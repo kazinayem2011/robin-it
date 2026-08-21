@@ -2093,8 +2093,18 @@
 .admin-settings-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     max-width: 860px;
+}
+
+/*
+ * The form is a flex column that already spaces its children with `gap`.
+ * .admin-card also carries margin-bottom: 22px, and the actions row added
+ * padding-top: 16px, so all three stacked and left 62px of dead space between
+ * the last card and the Save button. Drop the two redundant ones.
+ */
+.admin-settings-form > .admin-card {
+    margin-bottom: 0;
 }
 
 .form-checkbox-row {
@@ -2121,7 +2131,7 @@
 .admin-form-actions-sticky {
     display: flex;
     justify-content: flex-end;
-    padding: 16px 0;
+    padding: 0 0 8px;
 }
 
 /* Settings Tabs Bar */
