@@ -70,7 +70,7 @@ export default function Products({
             } catch (error) {
                 console.error('Failed to save product', error);
                 toast.error(
-                    error.response?.data?.message ||
+                    error?.message ||
                         'Failed to save product. Please check values.',
                     'Save Error',
                 );

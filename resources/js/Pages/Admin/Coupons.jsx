@@ -29,6 +29,7 @@ export default function AdminCoupons({ coupons = [] }) {
             min_spend: 1000,
             max_discount: 2000,
             usage_limit: 500,
+            per_user_limit: 1,
             is_active: true,
         },
         validationSchema: adminCouponSchema,
@@ -46,9 +47,7 @@ export default function AdminCoupons({ coupons = [] }) {
                 resetForm();
                 router.reload({ only: ['coupons'] });
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message || 'Failed to save coupon.',
-                );
+                toast.error(err?.message || 'Failed to save coupon.');
             } finally {
                 setSubmitting(false);
             }
@@ -66,6 +65,7 @@ export default function AdminCoupons({ coupons = [] }) {
                 min_spend: 1000,
                 max_discount: 2000,
                 usage_limit: 500,
+                per_user_limit: 1,
                 is_active: true,
             },
         });
@@ -83,6 +83,7 @@ export default function AdminCoupons({ coupons = [] }) {
                 min_spend: coupon.min_spend || '',
                 max_discount: coupon.max_discount || '',
                 usage_limit: coupon.usage_limit || 500,
+                per_user_limit: coupon.per_user_limit ?? '',
                 is_active: Boolean(coupon.is_active),
             },
         });
@@ -288,6 +289,23 @@ export default function AdminCoupons({ coupons = [] }) {
                                     name="max_discount"
                                     type="number"
                                     formik={formik}
+                                />
+                            </div>
+
+                            <div className="admin-form-grid-2">
+                                <FormInput
+                                    label="Total Uses (all customers)"
+                                    name="usage_limit"
+                                    type="number"
+                                    formik={formik}
+                                    placeholder="Leave blank for unlimited"
+                                />
+                                <FormInput
+                                    label="Uses Per Customer"
+                                    name="per_user_limit"
+                                    type="number"
+                                    formik={formik}
+                                    placeholder="Leave blank for unlimited"
                                 />
                             </div>
 

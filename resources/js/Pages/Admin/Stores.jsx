@@ -45,9 +45,7 @@ export default function AdminStores({ stores = [] }) {
                 resetForm();
                 router.reload({ only: ['stores'] });
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message || 'Failed to save store.',
-                );
+                toast.error(err?.message || 'Failed to save store.');
             } finally {
                 setSubmitting(false);
             }

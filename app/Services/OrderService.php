@@ -285,13 +285,14 @@ class OrderService
     }
 
     /**
-     * Accepts the storefront's lowercase 'cod' as well as the canonical uppercase codes.
+     * Accepts the storefront's lowercase 'cod' and normalises to the canonical code.
+     * Anything the store does not accept falls back to COD rather than being stored.
      */
     protected function normalisePaymentMethod(?string $method): string
     {
         $method = strtoupper(trim((string) $method));
 
-        return in_array($method, ['COD', 'BKASH', 'NAGAD'], true) ? $method : 'COD';
+        return in_array($method, Order::PAYMENT_METHODS, true) ? $method : 'COD';
     }
 
     /**

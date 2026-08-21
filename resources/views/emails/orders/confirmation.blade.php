@@ -64,8 +64,9 @@
     <div class="email-info-box">
         <div class="email-info-box-title">Shipping &amp; Delivery Address</div>
         <p class="email-info-box-text">
-            {{ $order->shipping_address ?? ($order->user->address ?? 'Standard Delivery Address') }}<br>
-            Phone: {{ $order->user->phone ?? 'N/A' }}
+            {{ $order->recipient_name }}<br>
+            {{ $order->formatted_shipping_address }}<br>
+            Phone: {{ $order->recipient_phone }}
         </p>
     </div>
 

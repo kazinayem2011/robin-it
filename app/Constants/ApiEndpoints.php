@@ -142,6 +142,8 @@ class ApiEndpoints
 
     public const ACCOUNT_PASSWORD = '/account/password';
 
+    public const ACCOUNT_ORDER_CANCEL = '/account/orders/{id}/cancel';
+
     // Admin
     public const ADMIN_PREFIX = 'admin';
 
@@ -178,6 +180,12 @@ class ApiEndpoints
     public const ADMIN_BLOGS = 'blogs';
 
     public const ADMIN_BLOGS_ITEM = 'blogs/{id}';
+
+    public const ADMIN_REVIEWS = 'reviews';
+
+    public const ADMIN_REVIEWS_ITEM = 'reviews/{id}';
+
+    public const ADMIN_REVIEWS_STATUS = 'reviews/{id}/status';
 
     public const ADMIN_WARRANTY = 'warranty';
 

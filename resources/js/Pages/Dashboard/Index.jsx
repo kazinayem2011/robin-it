@@ -24,6 +24,7 @@ import {
     Award,
     Eye,
     ChevronRight,
+    XCircle,
 } from 'lucide-react';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { Modal } from '@/Components/Modal';
@@ -42,6 +43,31 @@ export default function Index({
 }) {
     const [activeTab, setActiveTab] = useState('overview');
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [cancellingId, setCancellingId] = useState(null);
+
+    // Mirrors Order::isCancellableByCustomer() — cancellable until it ships.
+    const isCancellable = (order) =>
+        ['pending', 'processing'].includes(order.status);
+
+    const cancelOrder = (order) => {
+        if (
+            !window.confirm(
+                `Cancel order #${order.order_number}? The items will be returned to stock.`,
+            )
+        ) {
+            return;
+        }
+
+        setCancellingId(order.id);
+        router.post(
+            API_ENDPOINTS.ACCOUNT.ORDER_CANCEL(order.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setCancellingId(null),
+            },
+        );
+    };
     const [showAddressModal, setShowAddressModal] = useState(false);
 
     // Profile form state
@@ -582,6 +608,32 @@ export default function Index({
                                                                 />{' '}
                                                                 Order Invoice
                                                             </button>
+                                                            {isCancellable(
+                                                                order,
+                                                            ) && (
+                                                                <button
+                                                                    className="btn btn-outline btn-sm dash-order-cancel-btn"
+                                                                    disabled={
+                                                                        cancellingId ===
+                                                                        order.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        cancelOrder(
+                                                                            order,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <XCircle
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />{' '}
+                                                                    {cancellingId ===
+                                                                    order.id
+                                                                        ? 'Cancelling…'
+                                                                        : 'Cancel Order'}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

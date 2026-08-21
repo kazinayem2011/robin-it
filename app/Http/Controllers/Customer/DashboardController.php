@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\Wishlist;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -163,6 +164,39 @@ class DashboardController extends Controller
         }
 
         return back()->with('success', 'Address removed successfully.');
+    }
+
+    /**
+     * Let a customer call off an order that has not shipped yet.
+     *
+     * Cancelling routes through OrderService, which returns the reserved stock
+     * to the shelf so the units become sellable again.
+     */
+    public function cancelOrder(Request $request, OrderService $orderService, $id)
+    {
+        $user = Auth::user();
+
+        $order = Order::where('id', $id)->where('user_id', $user->id)->first();
+
+        if (! $order) {
+            return back()->with('error', 'We could not find that order on your account.');
+        }
+
+        if ($order->isCancelled()) {
+            return back()->with('error', 'That order is already cancelled.');
+        }
+
+        if (! $order->isCancellableByCustomer()) {
+            return back()->with(
+                'error',
+                "Order #{$order->order_number} has already been dispatched and can no longer be cancelled online. "
+                .'Please contact support and our team will help you with a return.'
+            );
+        }
+
+        $orderService->updateOrderStatus($order, 'cancelled');
+
+        return back()->with('success', "Order #{$order->order_number} has been cancelled.");
     }
 
     /**

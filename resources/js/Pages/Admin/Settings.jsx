@@ -59,9 +59,7 @@ export default function AdminSettings({ settings = [] }) {
                 );
                 router.reload({ only: ['settings'] });
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message || 'Failed to update settings.',
-                );
+                toast.error(err?.message || 'Failed to update settings.');
             } finally {
                 setSubmitting(false);
             }

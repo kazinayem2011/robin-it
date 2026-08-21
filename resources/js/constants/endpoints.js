@@ -57,6 +57,7 @@ export const API_ENDPOINTS = {
         ADDRESS: '/account/address',
         ADDRESS_ITEM: (id) => `/account/address/${id}`,
         PASSWORD: '/account/password',
+        ORDER_CANCEL: (id) => `/account/orders/${id}/cancel`,
     },
 
     // Blogs & Tech Journal API
@@ -120,6 +121,9 @@ export const API_ENDPOINTS = {
         CUSTOMERS: '/admin/customers',
         BLOGS: '/admin/blogs',
         BLOG_ITEM: (id) => `/admin/blogs/${id}`,
+        REVIEWS: '/admin/reviews',
+        REVIEW_ITEM: (id) => `/admin/reviews/${id}`,
+        REVIEW_STATUS: (id) => `/admin/reviews/${id}/status`,
         WARRANTY_STATUS: (id) => `/admin/warranty/${id}/status`,
     },
 };
@@ -170,6 +174,7 @@ export const ROUTES = {
     ADMIN_SETTINGS: '/admin/settings',
     ADMIN_CUSTOMERS: '/admin/customers',
     ADMIN_BLOGS: '/admin/blogs',
+    ADMIN_REVIEWS: '/admin/reviews',
 };
 
 export default {

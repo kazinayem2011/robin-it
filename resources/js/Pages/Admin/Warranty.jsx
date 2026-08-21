@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
-import {
-    Button,
-    DataTable,
-    Modal,
-    FormSelect,
-    toast,
-} from '../../Components';
+import { Button, DataTable, Modal, FormSelect, toast } from '../../Components';
 import { API_ENDPOINTS } from '../../constants/endpoints';
 import axiosInstance from '../../services/axiosInstance';
 import { ShieldCheck, Wrench, Edit3 } from 'lucide-react';
@@ -53,9 +47,7 @@ export default function AdminWarranty({ claims = [] }) {
             setSelectedClaim(null);
             router.reload({ only: ['claims'] });
         } catch (err) {
-            toast.error(
-                err.response?.data?.message || 'Failed to update claim status.',
-            );
+            toast.error(err?.message || 'Failed to update claim status.');
         } finally {
             setIsSaving(false);
         }

@@ -12,6 +12,7 @@ use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\SiteSetting;
 use App\Models\Store;
 use App\Models\User;
@@ -587,6 +588,7 @@ class AdminDashboardController extends Controller
             'min_spend' => 'nullable|numeric|min:0',
             'max_discount' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
+            'per_user_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
         ]);
@@ -615,6 +617,7 @@ class AdminDashboardController extends Controller
             'min_spend' => 'nullable|numeric|min:0',
             'max_discount' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
+            'per_user_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
         ]);
@@ -857,6 +860,83 @@ class AdminDashboardController extends Controller
         }
 
         return back()->with('success', 'Blog post removed.');
+    }
+
+    /**
+     * Customer Reviews Moderation.
+     *
+     * Reviews are published on submission (they can only come from verified
+     * buyers), but nothing let an admin take one down. This is that screen.
+     */
+    public function reviewsView(Request $request): Response
+    {
+        $status = $request->input('status', 'all');
+        $search = trim((string) $request->input('search', ''));
+
+        $query = ProductReview::with(['product:id,name,slug', 'user:id,name,email'])->latest();
+
+        if ($status === 'published') {
+            $query->where('is_approved', true);
+        } elseif ($status === 'hidden') {
+            $query->where('is_approved', false);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('comment', 'LIKE', "%{$search}%")
+                    ->orWhere('title', 'LIKE', "%{$search}%")
+                    ->orWhere('author_name', 'LIKE', "%{$search}%")
+                    ->orWhereHas('product', fn ($p) => $p->where('name', 'LIKE', "%{$search}%"));
+            });
+        }
+
+        return Inertia::render('Admin/Reviews', [
+            'reviews' => $query->paginate(20)->withQueryString(),
+            'filters' => ['status' => $status, 'search' => $search],
+            'counts' => [
+                'all' => ProductReview::count(),
+                'published' => ProductReview::where('is_approved', true)->count(),
+                'hidden' => ProductReview::where('is_approved', false)->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Publish or hide a single review.
+     */
+    public function updateReviewStatus(Request $request, $id)
+    {
+        $review = ProductReview::findOrFail($id);
+
+        $validated = $request->validate([
+            'is_approved' => 'required|boolean',
+        ]);
+
+        $review->update(['is_approved' => $validated['is_approved']]);
+
+        $message = $validated['is_approved']
+            ? 'Review published.'
+            : 'Review hidden from the storefront.';
+
+        if ($this->expectsJson($request)) {
+            return $this->successResponse($review, $message);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Permanently remove a review.
+     */
+    public function destroyReview(Request $request, $id)
+    {
+        ProductReview::findOrFail($id)->delete();
+
+        if ($this->expectsJson($request)) {
+            return $this->successResponse([], 'Review deleted.');
+        }
+
+        return back()->with('success', 'Review deleted.');
     }
 
     /**

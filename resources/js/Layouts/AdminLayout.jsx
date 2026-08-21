@@ -14,6 +14,7 @@ import {
     Sliders,
     BookOpen,
     ShieldCheck,
+    MessageSquare,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -136,6 +137,16 @@ export default function AdminLayout({
                         <div className="admin-nav-left">
                             <MapPin size={17} />
                             <span>Showrooms</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href={ROUTES.ADMIN_REVIEWS}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/reviews') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <MessageSquare size={17} />
+                            <span>Customer Reviews</span>
                         </div>
                     </Link>
 

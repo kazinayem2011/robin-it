@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+/**
+ * Implements MustVerifyEmail so a verification link is sent on sign-up and the
+ * /verify-email flow works. It is deliberately NOT enforced anywhere: this is a
+ * cash-on-delivery storefront where customers sign up with a mobile number, and
+ * gating checkout behind an email round-trip would cost real orders.
+ *
+ * To enforce it, add the 'verified' middleware to the routes that should require
+ * it (see routes/web.php).
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;

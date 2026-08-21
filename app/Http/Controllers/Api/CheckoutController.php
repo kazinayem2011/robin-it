@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Models\Order;
 use App\Services\CartService;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -27,12 +28,15 @@ class CheckoutController extends Controller
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'zone' => 'nullable|string|max:100',
-            'payment_method' => 'nullable|string',
-            'payment' => 'nullable|string',
+            // Only methods the store can actually take payment for.
+            'payment_method' => 'nullable|string|in:'.implode(',', Order::PAYMENT_METHODS),
+            'payment' => 'nullable|string|in:cod,COD',
             'coupon_code' => 'nullable|string|max:50',
         ], [
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number so we can reach you about delivery.',
             'street_address.required' => 'We need a street address to deliver your order.',
+            'payment_method.in' => 'We currently accept Cash on Delivery only.',
+            'payment.in' => 'We currently accept Cash on Delivery only.',
         ]);
 
         // The storefront form posts `payment`; the API contract is `payment_method`.
@@ -65,7 +69,7 @@ class CheckoutController extends Controller
             }
 
             $subtotal = $this->cartService->calculateTotals($cart)['subtotal'];
-            $check = $coupon->isValidForAmount($subtotal);
+            $check = $coupon->isValidForAmount($subtotal, Auth::id());
 
             if (! $check['valid']) {
                 return $this->errorResponse($check['message'], 422, ApiCode::COUPON_INVALID);

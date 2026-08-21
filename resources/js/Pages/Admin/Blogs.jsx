@@ -64,9 +64,7 @@ export default function AdminBlogs({ blogs = [] }) {
                 setModalOpen(false);
                 router.reload({ only: ['blogs'] });
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message || 'Failed to save article.',
-                );
+                toast.error(err?.message || 'Failed to save article.');
             } finally {
                 setSubmitting(false);
             }
@@ -116,9 +114,7 @@ export default function AdminBlogs({ blogs = [] }) {
             toast.success('Article removed.');
             router.reload({ only: ['blogs'] });
         } catch (err) {
-            toast.error(
-                err.response?.data?.message || 'Failed to delete article.',
-            );
+            toast.error(err?.message || 'Failed to delete article.');
         }
     };
 

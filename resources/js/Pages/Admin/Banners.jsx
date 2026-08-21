@@ -57,9 +57,7 @@ export default function AdminBanners({ banners = [] }) {
                 setModalOpen(false);
                 router.reload({ only: ['banners'] });
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message || 'Failed to save banner.',
-                );
+                toast.error(err?.message || 'Failed to save banner.');
             } finally {
                 setSubmitting(false);
             }

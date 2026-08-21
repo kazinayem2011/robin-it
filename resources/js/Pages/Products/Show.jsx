@@ -105,9 +105,7 @@ export default function ProductDetails(props) {
             const revs = await reviewService.getProductReviews(productSlug);
             setReviewsData(revs);
         } catch (err) {
-            toast.error(
-                err.response?.data?.message || 'Failed to submit review.',
-            );
+            toast.error(err?.message || 'Failed to submit review.');
         } finally {
             setSubmittingReview(false);
         }

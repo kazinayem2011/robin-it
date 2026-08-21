@@ -54,7 +54,7 @@ class CouponController extends Controller
             );
         }
 
-        $result = $coupon->isValidForAmount($subtotal);
+        $result = $coupon->isValidForAmount($subtotal, Auth::id());
 
         if (! $result['valid']) {
             return $this->errorResponse($result['message'], 422, ApiCode::COUPON_INVALID);

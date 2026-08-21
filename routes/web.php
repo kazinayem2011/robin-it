@@ -138,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post(ApiEndpoints::ACCOUNT_ADDRESS, [DashboardController::class, 'saveAddress'])->name('account.address');
     Route::delete(ApiEndpoints::ACCOUNT_ADDRESS_ITEM, [DashboardController::class, 'deleteAddress'])->name('account.address.delete');
     Route::put(ApiEndpoints::ACCOUNT_PASSWORD, [DashboardController::class, 'updatePassword'])->name('account.password');
+    Route::post(ApiEndpoints::ACCOUNT_ORDER_CANCEL, [DashboardController::class, 'cancelOrder'])->name('account.orders.cancel');
 
     Route::get(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'update'])->name('profile.update');
@@ -175,6 +176,9 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'storeBlog'])->name('blogs.store');
     Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'updateBlog'])->name('blogs.update');
     Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'destroyBlog'])->name('blogs.destroy');
+    Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminDashboardController::class, 'reviewsView'])->name('reviews');
+    Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminDashboardController::class, 'updateReviewStatus'])->name('reviews.status');
+    Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminDashboardController::class, 'destroyReview'])->name('reviews.destroy');
     Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminDashboardController::class, 'warrantyView'])->name('warranty');
     Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminDashboardController::class, 'updateWarrantyStatus'])->name('warranty.status');
 });

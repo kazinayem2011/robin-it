@@ -20,7 +20,7 @@
         <p class="email-info-box-text">
             <strong>Order Number:</strong> #{{ $order->order_number }}<br>
             <strong>Total Amount:</strong> ৳{{ number_format($order->total, 2) }} (Cash on Delivery)<br>
-            <strong>Shipping Destination:</strong> {{ $order->shipping_address ?? 'Registered Address' }}
+            <strong>Shipping Destination:</strong> {{ $order->formatted_shipping_address }}
         </p>
     </div>
 

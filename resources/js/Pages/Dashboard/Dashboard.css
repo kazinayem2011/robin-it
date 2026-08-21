@@ -608,3 +608,19 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Cancel action on an order card — destructive, so visually distinct. */
+.dash-order-cancel-btn {
+    color: #b42318;
+    border-color: #f5c2c7;
+}
+
+.dash-order-cancel-btn:hover:not(:disabled) {
+    background: #fdf2f2;
+    border-color: #b42318;
+}
+
+.dash-order-cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

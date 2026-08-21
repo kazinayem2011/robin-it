@@ -53,9 +53,7 @@ export default function BlogsIndex() {
     const filteredBlogs = blogs.filter(
         (b) =>
             b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (b.excerpt || '')
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()),
+            (b.excerpt || '').toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     const featuredLeadStory =

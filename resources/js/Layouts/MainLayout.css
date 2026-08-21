@@ -590,7 +590,11 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-800) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--dark-900) 0%,
+        var(--dark-800) 100%
+    );
     border: 1px solid rgba(234, 72, 79, 0.4);
     padding: 7px 14px;
     border-radius: var(--radius-sm);
@@ -907,7 +911,9 @@
     letter-spacing: 0;
     white-space: nowrap;
     position: relative;
-    transition: color var(--transition-fast), background var(--transition-fast);
+    transition:
+        color var(--transition-fast),
+        background var(--transition-fast);
     text-decoration: none;
 }
 
@@ -955,7 +961,7 @@
 
 /* ── Badges ──────────────────────────────────────────────────────────────── */
 .nav-chip-badge {
-    font-size: 0.60rem;
+    font-size: 0.6rem;
     font-weight: 800;
     padding: 2px 7px;
     border-radius: 4px;
@@ -967,14 +973,28 @@
     justify-content: center;
 }
 
-.badge-hot { background: var(--accent-amber); color: var(--white); }
-.badge-popular { background: var(--accent-blue); color: var(--white); }
-.badge-new { background: var(--success); color: var(--white); }
-.badge-sale { background: var(--primary); color: var(--white); }
+.badge-hot {
+    background: var(--accent-amber);
+    color: var(--white);
+}
+.badge-popular {
+    background: var(--accent-blue);
+    color: var(--white);
+}
+.badge-new {
+    background: var(--success);
+    color: var(--white);
+}
+.badge-sale {
+    background: var(--primary);
+    color: var(--white);
+}
 
 .nav-chevron-icon {
     opacity: 0.55;
-    transition: transform 0.18s ease, opacity 0.18s ease;
+    transition:
+        transform 0.18s ease,
+        opacity 0.18s ease;
     flex-shrink: 0;
 }
 
@@ -990,8 +1010,9 @@
     left: 0;
     width: 100%;
     background: var(--white);
-    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.22),
-                0 8px 16px -4px rgba(15, 23, 42, 0.08);
+    box-shadow:
+        0 20px 45px -10px rgba(15, 23, 42, 0.22),
+        0 8px 16px -4px rgba(15, 23, 42, 0.08);
     border-top: 3px solid var(--primary);
     border-bottom: 1px solid var(--border-color);
     border-left: 1px solid var(--border-color);
@@ -1193,7 +1214,7 @@
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
     color: var(--dark-700);
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.14s ease;
@@ -1210,7 +1231,7 @@
 
 .child-name {
     flex: 1;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     line-height: 1.3;
     word-break: break-word;
 }
@@ -1243,8 +1264,14 @@
 }
 
 @keyframes panelFadeIn {
-    from { opacity: 0; transform: translateX(6px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* ── Column 3: Spotlight Card ─────────────────────────────────────────────── */
@@ -1580,7 +1607,9 @@
     padding: 6px;
     border-radius: var(--radius-xs);
     cursor: pointer;
-    transition: background 0.14s ease, color 0.14s ease;
+    transition:
+        background 0.14s ease,
+        color 0.14s ease;
 }
 
 .mobile-menu-trigger-btn:hover {
@@ -1632,13 +1661,21 @@
 }
 
 @keyframes drawerFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes drawerSlideIn {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
 }
 
 /* Drawer Header */
@@ -1818,7 +1855,7 @@
 .mobile-cat-l2-link.view-all-link {
     color: var(--primary);
     font-weight: 700;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
 }
 
 .mobile-cat-l2-icon {
@@ -1847,7 +1884,7 @@
     justify-content: space-between;
     padding: 8px 16px 8px 38px;
     color: var(--dark-700);
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     font-weight: 500;
     text-decoration: none;
     transition: all 0.14s ease;
@@ -1877,7 +1914,7 @@
 }
 
 .mobile-drawer-hub-header {
-    font-size: 0.70rem;
+    font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.6px;
@@ -2002,4 +2039,3 @@
         text-align: center;
     }
 }
-

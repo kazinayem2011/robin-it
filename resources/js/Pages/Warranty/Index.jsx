@@ -117,9 +117,7 @@ export default function WarrantyIndex() {
             );
             setWarrantyData(data?.data || data);
         } catch (err) {
-            toast.error(
-                err.response?.data?.message || 'No warranty record found.',
-            );
+            toast.error(err?.message || 'No warranty record found.');
             setWarrantyData(null);
         } finally {
             setIsSearching(false);
@@ -147,10 +145,7 @@ export default function WarrantyIndex() {
                 toast.success('RMA claim registered successfully!');
                 resetForm();
             } catch (err) {
-                toast.error(
-                    err.response?.data?.message ||
-                        'Failed to submit warranty claim.',
-                );
+                toast.error(err?.message || 'Failed to submit warranty claim.');
             } finally {
                 setSubmitting(false);
             }

@@ -139,7 +139,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
             } catch (error) {
                 console.error('Category action failed', error);
                 toast.error(
-                    error.response?.data?.message || 'Failed to save category.',
+                    error?.message || 'Failed to save category.',
                     'Error',
                 );
             } finally {
