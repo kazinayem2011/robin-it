@@ -594,6 +594,29 @@
     min-width: 0;
 }
 
+/*
+ * Icon beside the heading, on one line — used by the settings section cards.
+ * These previously reused .admin-card-title-group, which stacks its children
+ * in a column, so the icon sat above the heading instead of next to it.
+ */
+.admin-card-title-inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.admin-card-title-inline .admin-card-icon {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.admin-card-title-inline .admin-card-title {
+    margin: 0;
+    min-width: 0;
+}
+
 .admin-header-actions {
     display: flex;
     align-items: center;
@@ -1152,10 +1175,22 @@
     justify-content: center;
 }
 
-.badge-hot { background: #ea580c; color: #fff; }
-.badge-popular { background: #2563eb; color: #fff; }
-.badge-new { background: #10b981; color: #fff; }
-.badge-sale { background: var(--primary); color: #fff; }
+.badge-hot {
+    background: #ea580c;
+    color: #fff;
+}
+.badge-popular {
+    background: #2563eb;
+    color: #fff;
+}
+.badge-new {
+    background: #10b981;
+    color: #fff;
+}
+.badge-sale {
+    background: var(--primary);
+    color: #fff;
+}
 
 .admin-cat-action-btn {
     display: inline-flex;
@@ -1302,7 +1337,7 @@
 }
 
 .admin-sub-slug-tag {
-    font-size: 0.70rem;
+    font-size: 0.7rem;
     color: var(--gray-400);
     font-family: monospace;
 }
@@ -1363,7 +1398,7 @@
 }
 
 .admin-cat-tree-l3-add-chip {
-    font-size: 0.70rem;
+    font-size: 0.7rem;
     color: var(--primary);
     background: rgba(234, 72, 79, 0.05);
     border: 1px dashed var(--primary);
@@ -1778,7 +1813,7 @@
     border: 1px solid #fca5a5;
     border-radius: var(--radius-sm);
     color: #991b1b;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     display: flex;
     gap: 8px;
     align-items: center;
@@ -2125,5 +2160,3 @@
     border-color: var(--primary);
     color: #ffffff;
 }
-
-

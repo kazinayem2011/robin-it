@@ -113,9 +113,14 @@ export default function AdminSettings({ settings = [] }) {
                     {activeTab === 'general' && (
                         <div className="admin-card">
                             <div className="admin-card-header">
-                                <div className="admin-card-title-group">
-                                    <Globe size={18} className="text-primary" />
-                                    <h3>Brand Identity &amp; Contacts</h3>
+                                <div className="admin-card-title-inline">
+                                    <Globe
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        Brand Identity &amp; Contacts
+                                    </h3>
                                 </div>
                             </div>
                             <div className="admin-card-body">
@@ -169,9 +174,12 @@ export default function AdminSettings({ settings = [] }) {
                     {activeTab === 'shipping' && (
                         <div className="admin-card">
                             <div className="admin-card-header">
-                                <div className="admin-card-title-group">
-                                    <Truck size={18} className="text-primary" />
-                                    <h3>
+                                <div className="admin-card-title-inline">
+                                    <Truck
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
                                         Shipping Rates &amp; Delivery Policies
                                     </h3>
                                 </div>
@@ -209,9 +217,14 @@ export default function AdminSettings({ settings = [] }) {
                     {activeTab === 'email' && (
                         <div className="admin-card">
                             <div className="admin-card-header">
-                                <div className="admin-card-title-group">
-                                    <Mail size={18} className="text-primary" />
-                                    <h3>Email &amp; SMTP Configuration</h3>
+                                <div className="admin-card-title-inline">
+                                    <Mail
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        Email &amp; SMTP Configuration
+                                    </h3>
                                 </div>
                             </div>
                             <div className="admin-card-body">
@@ -308,9 +321,14 @@ export default function AdminSettings({ settings = [] }) {
                     {activeTab === 'ticker' && (
                         <div className="admin-card">
                             <div className="admin-card-header">
-                                <div className="admin-card-title-group">
-                                    <Bell size={18} className="text-primary" />
-                                    <h3>Header Announcement Ticker</h3>
+                                <div className="admin-card-title-inline">
+                                    <Bell
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        Header Announcement Ticker
+                                    </h3>
                                 </div>
                             </div>
                             <div className="admin-card-body">
