@@ -74,12 +74,16 @@
     --primary-dark: #9e1216;
     --primary-light: #fdf2f2;
     --primary-glow: rgba(209, 33, 39, 0.28);
-    --primary-gradient: linear-gradient(135deg,
-            var(--primary) 0%,
-            var(--primary-hover) 100%);
-    --primary-gradient-hover: linear-gradient(135deg,
-            #e02c32 0%,
-            var(--primary) 100%);
+    --primary-gradient: linear-gradient(
+        135deg,
+        var(--primary) 0%,
+        var(--primary-hover) 100%
+    );
+    --primary-gradient-hover: linear-gradient(
+        135deg,
+        #e02c32 0%,
+        var(--primary) 100%
+    );
     --accent-yellow: #f5ee31;
 
     /* Secondary Accents */
@@ -141,7 +145,8 @@
 
     /* Typography */
     --font-heading:
-        'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont,
+        'Segoe UI', sans-serif;
     --font-body:
         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
@@ -526,9 +531,11 @@ textarea.has-error:focus,
 }
 
 .badge-new {
-    background: linear-gradient(135deg,
-            var(--accent-blue) 0%,
-            var(--accent-purple) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--accent-blue) 0%,
+        var(--accent-purple) 100%
+    );
     color: var(--white);
 }
 
@@ -564,7 +571,6 @@ textarea.has-error:focus,
 
 /* Shimmer & Glow Effects */
 @keyframes pulse-glow {
-
     0%,
     100% {
         box-shadow: 0 0 0 0 var(--primary-glow);
@@ -1047,10 +1053,12 @@ textarea.has-error:focus,
 
 /* 10. Skeleton */
 .skeleton-shimmer {
-    background: linear-gradient(90deg,
-            var(--gray-200) 25%,
-            var(--gray-100) 50%,
-            var(--gray-200) 75%);
+    background: linear-gradient(
+        90deg,
+        var(--gray-200) 25%,
+        var(--gray-100) 50%,
+        var(--gray-200) 75%
+    );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
@@ -1975,4 +1983,96 @@ textarea.has-error:focus,
     padding: 14px 20px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-surface-subtle);
+}
+/* ==========================================================================
+   UTILITY CLASSES
+   --------------------------------------------------------------------------
+   A small set of helpers used across the app. These names were previously
+   written into markup as Tailwind utilities, but Tailwind is not compiled into
+   this stylesheet (see GEMINI.md: "Vanilla CSS — do not use Tailwind classes"),
+   so they resolved to nothing and silently did no work.
+
+   Defined here in vanilla CSS against the project's own design tokens, so
+   `text-primary` is the brand red rather than a framework default.
+   ========================================================================== */
+
+/* Colour */
+.text-primary {
+    color: var(--primary);
+}
+
+.text-muted {
+    color: var(--gray-500);
+}
+
+.text-gray-400 {
+    color: var(--gray-400);
+}
+
+/* Type scale */
+.text-xs {
+    font-size: 0.72rem;
+}
+
+.text-sm {
+    font-size: 0.82rem;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-heading {
+    font-family: var(--font-heading);
+}
+
+.tracking-wide {
+    letter-spacing: 0.4px;
+}
+
+/* Layout */
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.block {
+    display: block;
+}
+
+.ml-auto {
+    margin-left: auto;
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
+.w-full,
+.w-100 {
+    width: 100%;
+}
+
+/* Spacing — matches the 4px rhythm used elsewhere in the design system. */
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mt-3 {
+    margin-top: 12px;
+}
+
+.mt-6 {
+    margin-top: 24px;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
 }

@@ -1,51 +1,75 @@
-import PrimaryButton from '@/Components/PrimaryButton';
-import GuestLayout from '@/Layouts/GuestLayout';
+import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ROUTES } from '@/constants/endpoints';
+import { MailCheck, ArrowRight } from 'lucide-react';
+import { BrandLogo, Button } from '../../Components';
+import siteConfig from '../../constants/siteConfig';
+import { ROUTES } from '../../constants/endpoints';
+import './Auth.css';
 
 export default function VerifyEmail({ status }) {
     const { post, processing } = useForm({});
 
     const submit = (e) => {
         e.preventDefault();
-
         post(ROUTES.EMAIL_VERIFICATION_NOTIFICATION);
     };
 
     return (
-        <GuestLayout>
-            <Head title="Email Verification" />
+        <div className="auth-page-wrapper">
+            <Head title={`Verify Email — ${siteConfig.name}`} />
 
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Thanks for signing up! Before getting started, could you verify
-                your email address by clicking on the link we just emailed to
-                you? If you didn't receive the email, we will gladly send you
-                another.
+            <div className="auth-card-container">
+                <div className="auth-card-header">
+                    <BrandLogo variant="auth" />
+                    <h1 className="auth-header-title">Verify Your Email</h1>
+                    <p className="auth-header-sub">
+                        One quick step to secure your account
+                    </p>
+                </div>
+
+                <div className="auth-card-body">
+                    {status === 'verification-link-sent' && (
+                        <div className="auth-status-alert">
+                            A new verification link has been sent to your email
+                            address.
+                        </div>
+                    )}
+
+                    <p className="auth-verify-copy">
+                        <MailCheck size={18} />
+                        <span>
+                            Thanks for signing up! Please confirm your email by
+                            clicking the link we just sent you. Didn&apos;t get
+                            it? We&apos;ll happily send another.
+                        </span>
+                    </p>
+
+                    <form onSubmit={submit}>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            className="btn-block"
+                            loading={processing}
+                            icon={ArrowRight}
+                            iconPosition="right"
+                        >
+                            Resend Verification Email
+                        </Button>
+                    </form>
+
+                    <div className="auth-footer-note">
+                        Wrong account?{' '}
+                        <Link
+                            href={ROUTES.LOGOUT}
+                            method="post"
+                            as="button"
+                            className="auth-back-link"
+                        >
+                            Log out
+                        </Link>
+                    </div>
+                </div>
             </div>
-
-            {status === 'verification-link-sent' && (
-                <div className="mb-4 text-sm font-medium text-green-600 dark:text-green-400">
-                    A new verification link has been sent to the email address
-                    you provided during registration.
-                </div>
-            )}
-
-            <form onSubmit={submit}>
-                <div className="mt-4 flex items-center justify-between">
-                    <PrimaryButton disabled={processing}>
-                        Resend Verification Email
-                    </PrimaryButton>
-
-                    <Link
-                        href={ROUTES.LOGOUT}
-                        method="post"
-                        as="button"
-                        className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >
-                        Log Out
-                    </Link>
-                </div>
-            </form>
-        </GuestLayout>
+        </div>
     );
 }

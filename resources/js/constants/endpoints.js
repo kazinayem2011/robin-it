@@ -161,6 +161,7 @@ export const ROUTES = {
     FORGOT_PASSWORD: '/forgot-password',
     PASSWORD_RESET: '/reset-password',
     PASSWORD_UPDATE: '/password',
+    PASSWORD_CONFIRM: '/confirm-password',
     EMAIL_VERIFICATION_NOTIFICATION: '/email/verification-notification',
     LOGOUT: '/logout',
     ADMIN_DASHBOARD: '/admin/dashboard',

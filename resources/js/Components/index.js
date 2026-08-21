@@ -1,18 +1,11 @@
 export { default as Button, Button as UIButton } from './Button';
-export { default as PrimaryButton } from './PrimaryButton';
-export { default as SecondaryButton } from './SecondaryButton';
-export { default as DangerButton } from './DangerButton';
 export { default as Checkbox } from './Checkbox';
-export { default as TextInput } from './TextInput';
-export { default as InputLabel } from './InputLabel';
-export { default as InputError } from './InputError';
 export { default as FormInput } from './FormInput';
 export { default as FormSelect } from './FormSelect';
 export { default as Card } from './Card';
 export { default as Spinner } from './Spinner';
 export { default as Pagination } from './Pagination';
 export { default as Modal } from './Modal';
-export { default as Dropdown } from './Dropdown';
 export { default as StatusBadge } from './StatusBadge';
 export { default as Skeleton, ProductCardSkeleton } from './Skeleton';
 export { default as EmptyState } from './EmptyState';

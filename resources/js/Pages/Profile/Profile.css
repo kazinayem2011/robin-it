@@ -23,6 +23,19 @@
     max-width: 500px;
 }
 
+/*
+ * The card around each settings section. This used to come from Tailwind
+ * utilities (bg-white p-4 shadow sm:rounded-lg) on the Breeze wrapper, which
+ * were never compiled, so the sections ran together with no separation.
+ */
+.profile-section-card {
+    padding: 24px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+}
+
 .profile-unverified-text {
     font-size: 0.85rem;
     color: var(--dark-700);
@@ -44,4 +57,84 @@
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--success);
+}
+
+/* ---------------------------------------------------------------
+   Account settings page
+   Previously rendered through Laravel Breeze's Tailwind layout, whose
+   classes are not defined in this project's vanilla CSS — the page came
+   out as an oversized unstyled logo.
+   --------------------------------------------------------------- */
+.profile-page-wrapper {
+    padding: 28px 0 60px;
+}
+
+.profile-breadcrumbs {
+    margin-bottom: 18px;
+}
+
+.profile-page-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.profile-page-icon {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--primary-light, rgba(209, 33, 39, 0.08));
+    color: var(--primary);
+}
+
+.profile-page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--dark-900);
+    margin: 0 0 2px;
+}
+
+.profile-page-sub {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--gray-500, #64748b);
+}
+
+.profile-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 720px;
+}
+
+/* Destructive section, visually separated from the routine settings. */
+.profile-danger-box {
+    border-color: #f5c2c7;
+}
+
+.profile-delete-modal {
+    padding: 24px;
+}
+
+.profile-delete-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+    .profile-page-header {
+        align-items: flex-start;
+    }
+
+    .profile-delete-actions {
+        flex-direction: column-reverse;
+    }
 }

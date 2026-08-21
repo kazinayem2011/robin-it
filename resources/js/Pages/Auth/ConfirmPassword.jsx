@@ -1,55 +1,70 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import React from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useFormik } from 'formik';
+import { Lock, ShieldCheck } from 'lucide-react';
+import { BrandLogo, FormInput, Button } from '../../Components';
+import siteConfig from '../../constants/siteConfig';
+import { ROUTES } from '../../constants/endpoints';
+import './Auth.css';
 
 export default function ConfirmPassword() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        password: '',
+    const formik = useFormik({
+        initialValues: { password: '' },
+        onSubmit: (values, { setSubmitting, setErrors, resetForm }) => {
+            router.post(ROUTES.PASSWORD_CONFIRM, values, {
+                onFinish: () => {
+                    setSubmitting(false);
+                    resetForm();
+                },
+                onError: (errs) => setErrors(errs),
+            });
+        },
     });
 
-    const submit = (e) => {
-        e.preventDefault();
-
-        post(route('password.confirm'), {
-            onFinish: () => reset('password'),
-        });
-    };
-
     return (
-        <GuestLayout>
-            <Head title="Confirm Password" />
+        <div className="auth-page-wrapper">
+            <Head title={`Confirm Password — ${siteConfig.name}`} />
 
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
+            <div className="auth-card-container">
+                <div className="auth-card-header">
+                    <BrandLogo variant="auth" />
+                    <h1 className="auth-header-title">Confirm Your Password</h1>
+                    <p className="auth-header-sub">
+                        This is a secure area of your account
+                    </p>
+                </div>
+
+                <div className="auth-card-body">
+                    <p className="auth-verify-copy">
+                        <ShieldCheck size={18} />
+                        <span>
+                            Please confirm your password before continuing.
+                        </span>
+                    </p>
+
+                    <form onSubmit={formik.handleSubmit}>
+                        <FormInput
+                            label="Password"
+                            name="password"
+                            type="password"
+                            icon={Lock}
+                            required
+                            autoFocus
+                            formik={formik}
+                            placeholder="Enter your password"
+                        />
+
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            className="btn-block"
+                            loading={formik.isSubmitting}
+                        >
+                            Confirm
+                        </Button>
+                    </form>
+                </div>
             </div>
-
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        isFocused={true}
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+        </div>
     );
 }

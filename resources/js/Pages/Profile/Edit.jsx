@@ -1,39 +1,56 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import React from 'react';
+import { Head, Link } from '@inertiajs/react';
+import MainLayout from '../../Layouts/MainLayout';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import siteConfig from '../../constants/siteConfig';
+import { ROUTES } from '../../constants/endpoints';
+import { UserCog } from 'lucide-react';
+import './Profile.css';
 
 export default function Edit({ mustVerifyEmail, status }) {
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Profile
-                </h2>
-            }
-        >
-            <Head title="Profile" />
+        <MainLayout>
+            <Head title={`Account Settings — ${siteConfig.name}`} />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
+            <div className="container profile-page-wrapper">
+                <div className="breadcrumbs profile-breadcrumbs">
+                    <Link href={ROUTES.HOME}>Home</Link> &gt;
+                    <Link href={ROUTES.DASHBOARD}> Account</Link> &gt;
+                    <span className="current"> Settings</span>
+                </div>
+
+                <div className="profile-page-header">
+                    <div className="profile-page-icon">
+                        <UserCog size={22} />
+                    </div>
+                    <div>
+                        <h1 className="profile-page-title">Account Settings</h1>
+                        <p className="profile-page-sub">
+                            Update your details, change your password, or close
+                            your account.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="profile-sections">
+                    <div className="profile-section-card">
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
                             status={status}
-                            className="max-w-xl"
                         />
                     </div>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
-                        <UpdatePasswordForm className="max-w-xl" />
+                    <div className="profile-section-card">
+                        <UpdatePasswordForm />
                     </div>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
-                        <DeleteUserForm className="max-w-xl" />
+                    <div className="profile-section-card profile-danger-box">
+                        <DeleteUserForm />
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </MainLayout>
     );
 }
