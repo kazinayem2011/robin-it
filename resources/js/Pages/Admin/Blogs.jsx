@@ -12,7 +12,7 @@ import {
     Checkbox,
     toast,
 } from '../../Components';
-import { adminService } from '../../services';
+import { adminService, uploadService } from '../../services';
 import { adminBlogSchema } from '../../validations';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -36,6 +36,7 @@ const BLOG_CATEGORIES = [
 export default function AdminBlogs({ blogs = [] }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [cropperOpen, setCropperOpen] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [editingBlog, setEditingBlog] = useState(null);
 
     const formik = useFormik({
@@ -118,10 +119,24 @@ export default function AdminBlogs({ blogs = [] }) {
         }
     };
 
-    const handleCropComplete = (croppedUrl) => {
-        formik.setFieldValue('image_path', croppedUrl);
+    // The cropper hands back { dataUrl, blob, file, width, height }. This used to
+    // treat that object as a URL string, so image_path became "[object Object]".
+    // The cropped file is uploaded and the stored public path is kept instead.
+    const handleCropComplete = async ({ file }) => {
         setCropperOpen(false);
-        toast.success('Article banner image cropped and updated.');
+        setUploadingImage(true);
+        try {
+            const { path } = await uploadService.uploadImage(file, 'blogs');
+            formik.setFieldValue('image_path', path);
+            toast.success('Cover image uploaded.', 'Upload Complete');
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not upload that image.',
+                'Upload Failed',
+            );
+        } finally {
+            setUploadingImage(false);
+        }
     };
 
     // Columns Definition for Reusable DataTable (SSOT)
@@ -341,8 +356,12 @@ export default function AdminBlogs({ blogs = [] }) {
                                         variant="secondary"
                                         icon={Crop}
                                         onClick={() => setCropperOpen(true)}
+                                        loading={uploadingImage}
+                                        disabled={uploadingImage}
                                     >
-                                        Crop / Upload
+                                        {uploadingImage
+                                            ? 'Uploading…'
+                                            : 'Crop / Upload'}
                                     </Button>
                                 </div>
                             </div>

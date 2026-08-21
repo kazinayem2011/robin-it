@@ -2214,3 +2214,27 @@
     opacity: 0.7;
     font-weight: 600;
 }
+
+/* ── Image upload field ─────────────────────────────────────────────────────── */
+.admin-image-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-image-field-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-image-preview {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    background: var(--bg-surface-subtle);
+    flex-shrink: 0;
+}

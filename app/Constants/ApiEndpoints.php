@@ -181,6 +181,8 @@ class ApiEndpoints
 
     public const ADMIN_BLOGS_ITEM = 'blogs/{id}';
 
+    public const ADMIN_MEDIA = 'media';
+
     public const ADMIN_REVIEWS = 'reviews';
 
     public const ADMIN_REVIEWS_ITEM = 'reviews/{id}';

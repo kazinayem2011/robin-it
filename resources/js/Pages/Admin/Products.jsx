@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Package, Plus, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import { Package, Plus, Edit2, CheckCircle, XCircle, Crop } from 'lucide-react';
 import {
     Modal,
     Button,
@@ -12,9 +12,10 @@ import {
     DataTable,
     ProductImage,
     toast,
+    ImageCropperModal,
 } from '@/Components';
 import { adminProductSchema } from '@/validations';
-import { adminService } from '@/services';
+import { adminService, uploadService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
@@ -29,6 +30,8 @@ export default function Products({
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [modalOpen, setModalOpen] = useState(false);
+    const [cropperOpen, setCropperOpen] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
 
     // Unified Product Form (Formik + Yup)
@@ -276,6 +279,23 @@ export default function Products({
         },
     ];
 
+    const handleCropComplete = async ({ file }) => {
+        setCropperOpen(false);
+        setUploadingImage(true);
+        try {
+            const { path } = await uploadService.uploadImage(file, 'products');
+            formik.setFieldValue('image_path', path);
+            toast.success('Product image uploaded.', 'Upload Complete');
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not upload that image.',
+                'Upload Failed',
+            );
+        } finally {
+            setUploadingImage(false);
+        }
+    };
+
     return (
         <AdminLayout
             title="Products & Inventory"
@@ -430,6 +450,45 @@ export default function Products({
                         placeholder="e.g. 20 Cores (8P + 12E), up to 5.6 GHz, LGA1700 Socket"
                     />
 
+                    {/* Product image. The form carried an image_path value with no
+                        field to edit it, so every product kept the same stock photo. */}
+                    <div className="admin-image-field">
+                        <FormInput
+                            id="image_path"
+                            name="image_path"
+                            label="Product Image"
+                            value={formik.values.image_path}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.image_path &&
+                                formik.errors.image_path
+                            }
+                            placeholder="/images/product.jpg or upload below"
+                        />
+                        <div className="admin-image-field-actions">
+                            {formik.values.image_path && (
+                                <img
+                                    src={formik.values.image_path}
+                                    alt="Product preview"
+                                    className="admin-image-preview"
+                                />
+                            )}
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                icon={Crop}
+                                loading={uploadingImage}
+                                disabled={uploadingImage}
+                                onClick={() => setCropperOpen(true)}
+                            >
+                                {uploadingImage
+                                    ? 'Uploading…'
+                                    : 'Crop / Upload'}
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="admin-form-checkbox-row">
                         <Checkbox
                             name="is_active"
@@ -468,6 +527,16 @@ export default function Products({
                     </div>
                 </form>
             </Modal>
+
+            {cropperOpen && (
+                <ImageCropperModal
+                    isOpen={cropperOpen}
+                    onClose={() => setCropperOpen(false)}
+                    onCropComplete={handleCropComplete}
+                    aspectRatio={1}
+                    title="Crop Product Image (1:1)"
+                />
+            )}
         </AdminLayout>
     );
 }

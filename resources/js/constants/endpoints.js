@@ -121,6 +121,7 @@ export const API_ENDPOINTS = {
         CUSTOMERS: '/admin/customers',
         BLOGS: '/admin/blogs',
         BLOG_ITEM: (id) => `/admin/blogs/${id}`,
+        MEDIA: '/admin/media',
         REVIEWS: '/admin/reviews',
         REVIEW_ITEM: (id) => `/admin/reviews/${id}`,
         REVIEW_STATUS: (id) => `/admin/reviews/${id}/status`,

@@ -14,3 +14,4 @@ export { default as storeService } from './storeService';
 export { default as settingService } from './settingService';
 export { default as blogService } from './blogService';
 export { default as warrantyService } from './warrantyService';
+export { uploadService } from './uploadService';

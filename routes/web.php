@@ -2,6 +2,7 @@
 
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\ComparisonController;
@@ -176,6 +177,10 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'storeBlog'])->name('blogs.store');
     Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'updateBlog'])->name('blogs.update');
     Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'destroyBlog'])->name('blogs.destroy');
+    // Image uploads for product shots, banners and blog covers.
+    Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store'])->name('media.store');
+    Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy'])->name('media.destroy');
+
     Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminDashboardController::class, 'reviewsView'])->name('reviews');
     Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminDashboardController::class, 'updateReviewStatus'])->name('reviews.status');
     Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminDashboardController::class, 'destroyReview'])->name('reviews.destroy');
