@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="rcRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5757"/>
+      <stop offset="100%" stop-color="#ea484f"/>
+    </linearGradient>
+    <linearGradient id="rcGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="rcShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Screen Stand -->
+  <path d="M22 54 L42 54" stroke="#ea484f" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 44 L32 54" stroke="#b91c1c" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Computer Monitor Display Frame -->
+  <rect x="8" y="8" width="48" height="36" rx="6" fill="#ffffff" stroke="url(#rcRed)" stroke-width="4.5" filter="url(#rcShadow)"/>
+  
+  <!-- Screen Gloss / Power Led -->
+  <circle cx="32" cy="40" r="1.5" fill="#ea484f"/>
+
+  <!-- Yellow Cursor Arrow (Signature Robins Computer Pointer) -->
+  <path d="M4 36 L18 10 L24 22 L36 24 Z" fill="url(#rcGold)" stroke="#d97706" stroke-width="1" filter="url(#rcShadow)"/>
+</svg>

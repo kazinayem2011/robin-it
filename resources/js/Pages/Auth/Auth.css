@@ -1,0 +1,233 @@
+/* ==========================================================================
+   ROBIN IT — AUTHENTICATION SUITE STYLES (LOGIN & REGISTER)
+   Senior Frontend Engineered Modern E-Commerce UI (StarTech / Daraz / Amazon)
+   ========================================================================== */
+
+.auth-page-wrapper {
+    min-height: 100vh;
+    background-color: var(--bg-surface-subtle);
+    background-image:
+        radial-gradient(
+            at 10% 20%,
+            rgba(234, 72, 79, 0.05) 0px,
+            transparent 50%
+        ),
+        radial-gradient(at 90% 80%, rgba(15, 23, 42, 0.04) 0px, transparent 50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    font-family: var(--font-body);
+}
+
+.auth-card-container {
+    width: 100%;
+    max-width: 480px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    box-shadow:
+        0 20px 40px -15px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.auth-card-header {
+    padding: 32px 32px 20px 32px;
+    text-align: center;
+    background: linear-gradient(
+        180deg,
+        var(--primary-light) 0%,
+        var(--bg-surface) 100%
+    );
+    border-bottom: 1px solid var(--border-light);
+}
+
+.auth-brand-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    margin-bottom: 16px;
+    padding: 6px 14px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.auth-brand-logo-img {
+    height: 44px;
+    width: auto;
+    max-width: 230px;
+    object-fit: contain;
+    display: block;
+}
+
+.auth-header-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    margin-bottom: 6px;
+    font-family: var(--font-heading);
+}
+
+.auth-header-sub {
+    font-size: 0.84rem;
+    color: var(--gray-500);
+    line-height: 1.4;
+}
+
+.auth-card-body {
+    padding: 28px 32px 32px 32px;
+}
+
+/* Quick Demo Fast-Login Strip */
+.auth-demo-helper {
+    background: var(--bg-surface-subtle);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-bottom: 22px;
+}
+
+.demo-helper-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-500);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.demo-helper-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.demo-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--dark-800);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-xs);
+}
+
+.demo-pill:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.demo-pill.admin:hover {
+    border-color: var(--accent-blue);
+    background: var(--info-light);
+    color: var(--accent-blue);
+}
+
+.demo-pill:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Status Alert */
+.auth-status-alert {
+    background: var(--success-light);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--success);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+/* Options Row (Remember Me + Forgot Password) */
+.auth-options-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    margin-bottom: 22px;
+    width: 100%;
+}
+
+.forgot-link {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.forgot-link:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Footer Link */
+.auth-footer-note {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--gray-500);
+}
+
+.auth-footer-note.mt-20 {
+    margin-top: 20px;
+}
+
+.auth-footer-note a {
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.auth-footer-note a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.auth-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.auth-back-link:hover {
+    color: var(--primary);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

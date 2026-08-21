@@ -1,0 +1,136 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Enums\ApiCode;
+use App\Http\Controllers\Controller;
+use App\Services\ProductService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class ProductController extends Controller
+{
+    public function __construct(
+        protected ProductService $productService
+    ) {}
+
+    /**
+     * Get a paginated list of products with optional filtering and sorting.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'category_slug' => 'nullable|string|max:120',
+            'category_id' => 'nullable|integer',
+            'brand_slug' => 'nullable|string|max:120',
+            'brand_id' => 'nullable|integer',
+            'is_featured' => 'nullable|boolean',
+            'in_stock' => 'nullable|boolean',
+            'search' => 'nullable|string|max:120',
+            'sort' => 'nullable|string|in:latest,price_low_high,price_high_low,name_asc',
+            'per_page' => 'nullable|integer|min:1|max:'.ProductService::MAX_PER_PAGE,
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        $products = $this->productService->getFilteredProducts(
+            $validated,
+            $this->productService->clampPerPage($validated['per_page'] ?? null)
+        );
+
+        return $this->paginatedResponse(
+            $products,
+            'Products fetched successfully.',
+            fn ($product) => $this->productService->formatProductCardData($product)
+        );
+    }
+
+    /**
+     * Get Flash Sale products with discount calculations.
+     */
+    public function flashSale(): JsonResponse
+    {
+        return $this->successResponse(
+            $this->productService->getFlashSaleProducts(),
+            'Flash sale products retrieved successfully.'
+        );
+    }
+
+    /**
+     * Get Best Selling & Tabbed Featured Products.
+     */
+    public function featured(Request $request): JsonResponse
+    {
+        $tab = (string) $request->input('tab', 'all');
+
+        return $this->successResponse(
+            $this->productService->getFeaturedProducts($tab),
+            'Featured products retrieved successfully.'
+        );
+    }
+
+    /**
+     * Get Dynamic Live Component Pricing for Interactive PC Builder Widget.
+     */
+    public function builderQuickSpecs(): JsonResponse
+    {
+        return $this->successResponse(
+            $this->productService->getBuilderQuickSpecs(),
+            'Builder quick specs fetched successfully.'
+        );
+    }
+
+    /**
+     * Get PC Builder blueprint categories.
+     */
+    public function pcBuilderCategories(): JsonResponse
+    {
+        return $this->successResponse(
+            $this->productService->getPcBuilderCategories(),
+            'PC builder categories fetched successfully.'
+        );
+    }
+
+    /**
+     * Get PC Builder selectable components for a specific category.
+     */
+    public function pcBuilderComponents(Request $request, string $categorySlug): JsonResponse
+    {
+        $search = $request->input('search');
+
+        return $this->successResponse(
+            $this->productService->getPcBuilderComponents($categorySlug, is_string($search) ? $search : null),
+            'PC builder components fetched successfully.'
+        );
+    }
+
+    /**
+     * Get live instant search suggestions.
+     */
+    public function suggestions(Request $request): JsonResponse
+    {
+        $query = (string) $request->input('q', '');
+
+        return $this->successResponse(
+            $this->productService->getSearchSuggestions($query),
+            'Search suggestions retrieved successfully.'
+        );
+    }
+
+    /**
+     * Get a single product details.
+     *
+     * Only a genuinely missing product returns 404 — real faults are allowed to
+     * surface as 500s rather than being disguised as "not found".
+     */
+    public function show(string $slug): JsonResponse
+    {
+        try {
+            $product = $this->productService->getProductBySlug($slug);
+        } catch (ModelNotFoundException) {
+            return $this->errorResponse('Product not found.', 404, ApiCode::NOT_FOUND);
+        }
+
+        return $this->successResponse($product, 'Product details fetched successfully.');
+    }
+}

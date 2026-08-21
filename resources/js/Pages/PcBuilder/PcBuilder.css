@@ -1,0 +1,384 @@
+/* ==========================================================================
+   ROBINS COMPUTER — PC BUILDER ARCHITECTURE (VANILLA CSS TOKENS)
+   ========================================================================== */
+
+.pc-builder-wrapper {
+    padding: 40px 0 60px 0;
+}
+
+.pc-builder-header-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(
+        135deg,
+        var(--dark-900) 0%,
+        var(--dark-800) 100%
+    );
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px 32px;
+    margin-bottom: 28px;
+    color: var(--white);
+    box-shadow: var(--shadow-md);
+}
+
+.pc-builder-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.pc-builder-tagline {
+    font-size: 0.82rem;
+    color: var(--gray-300);
+}
+
+.pc-builder-main-title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--white);
+    font-family: var(--font-heading);
+}
+
+.pc-builder-subtitle {
+    font-size: 0.86rem;
+    color: var(--gray-300);
+    margin-top: 4px;
+}
+
+.pc-builder-stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.stat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.stat-pill-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+}
+
+.stat-pill-value {
+    font-size: 1.35rem;
+    font-weight: 900;
+    font-family: var(--font-heading);
+    color: var(--accent-yellow);
+}
+
+.stat-pill-value.price-val {
+    color: var(--white);
+}
+
+.pc-builder-components-table {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.pc-builder-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 140px 140px;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition-fast);
+}
+
+.pc-builder-row:last-child {
+    border-bottom: none;
+}
+
+.pc-builder-row:hover {
+    background: var(--bg-surface-subtle);
+}
+
+.component-type-col {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.component-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.component-type-info h4 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.component-type-info span {
+    font-size: 0.72rem;
+    color: var(--gray-500);
+    display: block;
+}
+
+.component-selected-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.component-selected-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    background: var(--bg-surface-subtle);
+}
+
+.component-selected-details strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.component-selected-details span {
+    font-size: 0.76rem;
+    color: var(--gray-500);
+}
+
+.component-empty-placeholder {
+    font-size: 0.84rem;
+    color: var(--gray-400);
+    font-style: italic;
+}
+
+.component-price-col {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--primary);
+    text-align: right;
+    padding-right: 16px;
+}
+
+.component-action-col {
+    text-align: right;
+}
+
+.pc-builder-floating-bar {
+    position: sticky;
+    bottom: 20px;
+    margin-top: 24px;
+    background: var(--dark-900);
+    border-radius: var(--radius-md);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--white);
+    box-shadow: var(--shadow-xl);
+    z-index: 100;
+}
+
+.pc-builder-floating-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.pc-builder-floating-count {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+.pc-builder-floating-total {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--accent-yellow);
+    font-family: var(--font-heading);
+}
+
+.pc-builder-floating-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-text-light {
+    color: var(--gray-300) !important;
+}
+
+/* Select Component Page */
+.component-select-back-bar {
+    margin-bottom: 20px;
+}
+
+.component-select-header {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-xs);
+}
+
+.component-select-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    text-transform: capitalize;
+    color: var(--dark-900);
+    font-family: var(--font-heading);
+}
+
+.component-select-count {
+    font-size: 0.82rem;
+    color: var(--gray-500);
+}
+
+.component-select-search-box {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+}
+
+.component-select-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+}
+
+.component-select-search-input {
+    padding-left: 38px !important;
+    height: 40px !important;
+}
+
+.component-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.component-select-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-shadow: var(--shadow-xs);
+    transition: all var(--transition-fast);
+}
+
+.component-select-card.selected {
+    border-color: var(--primary);
+}
+
+.component-select-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.component-select-img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    background: var(--bg-surface-subtle);
+    flex-shrink: 0;
+}
+
+.component-select-item-title {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    margin-bottom: 4px;
+}
+
+.component-select-meta-row {
+    display: flex;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: var(--gray-600);
+}
+
+.component-select-stock-tag {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.component-select-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.component-select-price-box {
+    text-align: right;
+}
+
+.component-select-price {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--primary);
+    font-family: var(--font-heading);
+}
+
+.component-select-old-price {
+    display: block;
+    font-size: 0.78rem;
+    text-decoration: line-through;
+    color: var(--gray-400);
+}
+
+@media (max-width: 900px) {
+    .pc-builder-header-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .pc-builder-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .component-price-col,
+    .component-action-col {
+        text-align: left;
+        padding-right: 0;
+    }
+    .pc-builder-floating-bar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    .component-select-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .component-select-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

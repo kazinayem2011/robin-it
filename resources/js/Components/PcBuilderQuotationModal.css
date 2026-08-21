@@ -1,0 +1,280 @@
+/**
+ * ROBINS COMPUTER — OFFICIAL PC BUILDER QUOTATION PRINT STYLES
+ */
+
+.quotation-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.quotation-sheet-container {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 820px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.quotation-sheet-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.quotation-sheet-body {
+    padding: 36px 40px;
+    overflow-y: auto;
+    font-family: var(--font-body);
+    color: #1e293b;
+}
+
+/* Printable Letterhead */
+.quotation-letterhead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #0f172a;
+    margin-bottom: 24px;
+}
+
+.quotation-company-info h2 {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.5px;
+}
+
+.quotation-company-info p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 2px 0;
+    line-height: 1.4;
+}
+
+.quotation-meta-box {
+    text-align: right;
+}
+
+.quotation-badge-title {
+    display: inline-block;
+    background: #ea484f;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.quotation-ref-text {
+    font-size: 0.88rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: #0f172a;
+    margin: 0 0 2px 0;
+}
+
+.quotation-date-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* Client Info Bar */
+.quotation-client-bar {
+    display: flex;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+}
+
+.quotation-client-bar strong {
+    color: #0f172a;
+}
+
+/* Itemized Table */
+.quotation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.quotation-table th {
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #cbd5e1;
+    text-align: left;
+}
+
+.quotation-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+.quotation-cat-cell {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #475569;
+    text-transform: uppercase;
+    width: 130px;
+}
+
+.quotation-prod-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.quotation-prod-warranty {
+    font-size: 0.75rem;
+    color: #16a34a;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.quotation-price-cell {
+    text-align: right;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+/* Totals Summary Area */
+.quotation-summary-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-top: 16px;
+    border-top: 2px solid #0f172a;
+    margin-bottom: 28px;
+}
+
+.quotation-power-badge {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    color: #15803d;
+    max-width: 320px;
+}
+
+.quotation-calc-table {
+    text-align: right;
+}
+
+.quotation-calc-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 32px;
+    padding: 4px 0;
+    font-size: 0.88rem;
+    color: #64748b;
+}
+
+.quotation-calc-row.total-row {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #ea484f;
+    font-family: var(--font-heading);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Signatures & Terms */
+.quotation-terms {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 28px;
+}
+
+.quotation-footer-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 16px;
+}
+
+.signature-box {
+    text-align: center;
+    width: 200px;
+    border-top: 1px dashed #94a3b8;
+    padding-top: 6px;
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 700;
+}
+
+/* Print Overrides */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .quotation-sheet-container,
+    .quotation-sheet-container * {
+        visibility: visible;
+    }
+
+    .quotation-sheet-container {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+        border: none;
+        max-height: none;
+    }
+
+    .quotation-modal-backdrop {
+        position: static;
+        background: transparent;
+        padding: 0;
+    }
+
+    .quotation-sheet-toolbar {
+        display: none !important;
+    }
+
+    .quotation-sheet-body {
+        padding: 20px;
+    }
+}

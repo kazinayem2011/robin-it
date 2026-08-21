@@ -1,0 +1,79 @@
+/**
+ * ROBINS COMPUTER — REUSABLE REVIEW FORM STYLES
+ */
+
+.write-review-card {
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px 28px;
+    margin-bottom: 36px;
+}
+
+.write-review-card h4 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    margin-bottom: 18px;
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.review-form-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.review-form-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--dark-800);
+}
+
+.star-rating-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.star-pick-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-fast);
+}
+
+.star-pick-btn:hover {
+    transform: scale(1.15);
+}
+
+.star-pick-btn .star-filled {
+    fill: var(--accent-amber);
+    color: var(--accent-amber);
+}
+
+.star-pick-btn .star-empty {
+    fill: var(--gray-200);
+    color: var(--gray-300);
+}
+
+.review-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 640px) {
+    .review-form-row {
+        grid-template-columns: 1fr;
+    }
+}

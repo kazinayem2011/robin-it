@@ -1,0 +1,269 @@
+<?php
+
+namespace App\Services;
+
+use App\Exceptions\StorefrontException;
+use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+
+class CartService
+{
+    /** Flat delivery fee, in BDT. */
+    public const SHIPPING_FEE = 60.0;
+
+    /** Sanity cap so a single line item can't be used to inflate an order. */
+    public const MAX_QUANTITY_PER_ITEM = 20;
+
+    /**
+     * Get or create the cart for an authenticated user or guest session.
+     */
+    public function getOrCreateCart(?int $userId, ?string $sessionId): Cart
+    {
+        return Cart::firstOrCreate($this->ownerAttributes($userId, $sessionId));
+    }
+
+    /**
+     * Read-only lookup. Browsing the cart page shouldn't write a row for every
+     * visitor that never adds anything.
+     */
+    public function findCart(?int $userId, ?string $sessionId): ?Cart
+    {
+        return Cart::where($this->ownerAttributes($userId, $sessionId))->first();
+    }
+
+    /**
+     * Get the cart along with loaded relationships.
+     */
+    public function getCartWithItems(?int $userId, ?string $sessionId): Cart
+    {
+        $cart = $this->findCart($userId, $sessionId) ?: new Cart($this->ownerAttributes($userId, $sessionId));
+
+        if ($cart->exists) {
+            $cart->load(['items.product.images', 'items.product.brand']);
+        } else {
+            $cart->setRelation('items', collect());
+        }
+
+        return $cart;
+    }
+
+    /**
+     * Add an item to the cart or increment quantity if already present.
+     *
+     * @throws StorefrontException when the product is unavailable or short on stock
+     */
+    public function addItem(Cart $cart, int $productId, int $quantity = 1): CartItem
+    {
+        $product = Product::find($productId);
+
+        if (! $product || ! $product->is_active) {
+            throw StorefrontException::unavailable($product->name ?? 'This product');
+        }
+
+        $cartItem = CartItem::firstOrNew([
+            'cart_id' => $cart->id,
+            'product_id' => $productId,
+        ]);
+
+        $requested = ($cartItem->exists ? $cartItem->quantity : 0) + max(1, $quantity);
+
+        $this->assertStockCovers($product, $requested);
+
+        $cartItem->quantity = min($requested, self::MAX_QUANTITY_PER_ITEM);
+        $cartItem->save();
+
+        return $cartItem;
+    }
+
+    /**
+     * Update the quantity of a specific cart item.
+     *
+     * @throws StorefrontException when the requested quantity exceeds stock
+     */
+    public function updateItemQuantity(Cart $cart, int $itemId, int $quantity): CartItem
+    {
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('id', $itemId)
+            ->firstOrFail();
+
+        $product = $cartItem->product;
+
+        if (! $product || ! $product->is_active) {
+            throw StorefrontException::unavailable($product->name ?? 'This product');
+        }
+
+        $requested = max(1, min($quantity, self::MAX_QUANTITY_PER_ITEM));
+
+        $this->assertStockCovers($product, $requested);
+
+        $cartItem->update(['quantity' => $requested]);
+
+        return $cartItem;
+    }
+
+    /**
+     * Remove an item from the cart.
+     */
+    public function removeItem(Cart $cart, int $itemId): bool
+    {
+        return (bool) CartItem::where('cart_id', $cart->id)
+            ->where('id', $itemId)
+            ->delete();
+    }
+
+    /**
+     * Move a guest's session cart onto their account at login, so nothing they
+     * picked out before signing in disappears.
+     */
+    public function mergeGuestCart(int $userId, ?string $sessionId): void
+    {
+        if (! $sessionId) {
+            return;
+        }
+
+        $guestCart = Cart::where('session_id', $sessionId)->whereNull('user_id')->first();
+
+        if (! $guestCart) {
+            return;
+        }
+
+        DB::transaction(function () use ($guestCart, $userId) {
+            $userCart = Cart::firstOrCreate(['user_id' => $userId]);
+
+            if ($userCart->id === $guestCart->id) {
+                return;
+            }
+
+            $guestCart->load('items.product');
+
+            foreach ($guestCart->items as $guestItem) {
+                $existing = CartItem::firstOrNew([
+                    'cart_id' => $userCart->id,
+                    'product_id' => $guestItem->product_id,
+                ]);
+
+                $combined = ($existing->exists ? $existing->quantity : 0) + $guestItem->quantity;
+
+                // Merging must never fail the login — clamp instead of throwing.
+                $available = $guestItem->product?->stock_quantity ?? $combined;
+
+                $existing->quantity = max(1, min($combined, self::MAX_QUANTITY_PER_ITEM, $available));
+                $existing->save();
+            }
+
+            $guestCart->items()->delete();
+            $guestCart->delete();
+        });
+    }
+
+    /**
+     * Calculate subtotal, shipping, discount, and grand total for a cart.
+     *
+     * @param  float  $discount  coupon discount already validated server-side
+     */
+    public function calculateTotals(Cart $cart, float $discount = 0.0, ?float $shippingFee = null): array
+    {
+        $cart->loadMissing('items.product');
+
+        $shippingFee ??= self::SHIPPING_FEE;
+
+        $subtotal = 0.0;
+        $totalItems = 0;
+
+        foreach ($cart->items as $item) {
+            $product = $item->product;
+            if (! $product) {
+                continue;
+            }
+
+            $subtotal += $product->effective_price * $item->quantity;
+            $totalItems += $item->quantity;
+        }
+
+        $subtotal = round($subtotal, 2);
+        $discount = round(min(max($discount, 0.0), $subtotal), 2);
+        $shipping = $subtotal > 0 ? $shippingFee : 0.0;
+
+        return [
+            'subtotal' => $subtotal,
+            'shipping_fee' => $shipping,
+            'discount' => $discount,
+            'total' => round(max(0.0, $subtotal - $discount + $shipping), 2),
+            'total_items' => $totalItems,
+        ];
+    }
+
+    /**
+     * Clear all items and remove the cart.
+     */
+    public function clearCart(Cart $cart): void
+    {
+        $cart->items()->delete();
+        $cart->delete();
+    }
+
+    /**
+     * Cart lines whose product went inactive or short on stock since it was added.
+     * The cart page uses this to warn the customer before they reach checkout.
+     *
+     * @return array<int, array{item_id:int, product_name:string, requested:int, available:int, reason:string}>
+     */
+    public function findUnavailableItems(Cart $cart): array
+    {
+        $cart->loadMissing('items.product');
+
+        $issues = [];
+
+        foreach ($cart->items as $item) {
+            $product = $item->product;
+
+            if (! $product || ! $product->is_active) {
+                $issues[] = [
+                    'item_id' => $item->id,
+                    'product_name' => $product->name ?? 'Removed product',
+                    'requested' => $item->quantity,
+                    'available' => 0,
+                    'reason' => 'unavailable',
+                ];
+
+                continue;
+            }
+
+            if ($product->stock_quantity < $item->quantity) {
+                $issues[] = [
+                    'item_id' => $item->id,
+                    'product_name' => $product->name,
+                    'requested' => $item->quantity,
+                    'available' => max(0, $product->stock_quantity),
+                    'reason' => 'insufficient_stock',
+                ];
+            }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * Owner key for a cart: the account when signed in, otherwise the session.
+     *
+     * @return array<string, mixed>
+     */
+    private function ownerAttributes(?int $userId, ?string $sessionId): array
+    {
+        return $userId
+            ? ['user_id' => $userId]
+            : ['session_id' => $sessionId];
+    }
+
+    /**
+     * @throws StorefrontException
+     */
+    private function assertStockCovers(Product $product, int $quantity): void
+    {
+        if (! $product->canFulfil($quantity)) {
+            throw StorefrontException::outOfStock($product->name, max(0, $product->stock_quantity));
+        }
+    }
+}

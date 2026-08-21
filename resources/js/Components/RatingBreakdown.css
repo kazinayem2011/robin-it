@@ -1,0 +1,119 @@
+/**
+ * ROBINS COMPUTER — REUSABLE RATING BREAKDOWN STYLES
+ */
+
+.rating-breakdown-container {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px 32px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+    .rating-breakdown-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+        padding: 20px;
+    }
+}
+
+.rating-score-box {
+    text-align: center;
+    min-width: 160px;
+    padding-right: 32px;
+    border-right: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    .rating-score-box {
+        padding-right: 0;
+        padding-bottom: 20px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+}
+
+.rating-big-number {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--dark-900);
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+}
+
+.rating-stars-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.rating-star-icon.star-filled,
+.rating-star-label .star-filled {
+    fill: var(--accent-amber);
+    color: var(--accent-amber);
+}
+
+.rating-star-icon.star-empty {
+    fill: var(--gray-200);
+    color: var(--gray-300);
+}
+
+.rating-total-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+.rating-bars-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rating-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rating-star-label {
+    width: 50px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dark-800);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-surface-subtle);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.rating-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-amber) 0%, var(--warning-hover) 100%);
+    border-radius: var(--radius-full);
+    transition: width 0.4s ease-out;
+}
+
+.rating-count-num {
+    width: 32px;
+    text-align: right;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gray-500);
+}

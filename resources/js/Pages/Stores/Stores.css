@@ -1,0 +1,214 @@
+/* Stores.css - Showrooms & Experience Centers */
+
+.stores-page-wrapper {
+    padding: 36px 0 60px 0;
+}
+
+.stores-header-card {
+    background: linear-gradient(135deg, var(--dark-950) 0%, var(--dark-900) 100%);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px;
+    color: #ffffff;
+    margin-bottom: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stores-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: rgba(234, 72, 79, 0.15);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.8px;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.stores-header-card h1 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-family: var(--font-heading);
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.stores-header-card p {
+    font-size: 0.92rem;
+    color: var(--gray-300);
+    max-width: 720px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.city-filter-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.city-pill {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all 0.14s ease;
+}
+
+.city-pill:hover,
+.city-pill.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+/* Stores Grid */
+.stores-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 860px) {
+    .stores-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.store-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.18s ease;
+}
+
+.store-card:hover {
+    border-color: rgba(234, 72, 79, 0.4);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.store-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.store-type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.70rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(234, 72, 79, 0.08);
+    padding: 2px 8px;
+    border-radius: var(--radius-xs);
+    text-transform: uppercase;
+}
+
+.store-city-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--gray-500);
+}
+
+.store-name {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    margin-bottom: 16px;
+}
+
+.store-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex: 1;
+}
+
+.store-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.84rem;
+    color: var(--dark-700);
+    line-height: 1.4;
+}
+
+.detail-icon {
+    color: var(--gray-400);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.store-phone-link,
+.store-email-link {
+    color: var(--dark-900);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.14s ease;
+}
+
+.store-phone-link:hover,
+.store-email-link:hover {
+    color: var(--primary);
+}
+
+.store-card-actions {
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 16px;
+}
+
+.store-map-btn,
+.store-call-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: var(--radius-xs);
+    font-size: 0.80rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.14s ease;
+}
+
+.store-map-btn {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.store-map-btn:hover {
+    background: var(--primary-hover);
+}
+
+.store-call-btn {
+    background: var(--bg-surface-subtle);
+    color: var(--dark-800);
+    border: 1px solid var(--border-color);
+}
+
+.store-call-btn:hover {
+    background: #ffffff;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.stores-loading-box {
+    text-align: center;
+    padding: 60px 0;
+}

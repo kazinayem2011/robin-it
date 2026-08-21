@@ -1,0 +1,165 @@
+/* ==========================================================================
+   COMPARE MATRIX STYLESHEET
+   ========================================================================== */
+
+.compare-page-wrapper {
+    padding: 40px 0 60px 0;
+}
+
+.compare-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.compare-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--dark-900);
+    font-family: var(--font-heading);
+}
+
+.compare-count {
+    font-size: 0.84rem;
+    color: var(--gray-500);
+}
+
+.compare-table-wrapper {
+    overflow-x: auto;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.compare-thead-row {
+    border-bottom: 2px solid var(--border-color);
+    background: var(--bg-surface-subtle);
+}
+
+.compare-th-attribute {
+    padding: 16px 20px;
+    width: 220px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--gray-600);
+    text-transform: uppercase;
+}
+
+.compare-th-product {
+    padding: 16px 20px;
+    min-width: 260px;
+    vertical-align: top;
+}
+
+.compare-product-box {
+    position: relative;
+}
+
+.compare-remove-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 4px;
+    transition: color var(--transition-fast);
+}
+
+.compare-remove-btn:hover {
+    color: var(--danger);
+}
+
+.compare-product-img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    margin-bottom: 10px;
+}
+
+.compare-product-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    line-height: 1.3;
+}
+
+.compare-product-price {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--primary);
+    margin: 8px 0;
+    font-family: var(--font-heading);
+}
+
+.compare-tbody-row {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.compare-td-label {
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.84rem;
+    color: var(--gray-600);
+}
+
+.compare-td-val {
+    padding: 14px 20px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--dark-900);
+}
+
+.compare-stock-val {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.compare-empty-slot {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 36px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--gray-400);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    min-height: 280px;
+}
+
+.compare-empty-slot:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.compare-empty-slot-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-500);
+}
+
+.compare-empty-slot:hover .compare-empty-slot-icon {
+    background: #ffffff;
+    color: var(--primary);
+}
+

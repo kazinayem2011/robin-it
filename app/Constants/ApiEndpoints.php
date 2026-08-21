@@ -1,0 +1,184 @@
+<?php
+
+namespace App\Constants;
+
+/**
+ * Single Source of Truth (SSOT) for Backend Route Paths and API Endpoints.
+ */
+class ApiEndpoints
+{
+    // API Prefix
+    public const API_PREFIX = 'api';
+
+    // Categories
+    public const CATEGORIES_MEGA_MENU = 'categories/mega-menu';
+
+    public const CATEGORIES_FEATURED = 'categories/featured';
+
+    // Products
+    public const PRODUCTS_INDEX = 'products';
+
+    public const PRODUCTS_SHOW = 'products/{slug}';
+
+    public const PRODUCTS_FLASH_SALE = 'products/flash-sale';
+
+    public const PRODUCTS_FEATURED = 'products/featured';
+
+    public const PRODUCTS_SUGGESTIONS = 'products/suggestions';
+
+    public const BUILDER_QUICK_SPECS = 'builder/quick-specs';
+
+    public const PC_BUILDER_CATEGORIES = 'pc-builder/categories';
+
+    public const PC_BUILDER_COMPONENTS = 'pc-builder/components/{categorySlug}';
+
+    // Orders Tracking
+    public const ORDERS_TRACK = 'orders/track';
+
+    // Cart
+    public const CART = 'cart-api';
+
+    public const CART_ITEM = 'cart-api/{itemId}';
+
+    // Checkout
+    public const CHECKOUT = 'checkout-api';
+
+    // Wishlist
+    public const WISHLIST = 'wishlist';
+
+    public const WISHLIST_ITEM = 'wishlist/{productId}';
+
+    // Comparison
+    public const COMPARE = 'compare-api';
+
+    public const COMPARE_ITEM = 'compare-api/{productId}';
+
+    // Banners & Promos
+    public const BANNERS = 'banners';
+
+    // Brands Featured
+    public const BRANDS_FEATURED = 'brands/featured';
+
+    // Coupons
+    public const COUPONS_APPLY = 'coupons/apply';
+
+    // Product Reviews
+    public const PRODUCT_REVIEWS = 'products/{slug}/reviews';
+
+    // Showrooms & Stores
+    public const STORES = 'stores';
+
+    // Blogs & Tech Journal
+    public const BLOGS = 'blogs';
+    public const BLOG_SHOW = 'blogs/{slug}';
+
+    // Saved PC Builder
+    public const PC_BUILDER_SAVE = 'pc-builder/save';
+    public const PC_BUILDER_LOAD = 'pc-builder/load/{shareCode}';
+
+    // Warranty & RMA
+    public const WARRANTY_CHECK = 'warranty/check';
+    public const WARRANTY_CLAIM = 'warranty/claim';
+
+
+    // Site Settings
+    public const SETTINGS = 'settings';
+
+    // Web Public & Shop Routes
+    public const WEB_HOME = '/';
+
+    public const WEB_SHOP = '/shop';
+
+    public const WEB_SHOP_CATEGORY = '/shop/{categorySlug}';
+
+    public const WEB_PRODUCTS = '/products';
+
+    public const WEB_PRODUCT_SHOW = '/products/{slug}';
+
+    public const WEB_CART = '/cart';
+
+    public const WEB_CHECKOUT = '/checkout';
+
+    public const WEB_ORDER_SUCCESS = '/order/success';
+
+    public const WEB_TRACK = '/track';
+
+    public const WEB_PC_BUILDER = '/pc-builder';
+
+    public const WEB_PC_BUILDER_CHOOSE = '/pc-builder/choose/{categorySlug}';
+
+    public const WEB_WISHLIST = '/wishlist';
+
+    public const WEB_COMPARE = '/compare';
+
+    public const WEB_STORES = '/stores';
+
+    public const WEB_SUPPORT = '/support';
+
+    public const WEB_OFFERS = '/offers';
+
+    public const WEB_BLOGS = '/blogs';
+
+    public const WEB_BLOG_SHOW = '/blogs/{slug}';
+
+    public const WEB_WARRANTY = '/warranty';
+
+    public const WEB_TRACK_ORDER = '/track-order';
+
+    // Customer Account
+    public const DASHBOARD = '/dashboard';
+
+    public const ACCOUNT = '/account';
+
+    public const ACCOUNT_PROFILE = '/account/profile';
+
+    public const ACCOUNT_ADDRESS = '/account/address';
+
+    public const ACCOUNT_ADDRESS_ITEM = '/account/address/{id}';
+
+    public const ACCOUNT_PASSWORD = '/account/password';
+
+    // Admin
+    public const ADMIN_PREFIX = 'admin';
+
+    public const ADMIN_DASHBOARD = 'dashboard';
+
+    public const ADMIN_ORDERS = 'orders';
+
+    public const ADMIN_ORDERS_STATUS = 'orders/{id}/status';
+
+    public const ADMIN_PRODUCTS = 'products';
+
+    public const ADMIN_PRODUCTS_ITEM = 'products/{id}';
+
+    public const ADMIN_CATEGORIES = 'categories';
+
+    public const ADMIN_CATEGORIES_ITEM = 'categories/{id}';
+
+    public const ADMIN_BANNERS = 'banners';
+
+    public const ADMIN_BANNERS_ITEM = 'banners/{id}';
+
+    public const ADMIN_COUPONS = 'coupons';
+
+    public const ADMIN_COUPONS_ITEM = 'coupons/{id}';
+
+    public const ADMIN_STORES = 'stores';
+
+    public const ADMIN_STORES_ITEM = 'stores/{id}';
+
+    public const ADMIN_SETTINGS = 'settings';
+
+    public const ADMIN_CUSTOMERS = 'customers';
+
+    public const ADMIN_BLOGS = 'blogs';
+
+    public const ADMIN_BLOGS_ITEM = 'blogs/{id}';
+
+    public const ADMIN_WARRANTY = 'warranty';
+
+    public const ADMIN_WARRANTY_STATUS = 'warranty/{id}/status';
+
+    // Laravel Auth Profile
+    public const WEB_PROFILE = '/profile';
+}

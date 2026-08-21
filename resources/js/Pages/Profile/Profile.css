@@ -1,0 +1,47 @@
+/* ==========================================================================
+   ROBIN IT — USER PROFILE EDIT STYLESHEET
+   ========================================================================== */
+
+.profile-section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    font-family: var(--font-heading);
+}
+
+.profile-section-desc {
+    font-size: 0.85rem;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+.profile-form-box {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 500px;
+}
+
+.profile-unverified-text {
+    font-size: 0.85rem;
+    color: var(--dark-700);
+}
+
+.profile-verify-link {
+    color: var(--primary);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.profile-verification-success {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--success);
+}

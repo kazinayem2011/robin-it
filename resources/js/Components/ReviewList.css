@@ -1,0 +1,113 @@
+/**
+ * ROBINS COMPUTER — REUSABLE REVIEW LIST STYLES
+ */
+
+.reviews-feed-list h4 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    margin-bottom: 20px;
+}
+
+.review-items-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.review-item-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    transition: all var(--transition-fast);
+}
+
+.review-item-card:hover {
+    border-color: var(--gray-300);
+    box-shadow: var(--shadow-sm);
+}
+
+.review-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.review-author-info strong {
+    font-size: 0.95rem;
+    color: var(--dark-900);
+}
+
+.verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--success-light);
+    color: var(--success);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.review-stars-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.review-stars-pill .star-filled {
+    fill: var(--accent-amber);
+    color: var(--accent-amber);
+}
+
+.review-stars-pill .star-empty {
+    fill: var(--gray-200);
+    color: var(--gray-300);
+}
+
+.review-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    margin-bottom: 6px;
+}
+
+.review-comment {
+    font-size: 0.88rem;
+    color: var(--dark-700);
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+}
+
+.review-date-text {
+    font-size: 0.76rem;
+    color: var(--gray-400);
+    font-weight: 600;
+}
+
+.no-reviews-box {
+    text-align: center;
+    padding: 48px 24px;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.no-reviews-box p {
+    color: var(--gray-600);
+    font-size: 0.92rem;
+    margin: 0;
+}

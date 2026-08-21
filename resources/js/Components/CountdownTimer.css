@@ -1,0 +1,128 @@
+/* Reusable Countdown Timer Styles — Robin IT Design System */
+
+.reusable-countdown-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-family, inherit);
+}
+
+.countdown-timer-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.countdown-digits-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.countdown-box {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 3px 6px;
+    min-width: 32px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+}
+
+.countdown-box.box-accent {
+    background: var(--primary, #D12127);
+    border-color: var(--primary, #D12127);
+    color: #ffffff;
+}
+
+.digit-val {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+
+.digit-unit {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 1px;
+}
+
+.countdown-sep {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1;
+}
+
+/* Variant: Badge (Compact for Product Cards or Mini Banners) */
+.timer-variant-badge {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 3px 10px;
+}
+
+.timer-variant-badge .countdown-box {
+    background: transparent;
+    border: none;
+    padding: 0;
+    min-width: auto;
+}
+
+.timer-variant-badge .countdown-timer-label {
+    font-size: 0.7rem;
+    color: #cbd5e1;
+}
+
+/* Variant: Pill (For promotional top tickers & offer strips) */
+.timer-variant-pill {
+    background: rgba(209, 33, 39, 0.12);
+    border: 1px solid rgba(209, 33, 39, 0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+}
+
+.timer-variant-pill .countdown-timer-label {
+    color: var(--primary, #D12127);
+}
+
+.timer-variant-pill .countdown-box {
+    background: #0f172a;
+    border-color: rgba(209, 33, 39, 0.4);
+}
+
+.timer-variant-pill .digit-val {
+    color: #ffffff;
+}
+
+.countdown-icon-flame {
+    color: #f97316;
+    animation: flamePulse 1.5s infinite ease-in-out;
+}
+
+.countdown-icon-clock {
+    color: #38bdf8;
+}
+
+.countdown-icon-zap {
+    color: #eab308;
+}
+
+@keyframes flamePulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.18);
+        opacity: 1;
+    }
+}
