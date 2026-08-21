@@ -13,14 +13,29 @@ export const pcBuilderService = {
     },
 
     /**
-     * Get selectable components for a specific category.
+     * Get selectable components for a slot.
+     *
+     * `selection` is the current build as { slot: productId }; the API uses it to
+     * mark each candidate compatible / incompatible / unverified.
      */
-    getComponents: async (categorySlug, search = '') => {
+    getComponents: async (categorySlug, search = '', selection = {}) => {
         const response = await axiosInstance.get(
             API_ENDPOINTS.PC_BUILDER.COMPONENTS(categorySlug),
             {
-                params: { search },
+                params: { search, selection },
             },
+        );
+        return response?.data || response;
+    },
+
+    /**
+     * Check the current build for compatibility conflicts.
+     * @param {Object} selection - { slot: productId }
+     */
+    checkCompatibility: async (selection) => {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.PC_BUILDER.CHECK,
+            { selection },
         );
         return response?.data || response;
     },

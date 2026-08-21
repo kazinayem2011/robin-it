@@ -127,6 +127,33 @@ class Product extends Model
     }
 
     /**
+     * Look up a specification value by name.
+     *
+     * Matching is case-insensitive and partial, because the catalogue uses
+     * variations like "Socket", "CPU Socket" and "Socket Type".
+     *
+     * @param  string|array<int, string>  $names  first match wins
+     */
+    public function spec(string|array $names): ?string
+    {
+        if (! $this->relationLoaded('specifications')) {
+            $this->load('specifications');
+        }
+
+        foreach ((array) $names as $needle) {
+            $match = $this->specifications->first(
+                fn ($s) => stripos((string) $s->name, $needle) !== false
+            );
+
+            if ($match && trim((string) $match->value) !== '') {
+                return trim((string) $match->value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Power draw in watts, read from the product's TDP / Power / Wattage spec.
      *
      * The spec columns are `name` and `value`; both the API and the PC Builder UI

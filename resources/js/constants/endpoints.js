@@ -69,6 +69,7 @@ export const API_ENDPOINTS = {
     PC_BUILDER: {
         CATEGORIES: '/pc-builder/categories',
         COMPONENTS: (categorySlug) => `/pc-builder/components/${categorySlug}`,
+        CHECK: '/pc-builder/check',
         SAVE: '/pc-builder/save',
         LOAD: (shareCode) => `/pc-builder/load/${shareCode}`,
     },

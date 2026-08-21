@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -96,10 +97,36 @@ class ProductController extends Controller
      */
     public function pcBuilderComponents(Request $request, string $categorySlug): JsonResponse
     {
-        $search = $request->input('search');
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:120',
+            // Current build, so each candidate can be checked against it.
+            'selection' => 'nullable|array',
+            'selection.*' => 'nullable|integer',
+        ]);
+
+        $selection = collect($validated['selection'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $products = Product::whereIn('id', array_values($selection))
+            ->with('specifications')
+            ->get()
+            ->keyBy('id');
+
+        $resolved = [];
+        foreach ($selection as $slot => $id) {
+            if ($p = $products->get($id)) {
+                $resolved[$slot] = $p;
+            }
+        }
 
         return $this->successResponse(
-            $this->productService->getPcBuilderComponents($categorySlug, is_string($search) ? $search : null),
+            $this->productService->getPcBuilderComponents(
+                $categorySlug,
+                $validated['search'] ?? null,
+                $resolved
+            ),
             'PC builder components fetched successfully.'
         );
     }

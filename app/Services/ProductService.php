@@ -20,7 +20,8 @@ class ProductService
     private const EFFECTIVE_PRICE_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price THEN discount_price ELSE price END';
 
     public function __construct(
-        protected CategoryService $categoryService
+        protected CategoryService $categoryService,
+        protected PcCompatibilityService $compatibility
     ) {}
 
     /**
@@ -306,9 +307,14 @@ class ProductService
 
     /**
      * Get PC Builder selectable components for a specific category.
+     *
+     * @param  array<string, Product>  $selection  current build, for compatibility annotation
      */
-    public function getPcBuilderComponents(string $componentSlug, ?string $search = null): Collection
-    {
+    public function getPcBuilderComponents(
+        string $componentSlug,
+        ?string $search = null,
+        array $selection = []
+    ): Collection {
         $categoryIds = $this->categoryService->getDescendantIds($componentSlug);
 
         $query = Product::active()
@@ -331,10 +337,18 @@ class ProductService
             $query->where('name', 'LIKE', "%{$needle}%");
         }
 
-        return $query->latest()
-            ->take(self::MAX_PER_PAGE)
-            ->get()
-            ->map(fn (Product $p) => $this->formatProductCardData($p));
+        $products = $query->latest()->take(self::MAX_PER_PAGE)->get();
+
+        // Annotate against the current build so the picker can show what fits.
+        $annotated = $this->compatibility->annotateCandidates($componentSlug, $products, $selection);
+
+        return $annotated->map(fn (array $entry) => array_merge(
+            $this->formatProductCardData($entry['product']),
+            ['compatibility' => [
+                'status' => $entry['status'],
+                'reason' => $entry['reason'],
+            ]]
+        ))->values();
     }
 
     /**

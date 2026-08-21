@@ -33,6 +33,8 @@ import {
     Copy,
     Check,
     FileText,
+    AlertTriangle,
+    CheckCircle2,
 } from 'lucide-react';
 import './PcBuilder.css';
 
@@ -64,6 +66,8 @@ export default function PcBuilderIndex() {
         (state) => state.removePcBuilderItem,
     );
     const clearPcBuilder = useAppStore((state) => state.clearPcBuilder);
+    const [compat, setCompat] = useState(null);
+    const [checkingCompat, setCheckingCompat] = useState(false);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -119,6 +123,39 @@ export default function PcBuilderIndex() {
         fetchCategories();
     }, []);
 
+    // Ask the server to validate the build whenever the selection changes.
+    useEffect(() => {
+        if (pcBuilderItems.length === 0) {
+            setCompat(null);
+            return;
+        }
+
+        const selection = pcBuilderItems.reduce((acc, item) => {
+            acc[item.componentId] = item.product.id;
+            return acc;
+        }, {});
+
+        let cancelled = false;
+        setCheckingCompat(true);
+
+        pcBuilderService
+            .checkCompatibility(selection)
+            .then((data) => {
+                if (!cancelled) setCompat(data);
+            })
+            .catch((err) => {
+                console.error('Compatibility check failed', err);
+                if (!cancelled) setCompat(null);
+            })
+            .finally(() => {
+                if (!cancelled) setCheckingCompat(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [pcBuilderItems]);
+
     // Calculate Estimated Wattage & Total Cost
     const totalCost = pcBuilderItems.reduce((sum, item) => {
         const price = Number(
@@ -127,15 +164,24 @@ export default function PcBuilderIndex() {
         return sum + (Number.isFinite(price) ? price : 0);
     }, 0);
 
-    // `wattage` is parsed server-side from each product's TDP / Power spec.
-    const estimatedWattage = pcBuilderItems.reduce((sum, item) => {
-        const watts = Number(item.product.wattage);
-        return sum + (Number.isFinite(watts) && watts > 0 ? watts : 50);
-    }, 100);
+    // The server computes this from real TDP specs; fall back to the per-card
+    // wattage only while the check is in flight.
+    const estimatedWattage =
+        compat?.power?.estimated ??
+        pcBuilderItems.reduce((sum, item) => {
+            const watts = Number(item.product.wattage);
+            return sum + (Number.isFinite(watts) && watts > 0 ? watts : 50);
+        }, 100);
 
     const handleAddAllToCart = async () => {
         if (pcBuilderItems.length === 0) {
             toast.warning('Please choose components before adding to cart.');
+            return;
+        }
+
+        // Don't let someone buy parts we know do not work together.
+        if (compat?.status === 'fail') {
+            toast.error(compat.issues[0].message, 'Incompatible Build');
             return;
         }
 
@@ -231,7 +277,15 @@ export default function PcBuilderIndex() {
                                 FLAGSHIP TOOL
                             </span>
                             <span className="pc-builder-tagline">
-                                Instant Compatibility Matrix
+                                {checkingCompat
+                                    ? 'Checking compatibility…'
+                                    : compat?.status === 'fail'
+                                      ? `${compat.issues.length} compatibility issue${compat.issues.length === 1 ? '' : 's'}`
+                                      : compat?.status === 'pass'
+                                        ? 'All parts compatible'
+                                        : compat?.issues?.length > 0
+                                          ? 'Some parts need checking'
+                                          : 'Instant Compatibility Check'}
                             </span>
                         </div>
                         <h1 className="pc-builder-main-title">
@@ -260,6 +314,47 @@ export default function PcBuilderIndex() {
                         </div>
                     </div>
                 </div>
+
+                {compat && compat.issues.length > 0 && (
+                    <div
+                        className={`pc-compat-panel ${
+                            compat.status === 'fail' ? 'is-error' : 'is-warning'
+                        }`}
+                        role="alert"
+                    >
+                        <AlertTriangle size={18} />
+                        <div className="pc-compat-panel-body">
+                            <strong>
+                                {compat.status === 'fail'
+                                    ? "These parts won't work together"
+                                    : "We couldn't verify every part"}
+                            </strong>
+                            <ul>
+                                {compat.issues.map((issue) => (
+                                    <li key={issue.rule}>{issue.message}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                )}
+
+                {compat &&
+                    compat.status === 'pass' &&
+                    pcBuilderItems.length > 1 && (
+                        <div className="pc-compat-panel is-ok" role="status">
+                            <CheckCircle2 size={18} />
+                            <div className="pc-compat-panel-body">
+                                <strong>
+                                    All selected parts are compatible
+                                </strong>
+                                <p>
+                                    Estimated draw {compat.power.estimated}W —
+                                    we recommend at least{' '}
+                                    {compat.power.recommended}W of power supply.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                 {/* Table of Component Slots */}
                 {loading ? (
@@ -368,7 +463,7 @@ export default function PcBuilderIndex() {
                                         ) : (
                                             <Link
                                                 href={ROUTES.PC_BUILDER_CHOOSE(
-                                                    cat.slug,
+                                                    cat.category_slug,
                                                 )}
                                                 className="btn-choose-component"
                                             >

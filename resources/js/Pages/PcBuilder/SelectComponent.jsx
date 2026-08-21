@@ -22,8 +22,26 @@ export default function SelectComponent({ categorySlug }) {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
+    const [showIncompatible, setShowIncompatible] = useState(false);
+
     const addPcBuilderItem = useAppStore((state) => state.addPcBuilderItem);
     const pcBuilderItems = useAppStore((state) => state.pcBuilderItems);
+
+    // The rest of the build, as { slot: productId }, excluding the slot being filled.
+    const selection = pcBuilderItems.reduce((acc, item) => {
+        if (item.componentId !== categorySlug) {
+            acc[item.componentId] = item.product.id;
+        }
+        return acc;
+    }, {});
+
+    const compatibleCount = products.filter(
+        (p) => p.compatibility?.status !== 'fail',
+    ).length;
+    const incompatibleCount = products.length - compatibleCount;
+    const visibleProducts = showIncompatible
+        ? products
+        : products.filter((p) => p.compatibility?.status !== 'fail');
 
     useEffect(() => {
         const fetchComponents = async () => {
@@ -32,6 +50,7 @@ export default function SelectComponent({ categorySlug }) {
                 const data = await pcBuilderService.getComponents(
                     categorySlug,
                     search,
+                    selection,
                 );
                 if (data && Array.isArray(data)) {
                     setProducts(data);
@@ -51,6 +70,17 @@ export default function SelectComponent({ categorySlug }) {
     }, [categorySlug, search]);
 
     const handleSelectProduct = (product) => {
+        const compat = product.compatibility || {};
+
+        // Selecting a conflicting part is allowed only deliberately, and the
+        // reason is spelled out rather than silently accepted.
+        if (compat.status === 'fail') {
+            const proceed = window.confirm(
+                `${compat.reason}\n\nAdd it anyway?`,
+            );
+            if (!proceed) return;
+        }
+
         // Remove existing item for this slot if any, then add
         const currentItems = useAppStore.getState().pcBuilderItems;
         const filtered = currentItems.filter(
@@ -63,10 +93,21 @@ export default function SelectComponent({ categorySlug }) {
             ],
         });
 
-        toast.success(
-            `Selected "${product.name}" for your rig!`,
-            'Component Added',
-        );
+        // Confirming past a known conflict should not be congratulated.
+        if (compat.status === 'fail') {
+            toast.warning(
+                `Added despite a compatibility conflict — ${compat.reason}`,
+                'Incompatible Part Added',
+            );
+        } else if (compat.status === 'unknown') {
+            toast.warning(compat.reason, 'Compatibility Not Verified');
+        } else {
+            toast.success(
+                `Selected "${product.name}" for your rig!`,
+                'Component Added',
+            );
+        }
+
         router.visit(ROUTES.PC_BUILDER);
     };
 
@@ -91,7 +132,9 @@ export default function SelectComponent({ categorySlug }) {
                             Choose {categorySlug.replace(/-/g, ' ')}
                         </h2>
                         <span className="component-select-count">
-                            Showing {products.length} compatible components
+                            {incompatibleCount > 0
+                                ? `${compatibleCount} of ${products.length} compatible with your current build`
+                                : `Showing ${products.length} components`}
                         </span>
                     </div>
 
@@ -126,19 +169,39 @@ export default function SelectComponent({ categorySlug }) {
                     />
                 ) : (
                     <div className="component-select-list">
-                        {products.map((product) => {
+                        {incompatibleCount > 0 && (
+                            <label className="component-compat-toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={showIncompatible}
+                                    onChange={(e) =>
+                                        setShowIncompatible(e.target.checked)
+                                    }
+                                />
+                                <span>
+                                    Show {incompatibleCount} part
+                                    {incompatibleCount === 1 ? '' : 's'} that
+                                    won&apos;t fit your current build
+                                </span>
+                            </label>
+                        )}
+
+                        {visibleProducts.map((product) => {
                             const isSelected = pcBuilderItems.some(
                                 (i) =>
                                     i.componentId === categorySlug &&
                                     i.product.id === product.id,
                             );
-                            const price =
-                                product.discount_price || product.price;
+                            const price = product.raw_price ?? 0;
+                            const compat = product.compatibility || {};
+                            const blocked = compat.status === 'fail';
 
                             return (
                                 <div
                                     key={product.id}
-                                    className={`component-select-card ${isSelected ? 'selected' : ''}`}
+                                    className={`component-select-card ${isSelected ? 'selected' : ''} ${
+                                        blocked ? 'is-incompatible' : ''
+                                    } ${compat.status === 'unknown' ? 'is-unverified' : ''}`}
                                 >
                                     <div className="component-select-left">
                                         <ProductImage
@@ -154,15 +217,39 @@ export default function SelectComponent({ categorySlug }) {
                                                 <span>
                                                     Brand:{' '}
                                                     <strong>
-                                                        {product.brand?.name ||
+                                                        {product.brand ||
                                                             'Genuine'}
                                                     </strong>
                                                 </span>
                                                 <span>•</span>
-                                                <span className="component-select-stock-tag">
-                                                    In Stock
+                                                <span
+                                                    className="component-select-stock-tag"
+                                                    style={
+                                                        product.inStock
+                                                            ? undefined
+                                                            : {
+                                                                  color: '#b42318',
+                                                              }
+                                                    }
+                                                >
+                                                    {product.inStock
+                                                        ? `In Stock (${product.stockQuantity})`
+                                                        : 'Out of Stock'}
                                                 </span>
                                             </div>
+
+                                            {compat.reason && (
+                                                <small
+                                                    className={`component-compat-note ${
+                                                        blocked
+                                                            ? 'is-error'
+                                                            : 'is-warning'
+                                                    }`}
+                                                >
+                                                    {blocked ? '✕ ' : '⚠ '}
+                                                    {compat.reason}
+                                                </small>
+                                            )}
                                         </div>
                                     </div>
 

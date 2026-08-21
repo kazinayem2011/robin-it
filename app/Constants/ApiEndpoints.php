@@ -70,16 +70,20 @@ class ApiEndpoints
 
     // Blogs & Tech Journal
     public const BLOGS = 'blogs';
+
     public const BLOG_SHOW = 'blogs/{slug}';
 
     // Saved PC Builder
+    public const PC_BUILDER_CHECK = 'pc-builder/check';
+
     public const PC_BUILDER_SAVE = 'pc-builder/save';
+
     public const PC_BUILDER_LOAD = 'pc-builder/load/{shareCode}';
 
     // Warranty & RMA
     public const WARRANTY_CHECK = 'warranty/check';
-    public const WARRANTY_CLAIM = 'warranty/claim';
 
+    public const WARRANTY_CLAIM = 'warranty/claim';
 
     // Site Settings
     public const SETTINGS = 'settings';

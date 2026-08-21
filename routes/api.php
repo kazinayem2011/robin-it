@@ -60,6 +60,9 @@ Route::middleware('throttle:api')->group(function () {
     // PC Builder shared configuration
     Route::get(ApiEndpoints::PC_BUILDER_LOAD, [PcBuilderController::class, 'load']);
 
+    // Compatibility check for the current build
+    Route::post(ApiEndpoints::PC_BUILDER_CHECK, [PcBuilderController::class, 'check']);
+
     // Site Settings & Ticker API
     Route::get(ApiEndpoints::SETTINGS, [SettingController::class, 'index']);
 });

@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\SavedPcBuild;
+use App\Services\PcCompatibilityService;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -52,6 +53,60 @@ class PcBuilderController extends Controller
             'build_name' => $build->build_name,
             'total_price' => (float) $build->total_price,
         ], 'PC Build configuration saved successfully!', 201);
+    }
+
+    /**
+     * Resolve a posted selection of slot => product_id into loaded models,
+     * ignoring anything that no longer exists in the catalogue.
+     *
+     * @param  array<string, mixed>  $selection
+     * @return array<string, Product>
+     */
+    private function resolveSelection(array $selection): array
+    {
+        $ids = collect($selection)->filter()->map(fn ($v) => (int) $v)->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $products = Product::whereIn('id', array_values($ids))
+            ->with('specifications')
+            ->get()
+            ->keyBy('id');
+
+        $resolved = [];
+        foreach ($ids as $slot => $id) {
+            if ($product = $products->get($id)) {
+                $resolved[$slot] = $product;
+            }
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Check a build for compatibility conflicts.
+     *
+     * The builder previously filtered on category alone while advertising an
+     * "Instant Compatibility Matrix", so mismatched parts could be bought together.
+     */
+    public function check(Request $request, PcCompatibilityService $compatibility): JsonResponse
+    {
+        $validated = $request->validate([
+            'selection' => 'required|array',
+            'selection.*' => 'nullable|integer|exists:products,id',
+        ], [
+            'selection.required' => 'Choose at least one component to check.',
+        ]);
+
+        $report = $compatibility->analyse($this->resolveSelection($validated['selection']));
+
+        return $this->successResponse($report, match ($report['status']) {
+            PcCompatibilityService::FAIL => 'This build has compatibility conflicts.',
+            PcCompatibilityService::PASS => 'All selected parts are compatible.',
+            default => 'Some parts could not be verified.',
+        });
     }
 
     public function load(string $shareCode, ProductService $productService): JsonResponse
