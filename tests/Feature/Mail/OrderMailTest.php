@@ -16,6 +16,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -245,6 +246,71 @@ class OrderMailTest extends TestCase
      * Images are blocked by default in many clients, so the logo must carry alt
      * text that reads as the store name.
      */
+    /**
+     * The logo is embedded in the message rather than linked.
+     *
+     * A URL only resolves if the site is publicly reachable; with
+     * APP_URL=http://localhost:8000 the header rendered blank in a real inbox.
+     */
+    public function test_the_logo_is_embedded_in_the_message(): void
+    {
+        SiteSetting::set('site_logo', '/images/logo.png');
+
+        Mail::to('inbox@example.com')->send(
+            new OrderConfirmationMail($this->order(User::factory()->create()))
+        );
+
+        $message = Mail::getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $html = $message->getHtmlBody();
+
+        preg_match('/<img[^>]+src="([^"]+)"/', $html, $m);
+        $this->assertNotEmpty($m, 'no <img> in the header');
+        $this->assertStringStartsWith('cid:', $m[1], 'the logo should be embedded, not linked');
+
+        $images = collect($message->getAttachments())
+            ->filter(fn ($a) => str_starts_with($a->getMediaType().'/'.$a->getMediaSubtype(), 'image/'));
+
+        $this->assertCount(1, $images, 'exactly one embedded image expected');
+        $this->assertGreaterThan(1000, strlen($images->first()->getBody()), 'embedded image looks empty');
+    }
+
+    /** A logo uploaded through the admin lands on the public disk, not public/. */
+    public function test_an_uploaded_logo_is_found_and_embedded(): void
+    {
+        Storage::disk('public')->put(
+            'uploads/brands/uploaded-logo.png',
+            file_get_contents(public_path('images/logo.png'))
+        );
+
+        SiteSetting::set('site_logo', '/storage/uploads/brands/uploaded-logo.png');
+
+        $this->assertNotNull(
+            BrandDetails::localLogoPath(),
+            'an uploaded logo should resolve to a file on the public disk'
+        );
+
+        Mail::to('inbox@example.com')->send(
+            new OrderConfirmationMail($this->order(User::factory()->create()))
+        );
+
+        $html = Mail::getSymfonyTransport()->messages()->last()->getOriginalMessage()->getHtmlBody();
+        $this->assertStringContainsString('cid:', $html);
+    }
+
+    public function test_a_remote_logo_url_is_linked_rather_than_embedded(): void
+    {
+        SiteSetting::set('site_logo', 'https://cdn.example.com/logo.png');
+
+        $this->assertNull(BrandDetails::localLogoPath());
+
+        Mail::to('inbox@example.com')->send(
+            new OrderConfirmationMail($this->order(User::factory()->create()))
+        );
+
+        $html = Mail::getSymfonyTransport()->messages()->last()->getOriginalMessage()->getHtmlBody();
+        $this->assertStringContainsString('https://cdn.example.com/logo.png', $html);
+    }
+
     public function test_the_logo_has_alt_text_naming_the_store(): void
     {
         SiteSetting::set('site_name', 'Alt Text Store');

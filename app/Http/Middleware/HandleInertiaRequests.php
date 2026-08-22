@@ -35,7 +35,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'site_settings' => SiteSetting::getAllSettings(),
+            // Only the settings that are safe in a browser: this used to share
+            // the whole table, SMTP credentials included, with every visitor.
+            'site_settings' => SiteSetting::publicSettings(),
         ];
     }
 }

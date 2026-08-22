@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import siteConfig from '../constants/siteConfig';
 
 export default function SEOHead({
@@ -10,18 +10,27 @@ export default function SEOHead({
     type = 'website',
     schemaData = null,
 }) {
+    // SEO defaults come from Site Settings when the admin has set them, so the
+    // SEO tab is not decorative; siteConfig remains the final fallback.
+    const settings = usePage().props?.site_settings || {};
+    const brandName = settings.site_name || siteConfig.name;
+    const brandTagline = settings.site_tagline || siteConfig.tagline;
+
     const pageTitle = title
-        ? `${title} — ${siteConfig.name}`
-        : `${siteConfig.name} | ${siteConfig.tagline}`;
-    const pageDescription = description || siteConfig.description;
-    const pageImage = image || '/images/hero_gaming_pc.png';
+        ? `${title} — ${brandName}`
+        : settings.meta_title || `${brandName} | ${brandTagline}`;
+    const pageDescription =
+        description || settings.meta_description || siteConfig.description;
+    const pageImage =
+        image || settings.og_image || '/images/hero_gaming_pc.png';
+    const pageKeywords = settings.meta_keywords || '';
     const pageUrl =
         url || (typeof window !== 'undefined' ? window.location.href : '');
 
     const defaultSchema = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        name: siteConfig.name,
+        name: brandName,
         url: typeof window !== 'undefined' ? window.location.origin : '',
         telephone: siteConfig.hotline,
         address: {
@@ -37,6 +46,13 @@ export default function SEOHead({
         <Head>
             <title>{pageTitle}</title>
             <meta name="description" content={pageDescription} />
+            {pageKeywords && <meta name="keywords" content={pageKeywords} />}
+            {settings.google_site_verification && (
+                <meta
+                    name="google-site-verification"
+                    content={settings.google_site_verification}
+                />
+            )}
             <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
             <link rel="alternate icon" href="/favicon.ico" />
 

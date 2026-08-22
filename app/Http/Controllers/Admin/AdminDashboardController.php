@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusUpdatedMail;
+use App\Mail\TestConfigurationMail;
 use App\Models\Banner;
 use App\Models\BlogPost;
 use App\Models\Brand;
@@ -18,6 +19,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\WarrantyClaim;
 use App\Services\OrderService;
+use App\Support\MailSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -730,10 +732,15 @@ class AdminDashboardController extends Controller
      */
     public function settingsView(): Response
     {
-        $settings = SiteSetting::all();
+        // Send everything except the SMTP password, which must not travel back
+        // to the browser. The form shows whether one is set instead.
+        $settings = SiteSetting::all()
+            ->reject(fn ($setting) => $setting->key === 'mail_password')
+            ->values();
 
         return Inertia::render('Admin/Settings', [
             'settings' => $settings,
+            'mailPasswordSet' => MailSettings::isPasswordSet(),
         ]);
     }
 
@@ -755,10 +762,20 @@ class AdminDashboardController extends Controller
         ]);
 
         foreach ($data['settings'] as $key => $val) {
-            SiteSetting::updateOrCreate(
-                ['key' => (string) $key],
-                ['value' => is_bool($val) ? ($val ? '1' : '0') : (string) $val]
-            );
+            $key = (string) $key;
+            $value = is_bool($val) ? ($val ? '1' : '0') : (string) $val;
+
+            // The SMTP password is a live credential; encrypt it at rest. An
+            // empty submission means "leave it as it is" rather than "clear it",
+            // because the form never receives the current value to send back.
+            if ($key === 'mail_password') {
+                if ($value === '') {
+                    continue;
+                }
+                $value = MailSettings::encryptPassword($value);
+            }
+
+            SiteSetting::updateOrCreate(['key' => $key], ['value' => $value]);
         }
 
         SiteSetting::flushCache(array_keys($data['settings']));
@@ -768,6 +785,40 @@ class AdminDashboardController extends Controller
         }
 
         return back()->with('success', 'Settings updated successfully.');
+    }
+
+    /**
+     * Send a test message using the SMTP settings currently saved.
+     *
+     * Sends synchronously and on-demand rather than through the queue, so the
+     * admin gets the actual SMTP error back instead of a silent failed job.
+     */
+    public function sendTestEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ], [
+            'email.required' => 'Enter an address to send the test to.',
+        ]);
+
+        MailSettings::apply();
+
+        try {
+            Mail::mailer(config('mail.default'))
+                ->to($validated['email'])
+                ->sendNow(new TestConfigurationMail);
+        } catch (\Throwable $e) {
+            return $this->errorResponse(
+                'Could not send: '.$e->getMessage(),
+                422,
+                ApiCode::GENERIC
+            );
+        }
+
+        return $this->successResponse([
+            'host' => config('mail.mailers.smtp.host'),
+            'port' => config('mail.mailers.smtp.port'),
+        ], "Test email sent to {$validated['email']}. Check the inbox to confirm.");
     }
 
     /**

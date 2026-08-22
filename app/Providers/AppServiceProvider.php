@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\ApiCode;
+use App\Support\MailSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -27,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         $this->configureRateLimiting();
+
+        // SMTP credentials saved in the admin override the .env defaults.
+        MailSettings::apply();
     }
 
     /**

@@ -172,6 +172,7 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminDashboardController::class, 'destroyStore'])->name('stores.destroy');
     Route::get(ApiEndpoints::ADMIN_SETTINGS, [AdminDashboardController::class, 'settingsView'])->name('settings');
     Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminDashboardController::class, 'updateSettings'])->name('settings.update');
+    Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminDashboardController::class, 'sendTestEmail'])->name('settings.test-email');
     Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminDashboardController::class, 'customers'])->name('customers');
     Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'blogsView'])->name('blogs');
     Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'storeBlog'])->name('blogs.store');

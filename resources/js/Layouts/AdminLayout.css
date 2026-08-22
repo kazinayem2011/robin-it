@@ -2258,3 +2258,17 @@
     line-height: 1.5;
     color: var(--gray-400);
 }
+
+/* Test-email row: field and action button sit on one line. */
+.admin-test-email-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.admin-test-email-row .auth-form-group {
+    flex: 1 1 260px;
+    margin-bottom: 0;
+}

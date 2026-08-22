@@ -55,6 +55,33 @@ class BrandDetails
         return rtrim(config('app.url'), '/').'/'.ltrim($path, '/');
     }
 
+    /**
+     * Filesystem path of the logo when it is a local file, otherwise null.
+     *
+     * Emails embed this directly rather than linking to it. A URL only works if
+     * the site is publicly reachable — during local development APP_URL is
+     * http://localhost:8000, which an inbox cannot fetch, so the header came out
+     * blank. Embedding also survives the image blocking most clients apply to
+     * remote content by default.
+     */
+    public static function localLogoPath(): ?string
+    {
+        $path = trim((string) SiteSetting::get('site_logo', '/images/logo.png'));
+
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            return null;
+        }
+
+        $relative = ltrim($path, '/');
+
+        // /storage/... is the public disk, served through the storage symlink.
+        $file = str_starts_with($relative, 'storage/')
+            ? storage_path('app/public/'.substr($relative, strlen('storage/')))
+            : public_path($relative);
+
+        return is_file($file) ? $file : null;
+    }
+
     /** Digits only, for a tel: link. */
     public static function hotlineHref(): string
     {

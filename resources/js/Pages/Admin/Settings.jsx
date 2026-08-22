@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
@@ -14,12 +14,67 @@ import {
     Mail,
     Globe,
     Upload,
+    Search,
+    Send,
 } from 'lucide-react';
 
-export default function AdminSettings({ settings = [] }) {
-    const [activeTab, setActiveTab] = useState('general');
+export default function AdminSettings({
+    settings = [],
+    mailPasswordSet = false,
+}) {
+    const TABS = ['general', 'shipping', 'email', 'seo', 'ticker'];
+
+    // The tab lives in the URL so a refresh (or a shared link) reopens the same
+    // one instead of snapping back to General.
+    const tabFromUrl = () => {
+        if (typeof window === 'undefined') return 'general';
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        return TABS.includes(tab) ? tab : 'general';
+    };
+
+    const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+    const selectTab = (key) => {
+        setActiveTab(key);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', key);
+        // replaceState keeps the back button meaning "previous page", not
+        // "previous tab", and avoids an Inertia round-trip.
+        window.history.replaceState({}, '', url);
+    };
+
+    // Someone using back/forward should land on the tab that URL names.
+    useEffect(() => {
+        const onPop = () => setActiveTab(tabFromUrl());
+        window.addEventListener('popstate', onPop);
+        return () => window.removeEventListener('popstate', onPop);
+    }, []);
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const logoInputRef = useRef(null);
+    const [uploadingOg, setUploadingOg] = useState(false);
+    const ogInputRef = useRef(null);
+    const [testEmail, setTestEmail] = useState('');
+    const [sendingTest, setSendingTest] = useState(false);
+
+    const handleSendTest = async () => {
+        setSendingTest(true);
+        try {
+            const res = await adminService.sendTestEmail(testEmail);
+            toast.success(
+                res?.message || `Test email sent to ${testEmail}.`,
+                'SMTP Working',
+            );
+        } catch (err) {
+            // Surface the real SMTP error — "authentication failed",
+            // "connection refused" — rather than a generic message.
+            toast.error(
+                err?.message || 'Could not send the test email.',
+                'SMTP Failed',
+            );
+        } finally {
+            setSendingTest(false);
+        }
+    };
 
     // Map array of { key, value } to object
     const initialMap = {};
@@ -32,6 +87,12 @@ export default function AdminSettings({ settings = [] }) {
             site_name: initialMap.site_name || 'Robins Computer',
             site_tagline: initialMap.site_tagline || 'The Store of Technology',
             site_logo: initialMap.site_logo || '/images/logo.png',
+            meta_title: initialMap.meta_title || '',
+            meta_description: initialMap.meta_description || '',
+            meta_keywords: initialMap.meta_keywords || '',
+            og_image: initialMap.og_image || '',
+            google_analytics_id: initialMap.google_analytics_id || '',
+            google_site_verification: initialMap.google_site_verification || '',
             site_address:
                 initialMap.site_address ||
                 'Shop #301-304, Level 3, IDB Bhaban, Agargaon, Dhaka',
@@ -77,6 +138,29 @@ export default function AdminSettings({ settings = [] }) {
             }
         },
     });
+
+    const handleOgUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadingOg(true);
+        try {
+            const { path } = await uploadService.uploadImage(file, 'brands');
+            formik.setFieldValue('og_image', path);
+            toast.success(
+                'Share image uploaded. Save to apply it.',
+                'Upload Complete',
+            );
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not upload that image.',
+                'Upload Failed',
+            );
+        } finally {
+            setUploadingOg(false);
+            event.target.value = '';
+        }
+    };
 
     const handleLogoUpload = async (event) => {
         const file = event.target.files?.[0];
@@ -128,13 +212,18 @@ export default function AdminSettings({ settings = [] }) {
                             icon: Mail,
                         },
                         {
+                            key: 'seo',
+                            label: 'SEO & Social',
+                            icon: Search,
+                        },
+                        {
                             key: 'ticker',
                             label: 'Announcement Ticker',
                             icon: Bell,
                         },
                     ]}
                     activeTab={activeTab}
-                    onChange={setActiveTab}
+                    onChange={selectTab}
                     variant="enclosed"
                 />
 
@@ -394,11 +483,160 @@ export default function AdminSettings({ settings = [] }) {
                                         placeholder="Robins Computer Official"
                                     />
                                 </div>
+
+                                {mailPasswordSet && (
+                                    <p className="admin-field-hint">
+                                        A password is already saved. Leave the
+                                        field blank to keep it, or type a new
+                                        one to replace it.
+                                    </p>
+                                )}
+
+                                {/* Save first, then send: the test uses the
+                                    stored settings, not what is on screen. */}
+                                <div className="admin-test-email-row">
+                                    <FormInput
+                                        label="Send a test email to"
+                                        name="test_email_to"
+                                        type="email"
+                                        value={testEmail}
+                                        onChange={(e) =>
+                                            setTestEmail(e.target.value)
+                                        }
+                                        placeholder="you@example.com"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        icon={Send}
+                                        loading={sendingTest}
+                                        disabled={sendingTest || !testEmail}
+                                        onClick={handleSendTest}
+                                    >
+                                        {sendingTest
+                                            ? 'Sending…'
+                                            : 'Send Test Email'}
+                                    </Button>
+                                </div>
+                                <small className="admin-field-hint">
+                                    Save your settings first — the test sends
+                                    using what is stored, and reports the SMTP
+                                    error directly if it fails.
+                                </small>
                             </div>
                         </div>
                     )}
 
                     {/* TAB 4: Announcement Ticker */}
+                    {/* TAB: SEO & Social */}
+                    {activeTab === 'seo' && (
+                        <div className="admin-card">
+                            <div className="admin-card-header">
+                                <div className="admin-card-title-inline">
+                                    <Search
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        Search &amp; Social Preview
+                                    </h3>
+                                </div>
+                            </div>
+                            <div className="admin-card-body">
+                                <FormInput
+                                    label="Homepage Meta Title"
+                                    name="meta_title"
+                                    formik={formik}
+                                    placeholder="Robins Computer — Genuine PC Hardware in Bangladesh"
+                                />
+                                <small className="admin-field-hint">
+                                    Shown as the clickable headline in search
+                                    results. Around 60 characters reads best.
+                                </small>
+
+                                <FormInput
+                                    label="Meta Description"
+                                    name="meta_description"
+                                    type="textarea"
+                                    rows={3}
+                                    formik={formik}
+                                    placeholder="Shop genuine processors, graphics cards and custom gaming PCs with official warranty and cash on delivery across Bangladesh."
+                                />
+                                <small className="admin-field-hint">
+                                    The summary under the title in search
+                                    results. Around 155 characters.
+                                </small>
+
+                                <FormInput
+                                    label="Meta Keywords"
+                                    name="meta_keywords"
+                                    formik={formik}
+                                    placeholder="pc builder bangladesh, graphics card, gaming pc, genuine hardware"
+                                />
+
+                                {/* Used when a link is pasted into Facebook,
+                                    WhatsApp, X and similar. */}
+                                <div className="admin-image-field">
+                                    <FormInput
+                                        label="Social Share Image"
+                                        name="og_image"
+                                        formik={formik}
+                                        placeholder="/images/og-cover.jpg"
+                                    />
+                                    <div className="admin-image-field-actions">
+                                        {formik.values.og_image && (
+                                            <img
+                                                src={formik.values.og_image}
+                                                alt="Social share preview"
+                                                className="admin-logo-preview"
+                                            />
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            icon={Upload}
+                                            loading={uploadingOg}
+                                            disabled={uploadingOg}
+                                            onClick={() =>
+                                                ogInputRef.current?.click()
+                                            }
+                                        >
+                                            {uploadingOg
+                                                ? 'Uploading…'
+                                                : 'Upload Image'}
+                                        </Button>
+                                        <input
+                                            ref={ogInputRef}
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            style={{ display: 'none' }}
+                                            onChange={handleOgUpload}
+                                        />
+                                    </div>
+                                    <small className="admin-field-hint">
+                                        Shown when someone shares a link on
+                                        social media. 1200&times;630 works best.
+                                    </small>
+                                </div>
+
+                                <div className="form-row-2col">
+                                    <FormInput
+                                        label="Google Analytics ID"
+                                        name="google_analytics_id"
+                                        formik={formik}
+                                        placeholder="G-XXXXXXXXXX"
+                                    />
+                                    <FormInput
+                                        label="Google Site Verification"
+                                        name="google_site_verification"
+                                        formik={formik}
+                                        placeholder="verification token"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'ticker' && (
                         <div className="admin-card">
                             <div className="admin-card-header">

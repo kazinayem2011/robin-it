@@ -234,6 +234,18 @@ export const adminService = {
      * Save global site settings.
      * @param {Object} settingsData
      */
+    /**
+     * Send a test message using the SMTP settings currently saved.
+     * Rejects with the real SMTP error so the admin can act on it.
+     */
+    async sendTestEmail(email) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.SETTINGS_TEST_EMAIL,
+            { email },
+        );
+        return response;
+    },
+
     async updateSettings(settingsData) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.SETTINGS,

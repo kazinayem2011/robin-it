@@ -183,6 +183,8 @@ class ApiEndpoints
 
     public const ADMIN_MEDIA = 'media';
 
+    public const ADMIN_SETTINGS_TEST_EMAIL = 'settings/test-email';
+
     public const ADMIN_REVIEWS = 'reviews';
 
     public const ADMIN_REVIEWS_ITEM = 'reviews/{id}';

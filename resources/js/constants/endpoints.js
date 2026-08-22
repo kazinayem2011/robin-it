@@ -118,6 +118,7 @@ export const API_ENDPOINTS = {
         STORES: '/admin/stores',
         STORE_ITEM: (id) => `/admin/stores/${id}`,
         SETTINGS: '/admin/settings',
+        SETTINGS_TEST_EMAIL: '/admin/settings/test-email',
         CUSTOMERS: '/admin/customers',
         BLOGS: '/admin/blogs',
         BLOG_ITEM: (id) => `/admin/blogs/${id}`,

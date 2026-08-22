@@ -51,6 +51,46 @@ class SiteSetting extends Model
     }
 
     /**
+     * Settings that must never reach the browser.
+     *
+     * Everything in this table used to be shared with every Inertia page, which
+     * meant the SMTP host, username and password ciphertext were in the props of
+     * every public page for every visitor.
+     */
+    private const PRIVATE_PREFIXES = ['mail_', 'smtp_'];
+
+    private const PRIVATE_SUFFIXES = ['_password', '_secret', '_token', '_key'];
+
+    public static function isPrivateKey(string $key): bool
+    {
+        foreach (self::PRIVATE_PREFIXES as $prefix) {
+            if (str_starts_with($key, $prefix)) {
+                return true;
+            }
+        }
+
+        foreach (self::PRIVATE_SUFFIXES as $suffix) {
+            if (str_ends_with($key, $suffix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Settings safe to expose to the frontend — branding, SEO, shipping, ticker.
+     */
+    public static function publicSettings(): array
+    {
+        return array_filter(
+            self::getAllSettings(),
+            fn ($key) => ! self::isPrivateKey($key),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    /**
      * Invalidate the settings cache.
      *
      * The admin save used to forget 'site_settings_all' while reads cached under
