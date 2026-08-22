@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\BrandDetails;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -32,7 +33,10 @@ class OrderConfirmationMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->subject("Order Confirmation #{$this->order->order_number} — Robin IT")
-            ->view('emails.orders.confirmation');
+        // text() adds the plain-text part: multipart/alternative is better for
+        // deliverability and is what text-only clients fall back to.
+        return $this->subject("Order Confirmation #{$this->order->order_number} — ".BrandDetails::all()['name'])
+            ->view('emails.orders.confirmation')
+            ->text('emails.text.orders.confirmation');
     }
 }

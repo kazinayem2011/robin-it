@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Support\BrandDetails;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -32,7 +33,10 @@ class WelcomeCustomerMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->subject('Welcome to Robin IT — The Store of Technology')
-            ->view('emails.auth.welcome');
+        $brand = BrandDetails::all();
+
+        return $this->subject("Welcome to {$brand['name']} — {$brand['tagline']}")
+            ->view('emails.auth.welcome')
+            ->text('emails.text.auth.welcome');
     }
 }

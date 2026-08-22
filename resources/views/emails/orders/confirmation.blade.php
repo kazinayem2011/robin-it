@@ -1,84 +1,114 @@
-@extends('emails.layouts.master', ['title' => 'Order Confirmation #' . $order->order_number . ' — Robin IT'])
+@php($brand = \App\Support\BrandDetails::all())
+@extends('emails.layouts.master', [
+    'title' => 'Order Confirmation #'.$order->order_number,
+    'preheader' => 'Order #'.$order->order_number.' confirmed — '.$order->items->count().' item(s), ৳'.number_format($order->total, 2).' cash on delivery.',
+])
 
 @section('content')
-    <h2 class="email-heading">Thank You for Your Order!</h2>
-    <p class="email-lead">
-        Hi <strong>{{ $order->user->name ?? 'Valued Customer' }}</strong>,<br>
-        Your genuine tech hardware order has been successfully placed and is now being processed for delivery.
+    <h1 class="eml-h1 eml-text" style="margin:0 0 14px; font-family:Arial,Helvetica,sans-serif; font-size:24px; line-height:32px; font-weight:bold; color:#0f172a;">
+        Thank you for your order
+    </h1>
+
+    <p class="eml-text" style="margin:0 0 10px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:24px; color:#334155;">
+        Hi {{ $order->recipient_name }},
+    </p>
+    <p class="eml-muted" style="margin:0 0 26px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:24px; color:#475569;">
+        We've received your order and are getting it ready. You'll get another email as soon as it ships.
     </p>
 
-    <!-- Order Summary Badge -->
-    <div class="email-info-box">
-        <div class="email-info-box-title">Order Overview</div>
-        <p class="email-info-box-text">
-            <strong>Order Number:</strong> #{{ $order->order_number }}<br>
-            <strong>Date:</strong> {{ $order->created_at->format('F d, Y - h:i A') }}<br>
-            <strong>Payment Method:</strong> Cash on Delivery (COD)<br>
-            <strong>Status:</strong> <span class="text-primary">{{ strtoupper($order->status) }}</span>
-        </p>
-    </div>
-
-    <!-- Items Table -->
-    <table class="email-table">
-        <thead>
-            <tr>
-                <th>Item Details</th>
-                <th class="text-center">Qty</th>
-                <th class="text-right">Price</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($order->items as $item)
-                <tr>
-                    <td>
-                        <strong>{{ $item->product->name ?? 'Genuine Product' }}</strong>
-                    </td>
-                    <td class="text-center">{{ $item->quantity }}</td>
-                    <td class="text-right">৳{{ number_format(($item->unit_price ?? $item->price) * $item->quantity, 2) }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" class="text-right"><strong>Subtotal:</strong></td>
-                <td class="text-right">৳{{ number_format($order->subtotal ?? $order->total - 60, 2) }}</td>
-            </tr>
-            @if(isset($order->discount) && $order->discount > 0)
-                <tr>
-                    <td colspan="2" class="text-right" style="color: #10b981;"><strong>Discount:</strong></td>
-                    <td class="text-right" style="color: #10b981;">- ৳{{ number_format($order->discount, 2) }}</td>
-                </tr>
-            @endif
-            <tr>
-                <td colspan="2" class="text-right"><strong>Express Delivery:</strong></td>
-                <td class="text-right">৳{{ number_format($order->shipping_cost ?? 60, 2) }}</td>
-            </tr>
-            <tr style="background-color: #f8fafc;">
-                <td colspan="2" class="text-right" style="font-size: 16px;"><strong>Grand Total:</strong></td>
-                <td class="text-right" style="font-size: 16px; color: #ea484f;"><strong>৳{{ number_format($order->total, 2) }}</strong></td>
-            </tr>
-        </tfoot>
+    {{-- Order summary --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-panel"
+           style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; margin:0 0 26px;">
+        <tr>
+            <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:22px; color:#334155;">
+                <span style="display:block; margin-bottom:8px; font-size:12px; font-weight:bold; color:#0f172a; text-transform:uppercase; letter-spacing:0.6px;">Order Summary</span>
+                <strong style="color:#0f172a;">Order number:</strong> #{{ $order->order_number }}<br>
+                <strong style="color:#0f172a;">Placed:</strong> {{ $order->created_at->format('d M Y, g:i A') }}<br>
+                <strong style="color:#0f172a;">Payment:</strong> Cash on Delivery
+            </td>
+        </tr>
     </table>
 
-    <!-- Shipping Address -->
-    <div class="email-info-box">
-        <div class="email-info-box-title">Shipping &amp; Delivery Address</div>
-        <p class="email-info-box-text">
-            {{ $order->recipient_name }}<br>
-            {{ $order->formatted_shipping_address }}<br>
-            Phone: {{ $order->recipient_phone }}
-        </p>
-    </div>
+    {{-- Items --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 6px;">
+        <tr>
+            <th align="left" style="padding:10px 0; border-bottom:2px solid #e2e8f0; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:bold; color:#64748b; text-transform:uppercase; letter-spacing:0.6px;">Item</th>
+            <th align="center" width="50" style="padding:10px 0; border-bottom:2px solid #e2e8f0; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:bold; color:#64748b; text-transform:uppercase; letter-spacing:0.6px;">Qty</th>
+            <th align="right" width="110" style="padding:10px 0; border-bottom:2px solid #e2e8f0; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:bold; color:#64748b; text-transform:uppercase; letter-spacing:0.6px;">Total</th>
+        </tr>
 
-    <!-- Track Order CTA Button -->
-    <div class="email-button-wrap">
-        <a href="{{ url('/track-order?order=' . $order->order_number) }}" class="email-button" target="_blank">
-            Track Live Shipment Status &rarr;
-        </a>
-    </div>
+        @foreach ($order->items as $item)
+            <tr>
+                <td style="padding:14px 8px 14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:20px; color:#0f172a;">
+                    {{ $item->product_name }}
+                    <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">৳{{ number_format($item->price, 2) }} each</span>
+                </td>
+                <td align="center" style="padding:14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#334155;">{{ $item->quantity }}</td>
+                <td align="right" style="padding:14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#0f172a; white-space:nowrap;">৳{{ number_format($item->total, 2) }}</td>
+            </tr>
+        @endforeach
+    </table>
 
-    <p style="font-size: 13px; color: #64748b; line-height: 1.5; text-align: center;">
-        If you have any questions regarding your shipment or warranty, simply reply to this email or call our hotline at 
-        <strong style="color: #0f172a;">{{ \App\Models\SiteSetting::get('site_hotline', '09600-ROBIN-IT') }}</strong>.
+    {{-- Totals --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 26px;">
+        <tr>
+            <td align="right" style="padding:8px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#475569;">Subtotal</td>
+            <td align="right" width="110" style="padding:8px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#334155; white-space:nowrap;">৳{{ number_format($order->subtotal, 2) }}</td>
+        </tr>
+        @if ($order->discount > 0)
+            <tr>
+                <td align="right" style="padding:6px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#475569;">
+                    Discount @if ($order->coupon_code)<span style="color:#64748b;">({{ $order->coupon_code }})</span>@endif
+                </td>
+                <td align="right" style="padding:6px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#16a34a; white-space:nowrap;">&minus; ৳{{ number_format($order->discount, 2) }}</td>
+            </tr>
+        @endif
+        <tr>
+            <td align="right" style="padding:6px 0 12px; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#475569;">Delivery</td>
+            <td align="right" style="padding:6px 0 12px; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#334155; white-space:nowrap;">৳{{ number_format($order->shipping_fee, 2) }}</td>
+        </tr>
+        <tr class="eml-rule">
+            <td align="right" style="padding:12px 0 0; border-top:2px solid #e2e8f0; font-family:Arial,Helvetica,sans-serif; font-size:16px; font-weight:bold; color:#0f172a;">Total due on delivery</td>
+            <td align="right" class="eml-accent" style="padding:12px 0 0; border-top:2px solid #e2e8f0; font-family:Arial,Helvetica,sans-serif; font-size:18px; font-weight:bold; color:#d12127; white-space:nowrap;">৳{{ number_format($order->total, 2) }}</td>
+        </tr>
+    </table>
+
+    {{-- Delivery address --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-panel"
+           style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; margin:0 0 28px;">
+        <tr>
+            <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:22px; color:#475569;">
+                <span style="display:block; margin-bottom:8px; font-size:12px; font-weight:bold; color:#0f172a; text-transform:uppercase; letter-spacing:0.6px;">Delivering to</span>
+                <strong style="color:#0f172a;">{{ $order->recipient_name }}</strong><br>
+                {{ $order->formatted_shipping_address }}<br>
+                {{ $order->recipient_phone }}
+            </td>
+        </tr>
+    </table>
+
+    {{-- Bulletproof CTA: VML for Outlook, a normal anchor everywhere else. --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-btn">
+        <tr>
+            <td align="center" style="padding:0 0 24px;">
+                <!--[if mso]>
+                <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                             href="{{ $brand['url'] }}/track" style="height:46px;v-text-anchor:middle;width:260px;" arcsize="13%" stroke="f" fillcolor="#d12127">
+                    <w:anchorlock/>
+                    <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Track your order</center>
+                </v:roundrect>
+                <![endif]-->
+                <!--[if !mso]><!-- -->
+                <a href="{{ $brand['url'] }}/track"
+                   style="display:inline-block; background-color:#d12127; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; line-height:46px; text-align:center; text-decoration:none; width:260px; border-radius:6px;">
+                    Track your order
+                </a>
+                <!--<![endif]-->
+            </td>
+        </tr>
+    </table>
+
+    <p class="eml-muted" style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:13px; line-height:21px; color:#64748b; text-align:center;">
+        Questions about this order? Reply to this email or call
+        <a href="{{ \App\Support\BrandDetails::hotlineHref() }}" class="eml-accent" style="color:#d12127; text-decoration:none; font-weight:bold;">{{ $brand['hotline'] }}</a>.
     </p>
 @endsection

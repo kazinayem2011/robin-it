@@ -8,9 +8,11 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -59,6 +61,24 @@ class OrderMailTest extends TestCase
         ]);
 
         return $order->load(['items.product', 'user']);
+    }
+
+    /**
+     * Send through the array transport and read the plain-text part back.
+     * Mailable has no renderText(), and this also proves the text view is
+     * actually attached rather than merely compiling on its own.
+     */
+    private function textPartOf(Mailable $mailable): string
+    {
+        // These mailables are ShouldQueue; the sync queue runs them through the
+        // default mailer, so read that transport rather than a separate instance.
+        Mail::to('inbox@example.com')->send($mailable);
+
+        $messages = Mail::getSymfonyTransport()->messages();
+        $this->assertNotEmpty($messages, 'Nothing reached the mail transport.');
+
+        // ArrayTransport::messages() hands back a Collection, not an array.
+        return (string) $messages->last()->getOriginalMessage()->getTextBody();
     }
 
     public function test_the_confirmation_email_renders_without_error(): void
@@ -110,6 +130,74 @@ class OrderMailTest extends TestCase
             ShouldQueue::class,
             new OrderConfirmationMail($this->order(User::factory()->create()))
         );
+    }
+
+    /**
+     * The plain-text parts are separate Blade views, so a syntax error in one
+     * fails the send even though the HTML is fine — exactly what a nested inline
+     *
+     * @if/@endif did here.
+     */
+    public function test_the_plain_text_part_renders_for_every_mailable(): void
+    {
+        $order = $this->order(User::factory()->create());
+
+        foreach ([
+            new OrderConfirmationMail($order),
+            new OrderStatusUpdatedMail($order),
+        ] as $mailable) {
+            $text = $this->textPartOf($mailable);
+
+            $this->assertNotEmpty($text);
+            $this->assertStringContainsString($order->order_number, $text);
+            $this->assertStringNotContainsString('@if', $text, 'Blade directives must be compiled, not literal.');
+            $this->assertStringNotContainsString('{{', $text);
+        }
+    }
+
+    public function test_the_plain_text_part_renders_with_a_discount(): void
+    {
+        $order = $this->order(User::factory()->create());
+        $order->forceFill(['discount' => 500, 'coupon_code' => 'SAVE500'])->save();
+
+        $text = $this->textPartOf(new OrderConfirmationMail($order->fresh()->load('items')));
+
+        $this->assertStringContainsString('SAVE500', $text);
+        $this->assertStringContainsString('500.00', $text);
+    }
+
+    public function test_every_mailable_carries_both_an_html_and_a_text_part(): void
+    {
+        $order = $this->order(User::factory()->create());
+
+        foreach ([new OrderConfirmationMail($order), new OrderStatusUpdatedMail($order)] as $mailable) {
+            $this->assertNotEmpty($mailable->render(), 'HTML part missing');
+            $this->assertNotEmpty($this->textPartOf($mailable), 'Plain-text part missing');
+        }
+    }
+
+    /** The inbox preview line should describe the message, not leak markup. */
+    public function test_the_html_carries_a_preheader_and_outlook_fallbacks(): void
+    {
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+
+        $this->assertStringContainsString('display:none', $html, 'preheader missing');
+        $this->assertStringContainsString('<!--[if mso]>', $html, 'Outlook width fallback missing');
+        $this->assertStringContainsString('v:roundrect', $html, 'bulletproof button missing');
+        $this->assertStringContainsString('role="presentation"', $html, 'layout should be table-based');
+    }
+
+    public function test_brand_details_come_from_site_settings(): void
+    {
+        SiteSetting::set('site_name', 'Test Store BD');
+        SiteSetting::set('site_hotline', '01999-000000');
+
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+
+        // These were hardcoded in the templates, so editing them in the admin
+        // had no effect on what customers received.
+        $this->assertStringContainsString('Test Store BD', $html);
+        $this->assertStringContainsString('01999-000000', $html);
     }
 
     public function test_placing_an_order_sends_the_confirmation(): void

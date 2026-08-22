@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Order;
+use App\Support\BrandDetails;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -32,9 +33,19 @@ class OrderStatusUpdatedMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        $statusUpper = strtoupper($this->order->status);
+        $labels = [
+            'pending' => 'Order placed',
+            'processing' => 'Being packed',
+            'shipped' => 'Out for delivery',
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
+        ];
+        $label = $labels[$this->order->status] ?? ucfirst($this->order->status);
+        $brand = BrandDetails::all()['name'];
 
-        return $this->subject("Your Order #{$this->order->order_number} is now {$statusUpper} — Robin IT")
-            ->view('emails.orders.status-updated');
+        // Readable rather than shouted: "Out for delivery" beats "is now SHIPPED".
+        return $this->subject("Order #{$this->order->order_number} — {$label} | {$brand}")
+            ->view('emails.orders.status-updated')
+            ->text('emails.text.orders.status-updated');
     }
 }
