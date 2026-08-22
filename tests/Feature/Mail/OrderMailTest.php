@@ -4,12 +4,14 @@ namespace Tests\Feature\Mail;
 
 use App\Mail\OrderConfirmationMail;
 use App\Mail\OrderStatusUpdatedMail;
+use App\Mail\WelcomeCustomerMail;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use App\Models\User;
+use App\Support\BrandDetails;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailable;
@@ -185,6 +187,82 @@ class OrderMailTest extends TestCase
         $this->assertStringContainsString('<!--[if mso]>', $html, 'Outlook width fallback missing');
         $this->assertStringContainsString('v:roundrect', $html, 'bulletproof button missing');
         $this->assertStringContainsString('role="presentation"', $html, 'layout should be table-based');
+    }
+
+    /**
+     * Header and footer are shared partials, so a brand change has to show up in
+     * every message rather than only the one that was edited.
+     */
+    public function test_the_header_and_footer_are_shared_by_every_email(): void
+    {
+        SiteSetting::set('site_name', 'Shared Brand Co');
+        SiteSetting::set('site_hotline', '01888-777666');
+
+        $order = $this->order(User::factory()->create());
+
+        foreach ([
+            (new OrderConfirmationMail($order))->render(),
+            (new OrderStatusUpdatedMail($order))->render(),
+            (new WelcomeCustomerMail(User::factory()->create()))->render(),
+        ] as $html) {
+            $this->assertStringContainsString('Shared Brand Co', $html);
+            $this->assertStringContainsString('01888-777666', $html);
+            $this->assertStringContainsString('Support Hotline', $html, 'footer missing');
+        }
+    }
+
+    public function test_the_header_uses_the_configured_logo(): void
+    {
+        SiteSetting::set('site_logo', '/storage/uploads/brands/custom-logo.png');
+
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+
+        $this->assertStringContainsString('custom-logo.png', $html);
+        $this->assertStringContainsString('<img', $html);
+    }
+
+    /**
+     * Email clients have no page context, so a relative src never resolves.
+     */
+    public function test_the_logo_url_is_absolute(): void
+    {
+        SiteSetting::set('site_logo', '/images/logo.png');
+
+        $this->assertStringStartsWith('http', BrandDetails::logoUrl());
+
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+        $this->assertStringNotContainsString('src="/images', $html, 'logo src must be absolute');
+    }
+
+    public function test_an_absolute_logo_url_is_left_alone(): void
+    {
+        SiteSetting::set('site_logo', 'https://cdn.example.com/logo.png');
+
+        $this->assertSame('https://cdn.example.com/logo.png', BrandDetails::logoUrl());
+    }
+
+    /**
+     * Images are blocked by default in many clients, so the logo must carry alt
+     * text that reads as the store name.
+     */
+    public function test_the_logo_has_alt_text_naming_the_store(): void
+    {
+        SiteSetting::set('site_name', 'Alt Text Store');
+
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+
+        $this->assertMatchesRegularExpression('/<img[^>]+alt="Alt Text Store"/', $html);
+    }
+
+    public function test_clearing_the_logo_falls_back_to_the_wordmark(): void
+    {
+        SiteSetting::set('site_logo', '');
+        SiteSetting::set('site_name', 'Wordmark Store');
+
+        $html = (new OrderConfirmationMail($this->order(User::factory()->create())))->render();
+
+        $this->assertStringNotContainsString('<img', $html, 'no logo configured, so no image');
+        $this->assertStringContainsString('Wordmark Store', $html);
     }
 
     public function test_brand_details_come_from_site_settings(): void

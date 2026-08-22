@@ -2238,3 +2238,23 @@
     background: var(--bg-surface-subtle);
     flex-shrink: 0;
 }
+
+.admin-logo-preview {
+    max-width: 180px;
+    max-height: 48px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    /* The logo artwork is dark, so preview it on the light ground it is used on. */
+    background: #ffffff;
+}
+
+.admin-field-hint {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--gray-400);
+}

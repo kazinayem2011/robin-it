@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
 import { Button, FormInput, FormSelect, Tabs, toast } from '../../Components';
-import { adminService } from '../../services';
+import { adminService, uploadService } from '../../services';
 import { adminSettingsSchema } from '../../validations';
-import { Sliders, Save, Bell, Phone, Truck, Mail, Globe } from 'lucide-react';
+import {
+    Sliders,
+    Save,
+    Bell,
+    Phone,
+    Truck,
+    Mail,
+    Globe,
+    Upload,
+} from 'lucide-react';
 
 export default function AdminSettings({ settings = [] }) {
     const [activeTab, setActiveTab] = useState('general');
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const logoInputRef = useRef(null);
 
     // Map array of { key, value } to object
     const initialMap = {};
@@ -20,6 +31,7 @@ export default function AdminSettings({ settings = [] }) {
         initialValues: {
             site_name: initialMap.site_name || 'Robins Computer',
             site_tagline: initialMap.site_tagline || 'The Store of Technology',
+            site_logo: initialMap.site_logo || '/images/logo.png',
             site_address:
                 initialMap.site_address ||
                 'Shop #301-304, Level 3, IDB Bhaban, Agargaon, Dhaka',
@@ -65,6 +77,29 @@ export default function AdminSettings({ settings = [] }) {
             }
         },
     });
+
+    const handleLogoUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadingLogo(true);
+        try {
+            const { path } = await uploadService.uploadImage(file, 'brands');
+            formik.setFieldValue('site_logo', path);
+            toast.success(
+                'Logo uploaded. Save to apply it.',
+                'Upload Complete',
+            );
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not upload that logo.',
+                'Upload Failed',
+            );
+        } finally {
+            setUploadingLogo(false);
+            event.target.value = '';
+        }
+    };
 
     return (
         <AdminLayout
@@ -136,6 +171,54 @@ export default function AdminSettings({ settings = [] }) {
                                         formik={formik}
                                         placeholder="The Store of Technology"
                                     />
+                                </div>
+
+                                {/* Used across the site and in every outgoing
+                                    email header. Emails need an absolute URL,
+                                    which BrandDetails builds from APP_URL. */}
+                                <div className="admin-image-field">
+                                    <FormInput
+                                        label="Brand Logo"
+                                        name="site_logo"
+                                        formik={formik}
+                                        placeholder="/images/logo.png"
+                                    />
+                                    <div className="admin-image-field-actions">
+                                        {formik.values.site_logo && (
+                                            <img
+                                                src={formik.values.site_logo}
+                                                alt="Brand logo preview"
+                                                className="admin-logo-preview"
+                                            />
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            icon={Upload}
+                                            loading={uploadingLogo}
+                                            disabled={uploadingLogo}
+                                            onClick={() =>
+                                                logoInputRef.current?.click()
+                                            }
+                                        >
+                                            {uploadingLogo
+                                                ? 'Uploading…'
+                                                : 'Upload Logo'}
+                                        </Button>
+                                        <input
+                                            ref={logoInputRef}
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            style={{ display: 'none' }}
+                                            onChange={handleLogoUpload}
+                                        />
+                                    </div>
+                                    <small className="admin-field-hint">
+                                        Shown on the site and at the top of
+                                        every email. A wide PNG with a
+                                        transparent background works best —
+                                        around 540&times;110.
+                                    </small>
                                 </div>
 
                                 <div className="form-row-2col">

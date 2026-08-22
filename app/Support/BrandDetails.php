@@ -28,7 +28,31 @@ class BrandDetails
             ),
             'email' => SiteSetting::get('support_email', 'support@robinscomputer.com'),
             'url' => rtrim(config('app.url'), '/'),
+            'logo' => self::logoUrl(),
         ];
+    }
+
+    /**
+     * Absolute URL of the email logo, or null to fall back to the wordmark.
+     *
+     * Email clients have no page context, so a relative path never resolves —
+     * this must always be absolute. Admins can point `site_logo` at an uploaded
+     * file; otherwise the bundled logo is used.
+     */
+    public static function logoUrl(): ?string
+    {
+        $path = trim((string) SiteSetting::get('site_logo', '/images/logo.png'));
+
+        if ($path === '') {
+            return null;
+        }
+
+        // Already absolute (e.g. a CDN URL) — leave it alone.
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        return rtrim(config('app.url'), '/').'/'.ltrim($path, '/');
     }
 
     /** Digits only, for a tel: link. */

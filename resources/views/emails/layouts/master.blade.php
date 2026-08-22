@@ -61,6 +61,11 @@
 
             .eml-card { background-color:#131c2e !important; border-color:#22304a !important; }
 
+            /* The header sits light so the dark logo artwork stays readable;
+               keep it light in dark mode too rather than hiding the logo. */
+            .eml-header { background-color:#f8fafc !important; }
+            .eml-header .eml-tagline { color:#475569 !important; }
+
             .eml-body,
             .eml-body td, .eml-body th,
             .eml-body p, .eml-body h1, .eml-body span, .eml-body strong {
@@ -106,19 +111,8 @@
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="eml-container eml-card"
                        style="width:600px; max-width:600px; background-color:#ffffff; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
 
-                    {{-- Header --}}
-                    <tr>
-                        <td align="center" class="eml-pad" style="background-color:#0f172a; padding:26px 32px; border-bottom:3px solid #d12127;">
-                            <a href="{{ $brand['url'] }}" style="text-decoration:none;">
-                                <span style="display:block; font-family:Arial,Helvetica,sans-serif; font-size:24px; font-weight:bold; color:#ffffff; letter-spacing:-0.4px;">
-                                    {{ $brand['name'] }}
-                                </span>
-                                <span style="display:block; margin-top:5px; font-family:Arial,Helvetica,sans-serif; font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1.5px;">
-                                    {{ $brand['tagline'] }}
-                                </span>
-                            </a>
-                        </td>
-                    </tr>
+                    {{-- Header and footer are shared partials so every message stays consistent. --}}
+                    @include('emails.partials.header', ['brand' => $brand])
 
                     {{-- Body --}}
                     <tr>
@@ -127,33 +121,7 @@
                         </td>
                     </tr>
 
-                    {{-- Footer --}}
-                    <tr>
-                        <td class="eml-pad appleLinksGrey" align="center" style="background-color:#0b1120; padding:26px 32px; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:20px; color:#94a3b8;">
-                            <p style="margin:0 0 6px; font-size:14px; color:#ffffff; font-weight:bold;">
-                                Support Hotline:
-                                <a href="{{ \App\Support\BrandDetails::hotlineHref() }}" style="color:#f87171; text-decoration:none;">{{ $brand['hotline'] }}</a>
-                            </p>
-                            <p style="margin:0 0 4px; color:#94a3b8;">{{ $brand['address'] }}</p>
-                            <p style="margin:0 0 14px;">
-                                <a href="mailto:{{ $brand['email'] }}" style="color:#94a3b8; text-decoration:underline;">{{ $brand['email'] }}</a>
-                            </p>
-
-                            <p style="margin:0 0 14px;">
-                                <a href="{{ $brand['url'] }}/track" style="color:#cbd5e1; text-decoration:none;">Track Order</a>
-                                <span style="color:#475569;">&nbsp;&middot;&nbsp;</span>
-                                <a href="{{ $brand['url'] }}/stores" style="color:#cbd5e1; text-decoration:none;">Showrooms</a>
-                                <span style="color:#475569;">&nbsp;&middot;&nbsp;</span>
-                                <a href="{{ $brand['url'] }}/warranty" style="color:#cbd5e1; text-decoration:none;">Warranty</a>
-                                <span style="color:#475569;">&nbsp;&middot;&nbsp;</span>
-                                <a href="{{ $brand['url'] }}" style="color:#cbd5e1; text-decoration:none;">Shop</a>
-                            </p>
-
-                            <p style="margin:0; font-size:11px; color:#475569;">
-                                &copy; {{ date('Y') }} {{ $brand['name'] }}. All rights reserved.
-                            </p>
-                        </td>
-                    </tr>
+                    @include('emails.partials.footer', ['brand' => $brand])
                 </table>
 
                 <!--[if mso]></td></tr></table><![endif]-->
