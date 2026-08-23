@@ -5,6 +5,7 @@ export { default as FormSelect } from './FormSelect';
 export { default as SearchableSelect } from './SearchableSelect';
 export { default as ProductFilters } from './ProductFilters';
 export { default as BackInStockForm } from './BackInStockForm';
+export { default as BranchAvailability } from './BranchAvailability';
 export { default as Card } from './Card';
 export { default as Spinner } from './Spinner';
 export { default as Pagination } from './Pagination';

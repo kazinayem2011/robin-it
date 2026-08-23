@@ -39,6 +39,12 @@ class ProductVariant extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    /** What each branch is holding of this option. */
+    public function stockLevels()
+    {
+        return $this->hasMany(ProductStock::class, 'product_variant_id');
+    }
+
     /** List price: the variant's own, or the parent product's when unset. */
     public function getListPriceAttribute(): float
     {

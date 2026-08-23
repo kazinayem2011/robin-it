@@ -9,11 +9,13 @@ import {
     History,
     SlidersHorizontal,
     ClipboardList,
+    ArrowLeftRight,
 } from 'lucide-react';
 import ReceiveStockModal from './ReceiveStockModal';
 import ReceiptHistoryModal from './ReceiptHistoryModal';
 import AdjustStockModal from './AdjustStockModal';
 import StockLedgerModal from './StockLedgerModal';
+import TransferStockModal from './TransferStockModal';
 
 /**
  * Inventory.
@@ -29,11 +31,13 @@ export default function AdminStock({
     adjustmentReasons = {},
     summary = null,
     suppliers = [],
+    stores = [],
 }) {
     const [receiveOpen, setReceiveOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
     const [adjusting, setAdjusting] = useState(null);
     const [ledgerFor, setLedgerFor] = useState(null);
+    const [transferring, setTransferring] = useState(null);
 
     const rows = useMemo(() => {
         const list = Array.isArray(products?.data) ? products.data : [];
@@ -166,6 +170,36 @@ export default function AdminStock({
             },
         },
         {
+            key: 'branches',
+            header: 'At branch',
+            render: (row) => {
+                if (row._kind === 'parent') return null;
+
+                const levels = (row.stock_levels || []).filter(
+                    (l) =>
+                        l.quantity > 0 &&
+                        (row._kind === 'variant'
+                            ? l.product_variant_id === row._variant.id
+                            : !l.product_variant_id),
+                );
+
+                if (levels.length === 0) {
+                    return <span className="admin-field-hint">—</span>;
+                }
+
+                return (
+                    <div className="admin-branch-chips">
+                        {levels.map((l) => (
+                            <span key={l.id} className="admin-branch-chip">
+                                {l.store?.name ?? 'Unknown'}
+                                <strong>{l.quantity}</strong>
+                            </span>
+                        ))}
+                    </div>
+                );
+            },
+        },
+        {
             key: 'value',
             header: 'Price',
             render: (row) =>
@@ -195,6 +229,19 @@ export default function AdminStock({
                             }
                         >
                             Adjust
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            icon={ArrowLeftRight}
+                            onClick={() =>
+                                setTransferring({
+                                    product: row,
+                                    variant: row._variant || null,
+                                })
+                            }
+                        >
+                            Move
                         </Button>
                         <Button
                             variant="ghost"
@@ -273,6 +320,48 @@ export default function AdminStock({
                             {/* The count doubles as the filter, so noticing
                                 something needs buying and seeing what are the
                                 same click. */}
+                            {stores.length > 1 && (
+                                <div className="admin-stock-stat admin-stock-branch-filter">
+                                    <label
+                                        className="admin-stock-stat-label"
+                                        htmlFor="branch-filter"
+                                    >
+                                        Showing
+                                    </label>
+                                    <select
+                                        id="branch-filter"
+                                        value={filters.store || ''}
+                                        onChange={(e) =>
+                                            router.get(
+                                                '/admin/stock',
+                                                {
+                                                    search:
+                                                        filters.search ||
+                                                        undefined,
+                                                    reorder: filters.reorder
+                                                        ? 1
+                                                        : undefined,
+                                                    store:
+                                                        e.target.value ||
+                                                        undefined,
+                                                },
+                                                {
+                                                    preserveState: true,
+                                                    replace: true,
+                                                },
+                                            )
+                                        }
+                                    >
+                                        <option value="">All branches</option>
+                                        {stores.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <button
                                 type="button"
                                 className={`admin-stock-stat admin-stock-stat-action ${
@@ -353,6 +442,16 @@ export default function AdminStock({
             <ReceiptHistoryModal
                 isOpen={historyOpen}
                 onClose={() => setHistoryOpen(false)}
+            />
+
+            <TransferStockModal
+                target={transferring}
+                stores={stores}
+                onClose={() => setTransferring(null)}
+                onSaved={() => {
+                    setTransferring(null);
+                    reload();
+                }}
             />
         </AdminLayout>
     );

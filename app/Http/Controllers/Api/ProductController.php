@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\ProductVariant;
 use App\Services\ProductService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +50,55 @@ class ProductController extends Controller
             $products,
             'Products fetched successfully.',
             fn ($product) => $this->productService->formatProductCardData($product)
+        );
+    }
+
+    /**
+     * Which branches are holding something.
+     *
+     * Customers ring up to ask this constantly. Only branches that actually
+     * have one are listed, and the online branch is excluded — that is the
+     * warehouse the website already sells from, not somewhere to visit.
+     */
+    public function branchAvailability(Request $request, int $productId): JsonResponse
+    {
+        $validated = $request->validate([
+            'variant_id' => 'nullable|integer',
+        ]);
+
+        $product = Product::active()->find($productId);
+
+        if (! $product) {
+            return $this->errorResponse('Product not found.', 404, ApiCode::NOT_FOUND);
+        }
+
+        $variant = ! empty($validated['variant_id'])
+            ? ProductVariant::where('product_id', $product->id)->find($validated['variant_id'])
+            : null;
+
+        $rows = ProductStock::forUnit($product->id, $variant?->id)
+            ->inStock()
+            ->with('store:id,name,city,address,phone,is_active,holds_stock,fulfils_online')
+            ->get()
+            ->filter(fn ($row) => $row->store
+                && $row->store->is_active
+                && $row->store->holds_stock
+                && ! $row->store->fulfils_online)
+            ->sortBy(fn ($row) => $row->store->name)
+            ->map(fn ($row) => [
+                'store' => $row->store->name,
+                'city' => $row->store->city,
+                'address' => $row->store->address,
+                'phone' => $row->store->phone,
+                // Deliberately not the exact count: a showroom figure is a
+                // day old the moment someone walks in with one.
+                'available' => $row->quantity > 0,
+            ])
+            ->values();
+
+        return $this->successResponse(
+            ['branches' => $rows],
+            'Branch availability fetched.'
         );
     }
 

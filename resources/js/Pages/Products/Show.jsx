@@ -22,6 +22,7 @@ import {
     // page threw "ProductImage is not defined" and rendered nothing at all.
     ProductImage,
     BackInStockForm,
+    BranchAvailability,
 } from '../../Components';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -584,6 +585,11 @@ export default function ProductDetails(props) {
                                     variantId={selectedVariant?.id ?? null}
                                 />
                             )}
+
+                            <BranchAvailability
+                                productId={product.id}
+                                variantId={selectedVariant?.id ?? null}
+                            />
 
                             <div className="pdp-secondary-actions">
                                 <button

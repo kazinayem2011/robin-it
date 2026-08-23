@@ -197,6 +197,8 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->name('stock.adjust');
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->name('stock.movements');
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->name('stock.units');
+    Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->name('stock.transfer');
+    Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches'])->name('stock.branches');
     // Suppliers, in their own section.
     Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options'])->name('suppliers.options');
     Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers');

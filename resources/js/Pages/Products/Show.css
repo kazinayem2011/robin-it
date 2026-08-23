@@ -875,3 +875,77 @@
     margin-top: 2px;
     color: #0d7a3f;
 }
+
+/* ── Showroom availability ─────────────────────────────────────────────────── */
+
+.pdp-branches {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 10px;
+}
+
+.pdp-branches-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.pdp-branch-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+}
+
+.pdp-branch-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-border, #e2e5ea);
+}
+
+.pdp-branch-list li:last-child {
+    border-bottom: none;
+}
+
+.pdp-branch-list strong {
+    display: block;
+    font-size: 14px;
+}
+
+.pdp-branch-list span {
+    display: block;
+    margin-top: 1px;
+    font-size: 12px;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.pdp-branch-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-brand-red, #d1202f);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pdp-branch-phone:hover {
+    text-decoration: underline;
+}
+
+.pdp-branches-note {
+    display: block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-muted, #6b7280);
+}

@@ -27,6 +27,16 @@ export const productService = {
         return response?.data || null;
     },
 
+    /** Which showrooms are holding something. */
+    async getBranchAvailability(productId, variantId = null) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.PRODUCTS.BRANCHES(productId),
+            { params: variantId ? { variant_id: variantId } : {} },
+        );
+
+        return response?.data?.branches || [];
+    },
+
     async getProducts(params = {}) {
         const response = await axiosInstance.get(API_ENDPOINTS.PRODUCTS.LIST, {
             params,

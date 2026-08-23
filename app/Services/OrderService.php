@@ -11,8 +11,10 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
+use App\Models\Store;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -159,12 +161,34 @@ class OrderService
                 throw StorefrontException::unavailable($item->displayName());
             }
 
-            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            // Measured at the branch orders actually ship from. The shop can
+            // hold plenty across the showrooms while the one that posts
+            // parcels has none, and promising those units would be a lie.
+            $available = $this->onlineAvailability($product, $variant);
 
             if ($available < $item->quantity) {
                 throw StorefrontException::outOfStock($item->displayName(), max(0, $available));
             }
         }
+    }
+
+    /**
+     * How many of something the online branch can actually ship.
+     *
+     * Falls back to the overall balance when no branch is configured to fulfil
+     * online orders, so a shop that has not set one up still sells.
+     */
+    protected function onlineAvailability(Product $product, ?ProductVariant $variant): int
+    {
+        $storeId = Store::onlineFulfilment()?->id;
+
+        if (! $storeId) {
+            return (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+        }
+
+        return (int) ProductStock::forUnit($product->id, $variant?->id)
+            ->where('store_id', $storeId)
+            ->value('quantity') ?? 0;
     }
 
     /**
@@ -369,7 +393,7 @@ class OrderService
                 continue;
             }
 
-            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            $available = $this->onlineAvailability($product, $variant);
 
             if ($available < $item->quantity) {
                 throw new StorefrontException(

@@ -26,6 +26,9 @@ class ApiEndpoints
 
     public const STOCK_NOTIFY_COUNT = 'stock-notifications/count';
 
+    /** Which showrooms are holding something. */
+    public const PRODUCT_BRANCHES = 'products/{id}/branches';
+
     public const PRODUCTS_SHOW = 'products/{slug}';
 
     public const PRODUCTS_FLASH_SALE = 'products/flash-sale';
@@ -172,6 +175,10 @@ class ApiEndpoints
     public const ADMIN_STOCK_MOVEMENTS = 'stock/products/{id}/movements';
 
     public const ADMIN_STOCK_UNITS = 'stock/units';
+
+    public const ADMIN_STOCK_TRANSFER = 'stock/transfer';
+
+    public const ADMIN_STOCK_BRANCHES = 'stock/products/{id}/branches';
 
     // Suppliers are their own section, not part of the stock screen.
     public const ADMIN_SUPPLIERS = 'suppliers';

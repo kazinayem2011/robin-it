@@ -36,9 +36,13 @@ class StockMovement extends Model
     /** The balance a product carried before the ledger existed. */
     public const OPENING = 'opening';
 
+    /** Units moving between branches. Always paired, and always nets to zero. */
+    public const TRANSFER = 'transfer';
+
     public const TYPES = [
         self::PURCHASE, self::SALE, self::CANCELLATION, self::RETURN,
         self::WRITE_OFF, self::ADJUSTMENT, self::CONVERSION, self::OPENING,
+        self::TRANSFER,
     ];
 
     /** Human labels for the admin ledger view. */
@@ -51,10 +55,11 @@ class StockMovement extends Model
         self::ADJUSTMENT => 'Manual adjustment',
         self::CONVERSION => 'Moved between variants',
         self::OPENING => 'Opening balance',
+        self::TRANSFER => 'Branch transfer',
     ];
 
     protected $fillable = [
-        'product_id', 'product_variant_id', 'quantity', 'type', 'balance_after',
+        'product_id', 'product_variant_id', 'store_id', 'quantity', 'type', 'balance_after',
         'reference_type', 'reference_id', 'reason', 'note', 'unit_cost', 'user_id',
     ];
 
@@ -74,6 +79,11 @@ class StockMovement extends Model
     public function variant()
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
     }
 
     public function reference()

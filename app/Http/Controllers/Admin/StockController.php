@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
+use App\Models\Store;
 use App\Models\Supplier;
 use App\Services\OrderService;
 use App\Services\StockService;
@@ -34,18 +35,31 @@ class StockController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $onlyReorder = $request->boolean('reorder');
+        $storeId = $request->integer('store') ?: null;
 
         $products = Product::query()
-            ->with(['variants' => fn ($q) => $q->orderBy('position')->orderBy('id'), 'category'])
+            ->with([
+                'variants' => fn ($q) => $q->orderBy('position')->orderBy('id'),
+                'category',
+                'stockLevels.store:id,name',
+            ])
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->when($onlyReorder, fn ($q) => $q->needingReorder())
+            // Narrowing to a branch shows what that branch is actually holding,
+            // which is the question someone standing in it wants answered.
+            ->when($storeId, fn ($q) => $q->whereHas(
+                'stockLevels',
+                fn ($inner) => $inner->where('store_id', $storeId)->where('quantity', '>', 0)
+            ))
             ->orderBy('name')
             ->paginate(25)
             ->withQueryString();
 
         return Inertia::render('Admin/Stock/Index', [
             'products' => $products,
-            'filters' => ['search' => $search, 'reorder' => $onlyReorder],
+            'filters' => ['search' => $search, 'reorder' => $onlyReorder, 'store' => $storeId],
+            'stores' => Store::holdsStock()->orderBy('sort_order')->orderBy('name')
+                ->get(['id', 'name', 'city', 'fulfils_online']),
             'defaultReorderLevel' => (int) config('inventory.default_reorder_level', 10),
             'adjustmentReasons' => StockService::ADJUSTMENT_REASONS,
             'summary' => $this->summary(),
@@ -149,6 +163,7 @@ class StockController extends Controller
             'lines.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'lines.*.quantity' => 'required|integer|min:1|max:100000',
             'lines.*.unit_cost' => 'nullable|numeric|min:0',
+            'store_id' => 'nullable|exists:stores,id',
         ], [
             'lines.required' => 'Add at least one product to this delivery.',
         ]);
@@ -160,6 +175,7 @@ class StockController extends Controller
                 'invoice_number' => $validated['invoice_number'] ?? null,
                 'received_on' => $validated['received_on'] ?? now()->toDateString(),
                 'note' => $validated['note'] ?? null,
+                'store_id' => $validated['store_id'] ?? null,
             ],
             $validated['lines'],
             $request->user()?->id
@@ -197,6 +213,7 @@ class StockController extends Controller
             'quantity' => 'required|integer|not_in:0',
             'reason' => 'required|string|in:'.implode(',', array_keys(StockService::ADJUSTMENT_REASONS)),
             'note' => 'nullable|string|max:1000',
+            'store_id' => 'nullable|exists:stores,id',
         ], [
             'quantity.not_in' => 'Enter how many units to add or remove.',
             'reason.in' => 'Choose a reason for this adjustment.',
@@ -213,7 +230,8 @@ class StockController extends Controller
             (int) $validated['quantity'],
             $validated['reason'],
             $validated['note'] ?? null,
-            $request->user()?->id
+            $request->user()?->id,
+            $validated['store_id'] ?? null
         );
 
         $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
@@ -245,6 +263,63 @@ class StockController extends Controller
         $order = $orders->returnOrder($order, $validated['lines'], $validated['note'] ?? null);
 
         return $this->successResponse($order, "Order {$order->order_number} has been returned.");
+    }
+
+    /**
+     * Move units between branches.
+     *
+     * Written as a pair of movements that net to zero, so the shop's holding is
+     * unchanged and the ledger records where the units went.
+     */
+    public function transfer(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'product_variant_id' => 'nullable|exists:product_variants,id',
+            'quantity' => 'required|integer|min:1|max:100000',
+            'from_store_id' => 'required|exists:stores,id',
+            'to_store_id' => 'required|exists:stores,id|different:from_store_id',
+            'note' => 'nullable|string|max:1000',
+        ], [
+            'to_store_id.different' => 'Choose two different branches.',
+        ]);
+
+        [$product, $variant] = $this->stock->resolveUnit(
+            (int) $validated['product_id'],
+            $validated['product_variant_id'] ?? null
+        );
+
+        $this->stock->transfer(
+            $product,
+            $variant,
+            (int) $validated['quantity'],
+            (int) $validated['from_store_id'],
+            (int) $validated['to_store_id'],
+            $validated['note'] ?? null,
+            $request->user()?->id
+        );
+
+        $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
+
+        return $this->successResponse(
+            ['breakdown' => $this->stock->branchBreakdown($product->fresh(), $variant?->fresh())],
+            "Moved {$validated['quantity']} x {$name} between branches."
+        );
+    }
+
+    /** What each branch is holding of one thing. */
+    public function branches(Request $request, int $productId)
+    {
+        $validated = $request->validate([
+            'variant_id' => 'nullable|integer',
+        ]);
+
+        [$product, $variant] = $this->stock->resolveUnit(
+            $productId,
+            $validated['variant_id'] ?? null
+        );
+
+        return $this->successResponse($this->stock->branchBreakdown($product, $variant));
     }
 
     /** Options that can hold stock, for the receive and adjust pickers. */

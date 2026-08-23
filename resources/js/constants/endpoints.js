@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
     // Products API
     PRODUCTS: {
         FILTERS: '/products/filters',
+        BRANCHES: (id) => `/products/${id}/branches`,
         LIST: '/products',
         DETAIL: (slug) => `/products/${slug}`,
         FLASH_SALE: '/products/flash-sale',
@@ -138,6 +139,8 @@ export const API_ENDPOINTS = {
         STOCK_RECEIPTS: '/admin/stock/receipts',
         STOCK_ADJUST: '/admin/stock/adjust',
         STOCK_UNITS: '/admin/stock/units',
+        STOCK_TRANSFER: '/admin/stock/transfer',
+        STOCK_BRANCHES: (id) => `/admin/stock/products/${id}/branches`,
         SUPPLIERS: '/admin/suppliers',
         SUPPLIER_ITEM: (id) => `/admin/suppliers/${id}`,
         SUPPLIER_OPTIONS: '/admin/suppliers/options',

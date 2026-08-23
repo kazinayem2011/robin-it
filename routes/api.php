@@ -53,6 +53,7 @@ Route::middleware('throttle:api')->group(function () {
     // as a product slug and this endpoint 404s.
     Route::get(ApiEndpoints::PRODUCTS_FILTERS, [ProductController::class, 'filters']);
     Route::get(ApiEndpoints::STOCK_NOTIFY_COUNT, [StockNotificationController::class, 'count']);
+    Route::get(ApiEndpoints::PRODUCT_BRANCHES, [ProductController::class, 'branchAvailability']);
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
     // Product Reviews (read)
@@ -179,6 +180,8 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
+    Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer']);
+    Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches']);
     // Suppliers. `options` is declared before the {id} route or it is matched
     // as an id.
     Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options']);

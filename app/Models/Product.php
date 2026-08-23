@@ -66,6 +66,12 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    /** What each branch is holding of this product. */
+    public function stockLevels()
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
     public function images()
     {
         return $this->hasMany(ProductImage::class);

@@ -111,6 +111,27 @@ export const adminService = {
         return response.data;
     },
 
+    /**
+     * Move units between branches. Nets to zero — this changes where stock is,
+     * never how much there is.
+     */
+    async transferStock(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STOCK_TRANSFER,
+            payload,
+        );
+        return response.data;
+    },
+
+    /** What each branch holds of one product or option. */
+    async getStockBranches(productId, variantId = null) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.STOCK_BRANCHES(productId),
+            { params: variantId ? { variant_id: variantId } : {} },
+        );
+        return response.data;
+    },
+
     /** The ledger for one product, newest first. */
     async getStockMovements(productId, params = {}) {
         const response = await axiosInstance.get(
