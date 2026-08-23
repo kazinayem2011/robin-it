@@ -13,6 +13,11 @@ in development: a welcome email sat in the `jobs` table for 14 hours.
 Install one of the two supervisors below on every environment that takes real
 orders.
 
+> **On shared hosting** (Hostinger and similar) none of this works — those hosts
+> kill long-running processes. The queue is drained from cron there instead.
+> See [shared-hosting.md](shared-hosting.md), and set
+> `QUEUE_RUN_VIA_SCHEDULER=true` rather than installing a supervisor.
+
 ### Option A — supervisor
 
 ```bash

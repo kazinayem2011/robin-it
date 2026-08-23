@@ -109,6 +109,46 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Worker Supervision
+    |--------------------------------------------------------------------------
+    |
+    | On a VPS the worker runs as a long-lived daemon under supervisor or
+    | systemd. Shared hosting kills long-running processes, so there the
+    | scheduler drains the queue on each cron tick instead: it works through
+    | whatever is waiting, then exits before the next tick starts.
+    |
+    | Set QUEUE_RUN_VIA_SCHEDULER=true on shared hosting, and leave it false
+    | wherever a real supervisor is running so the two do not both consume the
+    | same jobs.
+    |
+    */
+
+    'run_via_scheduler' => (bool) env('QUEUE_RUN_VIA_SCHEDULER', false),
+
+    /*
+    | How long one scheduled drain may run. It must finish before the next cron
+    | tick, so keep it just under the cron interval.
+    */
+    'scheduler_max_seconds' => (int) env('QUEUE_SCHEDULER_MAX_SECONDS', 55),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Health Thresholds
+    |--------------------------------------------------------------------------
+    |
+    | A job waiting longer than this with nobody working on it means no worker
+    | is alive. Raise it when the queue is drained by cron on a plan that only
+    | allows infrequent cron, or every tick will look like an outage.
+    |
+    */
+
+    'health' => [
+        'stalled_after' => (int) env('QUEUE_STALLED_AFTER', 300),
+        'abandoned_after' => (int) env('QUEUE_ABANDONED_AFTER', 1800),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Failed Queue Jobs
     |--------------------------------------------------------------------------
     |

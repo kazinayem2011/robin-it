@@ -18,14 +18,26 @@ use Illuminate\Support\Facades\Schema;
  */
 class QueueHealth
 {
-    /** A job older than this with nobody working on it means no worker is alive. */
-    public const STALLED_AFTER_SECONDS = 300;
+    /**
+     * A job older than this with nobody working on it means no worker is alive.
+     *
+     * Configurable because it depends on how the worker is supervised: a
+     * daemon picks jobs up in seconds, while a shared host draining the queue
+     * from cron can legitimately leave one waiting for a whole cron interval.
+     */
+    public static function stalledAfterSeconds(): int
+    {
+        return max(60, (int) config('queue.health.stalled_after', 300));
+    }
 
     /**
      * A job a worker reserved and never finished — it died mid-flight. Laravel
      * only returns those to the queue after retry_after, so give it room.
      */
-    public const ABANDONED_AFTER_SECONDS = 1800;
+    public static function abandonedAfterSeconds(): int
+    {
+        return max(300, (int) config('queue.health.abandoned_after', 1800));
+    }
 
     /**
      * @return array{
@@ -61,7 +73,7 @@ class QueueHealth
         // Reserved long ago and never finished: the worker died holding it.
         $abandoned = (int) DB::table('jobs')
             ->whereNotNull('reserved_at')
-            ->where('reserved_at', '<', $now - self::ABANDONED_AFTER_SECONDS)
+            ->where('reserved_at', '<', $now - self::abandonedAfterSeconds())
             ->count();
 
         $failed = Schema::hasTable('failed_jobs')
@@ -69,7 +81,7 @@ class QueueHealth
             : 0;
 
         $stalled = $oldestPendingSeconds !== null
-            && $oldestPendingSeconds > self::STALLED_AFTER_SECONDS;
+            && $oldestPendingSeconds > self::stalledAfterSeconds();
 
         return self::report(
             $driver,
