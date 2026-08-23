@@ -68,8 +68,9 @@ class CheckoutController extends Controller
                 );
             }
 
-            $subtotal = $this->cartService->calculateTotals($cart)['subtotal'];
-            $check = $coupon->isValidForAmount($subtotal, Auth::id());
+            // Judged against the lines the coupon actually covers, so a
+            // category promo cannot discount the rest of the basket.
+            $check = $coupon->isValidForCart($cart, Auth::id());
 
             if (! $check['valid']) {
                 return $this->errorResponse($check['message'], 422, ApiCode::COUPON_INVALID);

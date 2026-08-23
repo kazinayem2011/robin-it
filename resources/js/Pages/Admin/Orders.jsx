@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, ShoppingCart } from 'lucide-react';
+import { Eye, ShoppingCart, Undo2 } from 'lucide-react';
 import { StatusBadge, Modal, Button, DataTable, toast } from '@/Components';
+import OrderReturnModal from './Components/OrderReturnModal';
 import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
@@ -15,6 +16,7 @@ export default function Orders({
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [returningOrder, setReturningOrder] = useState(null);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -131,19 +133,28 @@ export default function Orders({
                 <div className="admin-order-status-flex">
                     <StatusBadge status={order.status} />
 
-                    <select
-                        value={order.status}
-                        onChange={(e) =>
-                            handleStatusChange(order.id, e.target.value)
-                        }
-                        className="admin-status-dropdown"
-                    >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+                    {/*
+                     * A returned order is finished: its units have already been
+                     * accounted for item by item, so moving it on again would
+                     * double-count them.
+                     */}
+                    {order.status === 'returned' ? (
+                        <span className="admin-field-hint">Returned</span>
+                    ) : (
+                        <select
+                            value={order.status}
+                            onChange={(e) =>
+                                handleStatusChange(order.id, e.target.value)
+                            }
+                            className="admin-status-dropdown"
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    )}
                 </div>
             ),
         },
@@ -152,14 +163,29 @@ export default function Orders({
             header: 'Actions',
             align: 'right',
             render: (order) => (
-                <button
-                    type="button"
-                    className="admin-table-icon-btn"
-                    onClick={() => setSelectedOrder(order)}
-                    title="Inspect Order Details"
-                >
-                    <Eye size={14} />
-                </button>
+                <div className="admin-input-row-flex admin-order-actions">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        onClick={() => setSelectedOrder(order)}
+                        title="Inspect Order Details"
+                    >
+                        <Eye size={14} />
+                    </button>
+
+                    {/* Only a delivered order has goods with the customer to
+                        take back. */}
+                    {order.status === 'delivered' && (
+                        <button
+                            type="button"
+                            className="admin-table-icon-btn"
+                            onClick={() => setReturningOrder(order)}
+                            title="Process a return"
+                        >
+                            <Undo2 size={14} />
+                        </button>
+                    )}
+                </div>
             ),
         },
     ];
@@ -328,6 +354,14 @@ export default function Orders({
                     </div>
                 )}
             </Modal>
+            <OrderReturnModal
+                order={returningOrder}
+                onClose={() => setReturningOrder(null)}
+                onSaved={() => {
+                    setReturningOrder(null);
+                    router.reload({ preserveScroll: true });
+                }}
+            />
         </AdminLayout>
     );
 }

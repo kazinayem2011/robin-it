@@ -45,7 +45,10 @@ export default function AdminBanners({ banners = [] }) {
             is_active: true,
         },
         validationSchema: adminBannerSchema,
-        enableReinitialize: true,
+        // No enableReinitialize here: `initialValues` is a blank literal that is
+        // rebuilt on every render, so Formik would keep resetting the form back
+        // to it and wipe the values handleOpenEdit had just loaded. Editing a
+        // record opened a completely empty form because of that.
         onSubmit: async (values, { setSubmitting }) => {
             try {
                 if (editingBanner) {

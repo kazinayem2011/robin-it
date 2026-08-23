@@ -8,17 +8,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('cart_items', function (Blueprint $table) {
-            $table->foreignId('product_variant_id')->nullable()->after('product_id')
-                ->constrained()->cascadeOnDelete();
-        });
+        if (! Schema::hasColumn('cart_items', 'product_variant_id')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->foreignId('product_variant_id')->nullable()->after('product_id')
+                    ->constrained()->cascadeOnDelete();
+            });
+        }
 
         // One line per option, not per product: a shopper buying both the 16GB
         // and the 32GB has two lines, and the old unique(cart_id, product_id)
         // rejected the second one outright.
+        //
+        // The new index is added before the old one is dropped. MySQL uses the
+        // old unique as the supporting index for the cart_id foreign key and
+        // refuses to drop it while it is the only candidate; the new index has
+        // cart_id as its leftmost column, so it can take that role first.
         Schema::table('cart_items', function (Blueprint $table) {
-            $table->dropUnique(['cart_id', 'product_id']);
-            $table->unique(['cart_id', 'product_id', 'product_variant_id']);
+            $table->unique(['cart_id', 'product_id', 'product_variant_id'], 'cart_items_cart_product_variant_unique');
+        });
+
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropUnique('cart_items_cart_id_product_id_unique');
         });
 
         Schema::table('order_items', function (Blueprint $table) {
@@ -40,10 +50,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('cart_items', function (Blueprint $table) {
-            $table->dropUnique(['cart_id', 'product_id', 'product_variant_id']);
+            $table->unique(['cart_id', 'product_id']);
+        });
+
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropUnique('cart_items_cart_product_variant_unique');
             $table->dropForeign(['product_variant_id']);
             $table->dropColumn('product_variant_id');
-            $table->unique(['cart_id', 'product_id']);
         });
 
         Schema::table('order_items', function (Blueprint $table) {

@@ -4,6 +4,7 @@ import ToastContainer from '../Components/Toast';
 import {
     LayoutDashboard,
     Package,
+    Boxes,
     ShoppingCart,
     FolderTree,
     Users,
@@ -74,6 +75,16 @@ export default function AdminLayout({
                         <div className="admin-nav-left">
                             <Package size={17} />
                             <span>Products & Stock</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href={ROUTES.ADMIN_STOCK}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/stock') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Boxes size={17} />
+                            <span>Stock & Inventory</span>
                         </div>
                     </Link>
 

@@ -44,6 +44,75 @@ export const adminService = {
         return response.data;
     },
 
+    // ── Inventory ────────────────────────────────────────────────────────────
+    // There is deliberately no "set stock to N" call. Units enter through a
+    // receipt, leave through an order, and are corrected only by an adjustment
+    // that states a reason — so the ledger always explains the balance.
+
+    /**
+     * Book a delivery from a supplier.
+     * @param {Object} payload - { supplier_name, invoice_number, received_on, note, lines[] }
+     */
+    async receiveStock(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STOCK_RECEIPTS,
+            payload,
+        );
+        return response.data;
+    },
+
+    /** Past deliveries. */
+    async getStockReceipts(params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.STOCK_RECEIPTS,
+            { params },
+        );
+        return response.data;
+    },
+
+    /**
+     * Correct a count: breakage, loss, or a stock-take that disagrees.
+     * @param {Object} payload - { product_id, product_variant_id, quantity, reason, note }
+     */
+    async adjustStock(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STOCK_ADJUST,
+            payload,
+        );
+        return response.data;
+    },
+
+    /** The ledger for one product, newest first. */
+    async getStockMovements(productId, params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.STOCK_MOVEMENTS(productId),
+            { params },
+        );
+        return response.data;
+    },
+
+    /** Products and options that can hold stock, for the pickers. */
+    async getStockUnits(params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.STOCK_UNITS,
+            { params },
+        );
+        return response.data;
+    },
+
+    /**
+     * Take back a delivered order, item by item.
+     * @param {number|string} orderId
+     * @param {Object} payload - { note, lines: [{ order_item_id, resellable, damaged }] }
+     */
+    async returnOrder(orderId, payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.ORDER_RETURN(orderId),
+            payload,
+        );
+        return response.data;
+    },
+
     /**
      * Fetch executive dashboard metrics.
      */

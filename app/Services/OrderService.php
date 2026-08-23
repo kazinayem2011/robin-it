@@ -52,9 +52,9 @@ class OrderService
             $discount = 0.0;
 
             if ($coupon) {
-                $preview = $this->cartService->calculateTotals($cart);
-                // Recomputed server-side — never trust a discount posted by the browser.
-                $discount = $coupon->discountFor($preview['subtotal']);
+                // Recomputed server-side — never trust a discount posted by the
+                // browser — and only against the lines the coupon covers.
+                $discount = $coupon->discountFor($coupon->eligibleSubtotal($cart));
 
                 if (! $coupon->redeem()) {
                     throw new StorefrontException(

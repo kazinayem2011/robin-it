@@ -134,7 +134,11 @@ export default function Cart() {
 
                             <div className="cart-table-body">
                                 {cart.items.map((item) => {
+                                    // Price belongs to the option when there
+                                    // is one — the parent's price is not what
+                                    // this line costs.
                                     const unitPrice =
+                                        item.variant?.effective_price ??
                                         item.product.effective_price ??
                                         item.product.price;
                                     const itemSubtotal =
@@ -159,6 +163,11 @@ export default function Cart() {
                                                 >
                                                     {item.product.name}
                                                 </Link>
+                                                {item.variant && (
+                                                    <div className="cart-item-variant">
+                                                        {item.variant.name}
+                                                    </div>
+                                                )}
                                                 <div className="cart-item-price">
                                                     {formatBdt(unitPrice)}
                                                 </div>

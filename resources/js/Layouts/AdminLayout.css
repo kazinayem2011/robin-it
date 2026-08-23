@@ -2301,3 +2301,338 @@
 .admin-table-responsive > .admin-table {
     min-width: 520px;
 }
+
+/* ── Stock & inventory ─────────────────────────────────────────────────────── */
+
+.admin-stock-intro {
+    margin: -4px 0 16px;
+    max-width: 68ch;
+}
+
+.admin-stock-product-name {
+    font-weight: 600;
+}
+
+/* An option is indented under its parent so the hierarchy reads at a glance. */
+.admin-stock-variant-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 18px;
+}
+
+.admin-stock-variant-tick {
+    color: var(--color-text-muted, #8a8f98);
+    font-size: 13px;
+}
+
+.admin-stock-variant-name {
+    font-weight: 500;
+}
+
+.admin-stock-sku {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #8a8f98);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* ── Receiving ─────────────────────────────────────────────────────────────── */
+
+.admin-receive-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 16px 0 12px;
+}
+
+.admin-receive-line {
+    display: grid;
+    grid-template-columns: minmax(0, 2.4fr) minmax(0, 0.8fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+}
+
+.admin-receive-line > * {
+    min-width: 0;
+}
+
+.admin-receive-line-product {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-receive-line-remove {
+    align-self: center;
+    margin-top: 18px;
+    background: none;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--color-text-muted, #8a8f98);
+    transition: all 0.15s ease;
+}
+
+.admin-receive-line-remove:hover:not(:disabled) {
+    color: #d93025;
+    border-color: #d93025;
+}
+
+.admin-receive-line-remove:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.admin-receive-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.admin-receive-total {
+    font-size: 14px;
+    color: var(--color-text-muted, #8a8f98);
+}
+
+/* ── Adjustments ───────────────────────────────────────────────────────────── */
+
+.admin-adjust-summary {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border, #e2e5ea);
+}
+
+.admin-adjust-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.admin-adjust-projection {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(16, 143, 74, 0.08);
+    color: #0d7a3f;
+    font-size: 13px;
+}
+
+.admin-adjust-projection-bad {
+    background: rgba(217, 48, 37, 0.08);
+    color: #b3261e;
+}
+
+.admin-modal-actions {
+    justify-content: flex-end;
+    width: 100%;
+}
+
+/* ── Ledger ────────────────────────────────────────────────────────────────── */
+
+.admin-ledger-in {
+    color: #0d7a3f;
+    font-weight: 600;
+}
+
+.admin-ledger-out {
+    color: #b3261e;
+    font-weight: 600;
+}
+
+.admin-ledger-drift {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(217, 48, 37, 0.08);
+    color: #b3261e;
+    font-size: 13px;
+}
+
+@media (max-width: 720px) {
+    .admin-receive-line {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-receive-line-product {
+        grid-column: 1 / -1;
+    }
+
+    .admin-receive-line-remove {
+        margin-top: 0;
+        justify-self: end;
+        grid-column: 2;
+    }
+}
+
+/* ── Product options ───────────────────────────────────────────────────────── */
+
+.admin-variant-editor {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.admin-variant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 14px 0 12px;
+}
+
+.admin-variant-row {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1fr)
+        minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.admin-variant-row > * {
+    min-width: 0;
+}
+
+.admin-variant-values {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+}
+
+/* Stock is shown, never typed: editing an option must not move units. */
+.admin-variant-stock {
+    padding: 9px 12px;
+    border: 1px dashed var(--color-border, #e2e5ea);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--color-text-muted, #8a8f98);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.admin-variant-allocation {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.admin-variant-allocation-ok {
+    background: rgba(16, 143, 74, 0.08);
+    color: #0d7a3f;
+}
+
+.admin-variant-allocation-pending {
+    background: rgba(217, 119, 6, 0.1);
+    color: #92400e;
+}
+
+.admin-variant-warning {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(217, 119, 6, 0.1);
+    color: #92400e;
+    font-size: 13px;
+}
+
+/* Stock on the product form is a read-only summary with a way through to the
+   inventory screen, replacing the editable quantity field. */
+.admin-stock-readonly {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px dashed var(--color-border, #e2e5ea);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.admin-stock-readonly-qty {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.admin-stock-readonly-link {
+    font-size: 12px;
+    color: var(--color-brand-red, #d1202f);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-stock-readonly-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 860px) {
+    .admin-variant-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-variant-values {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ── Coupon scope ──────────────────────────────────────────────────────────── */
+
+.admin-coupon-scope {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 6px 0 14px;
+    padding: 14px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.admin-coupon-scope-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 190px;
+    overflow-y: auto;
+    padding: 4px 2px;
+}
+
+.admin-coupon-scope-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border: 1.5px solid var(--color-border, #e2e5ea);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.admin-coupon-scope-chip.is-selected {
+    border-color: var(--color-brand-red, #d1202f);
+    background: rgba(209, 32, 47, 0.06);
+}
+
+.admin-coupon-scope-chip input {
+    margin: 0;
+}
+
+/* A scoped coupon with nothing selected silently applies to nothing, which is
+   worth flagging before it is saved rather than after it fails at checkout. */
+.admin-coupon-scope-warning {
+    font-size: 12px;
+    color: #92400e;
+}

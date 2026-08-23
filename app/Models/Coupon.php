@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class Coupon extends Model
@@ -15,6 +16,7 @@ class Coupon extends Model
         'description',
         'discount_type',
         'discount_value',
+        'scope',
         'min_spend',
         'max_discount',
         'usage_limit',
@@ -23,6 +25,15 @@ class Coupon extends Model
         'expires_at',
         'is_active',
     ];
+
+    /** Whole cart, or only the products/categories the coupon is attached to. */
+    public const SCOPE_ALL = 'all';
+
+    public const SCOPE_PRODUCTS = 'products';
+
+    public const SCOPE_CATEGORIES = 'categories';
+
+    public const SCOPES = [self::SCOPE_ALL, self::SCOPE_PRODUCTS, self::SCOPE_CATEGORIES];
 
     protected $casts = [
         'discount_value' => 'float',
@@ -34,6 +45,16 @@ class Coupon extends Model
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
     ];
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'coupon_product');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'coupon_category');
+    }
 
     /** Codes are always stored and compared uppercase. */
     public function setCodeAttribute($value): void
@@ -48,6 +69,116 @@ class Coupon extends Model
 
         return $code === '' ? null : static::where('code', $code)->first();
     }
+
+    /**
+     * Whether this coupon covers a given product.
+     *
+     * A category-scoped coupon covers everything beneath the categories it names,
+     * so a promo on "Components" also reaches "Graphics Cards" under it.
+     */
+    public function appliesTo(?Product $product): bool
+    {
+        if (! $product) {
+            return false;
+        }
+
+        if ($this->scope === self::SCOPE_ALL) {
+            return true;
+        }
+
+        if ($this->scope === self::SCOPE_PRODUCTS) {
+            return $this->productIds()->contains($product->id);
+        }
+
+        return $this->categoryIds()->contains($product->category_id);
+    }
+
+    /** Product ids this coupon covers, resolved once per instance. */
+    public function productIds(): Collection
+    {
+        return $this->memoised['product_ids'] ??= $this->products()->pluck('products.id');
+    }
+
+    /**
+     * Category ids this coupon covers, expanded to include descendants so an
+     * admin does not have to list every child of a section by hand.
+     */
+    public function categoryIds(): Collection
+    {
+        return $this->memoised['category_ids'] ??= collect(
+            $this->categories()->pluck('categories.id')
+                ->flatMap(fn ($id) => Category::getDescendantIds($id))
+                ->unique()
+                ->values()
+        );
+    }
+
+    /**
+     * The part of the cart this coupon is allowed to discount.
+     *
+     * Prices come from whichever level owns them, so a variant line is valued at
+     * the option's price rather than the parent product's.
+     */
+    public function eligibleSubtotal(Cart $cart): float
+    {
+        $cart->loadMissing('items.product', 'items.variant');
+
+        $total = 0.0;
+
+        foreach ($cart->items as $item) {
+            if ($this->appliesTo($item->product)) {
+                $total += $item->unitPrice() * $item->quantity;
+            }
+        }
+
+        return round($total, 2);
+    }
+
+    /**
+     * Validate against a real cart, so a scoped coupon is judged on the lines it
+     * actually covers rather than on the whole basket.
+     *
+     * min_spend is measured against the same amount the discount applies to:
+     * for an unscoped coupon that is the whole subtotal, unchanged.
+     */
+    public function isValidForCart(Cart $cart, ?int $userId = null): array
+    {
+        $eligible = $this->eligibleSubtotal($cart);
+
+        if ($this->scope !== self::SCOPE_ALL && $eligible <= 0) {
+            return [
+                'valid' => false,
+                'message' => 'This code does not apply to anything in your cart. '.$this->scopeSummary(),
+            ];
+        }
+
+        return $this->isValidForAmount($eligible, $userId);
+    }
+
+    /** A short line the storefront can show explaining what a code covers. */
+    public function scopeSummary(): string
+    {
+        if ($this->scope === self::SCOPE_PRODUCTS) {
+            $names = $this->products()->pluck('name');
+
+            return $names->isEmpty()
+                ? 'It is limited to selected products.'
+                : 'It applies to: '.$names->take(4)->implode(', ').($names->count() > 4 ? ' and more.' : '.');
+        }
+
+        if ($this->scope === self::SCOPE_CATEGORIES) {
+            $names = $this->categories()->pluck('name');
+
+            return $names->isEmpty()
+                ? 'It is limited to selected categories.'
+                : 'It applies to '.$names->take(4)->implode(', ').($names->count() > 4 ? ' and more.' : '.');
+        }
+
+        return 'It applies to your whole order.';
+    }
+
+    /** Cheap per-instance memo so one request does not re-query the pivots. */
+    protected array $memoised = [];
 
     /**
      * @param  int|null  $userId  when given, the per-customer cap is enforced too
@@ -76,9 +207,15 @@ class Coupon extends Model
         }
 
         if ($subtotal < (float) $this->min_spend) {
+            // For a scoped coupon the threshold is about the qualifying lines,
+            // so say so rather than leaving the shopper to guess.
+            $qualifier = $this->scope === self::SCOPE_ALL
+                ? ' required to use this coupon.'
+                : ' on qualifying items required to use this coupon.';
+
             return [
                 'valid' => false,
-                'message' => 'Minimum spend of ৳'.number_format($this->min_spend).' required to use this coupon.',
+                'message' => 'Minimum spend of ৳'.number_format($this->min_spend).$qualifier,
             ];
         }
 

@@ -150,7 +150,7 @@ class AdminDashboardController extends Controller
         $search = $request->input('search', '');
         $categoryId = $request->input('category_id', '');
 
-        $query = Product::with(['category', 'brand', 'images'])->latest();
+        $query = Product::with(['category', 'brand', 'images', 'variants'])->latest();
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -647,10 +647,16 @@ class AdminDashboardController extends Controller
      */
     public function coupons(): Response
     {
-        $coupons = Coupon::latest()->get();
+        $coupons = Coupon::with(['products:id,name', 'categories:id,name'])->latest()->get();
 
         return Inertia::render('Admin/Coupons', [
             'coupons' => $coupons,
+            // The scope pickers need something to choose from.
+            'products' => Product::where('is_active', true)
+                ->orderBy('name')->get(['id', 'name']),
+            'categories' => Category::where('is_active', true)
+                ->orderBy('name')->get(['id', 'name', 'parent_id']),
+            'scopes' => Coupon::SCOPES,
         ]);
     }
 
@@ -670,12 +676,22 @@ class AdminDashboardController extends Controller
             'per_user_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
+
+            // Restrict the promo to part of the catalogue. Category scope covers
+            // everything beneath the categories named.
+            'scope' => 'nullable|in:'.implode(',', Coupon::SCOPES),
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'integer|exists:products,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'integer|exists:categories,id',
         ]);
 
-        $coupon = Coupon::create($validated);
+        $coupon = Coupon::create(collect($validated)->except(['product_ids', 'category_ids'])->all());
+
+        $this->syncCouponScope($coupon, $validated);
 
         if ($request->wantsJson() || $request->ajax()) {
-            return $this->successResponse($coupon, 'Coupon created.', 201);
+            return $this->successResponse($coupon->load('products:id,name', 'categories:id,name'), 'Coupon created.', 201);
         }
 
         return back()->with('success', 'Coupon created successfully.');
@@ -699,15 +715,45 @@ class AdminDashboardController extends Controller
             'per_user_limit' => 'nullable|integer|min:1',
             'expires_at' => 'nullable|date',
             'is_active' => 'boolean',
+
+            // Restrict the promo to part of the catalogue. Category scope covers
+            // everything beneath the categories named.
+            'scope' => 'nullable|in:'.implode(',', Coupon::SCOPES),
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'integer|exists:products,id',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'integer|exists:categories,id',
         ]);
 
-        $coupon->update($validated);
+        $coupon->update(collect($validated)->except(['product_ids', 'category_ids'])->all());
+
+        $this->syncCouponScope($coupon, $validated);
 
         if ($request->wantsJson() || $request->ajax()) {
-            return $this->successResponse($coupon, 'Coupon updated successfully.');
+            return $this->successResponse($coupon->load('products:id,name', 'categories:id,name'), 'Coupon updated successfully.');
         }
 
         return back()->with('success', 'Coupon updated successfully.');
+    }
+
+    /**
+     * Attach the products or categories a scoped coupon covers.
+     *
+     * The lists are cleared for the scopes that do not apply, so a coupon
+     * switched back to "whole order" cannot keep a stale restriction that would
+     * quietly change what it discounts.
+     */
+    private function syncCouponScope(Coupon $coupon, array $validated): void
+    {
+        $scope = $validated['scope'] ?? $coupon->scope ?? Coupon::SCOPE_ALL;
+
+        $coupon->products()->sync(
+            $scope === Coupon::SCOPE_PRODUCTS ? ($validated['product_ids'] ?? []) : []
+        );
+
+        $coupon->categories()->sync(
+            $scope === Coupon::SCOPE_CATEGORIES ? ($validated['category_ids'] ?? []) : []
+        );
     }
 
     /**

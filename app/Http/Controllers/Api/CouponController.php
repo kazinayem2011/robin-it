@@ -54,7 +54,7 @@ class CouponController extends Controller
             );
         }
 
-        $result = $coupon->isValidForAmount($subtotal, Auth::id());
+        $result = $coupon->isValidForCart($cart, Auth::id());
 
         if (! $result['valid']) {
             return $this->errorResponse($result['message'], 422, ApiCode::COUPON_INVALID);
@@ -68,6 +68,8 @@ class CouponController extends Controller
             'discount_type' => $coupon->discount_type,
             'discount_value' => $coupon->discount_value,
             'description' => $coupon->description,
+            'scope' => $coupon->scope,
+            'scope_summary' => $coupon->scopeSummary(),
             'totals' => $totals,
         ], "Coupon '{$coupon->code}' applied — you save ৳".number_format($result['discount']).'!');
     }

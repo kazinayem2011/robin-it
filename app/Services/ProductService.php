@@ -191,7 +191,12 @@ class ProductService
     {
         return Product::active()
             ->where('slug', $slug)
-            ->with(['category', 'brand', 'images', 'specifications'])
+            ->with([
+                'category', 'brand', 'images', 'specifications',
+                // Stock and price live on the option for a variant product, so
+                // the detail page cannot render a buy button without them.
+                'activeVariants',
+            ])
             ->withCatalogAggregates()
             ->firstOrFail();
     }

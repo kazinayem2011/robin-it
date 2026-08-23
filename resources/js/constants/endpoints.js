@@ -127,6 +127,14 @@ export const API_ENDPOINTS = {
         REVIEW_ITEM: (id) => `/admin/reviews/${id}`,
         REVIEW_STATUS: (id) => `/admin/reviews/${id}/status`,
         WARRANTY_STATUS: (id) => `/admin/warranty/${id}/status`,
+
+        // Inventory. Stock enters only through a receipt and is corrected only
+        // by an audited adjustment — there is no "set the quantity" endpoint.
+        STOCK_RECEIPTS: '/admin/stock/receipts',
+        STOCK_ADJUST: '/admin/stock/adjust',
+        STOCK_UNITS: '/admin/stock/units',
+        STOCK_MOVEMENTS: (id) => `/admin/stock/products/${id}/movements`,
+        ORDER_RETURN: (id) => `/admin/orders/${id}/return`,
     },
 };
 
@@ -169,6 +177,7 @@ export const ROUTES = {
     ADMIN_DASHBOARD: '/admin/dashboard',
     ADMIN_ORDERS: '/admin/orders',
     ADMIN_PRODUCTS: '/admin/products',
+    ADMIN_STOCK: '/admin/stock',
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_BANNERS: '/admin/banners',
     ADMIN_COUPONS: '/admin/coupons',

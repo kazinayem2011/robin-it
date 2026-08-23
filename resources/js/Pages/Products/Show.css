@@ -717,3 +717,83 @@
         font-size: 0.8rem;
     }
 }
+
+/* ── Option picker ─────────────────────────────────────────────────────────── */
+
+/* Each option carries its own stock and its own price, so the chip shows both:
+   a shopper should not have to select one to find out it is sold out. */
+.pdp-variants {
+    margin: 18px 0 6px;
+}
+
+.pdp-variants-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #6b7280);
+    margin-bottom: 10px;
+}
+
+.pdp-variant-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pdp-variant-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 118px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.pdp-variant-chip:hover:not(:disabled) {
+    border-color: var(--color-brand-red, #d1202f);
+}
+
+.pdp-variant-chip.is-selected {
+    border-color: var(--color-brand-red, #d1202f);
+    box-shadow: 0 0 0 3px rgba(209, 32, 47, 0.12);
+}
+
+.pdp-variant-chip > span:first-child {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.pdp-variant-price {
+    font-size: 13px;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.pdp-variant-chip.is-out {
+    opacity: 0.55;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Struck through rather than hidden, so the shopper can see the option exists
+   and is simply unavailable right now. */
+.pdp-variant-chip.is-out > span:first-child {
+    text-decoration: line-through;
+}
+
+.pdp-variant-out {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #b3261e;
+}

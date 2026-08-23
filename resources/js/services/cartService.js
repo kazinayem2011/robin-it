@@ -33,10 +33,13 @@ export const cartService = {
      * @param {number|string} productId
      * @param {number} quantity
      */
-    async addToCart(productId, quantity = 1) {
+    async addToCart(productId, quantity = 1, variantId = null) {
         const response = await axiosInstance.post(API_ENDPOINTS.CART.BASE, {
             product_id: productId,
             quantity,
+            // Stock and price live on the option for a variant product, so the
+            // server needs to know which one the shopper picked.
+            ...(variantId ? { product_variant_id: variantId } : {}),
         });
         return response?.data || response;
     },

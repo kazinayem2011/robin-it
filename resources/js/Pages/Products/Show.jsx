@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import {
@@ -18,6 +18,9 @@ import {
     RatingBreakdown,
     ReviewForm,
     ReviewList,
+    // The gallery renders <ProductImage> but never imported it, so the whole
+    // page threw "ProductImage is not defined" and rendered nothing at all.
+    ProductImage,
 } from '../../Components';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -51,6 +54,31 @@ export default function ProductDetails(props) {
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
+    const [selectedVariantId, setSelectedVariantId] = useState(null);
+
+    /*
+     * On a variant product the price and the stock belong to the option, not to
+     * the product. Everything below reads through these so the page can never
+     * show the parent's numbers while the shopper is buying an option.
+     */
+    const variants = useMemo(
+        () => (product?.has_variants ? product.active_variants || [] : []),
+        [product],
+    );
+
+    const selectedVariant = useMemo(
+        () => variants.find((v) => v.id === selectedVariantId) || null,
+        [variants, selectedVariantId],
+    );
+
+    const availableStock = product?.has_variants
+        ? (selectedVariant?.stock_quantity ?? 0)
+        : (product?.stock_quantity ?? 0);
+
+    // A variant product with nothing chosen yet cannot be bought.
+    const needsVariantChoice =
+        Boolean(product?.has_variants) && !selectedVariant;
+    const soldOut = !needsVariantChoice && availableStock === 0;
 
     // Reviews & Ratings State
     const [reviewsData, setReviewsData] = useState({
@@ -76,6 +104,18 @@ export default function ProductDetails(props) {
                 if (prodRes.status === 'fulfilled') {
                     const prodData = prodRes.value.data || prodRes.value;
                     setProduct(prodData);
+
+                    // Land on something buyable rather than making the shopper
+                    // discover which options are sold out by clicking each one.
+                    if (prodData?.has_variants) {
+                        const options = prodData.active_variants || [];
+                        const firstInStock = options.find(
+                            (v) => v.stock_quantity > 0,
+                        );
+                        setSelectedVariantId(
+                            (firstInStock || options[0])?.id ?? null,
+                        );
+                    }
                 } else {
                     setError('Product not found or unavailable.');
                 }
@@ -112,13 +152,24 @@ export default function ProductDetails(props) {
     };
 
     const handleAddToCart = async () => {
+        if (needsVariantChoice) {
+            toast.error('Please choose an option first.', 'Almost There');
+            return;
+        }
+
         setAddingToCart(true);
         try {
-            await cartService.addToCart(product.id, quantity);
+            await cartService.addToCart(
+                product.id,
+                quantity,
+                selectedVariantId,
+            );
             useAppStore.getState().fetchCartCount();
             setAddedToCart(true);
             toast.success(
-                `Added ${quantity}x "${product.name}" to cart!`,
+                `Added ${quantity}x "${product.name}${
+                    selectedVariant ? ` (${selectedVariant.name})` : ''
+                }" to cart!`,
                 'Cart Updated',
             );
             setTimeout(() => setAddedToCart(false), 2500);
@@ -135,9 +186,18 @@ export default function ProductDetails(props) {
     };
 
     const handleBuyNow = async () => {
+        if (needsVariantChoice) {
+            toast.error('Please choose an option first.', 'Almost There');
+            return;
+        }
+
         setAddingToCart(true);
         try {
-            await cartService.addToCart(product.id, quantity);
+            await cartService.addToCart(
+                product.id,
+                quantity,
+                selectedVariantId,
+            );
             useAppStore.getState().fetchCartCount();
             router.visit(ROUTES.CHECKOUT);
         } catch (err) {
@@ -317,9 +377,11 @@ export default function ProductDetails(props) {
                                 <div className="meta-item">
                                     <span className="meta-label">Status:</span>
                                     <span className="meta-value stock-status">
-                                        {product.in_stock
-                                            ? `In Stock (${product.stock_quantity} available)`
-                                            : 'Out of Stock'}
+                                        {needsVariantChoice
+                                            ? 'Choose an option'
+                                            : availableStock > 0
+                                              ? `In Stock (${availableStock} available)`
+                                              : 'Out of Stock'}
                                     </span>
                                 </div>
                                 <div className="meta-item">
@@ -333,13 +395,19 @@ export default function ProductDetails(props) {
                             </div>
 
                             <div className="pdp-pricing">
-                                {product.has_discount ? (
+                                {(selectedVariant ?? product).has_discount ? (
                                     <>
                                         <div className="price-current">
-                                            {formatBdt(product.effective_price)}
+                                            {formatBdt(
+                                                (selectedVariant ?? product)
+                                                    .effective_price,
+                                            )}
                                         </div>
                                         <div className="price-old">
-                                            {formatBdt(product.price)}
+                                            {formatBdt(
+                                                selectedVariant?.price ??
+                                                    product.price,
+                                            )}
                                         </div>
                                         <CountdownTimer
                                             label="LIMITED DEAL:"
@@ -350,10 +418,68 @@ export default function ProductDetails(props) {
                                     </>
                                 ) : (
                                     <div className="price-current">
-                                        {formatBdt(product.price)}
+                                        {formatBdt(
+                                            selectedVariant?.effective_price ??
+                                                product.price,
+                                        )}
                                     </div>
                                 )}
                             </div>
+
+                            {/* Option picker. Each option carries its own stock,
+                                so one being sold out says nothing about another. */}
+                            {product.has_variants && variants.length > 0 && (
+                                <div className="pdp-variants">
+                                    <span className="pdp-variants-label">
+                                        {(
+                                            product.variant_attributes || []
+                                        ).join(' / ') || 'Options'}
+                                    </span>
+                                    <div className="pdp-variant-options">
+                                        {variants.map((variant) => {
+                                            const out =
+                                                variant.stock_quantity === 0;
+
+                                            return (
+                                                <button
+                                                    key={variant.id}
+                                                    type="button"
+                                                    disabled={out}
+                                                    className={`pdp-variant-chip ${
+                                                        variant.id ===
+                                                        selectedVariantId
+                                                            ? 'is-selected'
+                                                            : ''
+                                                    } ${out ? 'is-out' : ''}`}
+                                                    onClick={() => {
+                                                        setSelectedVariantId(
+                                                            variant.id,
+                                                        );
+                                                        setQuantity(1);
+                                                    }}
+                                                    title={
+                                                        out
+                                                            ? 'Out of stock'
+                                                            : `${variant.stock_quantity} available`
+                                                    }
+                                                >
+                                                    <span>{variant.name}</span>
+                                                    <span className="pdp-variant-price">
+                                                        {formatBdt(
+                                                            variant.effective_price,
+                                                        )}
+                                                    </span>
+                                                    {out && (
+                                                        <span className="pdp-variant-out">
+                                                            Sold out
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="pdp-short-desc">
                                 <ul>
@@ -390,16 +516,11 @@ export default function ProductDetails(props) {
                                     />
                                     <button
                                         type="button"
-                                        disabled={
-                                            product?.stock_quantity !==
-                                                undefined &&
-                                            quantity >= product.stock_quantity
-                                        }
+                                        disabled={quantity >= availableStock}
                                         onClick={() =>
                                             setQuantity((prev) =>
                                                 Math.min(
-                                                    product?.stock_quantity ||
-                                                        99,
+                                                    availableStock || 99,
                                                     prev + 1,
                                                 ),
                                             )
@@ -411,22 +532,24 @@ export default function ProductDetails(props) {
                                 <Button
                                     variant="primary"
                                     size="lg"
-                                    disabled={product?.stock_quantity === 0}
+                                    disabled={soldOut}
                                     onClick={handleBuyNow}
                                 >
-                                    {product?.stock_quantity === 0
+                                    {soldOut
                                         ? 'Out of Stock'
-                                        : 'Buy Now'}
+                                        : needsVariantChoice
+                                          ? 'Choose an option'
+                                          : 'Buy Now'}
                                 </Button>
                                 <Button
                                     variant={addedToCart ? 'dark' : 'secondary'}
                                     size="lg"
-                                    disabled={product?.stock_quantity === 0}
+                                    disabled={soldOut}
                                     onClick={handleAddToCart}
                                     loading={addingToCart}
                                     icon={addedToCart ? Check : ShoppingCart}
                                 >
-                                    {product?.stock_quantity === 0
+                                    {soldOut
                                         ? 'Out of Stock'
                                         : addedToCart
                                           ? 'Added to Cart'

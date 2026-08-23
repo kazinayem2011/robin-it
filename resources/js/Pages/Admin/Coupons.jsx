@@ -11,12 +11,17 @@ import {
     Modal,
     toast,
 } from '../../Components';
+import CouponScopePicker from './Components/CouponScopePicker';
 import { adminService } from '../../services';
 import { adminCouponSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
 import { Tag, Plus, Edit2, Trash2 } from 'lucide-react';
 
-export default function AdminCoupons({ coupons = [] }) {
+export default function AdminCoupons({
+    coupons = [],
+    products = [],
+    categories = [],
+}) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingCoupon, setEditingCoupon] = useState(null);
 
@@ -31,6 +36,9 @@ export default function AdminCoupons({ coupons = [] }) {
             usage_limit: 500,
             per_user_limit: 1,
             is_active: true,
+            scope: 'all',
+            product_ids: [],
+            category_ids: [],
         },
         validationSchema: adminCouponSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -67,6 +75,9 @@ export default function AdminCoupons({ coupons = [] }) {
                 usage_limit: 500,
                 per_user_limit: 1,
                 is_active: true,
+                scope: 'all',
+                product_ids: [],
+                category_ids: [],
             },
         });
         setModalOpen(true);
@@ -85,6 +96,9 @@ export default function AdminCoupons({ coupons = [] }) {
                 usage_limit: coupon.usage_limit || 500,
                 per_user_limit: coupon.per_user_limit ?? '',
                 is_active: Boolean(coupon.is_active),
+                scope: coupon.scope || 'all',
+                product_ids: (coupon.products || []).map((p) => p.id),
+                category_ids: (coupon.categories || []).map((c) => c.id),
             },
         });
         setModalOpen(true);
@@ -308,6 +322,12 @@ export default function AdminCoupons({ coupons = [] }) {
                                     placeholder="Leave blank for unlimited"
                                 />
                             </div>
+
+                            <CouponScopePicker
+                                formik={formik}
+                                products={products}
+                                categories={categories}
+                            />
 
                             <div>
                                 <Checkbox

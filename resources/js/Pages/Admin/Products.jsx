@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Package, Plus, Edit2, CheckCircle, XCircle, Crop } from 'lucide-react';
@@ -18,7 +18,55 @@ import { adminProductSchema } from '@/validations';
 import { adminService, uploadService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
+import VariantEditor from './Components/VariantEditor';
 import { ROUTES } from '@/constants/endpoints';
+
+/**
+ * Shape the form values for the API.
+ *
+ * Blank numeric strings are dropped rather than sent as '', and `opening_stock`
+ * is only included when a single product is actually being split into options —
+ * it is an allocation of the existing shelf, never an instruction to add stock.
+ */
+const buildProductPayload = (values, editingProduct) => {
+    const { variants, has_variants: hasVariants, ...rest } = values;
+
+    // The stock field only exists when creating; an edit must never carry one.
+    if (editingProduct) {
+        delete rest.stock_quantity;
+    }
+
+    if (!hasVariants) {
+        return { ...rest, has_variants: false };
+    }
+
+    const isConverting =
+        Boolean(editingProduct) && !editingProduct.has_variants;
+
+    return {
+        ...rest,
+        has_variants: true,
+        variants: (variants || []).map((variant) => {
+            const line = {
+                id: variant.id || undefined,
+                options: variant.options || {},
+                sku: variant.sku || null,
+                price: variant.price === '' ? null : Number(variant.price),
+                discount_price:
+                    variant.discount_price === ''
+                        ? null
+                        : Number(variant.discount_price),
+                is_active: variant.is_active !== false,
+            };
+
+            if (isConverting) {
+                line.opening_stock = Number(variant.opening_stock) || 0;
+            }
+
+            return line;
+        }),
+    };
+};
 
 export default function Products({
     products = { data: [] },
@@ -48,19 +96,30 @@ export default function Products({
             image_path: '/images/product_cpu_i9.jpg',
             is_featured: false,
             is_active: true,
+            has_variants: false,
+            variant_attributes: [],
+            variants: [],
         },
         validationSchema: adminProductSchema,
-        enableReinitialize: true,
+        // No enableReinitialize here: `initialValues` is a blank literal that is
+        // rebuilt on every render, so Formik would keep resetting the form back
+        // to it and wipe the values handleOpenEdit had just loaded. Editing a
+        // record opened a completely empty form because of that.
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
+                const payload = buildProductPayload(values, editingProduct);
+
                 if (editingProduct) {
-                    await adminService.updateProduct(editingProduct.id, values);
+                    await adminService.updateProduct(
+                        editingProduct.id,
+                        payload,
+                    );
                     toast.success(
                         `Product "${values.name}" updated successfully!`,
                         'Product Updated',
                     );
                 } else {
-                    await adminService.createProduct(values);
+                    await adminService.createProduct(payload);
                     toast.success(
                         `Product "${values.name}" added to catalog successfully!`,
                         'Product Created',
@@ -126,6 +185,9 @@ export default function Products({
                 image_path: '/images/product_cpu_i9.jpg',
                 is_featured: false,
                 is_active: true,
+                has_variants: false,
+                variant_attributes: [],
+                variants: [],
             },
         });
         setModalOpen(true);
@@ -146,6 +208,22 @@ export default function Products({
                 image_path: p.images?.[0]?.image_path || '',
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
+                has_variants: Boolean(p.has_variants),
+                variant_attributes: p.variant_attributes || [],
+                variants: (p.variants || [])
+                    .filter((v) => v.is_active)
+                    .map((v) => ({
+                        key: `v-${v.id}`,
+                        id: v.id,
+                        options: v.options || {},
+                        sku: v.sku || '',
+                        price: v.price ?? '',
+                        discount_price: v.discount_price ?? '',
+                        opening_stock: '',
+                        is_active: Boolean(v.is_active),
+                        // Read-only here: editing an option never moves stock.
+                        stock_quantity: v.stock_quantity ?? 0,
+                    })),
             },
         });
         setModalOpen(true);
@@ -222,29 +300,19 @@ export default function Products({
                         {p.stock_quantity <= 5 && '⚠️ '}
                         {p.stock_quantity} in Stock
                     </span>
-                    <button
-                        type="button"
+                    {/*
+                     * There used to be a "+5 Stock" button here that added five
+                     * units with no supplier, no cost and no record of who did
+                     * it. Restocking now goes through a delivery.
+                     */}
+                    <Link
+                        href={ROUTES.ADMIN_STOCK}
                         className="btn btn-secondary btn-sm admin-btn-quick-restock"
-                        title="Quick add +5 inventory units"
-                        onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                                await adminService.updateProduct(p.id, {
-                                    stock_quantity: p.stock_quantity + 5,
-                                    price: p.price,
-                                    is_active: p.is_active,
-                                });
-                                toast.success(
-                                    `Restocked +5 units to ${p.name}!`,
-                                );
-                                router.reload({ preserveScroll: true });
-                            } catch (err) {
-                                toast.error('Failed to quick restock product.');
-                            }
-                        }}
+                        title="Record a delivery for this product"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        +5 Stock
-                    </button>
+                        Receive
+                    </Link>
                 </div>
             ),
         },
@@ -421,20 +489,62 @@ export default function Products({
                             }
                             placeholder="Optional"
                         />
-                        <FormInput
-                            id="stock_quantity"
-                            name="stock_quantity"
-                            label="Stock Quantity (Units) *"
-                            type="number"
-                            value={formik.values.stock_quantity}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.stock_quantity &&
-                                formik.errors.stock_quantity
-                            }
-                        />
+                        {/*
+                         * Stock is only typeable once, when the product is
+                         * first entered. After that it moves through
+                         * deliveries, orders and recorded adjustments — an
+                         * editable field here let a stale form put already-sold
+                         * units back on the shelf.
+                         */}
+                        {editingProduct ? (
+                            <div className="form-group">
+                                <label className="form-label">Stock</label>
+                                <div className="admin-stock-readonly">
+                                    <span className="admin-stock-readonly-qty">
+                                        {editingProduct.has_variants
+                                            ? `${editingProduct.stock_quantity} across ${
+                                                  (
+                                                      editingProduct.variants ||
+                                                      []
+                                                  ).filter((v) => v.is_active)
+                                                      .length
+                                              } option(s)`
+                                            : `${editingProduct.stock_quantity} on hand`}
+                                    </span>
+                                    <Link
+                                        href={ROUTES.ADMIN_STOCK}
+                                        className="admin-stock-readonly-link"
+                                    >
+                                        Receive or adjust
+                                    </Link>
+                                </div>
+                                <span className="admin-field-hint">
+                                    Changed by deliveries, orders and recorded
+                                    adjustments — never edited here.
+                                </span>
+                            </div>
+                        ) : (
+                            <FormInput
+                                id="stock_quantity"
+                                name="stock_quantity"
+                                label="Opening stock"
+                                type="number"
+                                value={formik.values.stock_quantity}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={
+                                    formik.touched.stock_quantity &&
+                                    formik.errors.stock_quantity
+                                }
+                                helperText="Units already on the shelf. Later arrivals are recorded as deliveries."
+                            />
+                        )}
                     </div>
+
+                    <VariantEditor
+                        formik={formik}
+                        editingProduct={editingProduct}
+                    />
 
                     <FormInput
                         id="short_description"

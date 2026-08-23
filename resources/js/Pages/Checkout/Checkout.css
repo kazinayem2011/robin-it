@@ -484,3 +484,11 @@
         color: #f5b5ba;
     }
 }
+
+/* The chosen option, so a cart holding both the 16GB and the 32GB of one
+   product reads as two distinguishable lines. */
+.cart-item-variant {
+    font-size: 12px;
+    color: var(--color-text-muted, #6b7280);
+    margin-top: 2px;
+}

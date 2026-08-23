@@ -313,6 +313,7 @@ export default function Checkout() {
                             <div className="summary-items">
                                 {cart.items.map((item) => {
                                     const unitPrice =
+                                        item.variant?.effective_price ??
                                         item.product.effective_price ??
                                         item.product.price;
                                     return (
@@ -328,6 +329,9 @@ export default function Checkout() {
                                             <div className="item-info">
                                                 <span className="item-name">
                                                     {item.product.name}
+                                                    {item.variant
+                                                        ? ` (${item.variant.name})`
+                                                        : ''}
                                                 </span>
                                                 <span className="item-qty">
                                                     Qty: {item.quantity}
