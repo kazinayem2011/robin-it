@@ -2,6 +2,7 @@
 
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
@@ -143,11 +144,57 @@ Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
 | Admin API management endpoints
 |--------------------------------------------------------------------------
 */
+/*
+ * The admin UI talks to these through axios, whose baseURL is '/api', so every
+ * endpoint adminService calls has to exist here. Only categories, products and
+ * order status did — saving settings, banners, blogs, coupons, stores and
+ * uploading media all 404'd from the admin screens.
+ *
+ * The `web` group is required for the session, and `admin` for the role check.
+ */
 Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints::ADMIN_PREFIX)->group(function () {
+    // Catalogue
     Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminDashboardController::class, 'storeCategory']);
     Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminDashboardController::class, 'updateCategory']);
     Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminDashboardController::class, 'destroyCategory']);
     Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminDashboardController::class, 'storeProduct']);
     Route::patch(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminDashboardController::class, 'updateProduct']);
+
+    // Orders
     Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminDashboardController::class, 'updateOrderStatus']);
+
+    // Banners
+    Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminDashboardController::class, 'storeBanner']);
+    Route::patch(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminDashboardController::class, 'updateBanner']);
+    Route::delete(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminDashboardController::class, 'destroyBanner']);
+
+    // Coupons
+    Route::post(ApiEndpoints::ADMIN_COUPONS, [AdminDashboardController::class, 'storeCoupon']);
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminDashboardController::class, 'updateCoupon']);
+    Route::delete(ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminDashboardController::class, 'destroyCoupon']);
+
+    // Showrooms
+    Route::post(ApiEndpoints::ADMIN_STORES, [AdminDashboardController::class, 'storeStore']);
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminDashboardController::class, 'updateStore']);
+    Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminDashboardController::class, 'destroyStore']);
+
+    // Tech journal
+    Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'storeBlog']);
+    Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'updateBlog']);
+    Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'destroyBlog']);
+
+    // Reviews
+    Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminDashboardController::class, 'updateReviewStatus']);
+    Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminDashboardController::class, 'destroyReview']);
+
+    // Warranty
+    Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminDashboardController::class, 'updateWarrantyStatus']);
+
+    // Settings
+    Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminDashboardController::class, 'updateSettings']);
+    Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminDashboardController::class, 'sendTestEmail']);
+
+    // Media uploads
+    Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store']);
+    Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy']);
 });

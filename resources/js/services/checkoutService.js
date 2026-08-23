@@ -15,7 +15,10 @@ export const checkoutService = {
             API_ENDPOINTS.CHECKOUT.PROCESS,
             orderData,
         );
-        return response.data?.data || response.data;
+        // axiosInstance already unwraps to the response envelope, so the payload
+        // is response.data. Reading response.data.data went one level too deep
+        // and always fell through to the empty fallback.
+        return response?.data || response;
     },
 };
 

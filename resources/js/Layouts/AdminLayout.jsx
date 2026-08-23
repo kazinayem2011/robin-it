@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import ToastContainer from '../Components/Toast';
 import {
     LayoutDashboard,
     Package,
@@ -234,6 +235,13 @@ export default function AdminLayout({
                 {/* Content Body */}
                 <div className="admin-content-body">{children}</div>
             </div>
+
+            {/*
+                Toasts render here as well as in MainLayout. Every admin screen
+                calls toast.success/error, but nothing in this layout rendered
+                them, so admin feedback was pushed into the store and never seen.
+            */}
+            <ToastContainer />
         </div>
     );
 }

@@ -9,7 +9,10 @@ export const blogService = {
         const response = await axiosInstance.get(API_ENDPOINTS.BLOGS.LIST, {
             params,
         });
-        return response.data?.data || [];
+        // axiosInstance already unwraps to the response envelope, so the payload
+        // is response.data. Reading response.data.data went one level too deep
+        // and always fell through to the empty fallback.
+        return response?.data || [];
     },
 
     /**
@@ -19,7 +22,7 @@ export const blogService = {
         const response = await axiosInstance.get(
             API_ENDPOINTS.BLOGS.DETAIL(slug),
         );
-        return response.data?.data || null;
+        return response?.data || null;
     },
 };
 

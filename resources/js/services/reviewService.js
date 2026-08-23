@@ -6,8 +6,10 @@ export const reviewService = {
         const response = await axiosInstance.get(
             API_ENDPOINTS.REVIEWS.LIST(productSlug),
         );
+        // See note in storeService: the payload is response.data, not
+        // response.data.data — reviews always fell back to this empty shape.
         return (
-            response.data?.data || {
+            response?.data || {
                 average_rating: 5.0,
                 total_reviews: 0,
                 breakdown: {},
@@ -21,7 +23,7 @@ export const reviewService = {
             API_ENDPOINTS.REVIEWS.SUBMIT(productSlug),
             reviewData,
         );
-        return response.data;
+        return response?.data || response;
     },
 };
 
