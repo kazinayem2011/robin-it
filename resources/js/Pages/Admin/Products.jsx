@@ -51,6 +51,7 @@ const buildProductPayload = (values, editingProduct) => {
                 id: variant.id || undefined,
                 options: variant.options || {},
                 sku: variant.sku || null,
+                image_url: variant.image_url || null,
                 price: variant.price === '' ? null : Number(variant.price),
                 discount_price:
                     variant.discount_price === ''
@@ -79,6 +80,9 @@ export default function Products({
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [modalOpen, setModalOpen] = useState(false);
     const [cropperOpen, setCropperOpen] = useState(false);
+    // The cropper is shared between the product shot and each option's own
+    // shot, so it has to remember which one it was opened for.
+    const [cropTarget, setCropTarget] = useState('product');
     const [uploadingImage, setUploadingImage] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
 
@@ -217,6 +221,7 @@ export default function Products({
                         id: v.id,
                         options: v.options || {},
                         sku: v.sku || '',
+                        image_url: v.image_url || '',
                         price: v.price ?? '',
                         discount_price: v.discount_price ?? '',
                         opening_stock: '',
@@ -352,8 +357,20 @@ export default function Products({
         setUploadingImage(true);
         try {
             const { path } = await uploadService.uploadImage(file, 'products');
-            formik.setFieldValue('image_path', path);
-            toast.success('Product image uploaded.', 'Upload Complete');
+
+            if (cropTarget === 'product') {
+                formik.setFieldValue('image_path', path);
+                toast.success('Product image uploaded.', 'Upload Complete');
+            } else {
+                // cropTarget is the option's row key.
+                formik.setFieldValue(
+                    'variants',
+                    (formik.values.variants || []).map((v) =>
+                        v.key === cropTarget ? { ...v, image_url: path } : v,
+                    ),
+                );
+                toast.success('Option image uploaded.', 'Upload Complete');
+            }
         } catch (err) {
             toast.error(
                 err?.message || 'Could not upload that image.',
@@ -361,6 +378,7 @@ export default function Products({
             );
         } finally {
             setUploadingImage(false);
+            setCropTarget('product');
         }
     };
 
@@ -544,6 +562,11 @@ export default function Products({
                     <VariantEditor
                         formik={formik}
                         editingProduct={editingProduct}
+                        onPickImage={(variantKey) => {
+                            setCropTarget(variantKey);
+                            setCropperOpen(true);
+                        }}
+                        uploading={uploadingImage}
                     />
 
                     <FormInput
@@ -590,7 +613,10 @@ export default function Products({
                                 icon={Crop}
                                 loading={uploadingImage}
                                 disabled={uploadingImage}
-                                onClick={() => setCropperOpen(true)}
+                                onClick={() => {
+                                    setCropTarget('product');
+                                    setCropperOpen(true);
+                                }}
                             >
                                 {uploadingImage
                                     ? 'Uploading…'

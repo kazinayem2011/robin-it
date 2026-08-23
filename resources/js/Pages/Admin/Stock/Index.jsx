@@ -3,8 +3,15 @@ import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import { Button, DataTable } from '../../../Components';
 import { formatBdt } from '../../../utils/formatters';
-import { Boxes, PackagePlus, History, SlidersHorizontal } from 'lucide-react';
+import {
+    Boxes,
+    PackagePlus,
+    History,
+    SlidersHorizontal,
+    ClipboardList,
+} from 'lucide-react';
 import ReceiveStockModal from './ReceiveStockModal';
+import ReceiptHistoryModal from './ReceiptHistoryModal';
 import AdjustStockModal from './AdjustStockModal';
 import StockLedgerModal from './StockLedgerModal';
 
@@ -22,6 +29,7 @@ export default function AdminStock({
     adjustmentReasons = {},
 }) {
     const [receiveOpen, setReceiveOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
     const [adjusting, setAdjusting] = useState(null);
     const [ledgerFor, setLedgerFor] = useState(null);
 
@@ -186,9 +194,17 @@ export default function AdminStock({
                             <Boxes size={18} className="admin-card-icon" />
                             Stock &amp; Inventory
                         </h2>
-                        <Button onClick={() => setReceiveOpen(true)}>
-                            <PackagePlus size={16} /> Receive stock
-                        </Button>
+                        <div className="admin-input-row-flex">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setHistoryOpen(true)}
+                            >
+                                <ClipboardList size={16} /> Deliveries
+                            </Button>
+                            <Button onClick={() => setReceiveOpen(true)}>
+                                <PackagePlus size={16} /> Receive stock
+                            </Button>
+                        </div>
                     </div>
 
                     <p className="admin-field-hint admin-stock-intro">
@@ -235,6 +251,11 @@ export default function AdminStock({
             <StockLedgerModal
                 target={ledgerFor}
                 onClose={() => setLedgerFor(null)}
+            />
+
+            <ReceiptHistoryModal
+                isOpen={historyOpen}
+                onClose={() => setHistoryOpen(false)}
             />
         </AdminLayout>
     );

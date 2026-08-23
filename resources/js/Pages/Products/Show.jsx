@@ -273,13 +273,23 @@ export default function ProductDetails(props) {
         );
     }
 
-    const images =
+    const productImages =
         product.images && product.images.length > 0
             ? product.images.map((img) => img.image_path)
             : [
                   siteConfig.productPlaceholder ||
                       '/images/product-placeholder.svg',
               ];
+
+    // An option can carry its own shot — a white card looks nothing like the
+    // black one. It leads the gallery so the picture matches what is selected,
+    // with the product's own images still available behind it.
+    const images = selectedVariant?.image_url
+        ? [
+              selectedVariant.image_url,
+              ...productImages.filter((i) => i !== selectedVariant.image_url),
+          ]
+        : productImages;
 
     const schemaData = {
         '@context': 'https://schema.org/',
@@ -456,6 +466,13 @@ export default function ProductDetails(props) {
                                                             variant.id,
                                                         );
                                                         setQuantity(1);
+                                                        // Jump back to the
+                                                        // first shot so the
+                                                        // option's own image
+                                                        // is what is showing.
+                                                        setSelectedImageIndex(
+                                                            0,
+                                                        );
                                                     }}
                                                     title={
                                                         out

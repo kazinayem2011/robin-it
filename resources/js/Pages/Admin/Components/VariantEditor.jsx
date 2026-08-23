@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { Button, Checkbox, FormInput } from '../../../Components';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 
 const newVariant = () => ({
     key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     id: null,
     options: {},
     sku: '',
+    image_url: '',
     price: '',
     discount_price: '',
     opening_stock: '',
@@ -23,7 +24,12 @@ const newVariant = () => ({
  * is filed did. This shows the running remainder so that is obvious before
  * saving rather than as an error afterwards.
  */
-export default function VariantEditor({ formik, editingProduct }) {
+export default function VariantEditor({
+    formik,
+    editingProduct,
+    onPickImage,
+    uploading = false,
+}) {
     const isNewProduct = !editingProduct;
     const wasVariant = Boolean(editingProduct?.has_variants);
     const hasVariants = Boolean(formik.values.has_variants);
@@ -190,6 +196,57 @@ export default function VariantEditor({ formik, editingProduct }) {
                                     }
                                     placeholder="Optional"
                                 />
+
+                                {/* Options often differ visually — a white card
+                                    looks nothing like the black one — so each
+                                    can carry its own shot. It leads the gallery
+                                    when that option is selected. */}
+                                <div className="form-group">
+                                    <label className="form-label">Image</label>
+                                    <div className="admin-variant-image">
+                                        {variant.image_url ? (
+                                            <img
+                                                src={variant.image_url}
+                                                alt=""
+                                                className="admin-variant-thumb"
+                                            />
+                                        ) : (
+                                            <span className="admin-variant-thumb admin-variant-thumb-empty">
+                                                <ImageIcon size={14} />
+                                            </span>
+                                        )}
+                                        <div className="admin-variant-image-actions">
+                                            <button
+                                                type="button"
+                                                className="admin-variant-image-btn"
+                                                disabled={uploading}
+                                                onClick={() =>
+                                                    onPickImage?.(variant.key)
+                                                }
+                                            >
+                                                {uploading
+                                                    ? 'Uploading…'
+                                                    : variant.image_url
+                                                      ? 'Replace'
+                                                      : 'Upload'}
+                                            </button>
+                                            {variant.image_url && (
+                                                <button
+                                                    type="button"
+                                                    className="admin-variant-image-btn admin-variant-image-clear"
+                                                    onClick={() =>
+                                                        patchVariant(
+                                                            variant.key,
+                                                            { image_url: '' },
+                                                        )
+                                                    }
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {isConverting ? (
                                     <FormInput
