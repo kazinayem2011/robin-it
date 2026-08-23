@@ -10,6 +10,7 @@ class Order extends Model
         'user_id', 'session_id', 'order_number', 'subtotal',
         'shipping_fee', 'discount', 'coupon_code', 'total', 'status',
         'payment_method', 'payment_status', 'shipping_address',
+        'stock_released_at', 'stock_returned_at',
     ];
 
     protected $casts = [
@@ -18,10 +19,21 @@ class Order extends Model
         'shipping_fee' => 'float',
         'discount' => 'float',
         'total' => 'float',
+        'stock_released_at' => 'datetime',
+        'stock_returned_at' => 'datetime',
     ];
 
     /** Order lifecycle states, in the order the customer sees them. */
-    public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+
+    /**
+     * States where the order no longer holds reserved stock and cannot move on.
+     * A returned order has already had its units accounted for, item by item.
+     */
+    public const TERMINAL_STATUSES = ['returned'];
+
+    /** Only a delivered order can be returned — nothing else has reached the customer. */
+    public const RETURNABLE_FROM = ['delivered'];
 
     public const PAYMENT_STATUSES = ['unpaid', 'paid', 'pending', 'refunded'];
 
@@ -93,5 +105,22 @@ class Order extends Model
     public function isCancellableByCustomer(): bool
     {
         return in_array($this->status, ['pending', 'processing'], true);
+    }
+
+    public function isReturned(): bool
+    {
+        return $this->status === 'returned';
+    }
+
+    /** Whether the order's units are currently off the shelf and owed back. */
+    public function holdsReservedStock(): bool
+    {
+        return $this->stock_released_at === null && $this->stock_returned_at === null;
+    }
+
+    public function isReturnable(): bool
+    {
+        return in_array($this->status, self::RETURNABLE_FROM, true)
+            && $this->stock_returned_at === null;
     }
 }

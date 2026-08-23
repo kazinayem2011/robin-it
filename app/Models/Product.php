@@ -10,7 +10,14 @@ class Product extends Model
         'category_id', 'brand_id', 'name', 'slug', 'price',
         'discount_price', 'stock_quantity', 'short_description',
         'description', 'is_featured', 'is_active',
+        'has_variants', 'variant_attributes',
     ];
+
+    /**
+     * Stock is never assigned directly — it is the cached balance of the stock
+     * ledger and only App\Services\StockService may move it. It stays fillable
+     * for the initial create, where the ledger's opening row is written alongside.
+     */
 
     /**
      * Computed pricing/availability the frontend can trust, present on every
@@ -28,6 +35,8 @@ class Product extends Model
         'stock_quantity' => 'integer',
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
+        'has_variants' => 'boolean',
+        'variant_attributes' => 'array',
     ];
 
     public function category()
@@ -38,6 +47,22 @@ class Product extends Model
     public function brand()
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function activeVariants()
+    {
+        return $this->hasMany(ProductVariant::class)->where('is_active', true)
+            ->orderBy('position')->orderBy('id');
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     public function images()
@@ -115,6 +140,10 @@ class Product extends Model
 
     /**
      * Whether the requested quantity can be fulfilled from stock right now.
+     *
+     * For a variant product this asks about the whole product; a specific option
+     * is answered by ProductVariant::canFulfil, because one option being in stock
+     * says nothing about the one the shopper picked.
      */
     public function canFulfil(int $quantity): bool
     {
@@ -124,6 +153,24 @@ class Product extends Model
     public function isInStock(): bool
     {
         return $this->is_active && $this->stock_quantity > 0;
+    }
+
+    /** The lowest effective price across the options, for "from ৳X" on a card. */
+    public function getPriceFromAttribute(): float
+    {
+        if (! $this->has_variants) {
+            return $this->effective_price;
+        }
+
+        $variants = $this->relationLoaded('activeVariants')
+            ? $this->activeVariants
+            : ($this->relationLoaded('variants') ? $this->variants->where('is_active', true) : null);
+
+        if ($variants === null || $variants->isEmpty()) {
+            return $this->effective_price;
+        }
+
+        return (float) $variants->min(fn ($v) => $v->effective_price);
     }
 
     /**

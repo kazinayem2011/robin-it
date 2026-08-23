@@ -19,6 +19,8 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\WarrantyClaim;
 use App\Services\OrderService;
+use App\Services\ProductVariantService;
+use App\Services\StockService;
 use App\Support\MailSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -179,7 +181,7 @@ class AdminDashboardController extends Controller
     /**
      * Quick Update a Product (Price, Discount Price, Stock, Active, Featured).
      */
-    public function updateProduct(Request $request, $productId)
+    public function updateProduct(Request $request, ProductVariantService $variants, $productId)
     {
         $product = Product::findOrFail($productId);
 
@@ -189,20 +191,44 @@ class AdminDashboardController extends Controller
             'name' => 'nullable|string|max:255',
             'price' => 'nullable|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'nullable|integer|min:0',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
+
+            // Options. Stock is deliberately absent from every one of these:
+            // editing a product must never move a unit.
+            'has_variants' => 'nullable|boolean',
+            'variant_attributes' => 'nullable|array',
+            'variant_attributes.*' => 'string|max:60',
+            'variants' => 'nullable|array',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.options' => 'nullable|array',
+            'variants.*.name' => 'nullable|string|max:180',
+            'variants.*.sku' => 'nullable|string|max:80',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.discount_price' => 'nullable|numeric|min:0',
+            'variants.*.image_url' => 'nullable|string|max:2048',
+            'variants.*.is_active' => 'nullable|boolean',
+            // Only read when switching a single product over to options, where it
+            // says how the existing shelf is split. It never adds stock.
+            'variants.*.opening_stock' => 'nullable|integer|min:0',
         ]);
+
+        // stock_quantity is not accepted here at all. An admin who could type an
+        // absolute quantity could save a form opened before a sale and put the
+        // sold units back on the shelf; stock moves only through the ledger.
+        $scalar = collect($validated)->except(['has_variants', 'variant_attributes', 'variants'])->all();
 
         // A posted `null` must not blank out a NOT NULL column such as name or price.
         $product->update(array_filter(
-            $validated,
+            $scalar,
             fn ($value, $key) => $value !== null || in_array($key, ['brand_id', 'discount_price'], true),
             ARRAY_FILTER_USE_BOTH
         ));
+
+        $this->applyVariantChanges($request, $variants, $product, $validated);
 
         if (! empty($validated['image_path'])) {
             $primaryImage = $product->images()->where('is_primary', true)->first();
@@ -224,9 +250,50 @@ class AdminDashboardController extends Controller
     }
 
     /**
+     * Apply an option change requested by the product form.
+     *
+     * Three distinct moves, and only the conversions touch stock — and then only
+     * to carry the same units across, never to change the total:
+     *   single  -> options   the existing shelf is split across the new options
+     *   options -> single    every option's stock is drained back to the product
+     *   options -> options   labels and prices change, stock stays where it is
+     */
+    private function applyVariantChanges(
+        Request $request,
+        ProductVariantService $variants,
+        Product $product,
+        array $validated
+    ): void {
+        if (! $request->has('has_variants') && ! $request->has('variants')) {
+            return;
+        }
+
+        $wantsVariants = (bool) ($validated['has_variants'] ?? $product->has_variants);
+        $definitions = $validated['variants'] ?? [];
+        $attributes = $validated['variant_attributes'] ?? ($product->variant_attributes ?? []);
+        $userId = $request->user()?->id;
+
+        if ($wantsVariants && ! $product->has_variants) {
+            $variants->convertToVariants($product, $attributes, $definitions, $userId);
+
+            return;
+        }
+
+        if (! $wantsVariants && $product->has_variants) {
+            $variants->convertToSingle($product, $userId);
+
+            return;
+        }
+
+        if ($wantsVariants && $definitions !== []) {
+            $variants->syncVariants($product, $attributes, $definitions);
+        }
+    }
+
+    /**
      * Create a New Product.
      */
-    public function storeProduct(Request $request)
+    public function storeProduct(Request $request, StockService $stock)
     {
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
@@ -244,7 +311,17 @@ class AdminDashboardController extends Controller
         $validated['slug'] = $this->uniqueSlug(Product::class, $validated['name']);
         $validated['is_active'] = true;
 
+        $opening = (int) ($validated['stock_quantity'] ?? 0);
+
         $product = Product::create($validated);
+
+        // The one moment an absolute quantity is legitimate: stock already on the
+        // shelf when the product is first entered. It is written to the ledger as
+        // an opening balance, and from here on only purchases, sales, returns and
+        // audited adjustments can move it.
+        if ($opening > 0) {
+            $stock->recordOpeningBalance($product, null, $opening, $request->user()?->id);
+        }
 
         if (! empty($validated['image_path'])) {
             $product->images()->create([

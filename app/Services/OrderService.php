@@ -11,6 +11,8 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +21,8 @@ use Illuminate\Support\Str;
 class OrderService
 {
     public function __construct(
-        protected CartService $cartService
+        protected CartService $cartService,
+        protected StockService $stock
     ) {}
 
     /**
@@ -36,7 +39,7 @@ class OrderService
         ?string $sessionId = null,
         ?Coupon $coupon = null
     ): Order {
-        $cart->load('items.product');
+        $cart->load('items.product', 'items.variant');
 
         if ($cart->items->isEmpty()) {
             throw StorefrontException::emptyCart();
@@ -91,18 +94,24 @@ class OrderService
                     continue;
                 }
 
-                $effectivePrice = $product->effective_price;
+                $variant = $item->variant;
+                $effectivePrice = $item->unitPrice();
 
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
+                    // Frozen at purchase time: the option may be renamed or
+                    // retired later and the invoice must still read correctly.
+                    'variant_name' => $variant?->name,
                     'price' => $effectivePrice,
                     'quantity' => $item->quantity,
                     'total' => round($effectivePrice * $item->quantity, 2),
                 ]);
 
-                $this->reserveStock($product, $item->quantity);
+                // Takes the units off the shelf and leaves a ledger row saying why.
+                $this->stock->sell($product, $variant, $item->quantity, $order);
             }
 
             // Clear Cart after successful order
@@ -119,30 +128,11 @@ class OrderService
     }
 
     /**
-     * Reserve stock with a single conditional UPDATE. Two shoppers racing for the
-     * last unit can't both succeed: whichever loses matches zero rows and is told so.
-     *
-     * @throws StorefrontException
-     */
-    protected function reserveStock(Product $product, int $quantity): void
-    {
-        $affected = Product::whereKey($product->id)
-            ->where('is_active', true)
-            ->where('stock_quantity', '>=', $quantity)
-            ->update([
-                'stock_quantity' => DB::raw("stock_quantity - {$quantity}"),
-            ]);
-
-        if ($affected === 0) {
-            throw StorefrontException::outOfStock(
-                $product->name,
-                max(0, (int) Product::whereKey($product->id)->value('stock_quantity'))
-            );
-        }
-    }
-
-    /**
      * Check every line against live stock before we start writing anything.
+     *
+     * On a variant product the stock is held per option, so a line is measured
+     * against the option the shopper actually chose — the product's overall
+     * total says nothing about whether that particular one is available.
      *
      * @throws StorefrontException
      */
@@ -155,8 +145,24 @@ class OrderService
                 throw StorefrontException::unavailable($product->name ?? 'A product in your cart');
             }
 
-            if ($product->stock_quantity < $item->quantity) {
-                throw StorefrontException::outOfStock($product->name, max(0, $product->stock_quantity));
+            if ($product->has_variants && ! $item->product_variant_id) {
+                throw new StorefrontException(
+                    "Choose an option for {$product->name} before checking out.",
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            $variant = $item->variant;
+
+            if ($item->product_variant_id && (! $variant || ! $variant->is_active)) {
+                throw StorefrontException::unavailable($item->displayName());
+            }
+
+            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+
+            if ($available < $item->quantity) {
+                throw StorefrontException::outOfStock($item->displayName(), max(0, $available));
             }
         }
     }
@@ -246,7 +252,21 @@ class OrderService
     }
 
     /**
-     * Update order status with validation. Cancelling returns reserved stock to the shelf.
+     * Move an order to a new status, applying the stock consequence of the move.
+     *
+     * The rules, all of which the ledger records:
+     *   pending -> processing/shipped/delivered   no stock change; the units were
+     *                                             already taken at checkout, so
+     *                                             approving an order must not
+     *                                             take them a second time
+     *   anything -> cancelled                     reserved units go back, once
+     *   cancelled -> anything                     units are taken off the shelf
+     *                                             again, and the move fails if
+     *                                             they are no longer there
+     *   delivered -> returned                     handled by returnOrder(), which
+     *                                             needs the condition of each item
+     *
+     * @throws StorefrontException when reopening an order the stock can no longer cover
      */
     public function updateOrderStatus(Order $order, string $status): Order
     {
@@ -254,34 +274,268 @@ class OrderService
             throw new \InvalidArgumentException("Invalid order status: {$status}");
         }
 
-        $wasCancelled = $order->isCancelled();
+        if ($order->isReturned()) {
+            throw new StorefrontException(
+                'This order has been returned and can no longer change status.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
 
-        DB::transaction(function () use ($order, $status, $wasCancelled) {
-            $order->update(['status' => $status]);
+        // A return has to say what condition each item came back in, so it
+        // cannot be a plain status change.
+        if ($status === 'returned') {
+            throw new StorefrontException(
+                'Process this as a return so each item\'s condition is recorded.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
 
-            if ($status === 'cancelled' && ! $wasCancelled) {
-                $this->restock($order);
+        if ($order->status === $status) {
+            return $order;
+        }
+
+        DB::transaction(function () use ($order, $status) {
+            // Lock the order so two admins clicking at once cannot both decide
+            // they are the one releasing the stock.
+            $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            if ($status === 'cancelled') {
+                $this->releaseStock($fresh);
+            } elseif ($fresh->status === 'cancelled') {
+                $this->reReserveStock($fresh);
             }
+
+            $fresh->update(['status' => $status]);
+            $order->setRawAttributes($fresh->getAttributes(), true);
         });
 
         return $order;
     }
 
     /**
-     * Put stock back when an order is cancelled, so the units become sellable again.
+     * Hand the reserved units back after a cancellation.
+     *
+     * `stock_released_at` is a latch, not a status check. The old code asked only
+     * whether the order was cancelled a moment ago, so cancelled -> pending ->
+     * cancelled put the units back twice and created stock that never existed.
      */
-    protected function restock(Order $order): void
+    protected function releaseStock(Order $order): void
     {
+        if ($order->stock_released_at !== null) {
+            return;
+        }
+
         $order->loadMissing('items');
 
         foreach ($order->items as $item) {
-            if (! $item->product_id) {
+            [$product, $variant, $note] = $this->stockUnitFor($item);
+
+            if (! $product) {
                 continue;
             }
 
-            Product::whereKey($item->product_id)
-                ->update(['stock_quantity' => DB::raw("stock_quantity + {$item->quantity}")]);
+            $this->stock->releaseToShelf($product, $variant, $item->quantity, $order, $note);
         }
+
+        $order->forceFill(['stock_released_at' => now()])->save();
+    }
+
+    /**
+     * Reopening a cancelled order takes the units off the shelf again.
+     *
+     * They may have been sold to someone else in the meantime, so this can fail —
+     * and it must, rather than quietly letting the shop promise stock it lacks.
+     *
+     * @throws StorefrontException
+     */
+    protected function reReserveStock(Order $order): void
+    {
+        if ($order->stock_released_at === null) {
+            return;
+        }
+
+        $order->loadMissing('items');
+
+        foreach ($order->items as $item) {
+            [$product, $variant] = $this->stockUnitFor($item);
+
+            if (! $product) {
+                continue;
+            }
+
+            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+
+            if ($available < $item->quantity) {
+                throw new StorefrontException(
+                    "Cannot reopen this order: only {$available} x {$item->display_name} left in stock, "
+                        ."but the order needs {$item->quantity}.",
+                    422,
+                    ApiCode::OUT_OF_STOCK
+                );
+            }
+
+            $this->stock->record($product, $variant, -$item->quantity, StockMovement::SALE, [
+                'reference' => $order,
+                'note' => 'Order reopened after cancellation',
+            ]);
+        }
+
+        $order->forceFill(['stock_released_at' => null])->save();
+    }
+
+    /**
+     * Process a return on a delivered order.
+     *
+     * Each line says how many units came back and in what condition: resellable
+     * units go to the shelf, damaged ones are written off so they can never be
+     * sold to the next customer. Both are recorded, so the loss is visible.
+     *
+     * @param  array<int, array{order_item_id:int, resellable?:int, damaged?:int}>  $lines
+     *
+     * @throws StorefrontException
+     */
+    public function returnOrder(Order $order, array $lines, ?string $note = null): Order
+    {
+        if (! $order->isReturnable()) {
+            throw new StorefrontException(
+                $order->isReturned()
+                    ? 'This order has already been returned.'
+                    : 'Only a delivered order can be returned.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $order->loadMissing('items');
+        $byId = $order->items->keyBy('id');
+        $movedAny = false;
+
+        DB::transaction(function () use ($order, $lines, $byId, $note, &$movedAny) {
+            foreach ($lines as $line) {
+                $item = $byId->get((int) ($line['order_item_id'] ?? 0));
+
+                if (! $item) {
+                    throw new StorefrontException(
+                        'One of the returned items does not belong to this order.',
+                        422,
+                        ApiCode::VALIDATION_ERROR
+                    );
+                }
+
+                $resellable = max(0, (int) ($line['resellable'] ?? 0));
+                $damaged = max(0, (int) ($line['damaged'] ?? 0));
+                $total = $resellable + $damaged;
+
+                if ($total === 0) {
+                    continue;
+                }
+
+                if ($total > $item->returnable_quantity) {
+                    throw new StorefrontException(
+                        "You cannot return {$total} x {$item->display_name} — only "
+                            ."{$item->returnable_quantity} of that line are still outstanding.",
+                        422,
+                        ApiCode::VALIDATION_ERROR
+                    );
+                }
+
+                [$product, $variant, $fallbackNote] = $this->stockUnitFor($item);
+
+                if (! $product) {
+                    continue;
+                }
+
+                if ($resellable > 0) {
+                    $this->stock->record($product, $variant, $resellable, StockMovement::RETURN, [
+                        'reference' => $order,
+                        'note' => trim(($fallbackNote ? $fallbackNote.' ' : '').($note ?? '')) ?: null,
+                    ]);
+                }
+
+                // Damaged units are accounted for but never put back on the shelf.
+                if ($damaged > 0) {
+                    $this->stock->record($product, $variant, $damaged, StockMovement::RETURN, [
+                        'reference' => $order,
+                        'note' => 'Returned damaged — written off below',
+                    ]);
+
+                    $this->stock->record($product, $variant, -$damaged, StockMovement::WRITE_OFF, [
+                        'reference' => $order,
+                        'reason' => 'damaged',
+                        'note' => $note ?: 'Damaged on return',
+                    ]);
+                }
+
+                $item->increment('returned_quantity', $total);
+                $movedAny = true;
+            }
+
+            if (! $movedAny) {
+                throw new StorefrontException(
+                    'Enter how many units came back before saving the return.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            $order->forceFill([
+                'status' => 'returned',
+                'stock_returned_at' => now(),
+            ])->save();
+        });
+
+        return $order->fresh('items');
+    }
+
+    /**
+     * Which shelf an order line belongs to.
+     *
+     * Usually the option recorded on the line. A line bought before the product
+     * gained options has no variant, so its units are steered to the first active
+     * option and the movement says so rather than silently vanishing.
+     *
+     * @return array{0: ?Product, 1: ?ProductVariant, 2: ?string}
+     */
+    protected function stockUnitFor(OrderItem $item): array
+    {
+        if (! $item->product_id) {
+            return [null, null, null];
+        }
+
+        $product = Product::find($item->product_id);
+
+        if (! $product) {
+            return [null, null, null];
+        }
+
+        if ($item->product_variant_id) {
+            $variant = ProductVariant::where('product_id', $product->id)->find($item->product_variant_id);
+
+            if ($variant) {
+                return [$product, $variant, null];
+            }
+        }
+
+        if (! $product->has_variants) {
+            return [$product, null, null];
+        }
+
+        $fallback = ProductVariant::where('product_id', $product->id)
+            ->where('is_active', true)
+            ->orderBy('position')->orderBy('id')
+            ->first();
+
+        if (! $fallback) {
+            return [$product, null, 'Product has options but none are active; credited to the product.'];
+        }
+
+        return [
+            $product,
+            $fallback,
+            'Bought before this product had options; credited to "'.$fallback->name.'".',
+        ];
     }
 
     /**

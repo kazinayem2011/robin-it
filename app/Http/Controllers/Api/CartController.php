@@ -40,9 +40,11 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
+            'product_variant_id' => 'nullable|integer|exists:product_variants,id',
             'quantity' => 'required|integer|min:1|max:'.CartService::MAX_QUANTITY_PER_ITEM,
         ], [
             'product_id.exists' => 'That product is no longer available.',
+            'product_variant_id.exists' => 'That option is no longer available.',
             'quantity.max' => 'You can order up to '.CartService::MAX_QUANTITY_PER_ITEM.' units of a single item. Contact us for bulk orders.',
         ]);
 
@@ -55,11 +57,12 @@ class CartController extends Controller
             $cartItem = $this->cartService->addItem(
                 $cart,
                 (int) $validated['product_id'],
-                (int) $validated['quantity']
+                (int) $validated['quantity'],
+                isset($validated['product_variant_id']) ? (int) $validated['product_variant_id'] : null
             );
 
             return $this->successResponse(
-                $cartItem->load('product'),
+                $cartItem->load('product', 'variant'),
                 'Added to your cart.'
             );
         } catch (StorefrontException $e) {
@@ -91,7 +94,7 @@ class CartController extends Controller
                 (int) $validated['quantity']
             );
 
-            return $this->successResponse($cartItem->load('product'), 'Cart updated.');
+            return $this->successResponse($cartItem->load('product', 'variant'), 'Cart updated.');
         } catch (StorefrontException $e) {
             return $this->storefrontErrorResponse($e);
         } catch (ModelNotFoundException) {

@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\MediaUploadController;
+use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\ComparisonController;
@@ -187,6 +188,15 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminDashboardController::class, 'destroyReview'])->name('reviews.destroy');
     Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminDashboardController::class, 'warrantyView'])->name('warranty');
     Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminDashboardController::class, 'updateWarrantyStatus'])->name('warranty.status');
+
+    // Inventory: receiving, audited adjustments and the per-product ledger.
+    Route::get('stock', [StockController::class, 'index'])->name('stock');
+    Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive'])->name('stock.receive');
+    Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts'])->name('stock.receipts');
+    Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->name('stock.adjust');
+    Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->name('stock.movements');
+    Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->name('stock.units');
+    Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->name('orders.return');
 });
 
 require __DIR__.'/auth.php';

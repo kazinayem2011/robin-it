@@ -153,6 +153,18 @@ class ApiEndpoints
 
     public const ADMIN_ORDERS_STATUS = 'orders/{id}/status';
 
+    public const ADMIN_ORDERS_RETURN = 'orders/{id}/return';
+
+    // Stock: units enter through a receipt, are corrected by an audited
+    // adjustment, and are never typed in as an absolute number.
+    public const ADMIN_STOCK_RECEIPTS = 'stock/receipts';
+
+    public const ADMIN_STOCK_ADJUST = 'stock/adjust';
+
+    public const ADMIN_STOCK_MOVEMENTS = 'stock/products/{id}/movements';
+
+    public const ADMIN_STOCK_UNITS = 'stock/units';
+
     public const ADMIN_PRODUCTS = 'products';
 
     public const ADMIN_PRODUCTS_ITEM = 'products/{id}';

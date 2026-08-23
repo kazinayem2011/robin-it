@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -41,7 +43,7 @@ class CartService
         $cart = $this->findCart($userId, $sessionId) ?: new Cart($this->ownerAttributes($userId, $sessionId));
 
         if ($cart->exists) {
-            $cart->load(['items.product.images', 'items.product.brand']);
+            $cart->load(['items.product.images', 'items.product.brand', 'items.variant']);
         } else {
             $cart->setRelation('items', collect());
         }
@@ -54,7 +56,7 @@ class CartService
      *
      * @throws StorefrontException when the product is unavailable or short on stock
      */
-    public function addItem(Cart $cart, int $productId, int $quantity = 1): CartItem
+    public function addItem(Cart $cart, int $productId, int $quantity = 1, ?int $variantId = null): CartItem
     {
         $product = Product::find($productId);
 
@@ -62,19 +64,61 @@ class CartService
             throw StorefrontException::unavailable($product->name ?? 'This product');
         }
 
+        $variant = $this->resolveVariant($product, $variantId);
+
+        // Two options of the same product are two lines, not one, because each
+        // draws from its own shelf.
         $cartItem = CartItem::firstOrNew([
             'cart_id' => $cart->id,
             'product_id' => $productId,
+            'product_variant_id' => $variant?->id,
         ]);
 
         $requested = ($cartItem->exists ? $cartItem->quantity : 0) + max(1, $quantity);
 
-        $this->assertStockCovers($product, $requested);
+        $this->assertStockCovers($product, $requested, $variant);
 
         $cartItem->quantity = min($requested, self::MAX_QUANTITY_PER_ITEM);
         $cartItem->save();
 
         return $cartItem;
+    }
+
+    /**
+     * A variant product can only be bought by the option, never as a whole, and
+     * an option from a different product is never acceptable.
+     *
+     * @throws StorefrontException
+     */
+    private function resolveVariant(Product $product, ?int $variantId): ?ProductVariant
+    {
+        if (! $product->has_variants) {
+            // Ignore a stray option id on a single product rather than failing:
+            // the shopper's intent is unambiguous.
+            return null;
+        }
+
+        if (! $variantId) {
+            throw new StorefrontException(
+                "Choose an option for {$product->name} before adding it to your cart.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $variant = ProductVariant::where('product_id', $product->id)
+            ->where('is_active', true)
+            ->find($variantId);
+
+        if (! $variant) {
+            throw new StorefrontException(
+                'That option is no longer available for this product.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        return $variant;
     }
 
     /**
@@ -94,9 +138,15 @@ class CartService
             throw StorefrontException::unavailable($product->name ?? 'This product');
         }
 
+        $variant = $cartItem->variant;
+
+        if ($cartItem->product_variant_id && (! $variant || ! $variant->is_active)) {
+            throw StorefrontException::unavailable($cartItem->displayName());
+        }
+
         $requested = max(1, min($quantity, self::MAX_QUANTITY_PER_ITEM));
 
-        $this->assertStockCovers($product, $requested);
+        $this->assertStockCovers($product, $requested, $variant);
 
         $cartItem->update(['quantity' => $requested]);
 
@@ -136,18 +186,23 @@ class CartService
                 return;
             }
 
-            $guestCart->load('items.product');
+            $guestCart->load('items.product', 'items.variant');
 
             foreach ($guestCart->items as $guestItem) {
+                // Match on the option too, so the 16GB and 32GB lines the
+                // shopper picked as a guest do not collapse into one.
                 $existing = CartItem::firstOrNew([
                     'cart_id' => $userCart->id,
                     'product_id' => $guestItem->product_id,
+                    'product_variant_id' => $guestItem->product_variant_id,
                 ]);
 
                 $combined = ($existing->exists ? $existing->quantity : 0) + $guestItem->quantity;
 
                 // Merging must never fail the login — clamp instead of throwing.
-                $available = $guestItem->product?->stock_quantity ?? $combined;
+                $available = $guestItem->variant?->stock_quantity
+                    ?? $guestItem->product?->stock_quantity
+                    ?? $combined;
 
                 $existing->quantity = max(1, min($combined, self::MAX_QUANTITY_PER_ITEM, $available));
                 $existing->save();
@@ -165,7 +220,7 @@ class CartService
      */
     public function calculateTotals(Cart $cart, float $discount = 0.0, ?float $shippingFee = null): array
     {
-        $cart->loadMissing('items.product');
+        $cart->loadMissing('items.product', 'items.variant');
 
         $shippingFee ??= self::SHIPPING_FEE;
 
@@ -178,7 +233,9 @@ class CartService
                 continue;
             }
 
-            $subtotal += $product->effective_price * $item->quantity;
+            // Price comes from whichever level owns it — the chosen option
+            // when there is one, otherwise the product.
+            $subtotal += $item->unitPrice() * $item->quantity;
             $totalItems += $item->quantity;
         }
 
@@ -212,17 +269,20 @@ class CartService
      */
     public function findUnavailableItems(Cart $cart): array
     {
-        $cart->loadMissing('items.product');
+        $cart->loadMissing('items.product', 'items.variant');
 
         $issues = [];
 
         foreach ($cart->items as $item) {
             $product = $item->product;
+            $variant = $item->variant;
 
-            if (! $product || ! $product->is_active) {
+            $optionGone = $item->product_variant_id && (! $variant || ! $variant->is_active);
+
+            if (! $product || ! $product->is_active || $optionGone) {
                 $issues[] = [
                     'item_id' => $item->id,
-                    'product_name' => $product->name ?? 'Removed product',
+                    'product_name' => $product ? $item->displayName() : 'Removed product',
                     'requested' => $item->quantity,
                     'available' => 0,
                     'reason' => 'unavailable',
@@ -231,12 +291,15 @@ class CartService
                 continue;
             }
 
-            if ($product->stock_quantity < $item->quantity) {
+            // Stock lives on the option when the product has them.
+            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+
+            if ($available < $item->quantity) {
                 $issues[] = [
                     'item_id' => $item->id,
-                    'product_name' => $product->name,
+                    'product_name' => $item->displayName(),
                     'requested' => $item->quantity,
-                    'available' => max(0, $product->stock_quantity),
+                    'available' => max(0, $available),
                     'reason' => 'insufficient_stock',
                 ];
             }
@@ -260,8 +323,19 @@ class CartService
     /**
      * @throws StorefrontException
      */
-    private function assertStockCovers(Product $product, int $quantity): void
+    private function assertStockCovers(Product $product, int $quantity, ?ProductVariant $variant = null): void
     {
+        if ($variant) {
+            if ($variant->stock_quantity < $quantity) {
+                throw StorefrontException::outOfStock(
+                    "{$product->name} ({$variant->name})",
+                    max(0, (int) $variant->stock_quantity)
+                );
+            }
+
+            return;
+        }
+
         if (! $product->canFulfil($quantity)) {
             throw StorefrontException::outOfStock($product->name, max(0, $product->stock_quantity));
         }

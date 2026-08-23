@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\MediaUploadController;
+use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
@@ -162,6 +163,14 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints
 
     // Orders
     Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminDashboardController::class, 'updateOrderStatus']);
+    Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
+
+    // Stock
+    Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive']);
+    Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts']);
+    Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
+    Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
+    Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
 
     // Banners
     Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminDashboardController::class, 'storeBanner']);
