@@ -15,6 +15,18 @@ export const productService = {
      * @param {Object} params - { category_slug, brand_slug, search, sort, is_featured, in_stock, page, per_page }
      * @returns {Promise<{items: Array, meta: Object}>}
      */
+    /**
+     * The price range and brands present in a selection, for the filter panel.
+     */
+    async getFilters(params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.PRODUCTS.FILTERS,
+            { params },
+        );
+
+        return response?.data || null;
+    },
+
     async getProducts(params = {}) {
         const response = await axiosInstance.get(API_ENDPOINTS.PRODUCTS.LIST, {
             params,

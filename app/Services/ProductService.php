@@ -64,8 +64,11 @@ class ProductService
             $query->whereIn('category_id', $categoryIds ?: [0]);
         }
 
-        // Filter by Brand
-        if (! empty($filters['brand_slug'])) {
+        // Filter by Brand. Several may be selected at once — a shopper
+        // comparing ASUS against MSI should not have to pick one.
+        if (! empty($filters['brand_ids'])) {
+            $query->whereIn('brand_id', (array) $filters['brand_ids']);
+        } elseif (! empty($filters['brand_slug'])) {
             $brandSlug = $filters['brand_slug'];
             $query->whereHas('brand', function ($q) use ($brandSlug) {
                 $q->where('slug', $brandSlug);
@@ -131,9 +134,17 @@ class ProductService
      */
     public function getFilterFacets(array $filters): array
     {
-        $scoped = array_diff_key($filters, array_flip(['min_price', 'max_price', 'sort', 'page', 'per_page']));
+        $scoped = array_diff_key($filters, array_flip([
+            'min_price', 'max_price', 'sort', 'page', 'per_page',
+        ]));
 
         $query = $this->baseFilteredQuery($scoped);
+
+        // The brand list is built without the brand filter applied: narrowing
+        // it to the brand already chosen would leave nothing else to pick.
+        $brandScope = array_diff_key($scoped, array_flip([
+            'brand_ids', 'brand_id', 'brand_slug',
+        ]));
 
         $bounds = (clone $query)
             ->selectRaw('MIN('.self::EFFECTIVE_PRICE_SQL.') as min_price')
@@ -141,7 +152,7 @@ class ProductService
             ->reorder()
             ->first();
 
-        $brands = (clone $query)
+        $brands = $this->baseFilteredQuery($brandScope)
             ->reorder()
             ->with('brand:id,name,slug')
             ->get(['id', 'brand_id'])

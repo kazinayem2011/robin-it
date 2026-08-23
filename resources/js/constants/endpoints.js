@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
 
     // Products API
     PRODUCTS: {
+        FILTERS: '/products/filters',
         LIST: '/products',
         DETAIL: (slug) => `/products/${slug}`,
         FLASH_SALE: '/products/flash-sale',

@@ -3,6 +3,7 @@ export { default as Checkbox } from './Checkbox';
 export { default as FormInput } from './FormInput';
 export { default as FormSelect } from './FormSelect';
 export { default as SearchableSelect } from './SearchableSelect';
+export { default as ProductFilters } from './ProductFilters';
 export { default as Card } from './Card';
 export { default as Spinner } from './Spinner';
 export { default as Pagination } from './Pagination';

@@ -183,6 +183,56 @@ class ProductFilteringTest extends TestCase
         $this->assertEqualsWithDelta(90000.0, $facets['min_price'], 0.01);
     }
 
+    public function test_several_brands_can_be_selected_at_once(): void
+    {
+        $msi = Brand::create(['name' => 'MSI', 'slug' => 'msi']);
+        $gigabyte = Brand::create(['name' => 'Gigabyte', 'slug' => 'gigabyte']);
+
+        $this->product('An ASUS card', 50000);
+        $this->product('An MSI card', 60000, brand: $msi);
+        $this->product('A Gigabyte card', 70000, brand: $gigabyte);
+
+        $this->assertSame(
+            ['An ASUS card', 'An MSI card'],
+            $this->names(['brand_ids' => [$this->asus->id, $msi->id]])
+        );
+    }
+
+    /**
+     * Choosing a brand must not remove every other brand from the list, or the
+     * filter can only ever be changed by clearing it first.
+     */
+    public function test_the_brand_list_does_not_collapse_to_the_chosen_brand(): void
+    {
+        $msi = Brand::create(['name' => 'MSI', 'slug' => 'msi']);
+        $this->product('An ASUS card', 50000);
+        $this->product('An MSI card', 60000, brand: $msi);
+
+        $facets = $this->getJson(
+            '/api/products/filters?'.http_build_query(['brand_ids' => [$this->asus->id]])
+        )->json('data');
+
+        $this->assertSame(['ASUS', 'MSI'], collect($facets['brands'])->pluck('name')->all());
+    }
+
+    public function test_brand_selection_still_narrows_alongside_a_category(): void
+    {
+        $cpus = Category::create(['name' => 'Processors', 'slug' => 'cpu', 'is_active' => true]);
+        $msi = Brand::create(['name' => 'MSI', 'slug' => 'msi']);
+
+        $this->product('A card', 90000, brand: $msi);
+        Product::create([
+            'category_id' => $cpus->id, 'brand_id' => $msi->id,
+            'name' => 'A processor', 'slug' => 'a-processor',
+            'price' => 45000, 'stock_quantity' => 2, 'is_active' => true,
+        ]);
+
+        $facets = $this->getJson('/api/products/filters?category_slug=gpu')->json('data');
+
+        // Only brands that actually sell something in this category.
+        $this->assertSame(['MSI'], collect($facets['brands'])->pluck('name')->all());
+    }
+
     public function test_an_empty_selection_reports_a_zero_range_rather_than_failing(): void
     {
         $facets = $this->getJson('/api/products/filters?search=nothingmatchesthis')->json('data');
