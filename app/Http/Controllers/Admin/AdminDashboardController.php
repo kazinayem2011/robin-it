@@ -673,8 +673,15 @@ class AdminDashboardController extends Controller
             'phone' => 'required|string|max:50',
             'email' => 'nullable|email|max:100',
             'opening_hours' => 'required|string|max:150',
+            'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
+
+        // sort_order defaults to 0 in the schema and the form does not collect
+        // it, so a new branch used to land above the flagship showroom. Append
+        // to the end unless a position was given.
+        $validated['sort_order'] = $validated['sort_order']
+            ?? ((int) Store::max('sort_order') + 1);
 
         $store = Store::create($validated);
 
@@ -700,8 +707,14 @@ class AdminDashboardController extends Controller
             'phone' => 'required|string|max:50',
             'email' => 'nullable|email|max:100',
             'opening_hours' => 'required|string|max:150',
+            'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
+
+        // Omitting the field means "leave the position as it is".
+        if (! isset($validated['sort_order'])) {
+            unset($validated['sort_order']);
+        }
 
         $store->update($validated);
 

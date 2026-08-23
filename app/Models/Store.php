@@ -29,6 +29,10 @@ class Store extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true)->orderBy('sort_order', 'asc');
+        // id as a tie-break so branches sharing a position keep a stable order
+        // rather than shuffling between requests.
+        return $query->where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc');
     }
 }
