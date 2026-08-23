@@ -246,6 +246,10 @@ class ProductVariantService
             'price' => $this->money($definition['price'] ?? null),
             'discount_price' => $this->money($definition['discount_price'] ?? null),
             'image_url' => blank($definition['image_url'] ?? null) ? null : $definition['image_url'],
+            // Not stock — just the level at which to buy more of this option.
+            'reorder_level' => blank($definition['reorder_level'] ?? null)
+                ? null
+                : (int) $definition['reorder_level'],
             'is_active' => (bool) ($definition['is_active'] ?? true),
             'position' => $position,
         ];

@@ -10,7 +10,7 @@ class Product extends Model
         'category_id', 'brand_id', 'name', 'slug', 'price',
         'discount_price', 'stock_quantity', 'short_description',
         'description', 'is_featured', 'is_active',
-        'has_variants', 'variant_attributes',
+        'has_variants', 'variant_attributes', 'reorder_level',
     ];
 
     /**
@@ -37,6 +37,7 @@ class Product extends Model
         'is_active' => 'boolean',
         'has_variants' => 'boolean',
         'variant_attributes' => 'array',
+        'reorder_level' => 'integer',
     ];
 
     public function category()
@@ -153,6 +154,38 @@ class Product extends Model
     public function isInStock(): bool
     {
         return $this->is_active && $this->stock_quantity > 0;
+    }
+
+    /**
+     * The level at which this should be reordered, falling back to the
+     * store-wide default when it has not been set for this product.
+     */
+    public function reorderLevel(): int
+    {
+        return $this->reorder_level ?? (int) config('inventory.default_reorder_level', 10);
+    }
+
+    /** Whether the shelf has fallen to the point of needing a delivery. */
+    public function needsReorder(): bool
+    {
+        return $this->is_active && $this->stock_quantity <= $this->reorderLevel();
+    }
+
+    /**
+     * Products at or below their own reorder level.
+     *
+     * Compared per row rather than against one number, so a product with its
+     * own level is judged by that and everything else by the default.
+     *
+     * Named `needingReorder` rather than `needsReorder` because a scope is
+     * invoked statically, and the instance method of that name would shadow it.
+     */
+    public function scopeNeedingReorder($query, ?int $default = null)
+    {
+        $default ??= (int) config('inventory.default_reorder_level', 10);
+
+        return $query->where('is_active', true)
+            ->whereRaw('stock_quantity <= COALESCE(reorder_level, ?)', [$default]);
     }
 
     /** The lowest effective price across the options, for "from ৳X" on a card. */

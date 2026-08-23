@@ -36,6 +36,13 @@ const buildProductPayload = (values, editingProduct) => {
         delete rest.stock_quantity;
     }
 
+    // Not a stock value — the level at which to buy more — so it is editable
+    // at any time.
+    rest.reorder_level =
+        rest.reorder_level === '' || rest.reorder_level === null
+            ? null
+            : Number(rest.reorder_level);
+
     if (!hasVariants) {
         return { ...rest, has_variants: false };
     }
@@ -52,6 +59,11 @@ const buildProductPayload = (values, editingProduct) => {
                 options: variant.options || {},
                 sku: variant.sku || null,
                 image_url: variant.image_url || null,
+                reorder_level:
+                    variant.reorder_level === '' ||
+                    variant.reorder_level === undefined
+                        ? null
+                        : Number(variant.reorder_level),
                 price: variant.price === '' ? null : Number(variant.price),
                 discount_price:
                     variant.discount_price === ''
@@ -100,6 +112,7 @@ export default function Products({
             image_path: '/images/product_cpu_i9.jpg',
             is_featured: false,
             is_active: true,
+            reorder_level: '',
             has_variants: false,
             variant_attributes: [],
             variants: [],
@@ -189,6 +202,7 @@ export default function Products({
                 image_path: '/images/product_cpu_i9.jpg',
                 is_featured: false,
                 is_active: true,
+                reorder_level: '',
                 has_variants: false,
                 variant_attributes: [],
                 variants: [],
@@ -212,6 +226,7 @@ export default function Products({
                 image_path: p.images?.[0]?.image_path || '',
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
+                reorder_level: p.reorder_level ?? '',
                 has_variants: Boolean(p.has_variants),
                 variant_attributes: p.variant_attributes || [],
                 variants: (p.variants || [])
@@ -222,6 +237,7 @@ export default function Products({
                         options: v.options || {},
                         sku: v.sku || '',
                         image_url: v.image_url || '',
+                        reorder_level: v.reorder_level ?? '',
                         price: v.price ?? '',
                         discount_price: v.discount_price ?? '',
                         opening_stock: '',
@@ -514,6 +530,19 @@ export default function Products({
                          * editable field here let a stale form put already-sold
                          * units back on the shelf.
                          */}
+                        <FormInput
+                            id="reorder_level"
+                            name="reorder_level"
+                            label="Reorder at"
+                            type="number"
+                            min="0"
+                            value={formik.values.reorder_level}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            placeholder="Store default"
+                            helperText="Flag this for reordering once stock falls to here."
+                        />
+
                         {editingProduct ? (
                             <div className="form-group">
                                 <label className="form-label">Stock</label>

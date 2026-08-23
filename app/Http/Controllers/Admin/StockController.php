@@ -32,20 +32,83 @@ class StockController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $onlyReorder = $request->boolean('reorder');
 
         $products = Product::query()
             ->with(['variants' => fn ($q) => $q->orderBy('position')->orderBy('id'), 'category'])
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($onlyReorder, fn ($q) => $q->needingReorder())
             ->orderBy('name')
             ->paginate(25)
             ->withQueryString();
 
         return Inertia::render('Admin/Stock/Index', [
             'products' => $products,
-            'filters' => ['search' => $search],
-            'lowStockThreshold' => 10,
+            'filters' => ['search' => $search, 'reorder' => $onlyReorder],
+            'defaultReorderLevel' => (int) config('inventory.default_reorder_level', 10),
             'adjustmentReasons' => StockService::ADJUSTMENT_REASONS,
+            'summary' => $this->summary(),
         ]);
+    }
+
+    /**
+     * What the shelf is worth and what needs buying.
+     *
+     * Valuation uses the most recent purchase price for each unit rather than
+     * its retail price: this is what the stock cost, not what it will sell for.
+     * Anything never received through a delivery has no cost and is left out
+     * rather than guessed at, and how many those are is reported alongside so
+     * the figure is never mistaken for the whole picture.
+     *
+     * @return array{
+     *     units:int, needs_reorder:int, valuation:float, uncosted_units:int
+     * }
+     */
+    private function summary(): array
+    {
+        // Latest unit cost seen for each stock unit.
+        $costs = StockMovement::query()
+            ->select('product_id', 'product_variant_id', 'unit_cost')
+            ->whereNotNull('unit_cost')
+            ->orderBy('id')
+            ->get()
+            ->reduce(function (array $carry, $movement) {
+                $carry[$movement->product_id.':'.($movement->product_variant_id ?? '')] = (float) $movement->unit_cost;
+
+                return $carry;
+            }, []);
+
+        $valuation = 0.0;
+        $units = 0;
+        $uncosted = 0;
+
+        Product::query()
+            ->where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)])
+            ->chunk(200, function ($products) use (&$valuation, &$units, &$uncosted, $costs) {
+                foreach ($products as $product) {
+                    $holdings = $product->has_variants
+                        ? $product->variants->map(fn ($v) => [$v->stock_quantity, $product->id.':'.$v->id])
+                        : collect([[$product->stock_quantity, $product->id.':']]);
+
+                    foreach ($holdings as [$quantity, $key]) {
+                        $units += $quantity;
+
+                        if (isset($costs[$key])) {
+                            $valuation += $costs[$key] * $quantity;
+                        } else {
+                            $uncosted += $quantity;
+                        }
+                    }
+                }
+            });
+
+        return [
+            'units' => $units,
+            'needs_reorder' => Product::needingReorder()->count(),
+            'valuation' => round($valuation, 2),
+            'uncosted_units' => $uncosted,
+        ];
     }
 
     /** The ledger for one product, newest first. */

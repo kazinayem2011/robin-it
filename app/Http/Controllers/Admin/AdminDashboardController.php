@@ -200,6 +200,9 @@ class AdminDashboardController extends Controller
             'is_active' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
+            // Not stock: the level at which to buy more. Safe to edit here
+            // because it moves nothing.
+            'reorder_level' => 'nullable|integer|min:0|max:100000',
 
             // Options. Stock is deliberately absent from every one of these:
             // editing a product must never move a unit.
@@ -214,6 +217,7 @@ class AdminDashboardController extends Controller
             'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.discount_price' => 'nullable|numeric|min:0',
             'variants.*.image_url' => 'nullable|string|max:2048',
+            'variants.*.reorder_level' => 'nullable|integer|min:0|max:100000',
             'variants.*.is_active' => 'nullable|boolean',
             // Only read when switching a single product over to options, where it
             // says how the existing shelf is split. It never adds stock.
@@ -310,6 +314,7 @@ class AdminDashboardController extends Controller
             'description' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
+            'reorder_level' => 'nullable|integer|min:0|max:100000',
         ]);
 
         $validated['slug'] = $this->uniqueSlug(Product::class, $validated['name']);

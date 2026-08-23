@@ -8,6 +8,7 @@ const newVariant = () => ({
     options: {},
     sku: '',
     image_url: '',
+    reorder_level: '',
     price: '',
     discount_price: '',
     opening_stock: '',
@@ -247,6 +248,19 @@ export default function VariantEditor({
                                         </div>
                                     </div>
                                 </div>
+
+                                <FormInput
+                                    label="Reorder at"
+                                    type="number"
+                                    min="0"
+                                    value={variant.reorder_level ?? ''}
+                                    onChange={(e) =>
+                                        patchVariant(variant.key, {
+                                            reorder_level: e.target.value,
+                                        })
+                                    }
+                                    placeholder="Product default"
+                                />
 
                                 {isConverting ? (
                                     <FormInput

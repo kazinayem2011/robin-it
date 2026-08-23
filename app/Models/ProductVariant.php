@@ -14,7 +14,7 @@ class ProductVariant extends Model
 {
     protected $fillable = [
         'product_id', 'name', 'sku', 'options', 'price', 'discount_price',
-        'stock_quantity', 'image_url', 'is_active', 'position',
+        'stock_quantity', 'reorder_level', 'image_url', 'is_active', 'position',
     ];
 
     protected $casts = [
@@ -22,6 +22,7 @@ class ProductVariant extends Model
         'price' => 'float',
         'discount_price' => 'float',
         'stock_quantity' => 'integer',
+        'reorder_level' => 'integer',
         'is_active' => 'boolean',
         'position' => 'integer',
     ];
@@ -103,6 +104,19 @@ class ProductVariant extends Model
         $values = array_filter(array_map('trim', array_values($options ?? [])), fn ($v) => $v !== '');
 
         return $values ? implode(' / ', $values) : 'Default';
+    }
+
+    /** Falls back to the parent product's level, then the store-wide default. */
+    public function reorderLevel(): int
+    {
+        return $this->reorder_level
+            ?? $this->product?->reorder_level
+            ?? (int) config('inventory.default_reorder_level', 10);
+    }
+
+    public function needsReorder(): bool
+    {
+        return $this->is_active && $this->stock_quantity <= $this->reorderLevel();
     }
 
     public function scopeActive($query)

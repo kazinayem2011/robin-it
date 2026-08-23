@@ -2490,10 +2490,10 @@
 
 .admin-variant-row {
     display: grid;
-    /* option values | price | sku | image | stock | remove */
+    /* values | price | sku | image | reorder | stock | remove */
     grid-template-columns:
-        minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.9fr)
-        minmax(0, 1.1fr) minmax(0, 0.9fr) auto;
+        minmax(0, 1.8fr) minmax(0, 0.8fr) minmax(0, 0.8fr)
+        minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
     gap: 10px;
     align-items: start;
     padding: 12px;
@@ -2770,4 +2770,65 @@
 
 .admin-receipt-lines li:last-child {
     border-bottom: none;
+}
+
+/* ── Stock summary strip ───────────────────────────────────────────────────── */
+
+.admin-stock-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.admin-stock-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 180px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+}
+
+.admin-stock-stat-value {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-stock-stat-label {
+    font-size: 12px;
+    color: var(--color-text-muted, #8a8f98);
+    line-height: 1.4;
+}
+
+/* The reorder count doubles as the filter toggle. */
+.admin-stock-stat-action {
+    cursor: pointer;
+    font: inherit;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+.admin-stock-stat-action:hover {
+    border-color: var(--color-brand-red, #d1202f);
+}
+
+.admin-stock-stat-action.is-active {
+    border-color: var(--color-brand-red, #d1202f);
+    background: rgba(209, 32, 47, 0.05);
+}
+
+.admin-stock-stat-action.is-active .admin-stock-stat-value {
+    color: var(--color-brand-red, #d1202f);
+}
+
+/* Short column headings should not wrap onto two lines in a narrow column. */
+.admin-table thead th {
+    white-space: nowrap;
 }

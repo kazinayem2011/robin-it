@@ -25,8 +25,9 @@ import StockLedgerModal from './StockLedgerModal';
 export default function AdminStock({
     products = {},
     filters = {},
-    lowStockThreshold = 10,
+    defaultReorderLevel = 10,
     adjustmentReasons = {},
+    summary = null,
 }) {
     const [receiveOpen, setReceiveOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
@@ -62,19 +63,39 @@ export default function AdminStock({
     }, [products]);
 
     // Stable identity: an inline arrow here re-fires the search effect forever.
-    const handleSearch = useCallback((value) => {
+    // The reorder filter is carried through so searching does not silently
+    // drop it.
+    const reorderFilter = filters.reorder;
+    const handleSearch = useCallback(
+        (value) => {
+            router.get(
+                '/admin/stock',
+                {
+                    search: value || undefined,
+                    reorder: reorderFilter ? 1 : undefined,
+                },
+                {
+                    preserveState: true,
+                    replace: true,
+                    only: ['products', 'filters', 'summary'],
+                },
+            );
+        },
+        [reorderFilter],
+    );
+
+    const reload = () => router.reload({ only: ['products', 'summary'] });
+
+    const toggleReorderFilter = useCallback(() => {
         router.get(
             '/admin/stock',
-            { search: value || undefined },
             {
-                preserveState: true,
-                replace: true,
-                only: ['products', 'filters'],
+                search: filters.search || undefined,
+                reorder: filters.reorder ? undefined : 1,
             },
+            { preserveState: true, replace: true },
         );
-    }, []);
-
-    const reload = () => router.reload({ only: ['products'] });
+    }, [filters.search, filters.reorder]);
 
     const columns = [
         {
@@ -114,7 +135,14 @@ export default function AdminStock({
                     row._kind === 'variant'
                         ? row._variant.stock_quantity
                         : row.stock_quantity;
-                const low = qty <= lowStockThreshold;
+
+                // Each row is judged by its own reorder level, falling back to
+                // the option's parent and then the store-wide default.
+                const level =
+                    (row._kind === 'variant'
+                        ? (row._variant.reorder_level ?? row.reorder_level)
+                        : row.reorder_level) ?? defaultReorderLevel;
+                const low = qty <= level;
 
                 return (
                     <span
@@ -126,7 +154,7 @@ export default function AdminStock({
                         title={
                             row._kind === 'parent'
                                 ? 'Total across every option'
-                                : undefined
+                                : `Reorder at ${level}`
                         }
                     >
                         {low && '⚠️ '}
@@ -138,7 +166,7 @@ export default function AdminStock({
         },
         {
             key: 'value',
-            header: 'Unit price',
+            header: 'Price',
             render: (row) =>
                 formatBdt(
                     row._kind === 'variant'
@@ -213,6 +241,50 @@ export default function AdminStock({
                         its reason, so the number here can always be explained.
                     </p>
 
+                    {summary && (
+                        <div className="admin-stock-summary">
+                            <div className="admin-stock-stat">
+                                <span className="admin-stock-stat-value">
+                                    {summary.units.toLocaleString()}
+                                </span>
+                                <span className="admin-stock-stat-label">
+                                    Units on hand
+                                </span>
+                            </div>
+
+                            <div className="admin-stock-stat">
+                                <span className="admin-stock-stat-value">
+                                    {formatBdt(summary.valuation)}
+                                </span>
+                                <span className="admin-stock-stat-label">
+                                    Stock at cost
+                                    {summary.uncosted_units > 0 &&
+                                        ` \u00b7 ${summary.uncosted_units} unit(s) have no recorded cost`}
+                                </span>
+                            </div>
+
+                            {/* The count doubles as the filter, so noticing
+                                something needs buying and seeing what are the
+                                same click. */}
+                            <button
+                                type="button"
+                                className={`admin-stock-stat admin-stock-stat-action ${
+                                    filters.reorder ? 'is-active' : ''
+                                }`}
+                                onClick={toggleReorderFilter}
+                            >
+                                <span className="admin-stock-stat-value">
+                                    {summary.needs_reorder}
+                                </span>
+                                <span className="admin-stock-stat-label">
+                                    {filters.reorder
+                                        ? 'Showing items to reorder — clear'
+                                        : 'Need reordering'}
+                                </span>
+                            </button>
+                        </div>
+                    )}
+
                     <DataTable
                         columns={columns}
                         data={rows}
@@ -222,8 +294,16 @@ export default function AdminStock({
                         onSearch={handleSearch}
                         searchPlaceholder="Search products..."
                         paginationLinks={products?.links || []}
-                        emptyTitle="Nothing in the catalogue yet"
-                        emptyDescription="Add a product first, then record the delivery that brought its stock in."
+                        emptyTitle={
+                            filters.reorder
+                                ? 'Nothing needs reordering'
+                                : 'Nothing in the catalogue yet'
+                        }
+                        emptyDescription={
+                            filters.reorder
+                                ? 'Every product is above its reorder level.'
+                                : 'Add a product first, then record the delivery that brought its stock in.'
+                        }
                         emptyIcon={Boxes}
                     />
                 </div>
