@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PcBuilderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\StockNotificationController;
 use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\WarrantyController;
 use App\Http\Controllers\ComparisonController;
@@ -51,6 +52,7 @@ Route::middleware('throttle:api')->group(function () {
     // Must be declared before the {slug} route below, or "filters" is matched
     // as a product slug and this endpoint 404s.
     Route::get(ApiEndpoints::PRODUCTS_FILTERS, [ProductController::class, 'filters']);
+    Route::get(ApiEndpoints::STOCK_NOTIFY_COUNT, [StockNotificationController::class, 'count']);
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
     // Product Reviews (read)
@@ -93,6 +95,8 @@ Route::middleware('throttle:lookup')->group(function () {
 Route::middleware('throttle:submissions')->group(function () {
     Route::post(ApiEndpoints::WARRANTY_CLAIM, [WarrantyController::class, 'store']);
     Route::post(ApiEndpoints::PC_BUILDER_SAVE, [PcBuilderController::class, 'save']);
+    // Anonymous, and it sends mail, so it is rate-limited like the rest.
+    Route::post(ApiEndpoints::STOCK_NOTIFY, [StockNotificationController::class, 'store']);
 });
 
 /*

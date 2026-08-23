@@ -4,6 +4,10 @@
  */
 
 export const API_ENDPOINTS = {
+    // "Tell me when this is back in stock."
+    STOCK_NOTIFY: '/stock-notifications',
+    STOCK_NOTIFY_COUNT: '/stock-notifications/count',
+
     // Categories API
     CATEGORIES: {
         MEGA_MENU: '/categories/mega-menu',

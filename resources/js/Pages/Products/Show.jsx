@@ -21,6 +21,7 @@ import {
     // The gallery renders <ProductImage> but never imported it, so the whole
     // page threw "ProductImage is not defined" and rendered nothing at all.
     ProductImage,
+    BackInStockForm,
 } from '../../Components';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -573,6 +574,16 @@ export default function ProductDetails(props) {
                                           : 'Add to Cart'}
                                 </Button>
                             </div>
+
+                            {/* Only when the thing being looked at is actually
+                                unavailable — on a variant product that means
+                                the chosen option, not the product overall. */}
+                            {soldOut && (
+                                <BackInStockForm
+                                    productId={product.id}
+                                    variantId={selectedVariant?.id ?? null}
+                                />
+                            )}
 
                             <div className="pdp-secondary-actions">
                                 <button

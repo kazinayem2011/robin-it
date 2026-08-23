@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
+use App\Jobs\NotifyBackInStock;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
@@ -102,6 +103,14 @@ class StockService
             } else {
                 Product::whereKey($product->id)->update(['stock_quantity' => $balanceAfter]);
                 $product->stock_quantity = $balanceAfter;
+            }
+
+            // Crossing back above zero is the moment anyone waiting wants to
+            // hear about. Queued after commit so the mail cannot roll the
+            // stock movement back, and so a thirty-line delivery does not sit
+            // waiting on thirty batches of email.
+            if ($current <= 0 && $balanceAfter > 0) {
+                NotifyBackInStock::dispatch($product->id, $variant?->id)->afterCommit();
             }
 
             return $movement;

@@ -21,6 +21,11 @@ class ApiEndpoints
     /** Price range and brands present in a selection, for the filter sidebar. */
     public const PRODUCTS_FILTERS = 'products/filters';
 
+    /** "Tell me when this is back in stock." */
+    public const STOCK_NOTIFY = 'stock-notifications';
+
+    public const STOCK_NOTIFY_COUNT = 'stock-notifications/count';
+
     public const PRODUCTS_SHOW = 'products/{slug}';
 
     public const PRODUCTS_FLASH_SALE = 'products/flash-sale';
