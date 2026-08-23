@@ -2856,25 +2856,6 @@
     white-space: nowrap;
 }
 
-/* Adding a supplier without leaving a half-entered delivery. */
-.admin-supplier-add {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: end;
-    margin: 12px 0;
-    padding: 12px;
-    border: 1px dashed var(--color-border, #e2e5ea);
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.02);
-}
-
-@media (max-width: 720px) {
-    .admin-supplier-add {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* ── Searchable select ─────────────────────────────────────────────────────── */
 
 .searchable-select {
@@ -2996,4 +2977,17 @@
 
 .searchable-select-more {
     border-top: 1px solid var(--color-border, #e2e5ea);
+}
+
+/* A supplier kept for its history but no longer offered when receiving. */
+.admin-supplier-retired {
+    margin-left: 8px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--color-text-muted, #8a8f98);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
 }

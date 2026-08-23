@@ -168,9 +168,13 @@ class ApiEndpoints
 
     public const ADMIN_STOCK_UNITS = 'stock/units';
 
-    public const ADMIN_SUPPLIERS = 'stock/suppliers';
+    // Suppliers are their own section, not part of the stock screen.
+    public const ADMIN_SUPPLIERS = 'suppliers';
 
-    public const ADMIN_SUPPLIERS_ITEM = 'stock/suppliers/{id}';
+    public const ADMIN_SUPPLIERS_ITEM = 'suppliers/{id}';
+
+    /** Just the list, for the delivery form's dropdown. */
+    public const ADMIN_SUPPLIER_OPTIONS = 'suppliers/options';
 
     public const ADMIN_PRODUCTS = 'products';
 

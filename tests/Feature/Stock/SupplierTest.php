@@ -40,7 +40,7 @@ class SupplierTest extends TestCase
 
     public function test_an_admin_can_add_a_supplier(): void
     {
-        $this->actingAs($this->admin())->postJson('/api/admin/stock/suppliers', [
+        $this->actingAs($this->admin())->postJson('/api/admin/suppliers', [
             'name' => 'Star Tech Ltd',
             'phone' => '01711223344',
         ])->assertStatus(201);
@@ -52,7 +52,7 @@ class SupplierTest extends TestCase
     {
         Supplier::create(['name' => 'Star Tech Ltd']);
 
-        $this->actingAs($this->admin())->postJson('/api/admin/stock/suppliers', [
+        $this->actingAs($this->admin())->postJson('/api/admin/suppliers', [
             'name' => 'Star Tech Ltd',
         ])->assertStatus(422);
     }
@@ -116,7 +116,7 @@ class SupplierTest extends TestCase
         );
 
         $this->actingAs($this->admin())
-            ->deleteJson("/api/admin/stock/suppliers/{$supplier->id}")
+            ->deleteJson("/api/admin/suppliers/{$supplier->id}")
             ->assertStatus(200);
 
         $this->assertDatabaseHas('suppliers', ['id' => $supplier->id, 'is_active' => false]);
@@ -128,7 +128,7 @@ class SupplierTest extends TestCase
         $supplier = Supplier::create(['name' => 'Never Used']);
 
         $this->actingAs($this->admin())
-            ->deleteJson("/api/admin/stock/suppliers/{$supplier->id}")
+            ->deleteJson("/api/admin/suppliers/{$supplier->id}")
             ->assertStatus(200);
 
         $this->assertDatabaseMissing('suppliers', ['id' => $supplier->id]);
@@ -137,7 +137,7 @@ class SupplierTest extends TestCase
     public function test_only_an_admin_can_manage_suppliers(): void
     {
         $response = $this->actingAs(User::factory()->create(['role' => 'customer']))
-            ->postJson('/api/admin/stock/suppliers', ['name' => 'Sneaky Supplier']);
+            ->postJson('/api/admin/suppliers', ['name' => 'Sneaky Supplier']);
 
         $this->assertContains($response->status(), [302, 403]);
         $this->assertDatabaseMissing('suppliers', ['name' => 'Sneaky Supplier']);
@@ -155,5 +155,26 @@ class SupplierTest extends TestCase
 
         $this->assertContains('Star Tech Ltd', $names);
         $this->assertNotContains('Retired One', $names, 'a retired supplier was offered');
+    }
+
+    public function test_suppliers_have_their_own_screen(): void
+    {
+        $supplier = Supplier::create(['name' => 'Star Tech Ltd', 'phone' => '01711223344']);
+        $product = $this->product();
+
+        app(StockService::class)->receive(
+            ['supplier_id' => $supplier->id],
+            [['product_id' => $product->id, 'quantity' => 6, 'unit_cost' => 500]]
+        );
+
+        $response = $this->actingAs($this->admin())->get('/admin/suppliers');
+        $response->assertStatus(200);
+
+        $row = collect($response->viewData('page')['props']['suppliers']['data'])->firstWhere('name', 'Star Tech Ltd');
+
+        $this->assertNotNull($row);
+        $this->assertSame(1, $row['receipts_count']);
+        $this->assertSame(6, (int) $row['units_received']);
+        $this->assertEqualsWithDelta(3000.0, (float) $row['total_spend'], 0.01);
     }
 }

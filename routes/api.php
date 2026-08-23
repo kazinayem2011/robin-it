@@ -4,6 +4,7 @@ use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
@@ -174,10 +175,13 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
-    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'suppliers']);
-    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'storeSupplier']);
-    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'updateSupplier']);
-    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'destroySupplier']);
+    // Suppliers. `options` is declared before the {id} route or it is matched
+    // as an id.
+    Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options']);
+    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index']);
+    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store']);
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update']);
+    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy']);
 
     // Banners
     Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminDashboardController::class, 'storeBanner']);

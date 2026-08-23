@@ -4,6 +4,7 @@ use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\ComparisonController;
@@ -196,10 +197,12 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->name('stock.adjust');
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->name('stock.movements');
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->name('stock.units');
-    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'suppliers'])->name('suppliers');
-    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'storeSupplier'])->name('suppliers.store');
-    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'updateSupplier'])->name('suppliers.update');
-    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'destroySupplier'])->name('suppliers.destroy');
+    // Suppliers, in their own section.
+    Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options'])->name('suppliers.options');
+    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers');
+    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update'])->name('suppliers.update');
+    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy'])->name('suppliers.destroy');
     Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->name('orders.return');
 });
 

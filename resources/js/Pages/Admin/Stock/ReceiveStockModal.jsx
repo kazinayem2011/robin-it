@@ -9,10 +9,7 @@ import {
     toast,
 } from '../../../Components';
 import { adminService } from '../../../services';
-import {
-    adminStockReceiptSchema,
-    adminSupplierSchema,
-} from '../../../validations';
+import { adminStockReceiptSchema } from '../../../validations';
 import { formatBdt } from '../../../utils/formatters';
 import { Plus, Trash2 } from 'lucide-react';
 
@@ -44,10 +41,6 @@ export default function ReceiveStockModal({
     suppliers = [],
 }) {
     const [units, setUnits] = useState([]);
-    const [supplierList, setSupplierList] = useState(suppliers);
-    // Adding a supplier mid-delivery is normal; bouncing to another screen
-    // would lose the half-entered receipt.
-    const [addingSupplier, setAddingSupplier] = useState(false);
 
     const formik = useFormik({
         initialValues: emptyReceipt(),
@@ -91,34 +84,6 @@ export default function ReceiveStockModal({
             }
         },
     });
-
-    const supplierForm = useFormik({
-        initialValues: { name: '', phone: '' },
-        validationSchema: adminSupplierSchema,
-        onSubmit: async (values, { setSubmitting, resetForm }) => {
-            try {
-                const created = await adminService.createSupplier({
-                    name: values.name.trim(),
-                    phone: values.phone || null,
-                });
-                setSupplierList((prev) =>
-                    [...prev, created].sort((a, b) =>
-                        a.name.localeCompare(b.name),
-                    ),
-                );
-                formik.setFieldValue('supplier_id', String(created.id));
-                setAddingSupplier(false);
-                resetForm();
-                toast.success(`Supplier "${created.name}" added.`);
-            } catch (err) {
-                toast.error(err?.message || 'Could not add that supplier.');
-            } finally {
-                setSubmitting(false);
-            }
-        },
-    });
-
-    useEffect(() => setSupplierList(suppliers), [suppliers]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -221,25 +186,22 @@ export default function ReceiveStockModal({
         >
             <form onSubmit={formik.handleSubmit}>
                 <div className="admin-grid-3col">
-                    <div>
-                        <FormSelect
-                            label="Supplier"
-                            name="supplier_id"
-                            formik={formik}
-                            placeholder="Choose a supplier…"
-                            options={supplierList.map((s) => ({
-                                value: String(s.id),
-                                label: s.name,
-                            }))}
-                        />
-                        <button
-                            type="button"
-                            className="admin-variant-image-btn"
-                            onClick={() => setAddingSupplier((v) => !v)}
-                        >
-                            {addingSupplier ? 'Cancel' : '+ New supplier'}
-                        </button>
-                    </div>
+                    {/* Suppliers are maintained in their own section; this
+                        only picks one. */}
+                    <FormSelect
+                        label="Supplier"
+                        name="supplier_id"
+                        formik={formik}
+                        placeholder={
+                            suppliers.length
+                                ? 'Choose a supplier…'
+                                : 'No suppliers yet'
+                        }
+                        options={suppliers.map((s) => ({
+                            value: String(s.id),
+                            label: s.name,
+                        }))}
+                    />
 
                     <FormInput
                         label="Invoice number"
@@ -255,31 +217,6 @@ export default function ReceiveStockModal({
                         formik={formik}
                     />
                 </div>
-
-                {addingSupplier && (
-                    <div className="admin-supplier-add">
-                        <FormInput
-                            label="Supplier name"
-                            name="name"
-                            formik={supplierForm}
-                            placeholder="Star Tech Ltd"
-                        />
-                        <FormInput
-                            label="Phone"
-                            name="phone"
-                            formik={supplierForm}
-                            placeholder="Optional"
-                        />
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={supplierForm.isSubmitting}
-                            onClick={supplierForm.handleSubmit}
-                        >
-                            Add supplier
-                        </Button>
-                    </div>
-                )}
 
                 <div className="admin-receive-lines">
                     {lines.map((line) => (

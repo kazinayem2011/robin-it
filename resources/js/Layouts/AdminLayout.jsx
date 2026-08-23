@@ -5,6 +5,7 @@ import {
     LayoutDashboard,
     Package,
     Boxes,
+    Truck,
     ShoppingCart,
     FolderTree,
     Users,
@@ -85,6 +86,16 @@ export default function AdminLayout({
                         <div className="admin-nav-left">
                             <Boxes size={17} />
                             <span>Stock & Inventory</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href={ROUTES.ADMIN_SUPPLIERS}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/suppliers') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Truck size={17} />
+                            <span>Suppliers</span>
                         </div>
                     </Link>
 
