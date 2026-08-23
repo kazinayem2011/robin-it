@@ -47,6 +47,9 @@ Route::middleware('throttle:api')->group(function () {
     Route::get(ApiEndpoints::PC_BUILDER_CATEGORIES, [ProductController::class, 'pcBuilderCategories']);
     Route::get(ApiEndpoints::PC_BUILDER_COMPONENTS, [ProductController::class, 'pcBuilderComponents']);
     Route::get(ApiEndpoints::PRODUCTS_INDEX, [ProductController::class, 'index']);
+    // Must be declared before the {slug} route below, or "filters" is matched
+    // as a product slug and this endpoint 404s.
+    Route::get(ApiEndpoints::PRODUCTS_FILTERS, [ProductController::class, 'filters']);
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
     // Product Reviews (read)

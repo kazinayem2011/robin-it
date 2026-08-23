@@ -18,6 +18,9 @@ class ApiEndpoints
     // Products
     public const PRODUCTS_INDEX = 'products';
 
+    /** Price range and brands present in a selection, for the filter sidebar. */
+    public const PRODUCTS_FILTERS = 'products/filters';
+
     public const PRODUCTS_SHOW = 'products/{slug}';
 
     public const PRODUCTS_FLASH_SALE = 'products/flash-sale';

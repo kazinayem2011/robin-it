@@ -28,6 +28,9 @@ class ProductController extends Controller
             'brand_id' => 'nullable|integer',
             'is_featured' => 'nullable|boolean',
             'in_stock' => 'nullable|boolean',
+            'on_sale' => 'nullable|boolean',
+            'min_price' => 'nullable|numeric|min:0',
+            'max_price' => 'nullable|numeric|min:0',
             'search' => 'nullable|string|max:120',
             'sort' => 'nullable|string|in:latest,price_low_high,price_high_low,name_asc',
             'per_page' => 'nullable|integer|min:1|max:'.ProductService::MAX_PER_PAGE,
@@ -43,6 +46,28 @@ class ProductController extends Controller
             $products,
             'Products fetched successfully.',
             fn ($product) => $this->productService->formatProductCardData($product)
+        );
+    }
+
+    /**
+     * The price range and brands present in a selection, so the filter sidebar
+     * can draw itself from the real catalogue rather than hardcoded brackets.
+     */
+    public function filters(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'category_slug' => 'nullable|string|max:120',
+            'category_id' => 'nullable|integer',
+            'brand_slug' => 'nullable|string|max:120',
+            'brand_id' => 'nullable|integer',
+            'in_stock' => 'nullable|boolean',
+            'on_sale' => 'nullable|boolean',
+            'search' => 'nullable|string|max:120',
+        ]);
+
+        return $this->successResponse(
+            $this->productService->getFilterFacets($validated),
+            'Filters fetched successfully.'
         );
     }
 

@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -29,9 +30,30 @@ class ProductService
      */
     public function getFilteredProducts(array $filters, int $perPage = self::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
-        $query = Product::active()
+        $query = $this->baseFilteredQuery($filters)
             ->with(['brand', 'images', 'specifications', 'category'])
             ->withCatalogAggregates();
+
+        // Sorting — price sorts use the discounted price the customer sees.
+        $sort = $filters['sort'] ?? 'latest';
+        match ($sort) {
+            'price_low_high' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' asc'),
+            'price_high_low' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' desc'),
+            'name_asc' => $query->orderBy('name', 'asc'),
+            default => $query->latest(),
+        };
+
+        return $query->paginate($this->clampPerPage($perPage))->withQueryString();
+    }
+
+    /**
+     * Every filter except sorting and paging, shared by the listing and by the
+     * facets that describe it — so a sidebar can never disagree with the
+     * results it sits next to.
+     */
+    private function baseFilteredQuery(array $filters): Builder
+    {
+        $query = Product::active();
 
         // Filter by Category Slug or ID
         if (! empty($filters['category_slug'])) {
@@ -57,9 +79,32 @@ class ProductService
             $query->where('is_featured', true);
         }
 
-        // Only show what can actually be bought
+        // Only show what can actually be bought. On a variant product
+        // stock_quantity is the maintained sum of its active options, so this
+        // stays correct without joining them.
         if (! empty($filters['in_stock'])) {
             $query->where('stock_quantity', '>', 0);
+        }
+
+        // Price range, measured against the price the customer actually pays
+        // rather than the list price — otherwise a heavily discounted card is
+        // filtered out of the bracket it visibly sits in.
+        // The `+ 0` is load-bearing on SQLite. PDO binds these as text, and a
+        // CASE expression — unlike a column — carries no type affinity, so
+        // SQLite compares storage classes instead of values and rules every
+        // number lower than every string: `50000 <= '100'` came out true.
+        // Adding zero forces numeric context, and is a no-op on MySQL.
+        if (isset($filters['min_price']) && $filters['min_price'] !== '' && $filters['min_price'] !== null) {
+            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' >= (? + 0)', [(float) $filters['min_price']]);
+        }
+
+        if (isset($filters['max_price']) && $filters['max_price'] !== '' && $filters['max_price'] !== null) {
+            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' <= (? + 0)', [(float) $filters['max_price']]);
+        }
+
+        // Genuinely discounted right now — the same rule the badge uses.
+        if (! empty($filters['on_sale'])) {
+            $query->discounted();
         }
 
         // Keyword Search
@@ -71,16 +116,49 @@ class ProductService
             });
         }
 
-        // Sorting — price sorts use the discounted price the customer sees.
-        $sort = $filters['sort'] ?? 'latest';
-        match ($sort) {
-            'price_low_high' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' asc'),
-            'price_high_low' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' desc'),
-            'name_asc' => $query->orderBy('name', 'asc'),
-            default => $query->latest(),
-        };
+        return $query;
+    }
 
-        return $query->paginate($this->clampPerPage($perPage))->withQueryString();
+    /**
+     * What the filter sidebar needs to draw itself: the price range actually
+     * present in this selection, and the brands within it.
+     *
+     * Deliberately ignores the shopper's own price bounds — a slider whose ends
+     * move every time it is dragged is unusable — but respects category, brand,
+     * search and stock, so the range always reflects a real set of products.
+     *
+     * @return array{min_price: float, max_price: float, brands: array, total: int}
+     */
+    public function getFilterFacets(array $filters): array
+    {
+        $scoped = array_diff_key($filters, array_flip(['min_price', 'max_price', 'sort', 'page', 'per_page']));
+
+        $query = $this->baseFilteredQuery($scoped);
+
+        $bounds = (clone $query)
+            ->selectRaw('MIN('.self::EFFECTIVE_PRICE_SQL.') as min_price')
+            ->selectRaw('MAX('.self::EFFECTIVE_PRICE_SQL.') as max_price')
+            ->reorder()
+            ->first();
+
+        $brands = (clone $query)
+            ->reorder()
+            ->with('brand:id,name,slug')
+            ->get(['id', 'brand_id'])
+            ->pluck('brand')
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values()
+            ->map(fn ($b) => ['id' => $b->id, 'name' => $b->name, 'slug' => $b->slug])
+            ->all();
+
+        return [
+            'min_price' => (float) ($bounds->min_price ?? 0),
+            'max_price' => (float) ($bounds->max_price ?? 0),
+            'brands' => $brands,
+            'total' => (clone $query)->reorder()->count(),
+        ];
     }
 
     /**
