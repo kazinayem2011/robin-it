@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
-import { Button, DataTable, toast } from '../../../Components';
-import { adminService } from '../../../services';
+import { Button, DataTable } from '../../../Components';
 import { formatBdt } from '../../../utils/formatters';
 import { Boxes, PackagePlus, History, SlidersHorizontal } from 'lucide-react';
 import ReceiveStockModal from './ReceiveStockModal';

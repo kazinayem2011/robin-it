@@ -18,16 +18,22 @@ export default function StockLedgerModal({ target, onClose }) {
     const product = target?.product;
     const variant = target?.variant;
 
+    // Depend on the ids rather than the objects: `target` is rebuilt by the
+    // parent on every render, so depending on it would refetch the ledger
+    // continuously while the modal is open.
+    const productId = product?.id ?? null;
+    const variantId = variant?.id ?? null;
+
     useEffect(() => {
-        if (!target) return;
+        if (!productId) return;
 
         let cancelled = false;
         setState({ loading: true, movements: [], integrity: null });
 
         adminService
             .getStockMovements(
-                product.id,
-                variant ? { variant_id: variant.id } : {},
+                productId,
+                variantId ? { variant_id: variantId } : {},
             )
             .then((res) => {
                 if (cancelled) return;
@@ -49,7 +55,7 @@ export default function StockLedgerModal({ target, onClose }) {
         return () => {
             cancelled = true;
         };
-    }, [target, product?.id, variant?.id]);
+    }, [productId, variantId]);
 
     return (
         <Modal

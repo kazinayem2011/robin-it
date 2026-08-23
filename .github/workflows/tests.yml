@@ -108,5 +108,18 @@ jobs:
       - name: Check JS/CSS formatting
         run: npx prettier --check "resources/js/**/*.{js,jsx,css}"
 
+      # Catches references to things that do not exist and hooks called
+      # conditionally. Products/Show.jsx once rendered <ProductImage> without
+      # importing it: the build succeeded, and every product detail page threw
+      # at render and showed a blank screen. No PHP test can see that.
+      - name: Lint JavaScript
+        run: npm run lint
+
+      # React component and hook behaviour. The admin search box once fired an
+      # unbounded request loop — 280 requests in 6 seconds — which was likewise
+      # invisible to the PHP suite.
+      - name: Frontend tests
+        run: npm test
+
       - name: Build production assets
         run: npm run build

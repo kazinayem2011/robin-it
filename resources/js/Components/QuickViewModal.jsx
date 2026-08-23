@@ -11,10 +11,13 @@ import { ROUTES } from '../constants/endpoints';
 import { ShoppingCart, Eye, Plus, Minus, Check } from 'lucide-react';
 
 export default function QuickViewModal({ show, onClose, product }) {
-    if (!product) return null;
-
+    // Hooks first, then the early return — see ProductCard for why. This modal
+    // is mounted with product=null until a card is clicked, which is exactly
+    // the sequence that breaks.
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
+
+    if (!product) return null;
 
     const price = product.discount_price || product.price;
     const hasDiscount =

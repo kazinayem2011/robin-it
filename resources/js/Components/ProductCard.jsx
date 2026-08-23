@@ -28,9 +28,13 @@ export const ProductCard = ({
     onToggleWishlist,
     isWishlisted = false,
 }) => {
-    if (!product) return null;
-
+    // Hooks must run before any early return: React matches them up by call
+    // order, so bailing out first means a card that renders once without a
+    // product and then with one changes its hook count and throws
+    // "Rendered more hooks than during the previous render".
     const [showQuickView, setShowQuickView] = useState(false);
+
+    if (!product) return null;
 
     // Normalize prices & discounts
     const regularPrice = product.raw_old_price || product.price || 0;

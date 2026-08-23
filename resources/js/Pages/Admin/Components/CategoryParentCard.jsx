@@ -55,7 +55,7 @@ export const CategoryParentCard = ({
                                 </span>
                             ) : null}
 
-                            {Boolean(parent.is_offer) ? (
+                            {parent.is_offer ? (
                                 <span className="nav-chip-badge badge-sale">
                                     OFFER
                                 </span>

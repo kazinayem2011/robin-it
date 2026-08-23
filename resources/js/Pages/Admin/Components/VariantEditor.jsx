@@ -33,7 +33,12 @@ export default function VariantEditor({ formik, editingProduct }) {
     const onHand = Number(editingProduct?.stock_quantity ?? 0);
 
     const attributes = formik.values.variant_attributes || [];
-    const variants = formik.values.variants || [];
+
+    // The `|| []` fallback builds a new array on every render, which would make
+    // the allocation useMemo below recompute every time. Same shape as the
+    // effect loop that took the admin down, so it is pinned here.
+    const rawVariants = formik.values.variants;
+    const variants = useMemo(() => rawVariants || [], [rawVariants]);
 
     const allocated = useMemo(
         () =>
