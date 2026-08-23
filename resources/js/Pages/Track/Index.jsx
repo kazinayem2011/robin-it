@@ -245,6 +245,9 @@ export default function TrackOrder() {
                                         <div>
                                             <span className="tracking-item-name">
                                                 {item.product_name}
+                                                {item.variant_name
+                                                    ? ` (${item.variant_name})`
+                                                    : ''}
                                             </span>
                                             <span className="tracking-item-qty">
                                                 Qty: {item.quantity} ×{' '}

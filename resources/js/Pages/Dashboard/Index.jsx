@@ -416,6 +416,9 @@ export default function Index({
                                                                                 {
                                                                                     item.product_name
                                                                                 }
+                                                                                {item.variant_name
+                                                                                    ? ` (${item.variant_name})`
+                                                                                    : ''}
                                                                             </div>
                                                                             <div className="order-item-sub">
                                                                                 Qty:{' '}
@@ -560,6 +563,9 @@ export default function Index({
                                                                                 {
                                                                                     item.product_name
                                                                                 }
+                                                                                {item.variant_name
+                                                                                    ? ` (${item.variant_name})`
+                                                                                    : ''}
                                                                             </div>
                                                                             <div className="order-item-sub">
                                                                                 Qty:{' '}

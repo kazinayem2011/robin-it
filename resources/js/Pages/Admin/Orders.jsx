@@ -327,6 +327,14 @@ export default function Orders({
                                                     item.product_name ||
                                                     'Hardware Component'}
                                             </strong>
+                                            {/* Frozen on the line at purchase
+                                                time, so it still reads correctly
+                                                if the option is renamed later. */}
+                                            {item.variant_name && (
+                                                <div className="admin-field-hint">
+                                                    {item.variant_name}
+                                                </div>
+                                            )}
                                         </td>
                                         <td>{formatBdt(item.price)}</td>
                                         <td>× {item.quantity}</td>

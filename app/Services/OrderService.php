@@ -242,6 +242,10 @@ class OrderService
                 return [
                     'id' => $item->id,
                     'product_name' => $item->product_name,
+                    // The option is part of what was bought, so tracking has to
+                    // name it too — otherwise a customer who chose the 32GB
+                    // cannot tell which one is on its way.
+                    'variant_name' => $item->variant_name,
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
                     'total' => (float) $item->total,

@@ -41,6 +41,12 @@
             <tr>
                 <td style="padding:14px 8px 14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:20px; color:#0f172a;">
                     {{ $item->product_name }}
+                    {{-- The option is part of what was bought: without it a
+                         customer who chose the 32GB cannot tell from this
+                         email which one is on its way. --}}
+                    @if ($item->variant_name)
+                        <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">{{ $item->variant_name }}</span>
+                    @endif
                     <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">৳{{ number_format($item->price, 2) }} each</span>
                 </td>
                 <td align="center" style="padding:14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#334155;">{{ $item->quantity }}</td>
