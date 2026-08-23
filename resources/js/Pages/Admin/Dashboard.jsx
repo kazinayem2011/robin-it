@@ -140,81 +140,86 @@ export default function Dashboard({
                         </Link>
                     </div>
 
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Quick Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {recentOrders.map((order) => (
-                                <tr key={order.id}>
-                                    <td>
-                                        <strong className="admin-table-item-title">
-                                            #{order.order_number}
-                                        </strong>
-                                        <div className="admin-table-item-sub">
-                                            {order.payment_method}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="admin-table-item-title">
-                                            {order.user?.name ||
-                                                order.shipping_address?.name ||
-                                                'Guest'}
-                                        </div>
-                                        <div className="admin-table-item-sub">
-                                            {formatBdPhone(
-                                                order.user?.phone ||
-                                                    order.shipping_address
-                                                        ?.phone,
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <strong className="admin-table-price-strong">
-                                            {formatBdt(order.total)}
-                                        </strong>
-                                    </td>
-                                    <td>
-                                        <StatusBadge status={order.status} />
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={order.status}
-                                            onChange={(e) =>
-                                                handleStatusChange(
-                                                    order.id,
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="admin-status-dropdown"
-                                        >
-                                            <option value="pending">
-                                                Pending
-                                            </option>
-                                            <option value="processing">
-                                                Processing
-                                            </option>
-                                            <option value="shipped">
-                                                Shipped
-                                            </option>
-                                            <option value="delivered">
-                                                Delivered
-                                            </option>
-                                            <option value="cancelled">
-                                                Cancelled
-                                            </option>
-                                        </select>
-                                    </td>
+                    <div className="admin-table-responsive">
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Quick Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {recentOrders.map((order) => (
+                                    <tr key={order.id}>
+                                        <td>
+                                            <strong className="admin-table-item-title">
+                                                #{order.order_number}
+                                            </strong>
+                                            <div className="admin-table-item-sub">
+                                                {order.payment_method}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="admin-table-item-title">
+                                                {order.user?.name ||
+                                                    order.shipping_address
+                                                        ?.name ||
+                                                    'Guest'}
+                                            </div>
+                                            <div className="admin-table-item-sub">
+                                                {formatBdPhone(
+                                                    order.user?.phone ||
+                                                        order.shipping_address
+                                                            ?.phone,
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong className="admin-table-price-strong">
+                                                {formatBdt(order.total)}
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <StatusBadge
+                                                status={order.status}
+                                            />
+                                        </td>
+                                        <td>
+                                            <select
+                                                value={order.status}
+                                                onChange={(e) =>
+                                                    handleStatusChange(
+                                                        order.id,
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="admin-status-dropdown"
+                                            >
+                                                <option value="pending">
+                                                    Pending
+                                                </option>
+                                                <option value="processing">
+                                                    Processing
+                                                </option>
+                                                <option value="shipped">
+                                                    Shipped
+                                                </option>
+                                                <option value="delivered">
+                                                    Delivered
+                                                </option>
+                                                <option value="cancelled">
+                                                    Cancelled
+                                                </option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Low Stock Alerts Box */}

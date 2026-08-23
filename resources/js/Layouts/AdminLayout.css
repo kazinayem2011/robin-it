@@ -2272,3 +2272,32 @@
     flex: 1 1 260px;
     margin-bottom: 0;
 }
+
+/* ---------------------------------------------------------------
+   Grid overflow
+   Grid items default to min-width:auto, so a column containing a
+   table cannot shrink below that table's intrinsic width. On the
+   dashboard that pushed .admin-grid-2col to 1311px inside a 1180px
+   container and made the whole admin area scroll sideways.
+   --------------------------------------------------------------- */
+.admin-grid-2col > *,
+.admin-grid-equal-2col > *,
+.admin-grid-3col > * {
+    min-width: 0;
+}
+
+/*
+ * Wide tables scroll within their own card instead of stretching the
+ * page. .admin-table-responsive was already referenced by DataTable but
+ * had no rule behind it.
+ */
+.admin-table-responsive {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-responsive > .admin-table {
+    min-width: 520px;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useDebounce } from '@/hooks';
 
@@ -29,19 +29,38 @@ export const SearchInput = ({
     const [searchTerm, setSearchTerm] = useState(controlledValue);
     const debouncedSearchTerm = useDebounce(searchTerm, delay);
 
+    /*
+     * Held in a ref rather than a dependency. Callers pass an inline arrow
+     * function, so `onSearch` is a new identity on every render — depending on
+     * it made this effect re-run after each response, fire another request, and
+     * loop. The admin customers screen was issuing ~47 requests a second.
+     */
+    const onSearchRef = useRef(onSearch);
+    useEffect(() => {
+        onSearchRef.current = onSearch;
+    });
+
     // Sync if parent updates controlledValue
     useEffect(() => {
         if (controlledValue !== undefined && controlledValue !== searchTerm) {
             setSearchTerm(controlledValue);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [controlledValue]);
 
-    // Trigger debounced onSearch callback
+    /*
+     * Only search once the term actually changes. Firing on mount would re-request
+     * the data the server just rendered.
+     */
+    const isFirstRun = useRef(true);
     useEffect(() => {
-        if (onSearch) {
-            onSearch(debouncedSearchTerm);
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
         }
-    }, [debouncedSearchTerm, onSearch]);
+
+        onSearchRef.current?.(debouncedSearchTerm);
+    }, [debouncedSearchTerm]);
 
     const handleInputChange = (e) => {
         const val = e.target.value;
@@ -56,9 +75,7 @@ export const SearchInput = ({
         if (onChange) {
             onChange({ target: { value: '' } });
         }
-        if (onSearch) {
-            onSearch('');
-        }
+        onSearchRef.current?.('');
     };
 
     return (
