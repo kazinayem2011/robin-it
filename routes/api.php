@@ -174,6 +174,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
+    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'suppliers']);
+    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'storeSupplier']);
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'updateSupplier']);
+    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'destroySupplier']);
 
     // Banners
     Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminDashboardController::class, 'storeBanner']);

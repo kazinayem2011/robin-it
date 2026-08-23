@@ -196,6 +196,10 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->name('stock.adjust');
     Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->name('stock.movements');
     Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->name('stock.units');
+    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'suppliers'])->name('suppliers');
+    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [StockController::class, 'storeSupplier'])->name('suppliers.store');
+    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'updateSupplier'])->name('suppliers.update');
+    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [StockController::class, 'destroySupplier'])->name('suppliers.destroy');
     Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->name('orders.return');
 });
 

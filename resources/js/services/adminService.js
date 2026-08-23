@@ -61,6 +61,35 @@ export const adminService = {
         return response.data;
     },
 
+    /** Suppliers, for the delivery form's dropdown. */
+    async getSuppliers() {
+        const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.SUPPLIERS);
+        return response.data;
+    },
+
+    async createSupplier(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.SUPPLIERS,
+            payload,
+        );
+        return response.data;
+    },
+
+    async updateSupplier(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.SUPPLIER_ITEM(id),
+            payload,
+        );
+        return response.data;
+    },
+
+    async deleteSupplier(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.SUPPLIER_ITEM(id),
+        );
+        return response.data;
+    },
+
     /** Past deliveries. */
     async getStockReceipts(params = {}) {
         const response = await axiosInstance.get(

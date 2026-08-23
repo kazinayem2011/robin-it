@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useFormik } from 'formik';
 import { Button, FormInput, Modal, toast } from '../../../Components';
 import { adminService } from '../../../services';
+import { adminOrderReturnSchema } from '../../../validations';
 
 /**
  * Taking back a delivered order, item by item.
@@ -10,34 +12,68 @@ import { adminService } from '../../../services';
  * a broken part back on sale is the failure this is here to prevent.
  */
 export default function OrderReturnModal({ order, onClose, onSaved }) {
-    const [lines, setLines] = useState({});
-    const [note, setNote] = useState('');
-    const [saving, setSaving] = useState(false);
-
     const items = useMemo(() => order?.items || [], [order]);
+
+    const formik = useFormik({
+        initialValues: { note: '', lines: {} },
+        validationSchema: adminOrderReturnSchema,
+        onSubmit: async (values, { setSubmitting }) => {
+            const payload = items
+                .map((item) => ({
+                    order_item_id: item.id,
+                    resellable: Number(values.lines[item.id]?.resellable) || 0,
+                    damaged: Number(values.lines[item.id]?.damaged) || 0,
+                }))
+                .filter((l) => l.resellable > 0 || l.damaged > 0);
+
+            try {
+                await adminService.returnOrder(order.id, {
+                    lines: payload,
+                    note: values.note || null,
+                });
+                toast.success(
+                    `Return recorded — ${totals.back} back to stock` +
+                        (totals.lost > 0
+                            ? `, ${totals.lost} written off.`
+                            : '.'),
+                );
+                onSaved?.();
+            } catch (err) {
+                toast.error(err?.message || 'Could not record this return.');
+            } finally {
+                setSubmitting(false);
+            }
+        },
+    });
+
+    const lines = formik.values.lines;
 
     useEffect(() => {
         if (!order) return;
 
-        setNote('');
-        setLines(
-            Object.fromEntries(
-                (order.items || []).map((item) => [
-                    item.id,
-                    { resellable: '', damaged: '' },
-                ]),
-            ),
-        );
+        formik.resetForm({
+            values: {
+                note: '',
+                lines: Object.fromEntries(
+                    (order.items || []).map((item) => [
+                        item.id,
+                        { resellable: '', damaged: '' },
+                    ]),
+                ),
+            },
+        });
+        // Resetting on the order alone; depending on formik's identity loops.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [order]);
 
     const outstanding = (item) =>
         Math.max(0, (item.quantity || 0) - (item.returned_quantity || 0));
 
     const patch = (id, key, value) =>
-        setLines((prev) => ({
-            ...prev,
-            [id]: { ...prev[id], [key]: value },
-        }));
+        formik.setFieldValue('lines', {
+            ...lines,
+            [id]: { ...lines[id], [key]: value },
+        });
 
     const totals = useMemo(() => {
         let back = 0;
@@ -59,46 +95,6 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
         return total > outstanding(item);
     });
 
-    const submit = async () => {
-        if (totals.back + totals.lost === 0) {
-            toast.error('Enter how many units came back.');
-            return;
-        }
-
-        if (overLine) {
-            toast.error(
-                `Only ${outstanding(overLine)} of "${overLine.product_name}" are still outstanding.`,
-            );
-            return;
-        }
-
-        setSaving(true);
-
-        try {
-            const payload = items
-                .map((item) => ({
-                    order_item_id: item.id,
-                    resellable: Number(lines[item.id]?.resellable) || 0,
-                    damaged: Number(lines[item.id]?.damaged) || 0,
-                }))
-                .filter((l) => l.resellable > 0 || l.damaged > 0);
-
-            await adminService.returnOrder(order.id, {
-                lines: payload,
-                note: note || null,
-            });
-            toast.success(
-                `Return recorded — ${totals.back} back to stock` +
-                    (totals.lost > 0 ? `, ${totals.lost} written off.` : '.'),
-            );
-            onSaved?.();
-        } catch (err) {
-            toast.error(err?.message || 'Could not record this return.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
     return (
         <Modal
             isOpen={Boolean(order)}
@@ -118,10 +114,12 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
                             Cancel
                         </Button>
                         <Button
-                            onClick={submit}
-                            disabled={saving || Boolean(overLine)}
+                            onClick={formik.handleSubmit}
+                            disabled={formik.isSubmitting || Boolean(overLine)}
                         >
-                            {saving ? 'Recording…' : 'Confirm return'}
+                            {formik.isSubmitting
+                                ? 'Recording…'
+                                : 'Confirm return'}
                         </Button>
                     </div>
                 </div>
@@ -217,8 +215,8 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
 
             <FormInput
                 label="Note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                name="note"
+                formik={formik}
                 placeholder="Why was it returned?"
             />
         </Modal>

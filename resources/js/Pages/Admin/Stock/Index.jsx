@@ -28,6 +28,7 @@ export default function AdminStock({
     defaultReorderLevel = 10,
     adjustmentReasons = {},
     summary = null,
+    suppliers = [],
 }) {
     const [receiveOpen, setReceiveOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
@@ -185,6 +186,7 @@ export default function AdminStock({
                         <Button
                             variant="secondary"
                             size="sm"
+                            icon={SlidersHorizontal}
                             onClick={() =>
                                 setAdjusting({
                                     product: row,
@@ -192,11 +194,12 @@ export default function AdminStock({
                                 })
                             }
                         >
-                            <SlidersHorizontal size={14} /> Adjust
+                            Adjust
                         </Button>
                         <Button
                             variant="ghost"
                             size="sm"
+                            icon={History}
                             onClick={() =>
                                 setLedgerFor({
                                     product: row,
@@ -204,7 +207,7 @@ export default function AdminStock({
                                 })
                             }
                         >
-                            <History size={14} /> History
+                            History
                         </Button>
                     </div>
                 ),
@@ -225,12 +228,16 @@ export default function AdminStock({
                         <div className="admin-input-row-flex">
                             <Button
                                 variant="secondary"
+                                icon={ClipboardList}
                                 onClick={() => setHistoryOpen(true)}
                             >
-                                <ClipboardList size={16} /> Deliveries
+                                Deliveries
                             </Button>
-                            <Button onClick={() => setReceiveOpen(true)}>
-                                <PackagePlus size={16} /> Receive stock
+                            <Button
+                                icon={PackagePlus}
+                                onClick={() => setReceiveOpen(true)}
+                            >
+                                Receive stock
                             </Button>
                         </div>
                     </div>
@@ -294,6 +301,15 @@ export default function AdminStock({
                         onSearch={handleSearch}
                         searchPlaceholder="Search products..."
                         paginationLinks={products?.links || []}
+                        // Rows are expanded client-side (a variant product
+                        // becomes a parent row plus one per option), so the
+                        // counts have to come from the paginator or the footer
+                        // reports however many rows were drawn.
+                        paginationMeta={{
+                            from: products?.from,
+                            to: products?.to,
+                            total: products?.total,
+                        }}
                         emptyTitle={
                             filters.reorder
                                 ? 'Nothing needs reordering'
@@ -310,6 +326,7 @@ export default function AdminStock({
             </div>
 
             <ReceiveStockModal
+                suppliers={suppliers}
                 isOpen={receiveOpen}
                 onClose={() => setReceiveOpen(false)}
                 onSaved={() => {

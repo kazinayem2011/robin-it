@@ -1,6 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Button, FormInput, Modal, toast } from '../../../Components';
+import React from 'react';
+import { useFormik } from 'formik';
+import {
+    Button,
+    FormInput,
+    FormSelect,
+    Modal,
+    toast,
+} from '../../../Components';
 import { adminService } from '../../../services';
+import { adminStockAdjustmentSchema } from '../../../validations';
 
 /**
  * A counted correction: breakage, loss, or a stock-take that disagrees.
@@ -15,63 +23,70 @@ export default function AdjustStockModal({
     onClose,
     onSaved,
 }) {
-    const [quantity, setQuantity] = useState('');
-    const [reason, setReason] = useState('stock_take');
-    const [note, setNote] = useState('');
-    const [saving, setSaving] = useState(false);
-
     const product = target?.product;
     const variant = target?.variant;
     const onHand = variant
         ? variant.stock_quantity
         : (product?.stock_quantity ?? 0);
-    const delta = Number(quantity) || 0;
-    const projected = onHand + delta;
 
-    useEffect(() => {
-        if (target) {
-            setQuantity('');
-            setReason('stock_take');
-            setNote('');
-        }
-    }, [target]);
+    const formik = useFormik({
+        initialValues: { quantity: '', reason: 'stock_take', note: '' },
+        validationSchema: adminStockAdjustmentSchema,
+        onSubmit: async (values, { setSubmitting, setFieldError }) => {
+            const delta = Number(values.quantity);
 
-    const submit = async () => {
-        if (!delta) {
-            toast.error('Enter how many units to add or remove.');
-            return;
-        }
+            // The server refuses this too; catching it here keeps the admin
+            // from losing a typed note to a round trip.
+            if (onHand + delta < 0) {
+                setFieldError(
+                    'quantity',
+                    `Only ${onHand} on hand — that would go below zero.`,
+                );
+                setSubmitting(false);
 
-        if (projected < 0) {
-            toast.error(`Only ${onHand} on hand — that would go below zero.`);
-            return;
-        }
+                return;
+            }
 
-        if (reason === 'other' && !note.trim()) {
-            toast.error('Explain the adjustment in the note.');
-            return;
-        }
+            try {
+                const movement = await adminService.adjustStock({
+                    product_id: product.id,
+                    product_variant_id: variant?.id ?? null,
+                    quantity: delta,
+                    reason: values.reason,
+                    note: values.note || null,
+                });
+                toast.success(
+                    `Stock adjusted to ${movement?.balance_after ?? onHand + delta}.`,
+                );
+                onSaved?.();
+            } catch (err) {
+                toast.error(err?.message || 'Could not adjust stock.');
+            } finally {
+                setSubmitting(false);
+            }
+        },
+    });
 
-        setSaving(true);
+    // Reset whenever a different unit is opened, without enableReinitialize:
+    // paired with resetForm it fights back and blanks the form.
+    const targetKey = `${product?.id ?? ''}:${variant?.id ?? ''}`;
+    const lastKey = React.useRef(null);
 
-        try {
-            const movement = await adminService.adjustStock({
-                product_id: product.id,
-                product_variant_id: variant?.id ?? null,
-                quantity: delta,
-                reason,
-                note: note || null,
+    React.useEffect(() => {
+        if (target && lastKey.current !== targetKey) {
+            lastKey.current = targetKey;
+            formik.resetForm({
+                values: { quantity: '', reason: 'stock_take', note: '' },
             });
-            toast.success(
-                `Stock adjusted to ${movement?.balance_after ?? projected}.`,
-            );
-            onSaved?.();
-        } catch (err) {
-            toast.error(err?.message || 'Could not adjust stock.');
-        } finally {
-            setSaving(false);
         }
-    };
+
+        if (!target) lastKey.current = null;
+        // formik is stable enough here; re-running on its identity would loop.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [target, targetKey]);
+
+    const delta = Number(formik.values.quantity) || 0;
+    const projected = onHand + delta;
 
     return (
         <Modal
@@ -84,63 +99,69 @@ export default function AdjustStockModal({
                     <Button variant="secondary" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button onClick={submit} disabled={saving || !delta}>
-                        {saving ? 'Recording…' : 'Record adjustment'}
+                    <Button
+                        onClick={formik.handleSubmit}
+                        disabled={formik.isSubmitting || !delta}
+                    >
+                        {formik.isSubmitting
+                            ? 'Recording…'
+                            : 'Record adjustment'}
                     </Button>
                 </div>
             }
         >
-            <div className="admin-adjust-summary">
-                <div className="admin-adjust-name">
-                    {product?.name}
-                    {variant && <span> — {variant.name}</span>}
+            <form onSubmit={formik.handleSubmit}>
+                <div className="admin-adjust-summary">
+                    <div className="admin-adjust-name">
+                        {product?.name}
+                        {variant && <span> — {variant.name}</span>}
+                    </div>
+                    <div className="admin-field-hint">
+                        Currently {onHand} on hand
+                    </div>
                 </div>
-                <div className="admin-field-hint">
-                    Currently {onHand} on hand
-                </div>
-            </div>
 
-            <FormInput
-                label="Change"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="e.g. -2 to remove two, 3 to add three"
-            />
+                <FormInput
+                    label="Change"
+                    name="quantity"
+                    type="number"
+                    formik={formik}
+                    placeholder="e.g. -2 to remove two, 3 to add three"
+                />
 
-            <div className="form-group">
-                <label className="form-label">Reason</label>
-                <select
-                    className="form-input"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                >
-                    {Object.entries(reasons).map(([value, label]) => (
-                        <option key={value} value={value}>
-                            {label}
-                        </option>
-                    ))}
-                </select>
-            </div>
+                <FormSelect
+                    label="Reason"
+                    name="reason"
+                    formik={formik}
+                    options={Object.entries(reasons).map(([value, label]) => ({
+                        value,
+                        label,
+                    }))}
+                />
 
-            <FormInput
-                label={reason === 'other' ? 'Note (required)' : 'Note'}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="What happened?"
-            />
+                <FormInput
+                    label={
+                        formik.values.reason === 'other'
+                            ? 'Note (required)'
+                            : 'Note'
+                    }
+                    name="note"
+                    formik={formik}
+                    placeholder="What happened?"
+                />
 
-            {Boolean(delta) && (
-                <div
-                    className={`admin-adjust-projection ${
-                        projected < 0 ? 'admin-adjust-projection-bad' : ''
-                    }`}
-                >
-                    {projected < 0
-                        ? `Only ${onHand} on hand — this would go below zero.`
-                        : `New balance will be ${projected}.`}
-                </div>
-            )}
+                {Boolean(delta) && (
+                    <div
+                        className={`admin-adjust-projection ${
+                            projected < 0 ? 'admin-adjust-projection-bad' : ''
+                        }`}
+                    >
+                        {projected < 0
+                            ? `Only ${onHand} on hand — this would go below zero.`
+                            : `New balance will be ${projected}.`}
+                    </div>
+                )}
+            </form>
         </Modal>
     );
 }

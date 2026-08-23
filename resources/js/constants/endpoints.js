@@ -133,6 +133,8 @@ export const API_ENDPOINTS = {
         STOCK_RECEIPTS: '/admin/stock/receipts',
         STOCK_ADJUST: '/admin/stock/adjust',
         STOCK_UNITS: '/admin/stock/units',
+        SUPPLIERS: '/admin/stock/suppliers',
+        SUPPLIER_ITEM: (id) => `/admin/stock/suppliers/${id}`,
         STOCK_MOVEMENTS: (id) => `/admin/stock/products/${id}/movements`,
         ORDER_RETURN: (id) => `/admin/orders/${id}/return`,
     },

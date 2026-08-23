@@ -430,6 +430,22 @@
     gap: 22px;
 }
 
+/*
+ * Three equal columns. This was referenced by the stock screens before it
+ * existed, so those fields stacked full-width instead of sitting side by side.
+ */
+.admin-grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 720px) {
+    .admin-grid-3col {
+        grid-template-columns: 1fr;
+    }
+}
+
 .admin-table {
     width: 100%;
     border-collapse: collapse;
@@ -2346,7 +2362,13 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 16px 0 12px;
+    margin: 18px 0 14px;
+}
+
+/* Breathing room before the note field, which was sitting on top of the
+   "add another line" button. */
+.admin-receive-add-line {
+    margin-bottom: 20px;
 }
 
 .admin-receive-line {
@@ -2367,8 +2389,9 @@
 }
 
 .admin-receive-line-remove {
-    align-self: center;
-    margin-top: 18px;
+    /* Sits level with the inputs, not with the labels above them. */
+    align-self: end;
+    margin-bottom: 4px;
     background: none;
     border: 1px solid var(--color-border, #e2e5ea);
     border-radius: 6px;
@@ -2831,4 +2854,146 @@
 /* Short column headings should not wrap onto two lines in a narrow column. */
 .admin-table thead th {
     white-space: nowrap;
+}
+
+/* Adding a supplier without leaving a half-entered delivery. */
+.admin-supplier-add {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px dashed var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 720px) {
+    .admin-supplier-add {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Searchable select ─────────────────────────────────────────────────────── */
+
+.searchable-select {
+    position: relative;
+}
+
+.searchable-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.searchable-select-trigger:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.searchable-select-trigger > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.searchable-select-placeholder {
+    color: var(--color-text-muted, #8a8f98);
+}
+
+.searchable-select-panel {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+}
+
+.searchable-select-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 11px;
+    border-bottom: 1px solid var(--color-border, #e2e5ea);
+    color: var(--color-text-muted, #8a8f98);
+}
+
+.searchable-select-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    font: inherit;
+    font-size: 14px;
+    background: transparent;
+    color: inherit;
+}
+
+.searchable-select-search button {
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    display: inline-flex;
+}
+
+.searchable-select-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.searchable-select-option {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.searchable-select-option.is-highlighted {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.searchable-select-option.is-selected {
+    color: var(--color-brand-red, #d1202f);
+    font-weight: 600;
+}
+
+.searchable-select-hint {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--color-text-muted, #8a8f98);
+}
+
+.searchable-select-empty,
+.searchable-select-more {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--color-text-muted, #8a8f98);
+}
+
+.searchable-select-more {
+    border-top: 1px solid var(--color-border, #e2e5ea);
 }

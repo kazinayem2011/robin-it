@@ -544,8 +544,8 @@ export default function Products({
                         />
 
                         {editingProduct ? (
-                            <div className="form-group">
-                                <label className="form-label">Stock</label>
+                            <div className="auth-form-group">
+                                <label className="auth-label">Stock</label>
                                 <div className="admin-stock-readonly">
                                     <span className="admin-stock-readonly-qty">
                                         {editingProduct.has_variants

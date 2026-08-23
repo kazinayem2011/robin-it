@@ -202,8 +202,8 @@ export default function VariantEditor({
                                     looks nothing like the black one — so each
                                     can carry its own shot. It leads the gallery
                                     when that option is selected. */}
-                                <div className="form-group">
-                                    <label className="form-label">Image</label>
+                                <div className="auth-form-group">
+                                    <label className="auth-label">Image</label>
                                     <div className="admin-variant-image">
                                         {variant.image_url ? (
                                             <img
@@ -275,8 +275,8 @@ export default function VariantEditor({
                                         }
                                     />
                                 ) : (
-                                    <div className="form-group">
-                                        <label className="form-label">
+                                    <div className="auth-form-group">
+                                        <label className="auth-label">
                                             Stock
                                         </label>
                                         <div className="admin-variant-stock">
@@ -314,9 +314,10 @@ export default function VariantEditor({
                         type="button"
                         variant="secondary"
                         size="sm"
+                        icon={Plus}
                         onClick={() => setVariants([...variants, newVariant()])}
                     >
-                        <Plus size={14} /> Add an option
+                        Add an option
                     </Button>
                 </>
             )}

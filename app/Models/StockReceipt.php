@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class StockReceipt extends Model
 {
     protected $fillable = [
-        'reference', 'supplier_name', 'invoice_number', 'received_on',
+        'reference', 'supplier_id', 'supplier_name', 'invoice_number', 'received_on',
         'note', 'total_cost', 'total_quantity', 'user_id',
     ];
 
@@ -19,6 +19,11 @@ class StockReceipt extends Model
         'total_cost' => 'float',
         'total_quantity' => 'integer',
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 
     public function items()
     {

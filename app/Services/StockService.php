@@ -9,6 +9,7 @@ use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\StockReceiptItem;
+use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -146,9 +147,14 @@ class StockService
         }
 
         return DB::transaction(function () use ($header, $lines, $userId) {
+            $supplier = $this->resolveSupplier($header);
+
             $receipt = StockReceipt::create([
                 'reference' => $header['reference'] ?? $this->generateReceiptReference(),
-                'supplier_name' => $header['supplier_name'] ?? null,
+                'supplier_id' => $supplier?->id,
+                // Kept alongside the relation so a delivery still names its
+                // supplier if that record is later removed.
+                'supplier_name' => $supplier?->name ?? ($header['supplier_name'] ?? null),
                 'invoice_number' => $header['invoice_number'] ?? null,
                 'received_on' => $header['received_on'] ?? now()->toDateString(),
                 'note' => $header['note'] ?? null,
@@ -179,7 +185,7 @@ class StockService
                     'reference' => $receipt,
                     'unit_cost' => $unitCost,
                     'user_id' => $userId ?? Auth::id(),
-                    'note' => $header['supplier_name'] ?? null,
+                    'note' => $receipt->supplier_name,
                 ]);
 
                 $totalQty += $quantity;
@@ -191,8 +197,34 @@ class StockService
                 'total_cost' => round($totalCost, 2),
             ]);
 
-            return $receipt->load('items.product', 'items.variant');
+            return $receipt->load('items.product', 'items.variant', 'supplier');
         });
+    }
+
+    /**
+     * Which supplier a delivery came from.
+     *
+     * Accepts an id from the dropdown, or a name typed into it — a new supplier
+     * being added mid-delivery is normal, and refusing it would push the admin
+     * out to another screen and lose the half-entered receipt.
+     */
+    private function resolveSupplier(array $header): ?Supplier
+    {
+        if (! empty($header['supplier_id'])) {
+            return Supplier::find($header['supplier_id']);
+        }
+
+        $name = trim((string) ($header['supplier_name'] ?? ''));
+
+        if ($name === '') {
+            return null;
+        }
+
+        // Match case-insensitively so "Star Tech" does not become a second
+        // supplier alongside "star tech".
+        $existing = Supplier::whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+
+        return $existing ?? Supplier::create(['name' => $name, 'is_active' => true]);
     }
 
     /**

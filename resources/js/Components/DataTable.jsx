@@ -38,6 +38,10 @@ export const DataTable = ({
     headerActions = null,
     pagination = true,
     paginationLinks = null,
+    // For callers that reshape rows before passing them in — expanding a
+    // product into its options, say — so the counts still describe the
+    // server's paging rather than however many rows were drawn.
+    paginationMeta = null,
     onPageChange,
     emptyTitle = 'No Records Found',
     emptyDescription = 'There are no items matching your current filters or query.',
@@ -55,9 +59,12 @@ export const DataTable = ({
           ? data
           : [];
     const links = paginationLinks || (isLaravelPaginator ? data.links : []);
-    const from = isLaravelPaginator ? data.from : null;
-    const to = isLaravelPaginator ? data.to : null;
-    const total = isLaravelPaginator ? data.total : rows.length;
+    const from =
+        paginationMeta?.from ?? (isLaravelPaginator ? data.from : null);
+    const to = paginationMeta?.to ?? (isLaravelPaginator ? data.to : null);
+    const total =
+        paginationMeta?.total ??
+        (isLaravelPaginator ? data.total : rows.length);
 
     const hasHeader = title || subtitle || searchable || headerActions;
 

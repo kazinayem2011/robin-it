@@ -168,6 +168,10 @@ class ApiEndpoints
 
     public const ADMIN_STOCK_UNITS = 'stock/units';
 
+    public const ADMIN_SUPPLIERS = 'stock/suppliers';
+
+    public const ADMIN_SUPPLIERS_ITEM = 'stock/suppliers/{id}';
+
     public const ADMIN_PRODUCTS = 'products';
 
     public const ADMIN_PRODUCTS_ITEM = 'products/{id}';

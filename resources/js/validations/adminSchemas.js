@@ -151,3 +151,101 @@ export const adminBlogSchema = Yup.object().shape({
     ),
     is_published: Yup.boolean().default(true),
 });
+
+/**
+ * Recording a delivery.
+ *
+ * The lines are what matter: a receipt with a supplier and no products moves
+ * no stock, so at least one line has to name a product and a quantity.
+ */
+export const adminStockReceiptSchema = Yup.object().shape({
+    supplier_id: Yup.mixed().nullable(),
+    invoice_number: Yup.string()
+        .max(100, 'Invoice number is too long')
+        .nullable(),
+    received_on: Yup.string().required('Say when this delivery arrived'),
+    note: Yup.string()
+        .max(1000, 'Note cannot exceed 1000 characters')
+        .nullable(),
+    lines: Yup.array()
+        .of(
+            Yup.object().shape({
+                unit: Yup.string(),
+                quantity: Yup.number()
+                    .typeError('Quantity must be a number')
+                    .integer('Quantity must be a whole number')
+                    .min(1, 'Quantity must be at least 1')
+                    .max(100000, 'That is more than this form will accept')
+                    .nullable()
+                    .transform((curr, orig) => (orig === '' ? null : curr)),
+                unit_cost: Yup.number()
+                    .typeError('Unit cost must be a number')
+                    .min(0, 'Unit cost cannot be negative')
+                    .nullable()
+                    .transform((curr, orig) => (orig === '' ? null : curr)),
+            }),
+        )
+        .test(
+            'has-a-real-line',
+            'Add at least one product with a quantity.',
+            (lines) =>
+                (lines || []).some((l) => l?.unit && Number(l?.quantity) > 0),
+        ),
+});
+
+/**
+ * A counted correction.
+ *
+ * Deliberately a change rather than a new total — typing an absolute quantity
+ * is how already-sold units used to come back to life — so zero is not a valid
+ * adjustment, and "Other" has to explain itself.
+ */
+export const adminStockAdjustmentSchema = Yup.object().shape({
+    quantity: Yup.number()
+        .typeError('Enter how many units to add or remove')
+        .integer('Enter a whole number of units')
+        .notOneOf([0], 'Enter how many units to add or remove')
+        .required('Enter how many units to add or remove'),
+    reason: Yup.string().required('Choose a reason for this adjustment'),
+    note: Yup.string()
+        .max(1000, 'Note cannot exceed 1000 characters')
+        .when('reason', {
+            is: 'other',
+            then: (schema) =>
+                schema.required(
+                    'Explain the adjustment when the reason is "Other"',
+                ),
+            otherwise: (schema) => schema.nullable(),
+        }),
+});
+
+/** A supplier added without leaving a half-entered delivery. */
+export const adminSupplierSchema = Yup.object().shape({
+    name: Yup.string()
+        .min(2, 'Supplier name must be at least 2 characters')
+        .max(255, 'Supplier name cannot exceed 255 characters')
+        .required('Give the supplier a name'),
+    contact_name: Yup.string().max(255).nullable(),
+    phone: Yup.string().max(40, 'Phone number is too long').nullable(),
+    email: Yup.string().email('Enter a valid email address').nullable(),
+});
+
+/**
+ * Taking back a delivered order.
+ *
+ * Condition per line decides where the units go, so a return that says nothing
+ * came back is not a return.
+ */
+export const adminOrderReturnSchema = Yup.object().shape({
+    note: Yup.string()
+        .max(1000, 'Note cannot exceed 1000 characters')
+        .nullable(),
+    lines: Yup.array().test(
+        'something-came-back',
+        'Enter how many units came back.',
+        (lines) =>
+            Object.values(lines || {}).some(
+                (l) => Number(l?.resellable) > 0 || Number(l?.damaged) > 0,
+            ),
+    ),
+});

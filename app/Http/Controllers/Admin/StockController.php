@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
+use App\Models\Supplier;
 use App\Services\OrderService;
 use App\Services\StockService;
 use Illuminate\Http\Request;
@@ -48,6 +49,8 @@ class StockController extends Controller
             'defaultReorderLevel' => (int) config('inventory.default_reorder_level', 10),
             'adjustmentReasons' => StockService::ADJUSTMENT_REASONS,
             'summary' => $this->summary(),
+            'suppliers' => Supplier::active()->orderBy('name')
+                ->get(['id', 'name', 'contact_name', 'phone', 'email']),
         ]);
     }
 
@@ -135,6 +138,7 @@ class StockController extends Controller
     public function receive(Request $request)
     {
         $validated = $request->validate([
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_name' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:100',
             'received_on' => 'nullable|date',
@@ -150,6 +154,7 @@ class StockController extends Controller
 
         $receipt = $this->stock->receive(
             [
+                'supplier_id' => $validated['supplier_id'] ?? null,
                 'supplier_name' => $validated['supplier_name'] ?? null,
                 'invoice_number' => $validated['invoice_number'] ?? null,
                 'received_on' => $validated['received_on'] ?? now()->toDateString(),
@@ -169,7 +174,7 @@ class StockController extends Controller
     /** Past deliveries, for reference and reconciliation. */
     public function receipts(Request $request)
     {
-        $receipts = StockReceipt::with(['items.product:id,name', 'items.variant:id,name', 'user:id,name'])
+        $receipts = StockReceipt::with(['items.product:id,name', 'items.variant:id,name', 'user:id,name', 'supplier:id,name'])
             ->latest('received_on')
             ->latest('id')
             ->paginate(25);
@@ -239,6 +244,77 @@ class StockController extends Controller
         $order = $orders->returnOrder($order, $validated['lines'], $validated['note'] ?? null);
 
         return $this->successResponse($order, "Order {$order->order_number} has been returned.");
+    }
+
+    /** Suppliers for the delivery form's dropdown. */
+    public function suppliers()
+    {
+        return $this->successResponse(
+            Supplier::active()->orderBy('name')->get(['id', 'name', 'contact_name', 'phone', 'email']),
+            'Suppliers fetched.'
+        );
+    }
+
+    /** Add a supplier. */
+    public function storeSupplier(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:suppliers,name',
+            'contact_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:40',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:1000',
+            'note' => 'nullable|string|max:1000',
+        ], [
+            'name.unique' => 'A supplier with that name already exists.',
+        ]);
+
+        $supplier = Supplier::create($validated + ['is_active' => true]);
+
+        return $this->successResponse($supplier, "Supplier '{$supplier->name}' added.", 201);
+    }
+
+    public function updateSupplier(Request $request, int $id)
+    {
+        $supplier = Supplier::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:suppliers,name,'.$supplier->id,
+            'contact_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:40',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:1000',
+            'note' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $supplier->update($validated);
+
+        return $this->successResponse($supplier, 'Supplier updated.');
+    }
+
+    /**
+     * Retire a supplier.
+     *
+     * Deactivated rather than deleted when deliveries reference it, so the
+     * history of who supplied what does not quietly disappear.
+     */
+    public function destroySupplier(int $id)
+    {
+        $supplier = Supplier::findOrFail($id);
+
+        if ($supplier->receipts()->exists()) {
+            $supplier->update(['is_active' => false]);
+
+            return $this->successResponse(
+                $supplier,
+                "'{$supplier->name}' has past deliveries, so it has been deactivated rather than deleted."
+            );
+        }
+
+        $supplier->delete();
+
+        return $this->successResponse([], 'Supplier removed.');
     }
 
     /** Options that can hold stock, for the receive and adjust pickers. */
