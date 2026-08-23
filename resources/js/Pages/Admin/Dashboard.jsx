@@ -21,6 +21,7 @@ export default function Dashboard({
     recentOrders = [],
     lowStockProducts = [],
     topSelling = [],
+    queueHealth = null,
 }) {
     const handleStatusChange = async (orderId, newStatus) => {
         try {
@@ -45,6 +46,22 @@ export default function Dashboard({
             subtitle={`Real-time Revenue, Orders, and Stock Logistics for ${siteConfig.name}`}
         >
             <Head title={`Admin Operations Overview — ${siteConfig.name}`} />
+
+            {/*
+             * Queued mail fails quietly on purpose: an order is never held up
+             * waiting for SMTP. The cost is that a dead worker looks exactly
+             * like a working one from in here, so it gets said out loud.
+             */}
+            {queueHealth && !queueHealth.healthy && (
+                <div className="admin-alert-banner" role="alert">
+                    <AlertTriangle size={18} />
+                    <div>
+                        <strong>Customer emails are not going out.</strong>
+                        <span>{queueHealth.message}</span>
+                        <code>php artisan queue:work --tries=3</code>
+                    </div>
+                </div>
+            )}
 
             {/* KPI Stat Cards */}
             <div className="admin-kpi-grid">

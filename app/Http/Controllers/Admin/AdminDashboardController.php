@@ -22,6 +22,7 @@ use App\Services\OrderService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
 use App\Support\MailSettings;
+use App\Support\QueueHealth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,9 @@ class AdminDashboardController extends Controller
             'recentOrders' => $recentOrders,
             'lowStockProducts' => $lowStockProducts,
             'topSelling' => $topSelling,
+            // A dead queue worker means customers silently stop receiving
+            // order emails. Nothing else in the app would say so.
+            'queueHealth' => QueueHealth::check(),
         ]);
     }
 

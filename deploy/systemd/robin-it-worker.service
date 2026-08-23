@@ -1,0 +1,32 @@
+# Queue worker for Robin IT, for hosts using systemd rather than supervisor.
+#
+# Install:
+#   sudo cp deploy/systemd/robin-it-worker.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now robin-it-worker
+#   sudo systemctl status robin-it-worker
+
+[Unit]
+Description=Robin IT queue worker
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/robin-it
+
+# See the supervisor config for what each flag is doing.
+ExecStart=/usr/bin/php /var/www/robin-it/artisan queue:work --queue=default --tries=3 --backoff=10 --max-time=3600 --sleep=3
+
+Restart=always
+RestartSec=5
+
+# Give a job in flight time to finish before the process is killed.
+TimeoutStopSec=60
+
+StandardOutput=append:/var/www/robin-it/storage/logs/queue-worker.log
+StandardError=append:/var/www/robin-it/storage/logs/queue-worker.log
+
+[Install]
+WantedBy=multi-user.target
