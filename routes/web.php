@@ -11,6 +11,7 @@ use App\Http\Controllers\ComparisonController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SitemapController;
 use App\Models\Banner;
 use App\Models\BlogPost;
 use Illuminate\Foundation\Application;
@@ -214,5 +215,13 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
  * own; the controller decides who may see which.
  */
 Route::get(ApiEndpoints::ORDER_INVOICE, [InvoiceController::class, 'show'])->name('orders.invoice');
+
+/*
+ * Sitemap and robots.txt, generated rather than static: the catalogue changes
+ * daily, and a stale sitemap points crawlers at products that no longer exist.
+ * The static public/robots.txt is removed in favour of this.
+ */
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
 require __DIR__.'/auth.php';

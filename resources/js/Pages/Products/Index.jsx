@@ -5,6 +5,7 @@ import { productService } from '../../services';
 import {
     ProductCard,
     ProductFilters,
+    SEOHead,
     Pagination,
     Spinner,
     Button,
@@ -124,12 +125,31 @@ export default function ProductListing({ categorySlug }) {
         );
     };
 
+    const readableCategory = categorySlug
+        ? categorySlug
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, (c) => c.toUpperCase())
+        : null;
+
     const pageTitle = categorySlug
         ? `${categorySlug.replace(/-/g, ' ').toUpperCase()} — ${siteConfig.name}`
         : `All Technology Products — ${siteConfig.name}`;
 
     return (
         <MainLayout>
+            <SEOHead
+                title={
+                    readableCategory
+                        ? `${readableCategory} — Price in Bangladesh`
+                        : 'Shop All Computer Hardware & Components'
+                }
+                description={
+                    readableCategory
+                        ? `Buy genuine ${readableCategory} at the best price in Bangladesh, with official warranty and nationwide delivery.`
+                        : 'Browse processors, graphics cards, motherboards, memory and complete builds — genuine parts with official warranty and nationwide delivery.'
+                }
+            />
+
             <Head title={pageTitle} />
 
             <div className="container plp-page-wrapper">

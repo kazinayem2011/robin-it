@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Truck, ShieldCheck, PhoneCall, Cpu } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -10,6 +10,10 @@ import { ROUTES } from '../constants/endpoints';
  * Encapsulates Trust Badges, 5-Column Navigation Links, Newsletter Signup, and Payment/Copyright Bar.
  */
 export const Footer = () => {
+    // Counted from the branches that exist rather than a number written into
+    // the markup, which had drifted to claiming "15+" against four.
+    const showroomCount = usePage().props?.showroom_count ?? 0;
+
     return (
         <footer className="site-master-footer">
             {/* 4 Pillar Trust Badges Row */}
@@ -159,7 +163,8 @@ export const Footer = () => {
                         </li>
                         <li>
                             <Link href={ROUTES.STORES}>
-                                Showrooms & Outlets (15+)
+                                Showrooms &amp; Outlets
+                                {showroomCount > 0 && ` (${showroomCount})`}
                             </Link>
                         </li>
                         <li>

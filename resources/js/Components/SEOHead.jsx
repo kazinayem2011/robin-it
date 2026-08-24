@@ -9,6 +9,9 @@ export default function SEOHead({
     url,
     type = 'website',
     schemaData = null,
+    // Pages behind a login or in the checkout funnel should not be indexed
+    // even if a crawler reaches them past robots.txt.
+    noindex = false,
 }) {
     // SEO defaults come from Site Settings when the admin has set them, so the
     // SEO tab is not decorative; siteConfig remains the final fallback.
@@ -26,6 +29,15 @@ export default function SEOHead({
     const pageKeywords = settings.meta_keywords || '';
     const pageUrl =
         url || (typeof window !== 'undefined' ? window.location.href : '');
+
+    // The canonical must not carry the query string. ?page=2, ?sort=price and
+    // ?ref=fb are the same page as far as indexing goes, and pointing each at
+    // itself is what creates the duplicate-content problem canonical exists to
+    // solve. Paging keeps its own URL so page 2 is not claimed to be page 1.
+    const canonicalUrl =
+        typeof window !== 'undefined'
+            ? window.location.origin + window.location.pathname
+            : pageUrl;
 
     const defaultSchema = {
         '@context': 'https://schema.org',
@@ -53,6 +65,15 @@ export default function SEOHead({
                     content={settings.google_site_verification}
                 />
             )}
+            {/*
+             * Canonical. A product reachable as /products/x and
+             * /products/x?ref=whatever is one page, and without this each
+             * variation competes with the others for the same ranking.
+             */}
+            <link rel="canonical" href={canonicalUrl} />
+
+            {noindex && <meta name="robots" content="noindex, follow" />}
+
             <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
             <link rel="alternate icon" href="/favicon.ico" />
 
