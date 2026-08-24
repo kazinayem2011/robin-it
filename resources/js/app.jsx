@@ -12,7 +12,15 @@ createInertiaApp({
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
+            // Tests co-located under Pages must be excluded, or the glob
+            // treats them as page components and Vite bundles them — Vitest
+            // and Testing Library included — into the production build. One
+            // test file was shipping as the largest asset on the site.
+            import.meta.glob([
+                './Pages/**/*.jsx',
+                '!./Pages/**/__tests__/**',
+                '!./Pages/**/*.test.jsx',
+            ]),
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);

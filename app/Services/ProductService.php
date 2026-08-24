@@ -399,16 +399,26 @@ class ProductService
             ->get()
             ->keyBy('slug');
 
+        // Resolving descendants and counting stock per slot used to be done
+        // inside the loop, which was 53 queries for 13 slots — each one walking
+        // the category tree again and running its own count. Both are done once
+        // here and read from memory below.
+        $descendants = $this->descendantMap($categories->pluck('id')->all());
+        $counts = Product::where('is_active', true)
+            ->selectRaw('category_id, COUNT(*) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
         return collect($slots)
-            ->map(function (array $slot) use ($categories) {
+            ->map(function (array $slot) use ($categories, $descendants, $counts) {
                 $category = $categories->get($slot['slug']);
 
                 if (! $category) {
                     return null;
                 }
 
-                $ids = $this->categoryService->getDescendantIds($slot['slug']);
-                $available = Product::active()->whereIn('category_id', $ids ?: [0])->count();
+                $ids = $descendants[$category->id] ?? [$category->id];
+                $available = collect($ids)->sum(fn ($id) => (int) ($counts[$id] ?? 0));
 
                 // An optional slot with nothing behind it is a dead end and is
                 // dropped. A required one is kept and marked unavailable —
@@ -434,6 +444,47 @@ class ProductService
             ->filter()
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Every category id beneath each of the given roots, resolved in one pass.
+     *
+     * The whole tree is read once and walked in memory. Asking the database per
+     * root re-reads the same rows over and over — thirteen slots turned into
+     * fifty-three queries.
+     *
+     * @param  array<int, int>  $rootIds
+     * @return array<int, array<int, int>>
+     */
+    private function descendantMap(array $rootIds): array
+    {
+        if ($rootIds === []) {
+            return [];
+        }
+
+        $childrenByParent = Category::where('is_active', true)
+            ->get(['id', 'parent_id'])
+            ->groupBy('parent_id')
+            ->map(fn ($rows) => $rows->pluck('id')->all())
+            ->all();
+
+        $collect = function (int $id) use (&$collect, $childrenByParent): array {
+            $ids = [$id];
+
+            foreach ($childrenByParent[$id] ?? [] as $childId) {
+                $ids = array_merge($ids, $collect($childId));
+            }
+
+            return $ids;
+        };
+
+        $map = [];
+
+        foreach ($rootIds as $rootId) {
+            $map[$rootId] = $collect($rootId);
+        }
+
+        return $map;
     }
 
     /**

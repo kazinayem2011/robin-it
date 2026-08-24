@@ -123,3 +123,15 @@ jobs:
 
       - name: Build production assets
         run: npm run build
+
+      # A test file co-located under Pages was picked up by the Inertia page
+      # glob and bundled — Vitest and Testing Library included — as the
+      # largest asset on the site. Nothing else would have noticed.
+      - name: No test code in the production bundle
+        run: |
+          if ls public/build/assets/ | grep -Ei '\.(test|spec)-'; then
+            echo "Test files were bundled into the production build."
+            exit 1
+          fi
+          echo "No test code in the bundle."
+
