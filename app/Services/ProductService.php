@@ -352,51 +352,88 @@ class ProductService
     /**
      * Get PC Builder dynamic categories directly querying from the Database.
      */
+    /**
+     * The slots a build is assembled from.
+     *
+     * Declared explicitly rather than read off whatever categories happen to
+     * exist, because order and grouping are the whole point: someone building a
+     * machine works down from the processor, and peripherals are a separate
+     * decision from the parts that have to fit together. An optional slot with
+     * nothing to put in it is dropped; a required one is kept and marked
+     * unavailable, because hiding it would make a build that cannot be
+     * completed look as though it could.
+     *
+     * @return array<int, array>
+     */
     public function getPcBuilderCategories(): array
     {
-        // 1. Check if 'Components' root category exists in DB
-        $componentsRoot = Category::where('slug', 'components')
-            ->orWhere('name', 'like', '%Components%')
-            ->first();
+        $slots = [
+            // Core: the parts that have to be compatible with each other.
+            ['slug' => 'cpu', 'icon' => 'Cpu', 'group' => 'core', 'required' => true,
+                'hint' => 'Sets the socket your motherboard must match'],
+            ['slug' => 'cpu-cooler', 'icon' => 'Wind', 'group' => 'core', 'required' => false,
+                'hint' => 'Some processors include one'],
+            ['slug' => 'motherboard', 'icon' => 'Server', 'group' => 'core', 'required' => true,
+                'hint' => 'Must match the processor socket and memory type'],
+            ['slug' => 'ram', 'icon' => 'Layers', 'group' => 'core', 'required' => true,
+                'hint' => 'DDR4 and DDR5 are not interchangeable'],
+            ['slug' => 'storage', 'icon' => 'HardDrive', 'group' => 'core', 'required' => true,
+                'hint' => 'Where Windows and your games live'],
+            ['slug' => 'graphics-card', 'icon' => 'Monitor', 'group' => 'core', 'required' => false,
+                'hint' => 'Not needed if the processor has graphics built in'],
+            ['slug' => 'power-supply', 'icon' => 'Zap', 'group' => 'core', 'required' => true,
+                'hint' => 'Sized against the wattage shown above'],
+            ['slug' => 'pc-case', 'icon' => 'Box', 'group' => 'core', 'required' => true,
+                'hint' => 'Must fit the motherboard form factor'],
 
-        // 2. Fetch categories from DB
-        $categoriesQuery = Category::where('is_active', true);
-        if ($componentsRoot) {
-            $categoriesQuery->where('parent_id', $componentsRoot->id);
-        } else {
-            $categoriesQuery->whereIn('slug', ['cpu', 'graphics-card', 'motherboard', 'ram', 'storage', 'power-supply', 'casing', 'monitors']);
-        }
-
-        $dbCategories = $categoriesQuery->orderBy('id', 'asc')->get();
-
-        $iconMap = [
-            'cpu' => 'Cpu',
-            'processor' => 'Cpu',
-            'motherboard' => 'Server',
-            'ram' => 'Layers',
-            'storage' => 'HardDrive',
-            'graphics-card' => 'Monitor',
-            'power-supply' => 'Zap',
-            'casing' => 'Box',
-            'cpu-cooler' => 'Wind',
-            'monitors' => 'Tv',
+            // Peripherals: chosen freely, nothing here has to fit anything.
+            ['slug' => 'monitors', 'icon' => 'Tv', 'group' => 'peripherals', 'required' => false],
+            ['slug' => 'keyboards', 'icon' => 'Keyboard', 'group' => 'peripherals', 'required' => false],
+            ['slug' => 'mice', 'icon' => 'Mouse', 'group' => 'peripherals', 'required' => false],
+            ['slug' => 'headsets', 'icon' => 'Headphones', 'group' => 'peripherals', 'required' => false],
+            ['slug' => 'wifi-routers', 'icon' => 'Wifi', 'group' => 'peripherals', 'required' => false],
         ];
 
-        return $dbCategories->map(function (Category $cat) use ($iconMap) {
-            $slug = $cat->slug;
-            $icon = $iconMap[$slug] ?? ($cat->icon ?: 'Box');
-            $isRequired = in_array($slug, ['cpu', 'processor', 'motherboard', 'ram', 'storage', 'power-supply', 'casing']);
+        $categories = Category::where('is_active', true)
+            ->whereIn('slug', array_column($slots, 'slug'))
+            ->get()
+            ->keyBy('slug');
 
-            return [
-                'id' => $slug,
-                'category_id' => $cat->id,
-                'name' => $cat->name,
-                'category_slug' => $slug,
-                'required' => $isRequired,
-                'icon' => $icon,
-                'description' => "Genuine {$cat->name} with authorized manufacturer warranty",
-            ];
-        })->values()->toArray();
+        return collect($slots)
+            ->map(function (array $slot) use ($categories) {
+                $category = $categories->get($slot['slug']);
+
+                if (! $category) {
+                    return null;
+                }
+
+                $ids = $this->categoryService->getDescendantIds($slot['slug']);
+                $available = Product::active()->whereIn('category_id', $ids ?: [0])->count();
+
+                // An optional slot with nothing behind it is a dead end and is
+                // dropped. A required one is kept and marked unavailable —
+                // hiding it would make a build look completable when it is not.
+                if ($available === 0 && ! $slot['required']) {
+                    return null;
+                }
+
+                return [
+                    'id' => $slot['slug'],
+                    'category_id' => $category->id,
+                    'name' => $category->name,
+                    'category_slug' => $slot['slug'],
+                    'required' => $slot['required'],
+                    'group' => $slot['group'],
+                    'icon' => $slot['icon'],
+                    // A short reason this slot matters, rather than the same
+                    // "genuine product with warranty" line on every row.
+                    'hint' => $slot['hint'] ?? null,
+                    'available' => $available,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
     /**

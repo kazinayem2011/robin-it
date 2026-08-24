@@ -364,114 +364,150 @@ export default function PcBuilderIndex() {
                     />
                 ) : (
                     <div className="pc-builder-components-table">
-                        {categories.map((cat) => {
+                        {categories.map((cat, index) => {
                             const IconComponent = ICON_MAP[cat.icon] || Cpu;
                             const selectedEntry = pcBuilderItems.find(
                                 (item) => item.componentId === cat.id,
                             );
 
-                            return (
-                                <div key={cat.id} className="pc-builder-row">
-                                    {/* Type Column */}
-                                    <div className="component-type-col">
-                                        <div className="component-icon-box">
-                                            <IconComponent size={20} />
-                                        </div>
-                                        <div className="component-type-info">
-                                            <h4>
-                                                {cat.name}
-                                                {cat.required && (
-                                                    <span className="required-star">
-                                                        *
-                                                    </span>
-                                                )}
-                                            </h4>
-                                            <p>{cat.description}</p>
-                                        </div>
-                                    </div>
+                            // The first slot of each group carries its heading.
+                            const previousGroup =
+                                index > 0 ? categories[index - 1].group : null;
+                            const startsGroup = cat.group !== previousGroup;
 
-                                    {/* Component Content Column */}
-                                    <div className="component-content-col">
-                                        {selectedEntry ? (
-                                            <div className="selected-product-box">
-                                                <img
-                                                    src={
-                                                        selectedEntry.product
-                                                            .images?.[0]
-                                                            ?.image_path ||
-                                                        '/images/product-placeholder.svg'
-                                                    }
-                                                    alt={
-                                                        selectedEntry.product
-                                                            .name
-                                                    }
-                                                    className="selected-product-thumb"
-                                                />
-                                                <div className="selected-product-meta">
-                                                    <h5 className="selected-product-title">
-                                                        {
+                            return (
+                                <React.Fragment key={cat.id}>
+                                    {startsGroup && (
+                                        <div className="pc-builder-group-head">
+                                            <h3>
+                                                {cat.group === 'peripherals'
+                                                    ? 'Peripherals & Accessories'
+                                                    : 'Core Components'}
+                                            </h3>
+                                            <span>
+                                                {cat.group === 'peripherals'
+                                                    ? 'Optional — nothing here has to match the rest'
+                                                    : 'These have to fit together; we check as you go'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="pc-builder-row">
+                                        {/* Type Column */}
+                                        <div className="component-type-col">
+                                            <div className="component-icon-box">
+                                                <IconComponent size={20} />
+                                            </div>
+                                            <div className="component-type-info">
+                                                <h4>
+                                                    {cat.name}
+                                                    {cat.required && (
+                                                        <span className="required-pill">
+                                                            Required
+                                                        </span>
+                                                    )}
+                                                </h4>
+                                                {/* A reason this slot matters,
+                                                rather than the same "genuine
+                                                product with warranty" line
+                                                repeated on every row. */}
+                                                {cat.hint && <p>{cat.hint}</p>}
+                                                {cat.available === 0 && (
+                                                    <p className="component-unavailable">
+                                                        None in stock right now
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Component Content Column */}
+                                        <div className="component-content-col">
+                                            {selectedEntry ? (
+                                                <div className="selected-product-box">
+                                                    <img
+                                                        src={
+                                                            selectedEntry
+                                                                .product
+                                                                .images?.[0]
+                                                                ?.image_path ||
+                                                            '/images/product-placeholder.svg'
+                                                        }
+                                                        alt={
                                                             selectedEntry
                                                                 .product.name
                                                         }
-                                                    </h5>
-                                                    <span className="selected-product-badge">
-                                                        {selectedEntry.product
-                                                            .stock_quantity > 0
-                                                            ? 'In Stock'
-                                                            : 'Out of Stock'}
-                                                    </span>
+                                                        className="selected-product-thumb"
+                                                    />
+                                                    <div className="selected-product-meta">
+                                                        <h5 className="selected-product-title">
+                                                            {
+                                                                selectedEntry
+                                                                    .product
+                                                                    .name
+                                                            }
+                                                        </h5>
+                                                        <span className="selected-product-badge">
+                                                            {selectedEntry
+                                                                .product
+                                                                .stock_quantity >
+                                                            0
+                                                                ? 'In Stock'
+                                                                : 'Out of Stock'}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                            <div className="empty-component-placeholder">
-                                                No component selected
-                                            </div>
-                                        )}
-                                    </div>
+                                            ) : (
+                                                <div className="empty-component-placeholder">
+                                                    No component selected
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {/* Price Column */}
-                                    <div className="component-price-col">
-                                        {selectedEntry ? (
-                                            <span className="component-live-price">
-                                                {formatBdt(
-                                                    selectedEntry.product
-                                                        .discount_price ||
+                                        {/* Price Column */}
+                                        <div className="component-price-col">
+                                            {selectedEntry ? (
+                                                <span className="component-live-price">
+                                                    {formatBdt(
                                                         selectedEntry.product
-                                                            .price,
-                                                )}
-                                            </span>
-                                        ) : (
-                                            <span className="price-dash">
-                                                —
-                                            </span>
-                                        )}
-                                    </div>
+                                                            .discount_price ||
+                                                            selectedEntry
+                                                                .product.price,
+                                                    )}
+                                                </span>
+                                            ) : (
+                                                <span className="price-dash">
+                                                    —
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    {/* Action Column */}
-                                    <div className="component-action-col">
-                                        {selectedEntry ? (
-                                            <button
-                                                type="button"
-                                                className="btn-remove-component"
-                                                onClick={() =>
-                                                    removePcBuilderItem(cat.id)
-                                                }
-                                                title="Remove Component"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        ) : (
-                                            <Link
-                                                href={ROUTES.PC_BUILDER_CHOOSE(
-                                                    cat.category_slug,
-                                                )}
-                                                className="btn-choose-component"
-                                            >
-                                                <Plus size={16} /> Choose
-                                            </Link>
-                                        )}
+                                        {/* Action Column */}
+                                        <div className="component-action-col">
+                                            {selectedEntry ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn-remove-component"
+                                                    onClick={() =>
+                                                        removePcBuilderItem(
+                                                            cat.id,
+                                                        )
+                                                    }
+                                                    title="Remove Component"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            ) : (
+                                                <Link
+                                                    href={ROUTES.PC_BUILDER_CHOOSE(
+                                                        cat.category_slug,
+                                                    )}
+                                                    className="btn-choose-component"
+                                                >
+                                                    <Plus size={16} /> Choose
+                                                </Link>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                </React.Fragment>
                             );
                         })}
                     </div>
