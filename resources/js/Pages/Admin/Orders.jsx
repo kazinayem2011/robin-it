@@ -251,8 +251,23 @@ export default function Orders({
             <Modal
                 isOpen={Boolean(selectedOrder)}
                 onClose={() => setSelectedOrder(null)}
-                title={`Order Inspector: #${selectedOrder?.order_number || ''}`}
+                title={selectedOrder?.order_number || 'Order'}
                 maxWidth="680px"
+                footer={
+                    <>
+                        <a
+                            href={`/orders/${selectedOrder?.id}/invoice?print=1`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-outline"
+                        >
+                            <Printer size={15} /> Print invoice
+                        </a>
+                        <Button onClick={() => setSelectedOrder(null)}>
+                            Close
+                        </Button>
+                    </>
+                }
             >
                 {selectedOrder && (
                     <div>
@@ -264,58 +279,57 @@ export default function Orders({
                                     {formatDate(selectedOrder.created_at)}
                                 </span>
                                 <div className="admin-modal-inspect-amount">
-                                    Total: {formatBdt(selectedOrder.total)}
+                                    {formatBdt(selectedOrder.total)}
                                 </div>
                             </div>
                             <StatusBadge status={selectedOrder.status} />
                         </div>
 
                         {/* Customer & Shipping Summary */}
-                        <div className="admin-modal-shipping-box">
-                            <h4 className="admin-modal-shipping-title">
-                                Shipping & Customer Details
-                            </h4>
-                            <div className="admin-modal-shipping-grid">
+                        <div className="admin-detail-panel">
+                            <span className="admin-detail-panel-label">
+                                Shipping &amp; customer
+                            </span>
+
+                            <dl className="admin-detail-grid">
                                 <div>
-                                    <div className="admin-modal-shipping-label">
-                                        Recipient:
-                                    </div>
-                                    <div className="admin-modal-shipping-val">
+                                    <dt>Recipient</dt>
+                                    <dd>
                                         {selectedOrder.shipping_address?.name ||
                                             selectedOrder.user?.name ||
-                                            'N/A'}
-                                    </div>
-                                    <div className="admin-modal-shipping-label mt-6">
-                                        Contact Phone:
-                                    </div>
-                                    <div className="admin-modal-shipping-val">
+                                            '—'}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt>Phone</dt>
+                                    <dd>
                                         {formatBdPhone(
                                             selectedOrder.shipping_address
                                                 ?.phone ||
                                                 selectedOrder.user?.phone,
-                                        )}
-                                    </div>
+                                        ) || '—'}
+                                    </dd>
                                 </div>
-                                <div>
-                                    <div className="admin-modal-shipping-label">
-                                        Delivery Destination:
-                                    </div>
-                                    <div className="admin-modal-shipping-val">
-                                        {selectedOrder.shipping_address
-                                            ?.street_address ||
+
+                                <div className="admin-detail-wide">
+                                    <dt>Deliver to</dt>
+                                    <dd>
+                                        {[
                                             selectedOrder.shipping_address
-                                                ?.address ||
-                                            'Dhaka, Bangladesh'}
-                                    </div>
-                                    <div className="admin-modal-shipping-val">
-                                        {selectedOrder.shipping_address?.city ||
-                                            'Dhaka'}
-                                        ,{' '}
-                                        {selectedOrder.shipping_address
-                                            ?.district || 'Dhaka'}
-                                    </div>
+                                                ?.street_address ||
+                                                selectedOrder.shipping_address
+                                                    ?.address,
+                                            selectedOrder.shipping_address
+                                                ?.zone,
+                                            selectedOrder.shipping_address
+                                                ?.city,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(', ') || '—'}
+                                    </dd>
                                 </div>
-                            </div>
+                            </dl>
                         </div>
 
                         {/* Order Items Table */}
@@ -362,16 +376,6 @@ export default function Orders({
                                 ))}
                             </tbody>
                         </table>
-
-                        {/* Modal Footer Actions */}
-                        <div className="admin-modal-footer-btns">
-                            <Button
-                                variant="outline"
-                                onClick={() => setSelectedOrder(null)}
-                            >
-                                Close Inspector
-                            </Button>
-                        </div>
                     </div>
                 )}
             </Modal>

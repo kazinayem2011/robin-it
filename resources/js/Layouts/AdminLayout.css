@@ -913,30 +913,59 @@
     color: var(--gray-500);
 }
 
-.admin-modal-shipping-box {
-    margin-bottom: 16px;
-    background: var(--bg-surface-subtle);
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    font-size: 0.82rem;
+/*
+ * A block of record detail.
+ *
+ * Replaces a grey box with a red heading whose label and value classes had no
+ * CSS at all, so each pair stacked on its own line with default block spacing
+ * and the panel ran half a screen tall for four facts.
+ */
+.admin-detail-panel {
+    margin-bottom: 20px;
+    padding: 16px 18px;
     border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
 }
 
-.admin-modal-shipping-title {
-    color: var(--primary);
+.admin-detail-panel-label {
     display: block;
-    margin-bottom: 4px;
-    font-weight: 800;
-}
-
-.admin-modal-shipping-name {
+    margin-bottom: 12px;
+    font-size: 0.68rem;
     font-weight: 700;
-    color: var(--dark-900);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
 }
 
-.admin-modal-shipping-addr {
-    color: var(--gray-600);
-    margin-top: 2px;
+.admin-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px 24px;
+    margin: 0;
+}
+
+.admin-detail-grid > * {
+    min-width: 0;
+}
+
+.admin-detail-wide {
+    grid-column: 1 / -1;
+}
+
+.admin-detail-grid dt {
+    margin: 0 0 2px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-500);
+}
+
+.admin-detail-grid dd {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark-900);
+    line-height: 1.45;
 }
 
 .admin-modal-items-title {
@@ -3154,4 +3183,85 @@
     .admin-stock-summary {
         width: 100%;
     }
+}
+
+/* ── Record inspector ──────────────────────────────────────────────────────── */
+
+.admin-modal-inspect-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.admin-modal-inspect-date {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+/* The figure people opened the record to see, sized accordingly. */
+.admin-modal-inspect-amount {
+    margin-top: 2px;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dark-900);
+}
+
+.admin-modal-items-title {
+    margin: 0 0 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+/*
+ * Line items. Money is right-aligned so figures line up on the decimal, and
+ * the headings do not wrap — "Unit Price" was breaking across two lines and
+ * dragging the row height with it.
+ */
+.admin-modal-items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-modal-items-table th {
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.admin-modal-items-table th:not(:first-child),
+.admin-modal-items-table td:not(:first-child) {
+    text-align: right;
+    padding-left: 16px;
+    white-space: nowrap;
+}
+
+.admin-modal-items-table td {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.88rem;
+    vertical-align: top;
+}
+
+.admin-modal-items-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-modal-items-table td strong {
+    font-weight: 600;
+    color: var(--dark-900);
 }
