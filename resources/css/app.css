@@ -1592,15 +1592,22 @@ textarea.has-error:focus,
     background: var(--primary);
     color: #ffffff;
     border: none;
-    border-radius: var(--radius-xs);
-    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
     font-size: 0.8rem;
     font-weight: 700;
+    white-space: nowrap;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.btn-add-cart:hover {
+.btn-add-cart:disabled {
+    background: var(--gray-200);
+    color: var(--gray-500);
+    cursor: not-allowed;
+}
+
+.btn-add-cart:hover:not(:disabled) {
     background: var(--primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 8px var(--primary-glow);

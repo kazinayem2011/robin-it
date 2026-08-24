@@ -57,7 +57,6 @@ Route::middleware('throttle:api')->group(function () {
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
     // Product Reviews (read)
-    Route::get(ApiEndpoints::PRODUCT_REVIEWS, [ReviewController::class, 'index']);
 
     // Showroom Stores API
     Route::get(ApiEndpoints::STORES, [StoreController::class, 'index']);
@@ -125,6 +124,10 @@ Route::middleware(['web', 'throttle:api'])->group(function () {
     Route::post(ApiEndpoints::CHECKOUT, [CheckoutController::class, 'process']);
 
     // Reviews are written by verified buyers, who are signed in via the session.
+    // Reading reviews needs the session too, not just writing one. Without
+    // `web` there is no session, so Auth::user() was null for a signed-in
+    // customer and the page told them to log in — while they were logged in.
+    Route::get(ApiEndpoints::PRODUCT_REVIEWS, [ReviewController::class, 'index']);
     Route::post(ApiEndpoints::PRODUCT_REVIEWS, [ReviewController::class, 'store']);
 });
 

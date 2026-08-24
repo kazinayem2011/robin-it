@@ -367,13 +367,21 @@ export const ProductCard = ({
                             )}
                         </div>
 
+                        {/*
+                         * Says what it does. It was labelled "Buy" while
+                         * adding to the cart, which reads as going to
+                         * checkout — and an out-of-stock card should not
+                         * offer the action at all.
+                         */}
                         <button
                             type="button"
                             onClick={handleAddToCart}
                             className="btn-add-cart"
-                            title="Add to Cart"
+                            disabled={!inStock}
+                            title={inStock ? 'Add to cart' : 'Out of stock'}
                         >
-                            <ShoppingCart size={16} /> Buy
+                            <ShoppingCart size={16} />
+                            <span>{inStock ? 'Add to Cart' : 'Sold out'}</span>
                         </button>
                     </div>
                 </div>
