@@ -108,6 +108,15 @@ export const ProductCard = ({
         setShowQuickView(true);
     };
 
+    // A product with options cannot be added blind — the handler sends those
+    // to the detail page, so the control should not promise a cart either.
+    const hasOptions = Boolean(product.has_variants ?? product.hasVariants);
+    const cartActionLabel = !inStock
+        ? 'Out of stock'
+        : hasOptions
+          ? 'Choose options'
+          : 'Add to cart';
+
     if (variant === 'flash') {
         return (
             <>
@@ -121,6 +130,16 @@ export const ProductCard = ({
 
                     {/* Wishlist & Compare Quick Floating Actions */}
                     <div className="card-floating-actions">
+                        <button
+                            type="button"
+                            onClick={handleAddToCart}
+                            className="card-action-btn card-action-cart"
+                            disabled={!inStock}
+                            title={cartActionLabel}
+                            aria-label={cartActionLabel}
+                        >
+                            <ShoppingCart size={14} />
+                        </button>
                         <button
                             type="button"
                             onClick={handleOpenQuickView}
@@ -250,9 +269,13 @@ export const ProductCard = ({
                                 type="button"
                                 onClick={handleAddToCart}
                                 className="btn-add-cart"
-                                title="Add to Cart"
+                                disabled={!inStock}
+                                title={cartActionLabel}
                             >
-                                <ShoppingCart size={16} /> Buy Now
+                                <ShoppingCart size={16} />
+                                <span>
+                                    {inStock ? 'Add to Cart' : 'Sold out'}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -279,6 +302,16 @@ export const ProductCard = ({
 
                 {/* Quick Floating Action Tools */}
                 <div className="card-floating-actions">
+                        <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        className="card-action-btn card-action-cart"
+                        disabled={!inStock}
+                        title={cartActionLabel}
+                        aria-label={cartActionLabel}
+                    >
+                        <ShoppingCart size={14} />
+                    </button>
                     <button
                         type="button"
                         onClick={handleOpenQuickView}
