@@ -194,33 +194,80 @@
     color: var(--gray-500);
 }
 
-.component-selected-card {
+/*
+ * The middle column of a builder row. These rules used to be written against
+ * .component-selected-* class names that the markup no longer renders, so the
+ * whole column was unstyled: the thumbnail fell back to the global
+ * `img { max-width: 100% }`, and because the placeholder is an SVG with no
+ * intrinsic size it stretched to the full width of the 1fr column — a 662px
+ * image in a 732px-tall row.
+ */
+.component-content-col {
+    /* A grid child defaults to min-width:auto, so a long product name would
+       push the price and action columns off the row instead of ellipsing. */
+    min-width: 0;
+}
+
+.selected-product-box {
     display: flex;
     align-items: center;
     gap: 14px;
+    min-width: 0;
 }
 
-.component-selected-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
+.selected-product-thumb {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    /* contain, not cover: these are boxed products shot on white, and cropping
+       a CPU box to a square loses the part that identifies it. */
+    object-fit: contain;
+    padding: 4px;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-xs);
     background: var(--bg-surface-subtle);
 }
 
-.component-selected-details strong {
-    display: block;
+.selected-product-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+}
+
+.selected-product-title {
+    margin: 0;
     font-size: 0.88rem;
     font-weight: 700;
+    line-height: 1.35;
     color: var(--dark-900);
+    /* Two lines is enough for a full product name at this width. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.component-selected-details span {
-    font-size: 0.76rem;
-    color: var(--gray-500);
+.selected-product-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
 }
 
-.component-empty-placeholder {
+.selected-product-badge.is-out {
+    background: rgba(209, 33, 39, 0.12);
+    color: var(--primary);
+}
+
+.empty-component-placeholder {
     font-size: 0.84rem;
     color: var(--gray-400);
     font-style: italic;
@@ -560,6 +607,16 @@
         background: #13291d;
         border-color: #2c5c3e;
         color: #a7e3bf;
+    }
+
+    .selected-product-badge {
+        background: rgba(34, 197, 94, 0.16);
+        color: #6ee7a0;
+    }
+
+    .selected-product-badge.is-out {
+        background: rgba(248, 113, 113, 0.16);
+        color: #f5a3a7;
     }
 }
 

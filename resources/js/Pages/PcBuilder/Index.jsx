@@ -445,7 +445,16 @@ export default function PcBuilderIndex() {
                                                                     .name
                                                             }
                                                         </h5>
-                                                        <span className="selected-product-badge">
+                                                        <span
+                                                            className={`selected-product-badge${
+                                                                selectedEntry
+                                                                    .product
+                                                                    .stock_quantity >
+                                                                0
+                                                                    ? ''
+                                                                    : ' is-out'
+                                                            }`}
+                                                        >
                                                             {selectedEntry
                                                                 .product
                                                                 .stock_quantity >
