@@ -1572,6 +1572,12 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /*
+     * Wraps rather than running off the side. A non-wrapping flex row of
+     * payment chips came to 470px, which on a 375px phone made every page on
+     * the site scroll sideways — the footer is on all of them.
+     */
+    flex-wrap: wrap;
 }
 
 .payment-label {

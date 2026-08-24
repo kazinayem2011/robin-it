@@ -5,6 +5,7 @@ namespace Tests\Feature\Performance;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -109,7 +110,7 @@ class QueryBudgetTest extends TestCase
             fn () => app(ProductService::class)->getPcBuilderCategories()
         );
 
-        $this->assertSame($small, $large, 'the query count grew with the catalogue');
+        $this->assertLessThanOrEqual($small, $large, 'the query count grew with the catalogue');
     }
 
     public function test_the_product_listing_does_not_query_per_product(): void
@@ -128,10 +129,70 @@ class QueryBudgetTest extends TestCase
 
         $many = $this->countQueries(fn () => $this->getJson('/api/products?per_page=50'));
 
-        $this->assertSame(
+        $this->assertLessThanOrEqual(
             $few,
             $many,
             "listing 45 products cost {$many} queries against {$few} for 5 — that is an N+1"
+        );
+    }
+
+    /**
+     * The admin product list once ran 61 queries for 20 rows: a compatibility
+     * check added later read each product's specs and category individually.
+     * The budgets above only covered the storefront, which is why it got in.
+     */
+    public function test_the_admin_product_list_does_not_query_per_product(): void
+    {
+        $this->seedCatalogue(5);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $few = $this->countQueries(
+            fn () => $this->actingAs($admin)->get('/admin/products')
+        );
+
+        $leaf = Category::where('slug', 'cpu-0')->first();
+        for ($i = 400; $i < 419; $i++) {
+            Product::create([
+                'category_id' => $leaf->id, 'name' => "Row {$i}",
+                'slug' => "row-{$i}", 'price' => 500, 'stock_quantity' => 1,
+                'is_active' => true,
+            ]);
+        }
+
+        $many = $this->countQueries(
+            fn () => $this->actingAs($admin)->get('/admin/products')
+        );
+
+        // Not assertSame: Laravel skips an eager load whose parent set has no
+        // matching rows, so the count can legitimately dip by one as the
+        // catalogue fills out. The property being asserted is that it never
+        // *grows* with the number of rows.
+        $this->assertLessThanOrEqual(
+            $few,
+            $many,
+            "listing 24 products cost {$many} queries against {$few} for 5 — that is an N+1"
+        );
+    }
+
+    public function test_the_admin_stock_screen_does_not_query_per_product(): void
+    {
+        $this->seedCatalogue(5);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $few = $this->countQueries(fn () => $this->actingAs($admin)->get('/admin/stock'));
+
+        $leaf = Category::where('slug', 'cpu-0')->first();
+        for ($i = 500; $i < 519; $i++) {
+            Product::create([
+                'category_id' => $leaf->id, 'name' => "Stocked {$i}",
+                'slug' => "stocked-{$i}", 'price' => 500, 'stock_quantity' => 1,
+                'is_active' => true,
+            ]);
+        }
+
+        $this->assertLessThanOrEqual(
+            $few,
+            $this->countQueries(fn () => $this->actingAs($admin)->get('/admin/stock'))
         );
     }
 
@@ -149,6 +210,9 @@ class QueryBudgetTest extends TestCase
             ]);
         }
 
-        $this->assertSame($few, $this->countQueries(fn () => $this->getJson('/api/products/filters')));
+        $this->assertLessThanOrEqual(
+            $few,
+            $this->countQueries(fn () => $this->getJson('/api/products/filters'))
+        );
     }
 }

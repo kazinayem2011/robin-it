@@ -155,7 +155,12 @@ class AdminDashboardController extends Controller
         $search = $request->input('search', '');
         $categoryId = $request->input('category_id', '');
 
-        $query = Product::with(['category', 'brand', 'images', 'variants'])->latest();
+        // specifications and the category chain are eager-loaded because the
+        // compatibility gap check below reads both. Loading them per product
+        // instead turned this page into 61 queries for 20 rows.
+        $query = Product::with([
+            'category.parent.parent', 'brand', 'images', 'variants', 'specifications',
+        ])->latest();
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -177,10 +182,7 @@ class AdminDashboardController extends Controller
         // "we never said".
         $compatibility = app(PcCompatibilityService::class);
         $products->getCollection()->each(function (Product $product) use ($compatibility) {
-            $product->setAttribute(
-                'missing_specs',
-                $compatibility->missingSpecsFor($product->loadMissing('specifications', 'category.parent'))
-            );
+            $product->setAttribute('missing_specs', $compatibility->missingSpecsFor($product));
         });
 
         $categories = Category::all(['id', 'name', 'slug', 'parent_id']);

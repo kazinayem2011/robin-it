@@ -17,6 +17,18 @@
     justify-content: space-between;
     align-items: flex-end;
     margin-bottom: 24px;
+    /*
+     * Wraps rather than stretching the page. A flex item will not shrink below
+     * its content, so on a 375px phone the heading and its actions came to
+     * 1265px and took the whole document with them — the homepage scrolled
+     * 906px sideways.
+     */
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.section-title-row > * {
+    min-width: 0;
 }
 
 .title-text-group h2 {
@@ -1257,6 +1269,13 @@
     padding: 32px 28px;
     text-align: center;
     box-shadow: var(--shadow-sm);
+    /*
+     * The track inside is `width: max-content` and animated, so without this
+     * it escaped the card and stretched the whole document — the homepage
+     * scrolled 906px sideways on a phone. Its category-marquee sibling has
+     * always clipped; this one never did.
+     */
+    overflow: hidden;
 }
 
 .brands-marquee-header {
