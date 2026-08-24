@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
-import { productService } from '../../services';
+import { productService, cartService } from '../../services';
 import {
     ProductCard,
     ProductFilters,
@@ -11,7 +11,9 @@ import {
     Button,
     ProductCardSkeleton,
     EmptyState,
+    toast,
 } from '../../Components';
+import useAppStore from '../../store/useAppStore';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
@@ -117,6 +119,29 @@ export default function ProductListing({ categorySlug }) {
         setPage(1);
     }, [categorySlug]);
 
+    /**
+     * ProductCard's Buy button calls this. It was never passed, so every Buy
+     * button in the shop did nothing at all — no request, no message, no
+     * navigation.
+     */
+    const addToCart = async (product) => {
+        // A product sold by option cannot be added from a card; the shopper
+        // has to pick one first.
+        if (product.has_variants) {
+            router.visit(ROUTES.PRODUCT_DETAIL(product.slug));
+
+            return;
+        }
+
+        try {
+            await cartService.addToCart(product.id, 1);
+            useAppStore.getState().fetchCartCount();
+            toast.success(`Added "${product.name}" to your cart.`);
+        } catch (error) {
+            toast.error(error?.message || 'Could not add that to your cart.');
+        }
+    };
+
     const toggleWishlist = (productId) => {
         setWishlistIds((prev) =>
             prev.includes(productId)
@@ -125,10 +150,13 @@ export default function ProductListing({ categorySlug }) {
         );
     };
 
+    // Prefer the catalogue's own name for the category. Prettifying the slug
+    // turned "pc-case" into "Pc Case", which is not what the shop calls it.
     const readableCategory = categorySlug
-        ? categorySlug
+        ? (facets?.category?.name ??
+          categorySlug
               .replace(/-/g, ' ')
-              .replace(/\b\w/g, (c) => c.toUpperCase())
+              .replace(/\b\w/g, (c) => c.toUpperCase()))
         : null;
 
     const pageTitle = categorySlug
@@ -158,18 +186,13 @@ export default function ProductListing({ categorySlug }) {
                     <div className="plp-header-banner">
                         <div>
                             <div className="breadcrumbs plp-breadcrumbs-spacer">
-                                <Link href={ROUTES.HOME}>Home</Link> &gt;
+                                <Link href={ROUTES.HOME}>Home</Link>
                                 <span className="current">
-                                    {' '}
-                                    {categorySlug
-                                        ? categorySlug.replace(/-/g, ' ')
-                                        : 'All Products'}
+                                    {readableCategory || 'All Products'}
                                 </span>
                             </div>
                             <h1 className="plp-title">
-                                {categorySlug
-                                    ? categorySlug.replace(/-/g, ' ')
-                                    : 'Hardware Catalog'}
+                                {readableCategory || 'Hardware Catalog'}
                             </h1>
                             <span className="plp-item-count">
                                 Showing {products.length} of {totalCount} items
@@ -237,6 +260,7 @@ export default function ProductListing({ categorySlug }) {
                                             isWishlisted={wishlistIds.includes(
                                                 product.id,
                                             )}
+                                            onAddToCart={addToCart}
                                             onToggleWishlist={() =>
                                                 toggleWishlist(product.id)
                                             }

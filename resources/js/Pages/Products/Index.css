@@ -10,15 +10,48 @@
     gap: 20px;
 }
 
+/*
+ * The page heading, not a banner. It was a full card with 24px of padding and
+ * its own border and shadow, so a breadcrumb, a title and an item count took
+ * roughly 180px of vertical space before a single product appeared.
+ */
 .plp-header-banner {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 24px 28px;
-    box-shadow: var(--shadow-xs);
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 4px 0 18px;
+}
+
+.plp-title {
+    margin: 2px 0 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.plp-item-count {
+    font-size: 0.82rem;
+    color: var(--gray-500);
+}
+
+.plp-breadcrumbs-spacer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+}
+
+.plp-breadcrumbs-spacer .current {
+    color: var(--gray-500);
+}
+
+.plp-breadcrumbs-spacer .current::before {
+    content: '/';
+    margin-right: 6px;
+    color: var(--gray-300);
 }
 
 .plp-breadcrumbs-spacer {

@@ -164,11 +164,31 @@ class ProductService
             ->map(fn ($b) => ['id' => $b->id, 'name' => $b->name, 'slug' => $b->slug])
             ->all();
 
+        // The category being browsed, so the page can title itself with the
+        // catalogue's own name. Deriving it from the slug produced "Pc Case"
+        // where the shop says "PC Case / Chassis", and taking it from the first
+        // product gave that product's leaf sub-category instead.
+        $category = null;
+
+        if (! empty($filters['category_slug'])) {
+            $category = Category::where('slug', $filters['category_slug'])
+                ->where('is_active', true)
+                ->first(['id', 'name', 'slug']);
+        } elseif (! empty($filters['category_id'])) {
+            $category = Category::where('is_active', true)
+                ->find($filters['category_id'], ['id', 'name', 'slug']);
+        }
+
         return [
             'min_price' => (float) ($bounds->min_price ?? 0),
             'max_price' => (float) ($bounds->max_price ?? 0),
             'brands' => $brands,
             'total' => (clone $query)->reorder()->count(),
+            'category' => $category ? [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+            ] : null,
         ];
     }
 

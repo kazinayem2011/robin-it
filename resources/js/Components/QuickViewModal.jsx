@@ -42,7 +42,15 @@ export default function QuickViewModal({ show, onClose, product }) {
     };
 
     return (
-        <Modal show={show} onClose={onClose} maxWidth="2xl">
+        // Modal takes `isOpen` and a CSS width. It was being given `show` and
+        // "2xl", so isOpen defaulted to false and Quick View never opened at
+        // all — which is why "View Details" was unreachable.
+        <Modal
+            isOpen={show}
+            onClose={onClose}
+            title="Quick view"
+            maxWidth="820px"
+        >
             <div className="quick-view-grid">
                 {/* Left: Product Image */}
                 <div className="quick-view-image-box">
