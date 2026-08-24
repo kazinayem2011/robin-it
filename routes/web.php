@@ -121,19 +121,25 @@ Route::get(ApiEndpoints::WEB_WARRANTY, function () {
 /*
  * Legacy root-level aliases for the stateful storefront endpoints.
  *
- * The browser client calls these under /api (see routes/api.php); these root paths
- * are kept so older links and any non-browser client keep working.
+ * The browser client calls these under /api (see routes/api.php); these root
+ * paths are kept so older links and any non-browser client keep working.
+ *
+ * They carry the same rate limit as their /api twins. Without it the limit on
+ * the /api side was decorative: the identical unthrottled path sat one prefix
+ * away, so anyone hammering checkout or the cart would simply use this one.
  */
-Route::get(ApiEndpoints::COMPARE, [ComparisonController::class, 'index']);
-Route::post(ApiEndpoints::COMPARE, [ComparisonController::class, 'store']);
-Route::delete(ApiEndpoints::COMPARE_ITEM, [ComparisonController::class, 'destroy']);
+Route::middleware('throttle:api')->group(function () {
+    Route::get(ApiEndpoints::COMPARE, [ComparisonController::class, 'index']);
+    Route::post(ApiEndpoints::COMPARE, [ComparisonController::class, 'store']);
+    Route::delete(ApiEndpoints::COMPARE_ITEM, [ComparisonController::class, 'destroy']);
 
-Route::get(ApiEndpoints::CART, [CartController::class, 'index']);
-Route::post(ApiEndpoints::CART, [CartController::class, 'store']);
-Route::patch(ApiEndpoints::CART_ITEM, [CartController::class, 'update']);
-Route::delete(ApiEndpoints::CART_ITEM, [CartController::class, 'destroy']);
+    Route::get(ApiEndpoints::CART, [CartController::class, 'index']);
+    Route::post(ApiEndpoints::CART, [CartController::class, 'store']);
+    Route::patch(ApiEndpoints::CART_ITEM, [CartController::class, 'update']);
+    Route::delete(ApiEndpoints::CART_ITEM, [CartController::class, 'destroy']);
 
-Route::post(ApiEndpoints::CHECKOUT, [CheckoutController::class, 'process']);
+    Route::post(ApiEndpoints::CHECKOUT, [CheckoutController::class, 'process']);
+});
 
 // Authenticated Customer Dashboard Routes
 Route::middleware(['auth'])->group(function () {
