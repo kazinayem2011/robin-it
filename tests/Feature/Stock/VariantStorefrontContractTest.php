@@ -38,11 +38,17 @@ class VariantStorefrontContractTest extends TestCase
             'is_active' => true,
         ]);
 
-        app(StockService::class)->receive([], [['product_id' => $this->product->id, 'quantity' => 10]]);
+        // Options first: a product holding stock can no longer be restructured.
+        app(ProductVariantService::class)->convertToVariants($this->product, ['Capacity'], [
+            ['options' => ['Capacity' => '16GB'], 'price' => 4200, 'opening_stock' => 0],
+            ['options' => ['Capacity' => '32GB'], 'price' => 8200, 'opening_stock' => 0],
+        ]);
 
-        app(ProductVariantService::class)->convertToVariants($this->product->fresh(), ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'price' => 4200, 'opening_stock' => 6],
-            ['options' => ['Capacity' => '32GB'], 'price' => 8200, 'opening_stock' => 4],
+        $variants = $this->product->fresh('variants')->variants;
+
+        app(StockService::class)->receive([], [
+            ['product_id' => $this->product->id, 'product_variant_id' => $variants->firstWhere('name', '16GB')->id, 'quantity' => 6],
+            ['product_id' => $this->product->id, 'product_variant_id' => $variants->firstWhere('name', '32GB')->id, 'quantity' => 4],
         ]);
     }
 

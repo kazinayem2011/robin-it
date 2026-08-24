@@ -160,7 +160,11 @@ class AdminDashboardController extends Controller
         // instead turned this page into 61 queries for 20 rows.
         $query = Product::with([
             'category.parent.parent', 'brand', 'images', 'variants', 'specifications',
-        ])->latest();
+        ])
+            // withExists rather than asking per product: checking each row
+            // individually took this page from 23 queries to 52.
+            ->withExists(['stockMovements', 'orderItems'])
+            ->latest();
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -183,6 +187,14 @@ class AdminDashboardController extends Controller
         $compatibility = app(PcCompatibilityService::class);
         $products->getCollection()->each(function (Product $product) use ($compatibility) {
             $product->setAttribute('missing_specs', $compatibility->missingSpecsFor($product));
+
+            // Whether single/variant can still be changed. Once a product has
+            // stock or appears on an order its shape is fixed, so the form
+            // should say so rather than letting someone try and be refused.
+            $product->setAttribute(
+                'structure_locked',
+                (bool) $product->stock_movements_exists || (bool) $product->order_items_exists
+            );
         });
 
         $categories = Category::all(['id', 'name', 'slug', 'parent_id']);

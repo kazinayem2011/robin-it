@@ -110,11 +110,18 @@ class ReorderAndValuationTest extends TestCase
     {
         config(['inventory.default_reorder_level' => 10]);
 
-        $product = $this->product('Memory Kit', 20, reorderLevel: 30);
+        // No stock yet: a product holding stock can no longer be restructured.
+        $product = $this->product('Memory Kit', 0, reorderLevel: 30);
 
-        app(ProductVariantService::class)->convertToVariants($product->fresh(), ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'reorder_level' => 4, 'opening_stock' => 12],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 8],
+        app(ProductVariantService::class)->convertToVariants($product, ['Capacity'], [
+            ['options' => ['Capacity' => '16GB'], 'reorder_level' => 4, 'opening_stock' => 0],
+            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 0],
+        ]);
+
+        $variants = $product->fresh('variants')->variants;
+        app(StockService::class)->receive([], [
+            ['product_id' => $product->id, 'product_variant_id' => $variants->firstWhere('name', '16GB')->id, 'quantity' => 12],
+            ['product_id' => $product->id, 'product_variant_id' => $variants->firstWhere('name', '32GB')->id, 'quantity' => 8],
         ]);
 
         $product = $product->fresh('variants');

@@ -15,9 +15,15 @@ use Illuminate\Support\Facades\DB;
  * Switching a product between single and variant stock without inventing or
  * losing a single unit.
  *
- * Both directions move the existing on-hand across as `conversion` movements
- * that net to exactly zero, so the ledger still explains the balance afterwards
- * and the total the shop holds never changes at the moment of the switch.
+ * A product's structure is only changeable while it has no history at all — no
+ * stock movement, no order line. In practice that means a conversion always runs
+ * against an empty shelf and moves nothing.
+ *
+ * The `conversion` movement paths below therefore no longer execute. They are
+ * kept because they are the thing that makes a switch safe if that rule is ever
+ * relaxed: both directions move the on-hand across as movements netting to
+ * exactly zero, so the ledger still explains the balance afterwards. Read them
+ * as a guarantee, not as something that happens today.
  */
 class ProductVariantService
 {
@@ -45,6 +51,7 @@ class ProductVariantService
             );
         }
 
+        $this->assertStructureIsStillChangeable($product, 'be switched to options');
         $this->assertNoOpenOrders($product, 'switch it to options');
 
         if ($variants === []) {
@@ -58,8 +65,9 @@ class ProductVariantService
         $onHand = (int) $product->stock_quantity;
         $allocated = array_sum(array_map(fn ($v) => (int) ($v['opening_stock'] ?? 0), $variants));
 
-        // The whole point of the conversion is that the shop's stock does not
-        // change, so the allocation has to account for every unit on the shelf.
+        // The shop's stock must not change at the moment of the switch. With the
+        // structure lock in place $onHand is always 0, so this is what stops an
+        // opening balance being typed in without a purchase behind it.
         if ($allocated !== $onHand) {
             throw new StorefrontException(
                 "This product has {$onHand} in stock but you have allocated {$allocated} across the options. "
@@ -118,6 +126,7 @@ class ProductVariantService
             );
         }
 
+        $this->assertStructureIsStillChangeable($product, 'be switched back to a single stock pool');
         $this->assertNoOpenOrders($product, 'switch it back to a single stock pool');
 
         return DB::transaction(function () use ($product, $userId) {
@@ -265,6 +274,49 @@ class ProductVariantService
      * go back to whichever shelf they came from. Moving the shelf underneath it
      * would make that impossible to do honestly, so the switch waits.
      */
+    /**
+     * Whether this product's structure may still change.
+     *
+     * A product may be switched between single and per-option stock only while
+     * it has no history — no stock movement, no order line. Once either exists
+     * the shape is fixed, because converting it means moving units between
+     * shelves that past records already point at.
+     *
+     * This is where the industry lands: WooCommerce allows the switch at any
+     * time and is a known source of inventory corruption; Magento forbids it
+     * outright and traps anyone who picked the wrong type by mistake. Allowing
+     * it only before anything has happened removes the risk without the trap.
+     *
+     * @throws StorefrontException
+     */
+    private function assertStructureIsStillChangeable(Product $product, string $action): void
+    {
+        $movements = StockMovement::where('product_id', $product->id)->count();
+        $sold = OrderItem::where('product_id', $product->id)->count();
+
+        if ($movements === 0 && $sold === 0) {
+            return;
+        }
+
+        $reasons = [];
+
+        if ($movements > 0) {
+            $reasons[] = 'stock has been recorded against it';
+        }
+
+        if ($sold > 0) {
+            $reasons[] = 'it appears on past orders';
+        }
+
+        throw new StorefrontException(
+            "This product can no longer {$action}, because "
+                .implode(' and ', $reasons)
+                .'. Create a new product with the structure you need, and retire this one.',
+            422,
+            ApiCode::VALIDATION_ERROR
+        );
+    }
+
     private function assertNoOpenOrders(Product $product, string $action): void
     {
         $open = OrderItem::where('product_id', $product->id)

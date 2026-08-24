@@ -3,12 +3,10 @@
 namespace Tests\Feature\Stock;
 
 use App\Models\Category;
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\User;
-use App\Services\OrderService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,19 +15,23 @@ use Tests\TestCase;
 /**
  * Switching a product between a single stock pool and per-option stock.
  *
- * The one thing that must never happen: the shop's total holding changing at the
- * moment of the switch. Every conversion moves the same units across and nets to
- * exactly zero in the ledger.
+ * A product's structure is only changeable while it has no history — no stock
+ * movement, no order line. Once either exists the shape is fixed, which means a
+ * conversion can never move units: there are none to move. What these cover is
+ * that the switch is clean while it is still allowed, and firmly refused after.
+ *
+ * The refusal itself lives in ProductStructureLockTest.
  */
 class VariantConversionTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function product(int $stock = 12): Product
+    /** A product with no history: the only kind that can still be restructured. */
+    private function product(): Product
     {
         $category = Category::firstOrCreate(['slug' => 'ram'], ['name' => 'RAM', 'is_active' => true]);
 
-        $product = Product::create([
+        return Product::create([
             'category_id' => $category->id,
             'name' => 'Kingston Fury Beast',
             'slug' => 'fury-'.uniqid(),
@@ -37,12 +39,6 @@ class VariantConversionTest extends TestCase
             'stock_quantity' => 0,
             'is_active' => true,
         ]);
-
-        if ($stock > 0) {
-            app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => $stock]]);
-        }
-
-        return $product->fresh();
     }
 
     private function variants(): ProductVariantService
@@ -59,158 +55,131 @@ class VariantConversionTest extends TestCase
             : (int) $product->stock_quantity;
     }
 
-    public function test_switching_to_options_moves_the_shelf_without_changing_the_total(): void
+    /** Convert while empty, then buy stock into each option. */
+    private function withOptions(Product $product, int $small = 5, int $large = 7): Product
     {
-        $product = $this->product(12);
-
         $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
+            ['options' => ['Capacity' => '32GB'], 'price' => 8200, 'opening_stock' => 0],
         ]);
 
-        $product = $product->fresh('variants');
+        $fresh = $product->fresh('variants');
+
+        app(StockService::class)->receive([], array_values(array_filter([
+            $small > 0 ? ['product_id' => $product->id, 'product_variant_id' => $fresh->variants->firstWhere('name', '16GB')->id, 'quantity' => $small] : null,
+            $large > 0 ? ['product_id' => $product->id, 'product_variant_id' => $fresh->variants->firstWhere('name', '32GB')->id, 'quantity' => $large] : null,
+        ])));
+
+        return $product->fresh('variants');
+    }
+
+    public function test_a_fresh_product_can_be_given_options(): void
+    {
+        $product = $this->withOptions($this->product());
 
         $this->assertTrue($product->has_variants);
-        $this->assertSame(12, $this->totalHolding($product), 'the total holding changed');
+        $this->assertSame(12, $this->totalHolding($product));
         $this->assertSame(12, $product->stock_quantity, 'the parent total is not the sum of its options');
 
         $this->assertSame(5, $product->variants->firstWhere('name', '16GB')->stock_quantity);
         $this->assertSame(7, $product->variants->firstWhere('name', '32GB')->stock_quantity);
     }
 
-    /** The conversion movements must cancel out exactly — no units created or lost. */
-    public function test_the_conversion_nets_to_zero_in_the_ledger(): void
+    /**
+     * Because only an empty product can be restructured, the switch itself has
+     * nothing to carry across and must leave the ledger untouched.
+     */
+    public function test_the_switch_itself_writes_nothing_to_the_ledger(): void
     {
-        $product = $this->product(12);
+        $product = $this->product();
 
         $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
+            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 0],
         ]);
 
-        $net = (int) StockMovement::where('product_id', $product->id)
-            ->where('type', StockMovement::CONVERSION)
-            ->sum('quantity');
-
-        $this->assertSame(0, $net, 'the conversion invented or destroyed stock');
+        $this->assertSame(0, StockMovement::where('product_id', $product->id)->count(),
+            'restructuring an empty product touched the ledger');
+        $this->assertSame(0, $this->totalHolding($product));
     }
 
-    public function test_an_allocation_that_does_not_match_the_shelf_is_refused(): void
+    /**
+     * Opening stock would be units appearing without a purchase behind them.
+     * The only honest opening balance on an empty product is zero.
+     */
+    public function test_opening_stock_cannot_be_invented_during_the_switch(): void
     {
-        $product = $this->product(12);
+        $product = $this->product();
 
-        $this->expectExceptionMessage('has 12 in stock but you have allocated 10');
-
-        $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 5],
-        ]);
-
-        $this->assertSame(12, $product->fresh()->stock_quantity);
-    }
-
-    public function test_over_allocating_is_refused_too(): void
-    {
-        $product = $this->product(12);
-
-        $this->expectExceptionMessage('has 12 in stock but you have allocated 20');
+        $this->expectExceptionMessage('has 0 in stock but you have allocated 20');
 
         $this->variants()->convertToVariants($product, ['Capacity'], [
             ['options' => ['Capacity' => '16GB'], 'opening_stock' => 20],
         ]);
     }
 
-    public function test_switching_back_to_a_single_pool_collects_every_unit(): void
+    public function test_an_empty_variant_product_can_collapse_back(): void
     {
-        $product = $this->product(12);
+        $product = $this->product();
 
         $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
+            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 0],
         ]);
 
         $this->variants()->convertToSingle($product->fresh());
 
         $product = $product->fresh();
         $this->assertFalse($product->has_variants);
-        $this->assertSame(12, $product->stock_quantity, 'units were lost collapsing back');
+        $this->assertSame(0, $product->stock_quantity);
         $this->assertFalse(app(StockService::class)->verify($product)['drifted']);
     }
 
-    public function test_a_full_round_trip_preserves_the_total_exactly(): void
+    /** Undoing a mis-click is fine; it is only history that fixes the shape. */
+    public function test_a_round_trip_is_possible_while_the_product_is_untouched(): void
     {
-        $product = $this->product(12);
+        $product = $this->product();
 
         $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
         ]);
         $this->variants()->convertToSingle($product->fresh());
         $this->variants()->convertToVariants($product->fresh(), ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 12],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
         ]);
 
-        $this->assertSame(12, $this->totalHolding($product));
-
-        $net = (int) StockMovement::where('product_id', $product->id)
-            ->where('type', StockMovement::CONVERSION)->sum('quantity');
-        $this->assertSame(0, $net);
+        $this->assertTrue($product->fresh()->has_variants);
+        $this->assertSame(0, StockMovement::where('product_id', $product->id)->count());
     }
 
     /**
-     * A pending order still owes its units back to a specific shelf. Moving the
-     * shelf under it would make an honest restock impossible.
+     * The old rule only blocked conversion while an order was still open, so a
+     * delivered order left the shape editable and the paperwork pointing at a
+     * shelf that no longer existed. Any order line now fixes it for good.
      */
-    public function test_conversion_is_blocked_while_an_order_is_open(): void
+    public function test_a_product_that_has_been_ordered_can_never_be_restructured(): void
     {
-        $product = $this->product(12);
-        $user = User::factory()->create();
+        $product = $this->product();
+        app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 12]]);
 
+        $user = User::factory()->create();
         $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 2]);
         $this->actingAs($user)->postJson('/checkout-api', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
 
-        $this->expectExceptionMessage('open order(s) still contain this product');
+        $this->expectExceptionMessage('it appears on past orders');
 
         $this->variants()->convertToVariants($product->fresh(), ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 10],
+            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
         ]);
-    }
-
-    public function test_conversion_is_allowed_once_the_order_is_settled(): void
-    {
-        $product = $this->product(12);
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 2]);
-        $this->actingAs($user)->postJson('/checkout-api', [
-            'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
-            'street_address' => 'House 45', 'city' => 'Dhaka',
-        ]);
-
-        $order = Order::where('user_id', $user->id)->latest()->first();
-        app(OrderService::class)->updateOrderStatus($order, 'delivered');
-
-        $this->variants()->convertToVariants($product->fresh(), ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 10],
-        ]);
-
-        $this->assertSame(10, $this->totalHolding($product));
     }
 
     /** Editing labels and prices is not a stock operation. */
     public function test_editing_options_never_moves_stock(): void
     {
-        $product = $this->product(12);
-
-        $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
-        ]);
-
-        $product = $product->fresh('variants');
+        $product = $this->withOptions($this->product());
         $first = $product->variants->firstWhere('name', '16GB');
         $second = $product->variants->firstWhere('name', '32GB');
 
@@ -231,14 +200,7 @@ class VariantConversionTest extends TestCase
      */
     public function test_removing_an_option_that_holds_stock_retires_it_instead(): void
     {
-        $product = $this->product(12);
-
-        $this->variants()->convertToVariants($product, ['Capacity'], [
-            ['options' => ['Capacity' => '16GB'], 'opening_stock' => 5],
-            ['options' => ['Capacity' => '32GB'], 'opening_stock' => 7],
-        ]);
-
-        $product = $product->fresh('variants');
+        $product = $this->withOptions($this->product());
         $keep = $product->variants->firstWhere('name', '16GB');
         $drop = $product->variants->firstWhere('name', '32GB');
 

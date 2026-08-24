@@ -174,12 +174,15 @@ class InvoiceTest extends TestCase
     public function test_the_invoice_names_the_option_that_was_bought(): void
     {
         $product = $this->product(0);
-        app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 6]]);
-        app(ProductVariantService::class)->convertToVariants($product->fresh(), ['Edition'], [
-            ['options' => ['Edition' => 'Boxed'], 'opening_stock' => 6],
+        // Options first: a product holding stock can no longer be restructured.
+        app(ProductVariantService::class)->convertToVariants($product, ['Edition'], [
+            ['options' => ['Edition' => 'Boxed'], 'opening_stock' => 0],
         ]);
 
         $variant = $product->fresh('variants')->variants->first();
+        app(StockService::class)->receive([], [[
+            'product_id' => $product->id, 'product_variant_id' => $variant->id, 'quantity' => 6,
+        ]]);
         $user = User::factory()->create();
 
         $this->actingAs($user)->postJson('/cart-api', [

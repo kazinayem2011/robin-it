@@ -3265,3 +3265,13 @@
     font-weight: 600;
     color: var(--dark-900);
 }
+
+/* Explains why the single/variant toggle is unavailable, rather than leaving
+   a disabled checkbox with no reason given. */
+.admin-structure-locked {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(217, 119, 6, 0.1);
+    color: #92400e;
+}

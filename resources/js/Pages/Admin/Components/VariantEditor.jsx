@@ -35,6 +35,11 @@ export default function VariantEditor({
     const wasVariant = Boolean(editingProduct?.has_variants);
     const hasVariants = Boolean(formik.values.has_variants);
 
+    // Once a product has stock or sits on an order, switching between a single
+    // pool and per-option stock would move units between shelves that past
+    // records already point at. The server refuses it; the form says so first.
+    const structureLocked = Boolean(editingProduct?.structure_locked);
+
     // Only a single product being switched over needs its shelf split up.
     const isConverting = hasVariants && !wasVariant && !isNewProduct;
     const onHand = Number(editingProduct?.stock_quantity ?? 0);
@@ -93,8 +98,19 @@ export default function VariantEditor({
                 name="has_variants"
                 label="This product is sold in options (sizes, capacities, colours)"
                 checked={hasVariants}
+                disabled={structureLocked}
                 onChange={(e) => toggle(e.target.checked)}
             />
+
+            {structureLocked && (
+                <p className="admin-field-hint admin-structure-locked">
+                    {hasVariants
+                        ? 'This product is sold in options and has stock or past orders, so it cannot be collapsed back into a single pool.'
+                        : 'This product has stock or past orders, so it cannot be switched to options.'}{' '}
+                    Create a new product with the structure you need and retire
+                    this one.
+                </p>
+            )}
 
             {!hasVariants && wasVariant && (
                 <div className="admin-variant-warning">

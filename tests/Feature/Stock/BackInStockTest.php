@@ -189,11 +189,16 @@ class BackInStockTest extends TestCase
     public function test_a_variant_product_requires_choosing_which_option(): void
     {
         $product = $this->product(0);
-        app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 4]]);
-        app(ProductVariantService::class)->convertToVariants($product->fresh(), ['Edition'], [
-            ['options' => ['Edition' => 'OC'], 'opening_stock' => 4],
+        // Options first: a product holding stock can no longer be restructured.
+        app(ProductVariantService::class)->convertToVariants($product, ['Edition'], [
+            ['options' => ['Edition' => 'OC'], 'opening_stock' => 0],
             ['options' => ['Edition' => 'Standard'], 'opening_stock' => 0],
         ]);
+        app(StockService::class)->receive([], [[
+            'product_id' => $product->id,
+            'product_variant_id' => $product->fresh('variants')->variants->firstWhere('name', 'OC')->id,
+            'quantity' => 4,
+        ]]);
 
         $this->subscribe($product->fresh())
             ->assertStatus(422)
@@ -205,11 +210,16 @@ class BackInStockTest extends TestCase
     {
         Mail::fake();
         $product = $this->product(0);
-        app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 4]]);
-        app(ProductVariantService::class)->convertToVariants($product->fresh(), ['Edition'], [
-            ['options' => ['Edition' => 'OC'], 'opening_stock' => 4],
+        // Options first: a product holding stock can no longer be restructured.
+        app(ProductVariantService::class)->convertToVariants($product, ['Edition'], [
+            ['options' => ['Edition' => 'OC'], 'opening_stock' => 0],
             ['options' => ['Edition' => 'Standard'], 'opening_stock' => 0],
         ]);
+        app(StockService::class)->receive([], [[
+            'product_id' => $product->id,
+            'product_variant_id' => $product->fresh('variants')->variants->firstWhere('name', 'OC')->id,
+            'quantity' => 4,
+        ]]);
 
         $product = $product->fresh('variants');
         $soldOut = $product->variants->firstWhere('name', 'Standard');
