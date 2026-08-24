@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\ComparisonController;
 use App\Http\Controllers\Customer\DashboardController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Banner;
 use App\Models\BlogPost;
@@ -207,5 +208,11 @@ Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('
     Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy'])->name('suppliers.destroy');
     Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->name('orders.return');
 });
+
+/*
+ * Printable invoice. Outside the admin group because a customer prints their
+ * own; the controller decides who may see which.
+ */
+Route::get(ApiEndpoints::ORDER_INVOICE, [InvoiceController::class, 'show'])->name('orders.invoice');
 
 require __DIR__.'/auth.php';

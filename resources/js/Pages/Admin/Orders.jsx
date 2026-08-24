@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, ShoppingCart, Undo2 } from 'lucide-react';
+import { Eye, ShoppingCart, Undo2, Printer } from 'lucide-react';
 import { StatusBadge, Modal, Button, DataTable, toast } from '@/Components';
 import OrderReturnModal from './Components/OrderReturnModal';
 import { adminService } from '@/services';
@@ -185,6 +185,19 @@ export default function Orders({
                             <Undo2 size={14} />
                         </button>
                     )}
+
+                    {/* Opens the print dialog straight away — the paperwork
+                        goes out with the rider. */}
+                    <a
+                        href={`/orders/${order.id}/invoice?print=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="admin-table-icon-btn"
+                        title="Print invoice"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Printer size={14} />
+                    </a>
                 </div>
             ),
         },

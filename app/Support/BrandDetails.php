@@ -56,6 +56,30 @@ class BrandDetails
     }
 
     /**
+     * The logo as a path the browser resolves against the current host.
+     *
+     * Pages should use this rather than logoUrl(): an absolute URL built from
+     * APP_URL breaks the moment the app is served from anywhere else — which is
+     * exactly what happened on the invoice, where APP_URL still said :8000 and
+     * the header rendered a broken image. Email is the opposite case and does
+     * need something absolute or embedded.
+     */
+    public static function logoWebPath(): ?string
+    {
+        $path = trim((string) SiteSetting::get('site_logo', '/images/logo.png'));
+
+        if ($path === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        return '/'.ltrim($path, '/');
+    }
+
+    /**
      * Filesystem path of the logo when it is a local file, otherwise null.
      *
      * Emails embed this directly rather than linking to it. A URL only works if

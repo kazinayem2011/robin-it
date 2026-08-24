@@ -624,3 +624,23 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Link out to the printable invoice from the order detail. */
+.dash-invoice-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text, #0f172a);
+    text-decoration: none;
+}
+
+.dash-invoice-link:hover {
+    border-color: var(--color-brand-red, #d1202f);
+    color: var(--color-brand-red, #d1202f);
+}

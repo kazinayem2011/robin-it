@@ -25,6 +25,7 @@ import {
     Eye,
     ChevronRight,
     XCircle,
+    Printer,
 } from 'lucide-react';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { Modal } from '@/Components/Modal';
@@ -1161,6 +1162,17 @@ export default function Index({
             >
                 {selectedOrder && (
                     <div>
+                        {/* The account has promised "invoices" all along
+                            without producing one. */}
+                        <a
+                            href={`/orders/${selectedOrder.id}/invoice`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dash-invoice-link"
+                        >
+                            <Printer size={15} /> Print invoice
+                        </a>
+
                         <div className="dash-modal-invoice-header">
                             <div>
                                 <span className="dash-modal-invoice-date">

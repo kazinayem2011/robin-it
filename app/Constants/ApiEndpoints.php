@@ -155,6 +155,9 @@ class ApiEndpoints
 
     public const ACCOUNT_ORDER_CANCEL = '/account/orders/{id}/cancel';
 
+    /** Printable invoice, for the customer and the admin alike. */
+    public const ORDER_INVOICE = '/orders/{id}/invoice';
+
     // Admin
     public const ADMIN_PREFIX = 'admin';
 
