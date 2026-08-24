@@ -1142,6 +1142,108 @@ textarea.has-error:focus,
     margin-top: 8px;
 }
 
+.skeleton-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Cart and checkout lines */
+.skeleton-line-items {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.skeleton-line-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.skeleton-line-item-thumb {
+    flex-shrink: 0;
+}
+
+.skeleton-line-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* A flex child defaults to min-width:auto, which would stop these
+       shrinking and push the price off the row on a narrow screen. */
+    flex: 1;
+    min-width: 0;
+}
+
+.skeleton-line-item-price {
+    flex-shrink: 0;
+}
+
+/* Product detail */
+.skeleton-pdp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 40px;
+    padding: 32px 0;
+}
+
+.skeleton-pdp-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.skeleton-pdp-thumbs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.skeleton-pdp-info {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.skeleton-pdp-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+    .skeleton-pdp {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+}
+
+/*
+ * An indefinite shimmer is exactly the kind of motion that causes trouble for
+ * people who ask the OS to reduce it, and a static block reads as loading just
+ * as well.
+ */
+.compare-grid-skeleton {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer {
+        animation: none;
+        background: var(--gray-200);
+    }
+}
+
 /* 11. Quick View Modal */
 .quick-view-grid {
     padding: 24px;

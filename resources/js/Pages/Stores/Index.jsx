@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import { storeService } from '../../services';
-import { SEOHead, Spinner } from '../../Components';
+import { SEOHead, CardGridSkeleton } from '../../Components';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -77,10 +77,10 @@ export default function StoresIndex() {
                     </div>
 
                     {loading ? (
-                        <div className="stores-loading-box">
-                            <Spinner size="lg" />
-                            <p>Loading authorized store locations...</p>
-                        </div>
+                        <CardGridSkeleton
+                            count={3}
+                            className="stores-grid"
+                        />
                     ) : (
                         <div className="stores-grid">
                             {filteredStores.map((store) => (

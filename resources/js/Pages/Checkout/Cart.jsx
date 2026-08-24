@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import { cartService } from '../../services';
-import { Button, Spinner, Card, ProductImage, toast } from '../../Components';
+import {
+    Button,
+    LineItemsSkeleton,
+    Card,
+    ProductImage,
+    toast,
+} from '../../Components';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -68,7 +74,9 @@ export default function Cart() {
     if (loading) {
         return (
             <MainLayout>
-                <Spinner text="Loading shopping cart..." fullHeight />
+                <div className="checkout-container container">
+                    <LineItemsSkeleton count={3} />
+                </div>
             </MainLayout>
         );
     }

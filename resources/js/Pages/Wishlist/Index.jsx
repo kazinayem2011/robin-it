@@ -4,7 +4,7 @@ import MainLayout from '../../Layouts/MainLayout';
 import {
     Button,
     EmptyState,
-    Spinner,
+    CardGridSkeleton,
     ProductImage,
     toast,
 } from '../../Components';
@@ -97,7 +97,7 @@ export default function Wishlist() {
                 </div>
 
                 {loading ? (
-                    <Spinner text="Loading saved items..." fullHeight />
+                    <CardGridSkeleton count={4} className="wishlist-grid" />
                 ) : wishlist.length === 0 ? (
                     <EmptyState
                         icon={Heart}

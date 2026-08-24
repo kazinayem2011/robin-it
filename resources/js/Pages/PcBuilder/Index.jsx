@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import {
     Button,
-    Spinner,
+    BuilderRowsSkeleton,
     toast,
     Modal,
     PcBuilderQuotationModal,
@@ -358,10 +358,7 @@ export default function PcBuilderIndex() {
 
                 {/* Table of Component Slots */}
                 {loading ? (
-                    <Spinner
-                        text="Loading PC builder blueprint..."
-                        fullHeight
-                    />
+                    <BuilderRowsSkeleton count={8} />
                 ) : (
                     <div className="pc-builder-components-table">
                         {categories.map((cat, index) => {

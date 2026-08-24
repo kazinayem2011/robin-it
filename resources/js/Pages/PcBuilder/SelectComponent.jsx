@@ -3,7 +3,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import {
     Button,
-    Spinner,
     ProductCardSkeleton,
     EmptyState,
     ProductImage,

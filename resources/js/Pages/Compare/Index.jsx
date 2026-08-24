@@ -4,7 +4,7 @@ import MainLayout from '../../Layouts/MainLayout';
 import {
     Button,
     EmptyState,
-    Spinner,
+    CardGridSkeleton,
     ProductImage,
     toast,
 } from '../../Components';
@@ -147,10 +147,7 @@ export default function Compare() {
                 </div>
 
                 {loading ? (
-                    <Spinner
-                        text="Loading hardware comparison matrix..."
-                        fullHeight
-                    />
+                    <CardGridSkeleton count={4} className="compare-grid-skeleton" />
                 ) : compareProducts.length === 0 ? (
                     <EmptyState
                         icon={Scale}

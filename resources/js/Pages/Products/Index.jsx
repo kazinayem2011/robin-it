@@ -7,7 +7,6 @@ import {
     ProductFilters,
     SEOHead,
     Pagination,
-    Spinner,
     Button,
     ProductCardSkeleton,
     EmptyState,

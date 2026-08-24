@@ -3,7 +3,12 @@ import { Head, router, Link } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import MainLayout from '../../Layouts/MainLayout';
 import { cartService, checkoutService, couponService } from '../../services';
-import { Button, Spinner, ProductImage, toast } from '../../Components';
+import {
+    Button,
+    LineItemsSkeleton,
+    ProductImage,
+    toast,
+} from '../../Components';
 import useAppStore from '../../store/useAppStore';
 import { checkoutSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
@@ -123,7 +128,9 @@ export default function Checkout() {
     if (loading) {
         return (
             <MainLayout>
-                <Spinner text="Loading checkout details..." fullHeight />
+                <div className="checkout-container container">
+                    <LineItemsSkeleton count={3} />
+                </div>
             </MainLayout>
         );
     }

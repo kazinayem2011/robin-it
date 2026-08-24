@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Spinner } from '../../../Components';
+import { Modal, TableSkeleton } from '../../../Components';
 import { adminService } from '../../../services';
 import { formatBdt } from '../../../utils/formatters';
 
@@ -51,7 +51,16 @@ export default function ReceiptHistoryModal({ isOpen, onClose }) {
             maxWidth="820px"
         >
             {state.loading ? (
-                <Spinner />
+                <TableSkeleton
+                    headers={[
+                        'Reference',
+                        'Supplier',
+                        'Received',
+                        'Units',
+                        'Cost',
+                    ]}
+                    rows={4}
+                />
             ) : state.receipts.length === 0 ? (
                 <p className="admin-field-hint">
                     No deliveries recorded yet. Receiving stock will list them

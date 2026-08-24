@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Spinner } from '../../../Components';
+import { Modal, TableSkeleton } from '../../../Components';
 import { adminService } from '../../../services';
 
 /**
@@ -81,7 +81,16 @@ export default function StockLedgerModal({ target, onClose }) {
             )}
 
             {state.loading ? (
-                <Spinner />
+                <TableSkeleton
+                    headers={[
+                        'When',
+                        'What happened',
+                        'Change',
+                        'Balance',
+                        'By',
+                    ]}
+                    rows={6}
+                />
             ) : state.movements.length === 0 ? (
                 <p className="admin-field-hint">
                     Nothing has moved yet. Receiving a delivery will show up

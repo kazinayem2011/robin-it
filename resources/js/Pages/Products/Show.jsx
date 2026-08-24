@@ -10,7 +10,7 @@ import {
 } from '../../services';
 import {
     Button,
-    Spinner,
+    ProductDetailSkeleton,
     SEOHead,
     toast,
     CountdownTimer,
@@ -255,8 +255,8 @@ export default function ProductDetails(props) {
     if (loading) {
         return (
             <MainLayout>
-                <div className="pdp-loading-container">
-                    <Spinner size="lg" text="Loading product details..." />
+                <div className="container">
+                    <ProductDetailSkeleton />
                 </div>
             </MainLayout>
         );
