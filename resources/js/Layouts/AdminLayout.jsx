@@ -18,6 +18,8 @@ import {
     BookOpen,
     ShieldCheck,
     MessageSquare,
+    Menu,
+    X,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -29,17 +31,35 @@ export default function AdminLayout({
     title = 'Executive Dashboard',
     subtitle = `${siteConfig.name} Operations & Inventory`,
 }) {
+    // The sidebar is a drawer below the desktop breakpoint. Without this it
+    // took 260px of a 375px screen and left the page an unusable sliver.
+    const [navOpen, setNavOpen] = React.useState(false);
+
     const { auth } = usePage().props;
     const user = auth.user || {};
     const currentUrl =
         typeof window !== 'undefined' ? window.location.pathname : '';
+
+    // Close it after navigating, or the drawer stays over the page just
+    // arrived at. Declared after currentUrl: a dependency array is evaluated
+    // during render, so referencing it earlier is a temporal dead zone error.
+    React.useEffect(() => {
+        setNavOpen(false);
+    }, [currentUrl]);
 
     const handleLogout = () => {
         router.post(ROUTES.LOGOUT);
     };
 
     return (
-        <div className="admin-wrapper">
+        <div className={`admin-wrapper ${navOpen ? 'nav-open' : ''}`}>
+            {/* Tapping away closes the drawer, which is what people expect. */}
+            <div
+                className="admin-nav-backdrop"
+                onClick={() => setNavOpen(false)}
+                aria-hidden="true"
+            />
+
             {/* Sidebar */}
             <aside className="admin-sidebar">
                 <div className="admin-sidebar-header">
@@ -237,6 +257,16 @@ export default function AdminLayout({
             <div className="admin-main-viewport">
                 {/* Topbar */}
                 <header className="admin-topbar">
+                    <button
+                        type="button"
+                        className="admin-nav-toggle"
+                        aria-label={navOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={navOpen}
+                        onClick={() => setNavOpen((open) => !open)}
+                    >
+                        {navOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+
                     <div className="admin-page-title-group">
                         <h2>{title}</h2>
                         <p>{subtitle}</p>

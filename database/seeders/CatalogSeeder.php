@@ -8,7 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductSpecification;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CatalogSeeder extends Seeder
 {
@@ -18,13 +18,16 @@ class CatalogSeeder extends Seeder
     public function run(): void
     {
         // Clear existing tables
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // Schema:: rather than raw SQL — `SET FOREIGN_KEY_CHECKS` is MySQL-only
+        // and made this seeder unrunnable on SQLite, so no test could use the
+        // real catalogue as a fixture.
+        Schema::disableForeignKeyConstraints();
         ProductSpecification::truncate();
         ProductImage::truncate();
         Product::truncate();
         Category::truncate();
         Brand::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        Schema::enableForeignKeyConstraints();
 
         // ─────────────────────────────────────────────────────────────────
         // 1. BRANDS

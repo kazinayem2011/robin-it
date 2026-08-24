@@ -395,6 +395,17 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
+    /*
+     * Wraps rather than letting the actions ride over the heading. On a phone
+     * the title and its buttons overlapped and the last button was cut off at
+     * the card edge.
+     */
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-card-header > * {
+    min-width: 0;
 }
 
 .admin-card-title {
@@ -3043,4 +3054,104 @@
     color: #92400e;
     font-size: 11px;
     font-weight: 600;
+}
+
+/* ── Admin on a phone ──────────────────────────────────────────────────────── */
+
+/*
+ * The sidebar is 260px and was always visible, so on a 375px screen it left
+ * roughly 85px for the page — content rendered one letter per line and the
+ * admin was unusable on a phone. Below the desktop breakpoint it becomes a
+ * drawer.
+ */
+.admin-nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--dark-900);
+    cursor: pointer;
+}
+
+.admin-nav-backdrop {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .admin-nav-toggle {
+        display: inline-flex;
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100dvh;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        box-shadow: 0 0 40px rgba(15, 23, 42, 0.18);
+    }
+
+    .admin-wrapper.nav-open .admin-sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-nav-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 99;
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+
+    .admin-wrapper.nav-open .admin-nav-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* The viewport takes the full width now that the sidebar is out of flow. */
+    .admin-main-viewport {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .admin-topbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Opening the live store is a desktop convenience, not worth the width
+       here where the title needs every pixel. */
+    .admin-live-store-btn span {
+        display: none;
+    }
+
+    .admin-topbar {
+        flex-wrap: wrap;
+    }
+
+    /* Groups of buttons in a card header stack instead of running off the
+       side; a cut-off "Receive stock" is a button nobody can press. */
+    .admin-card-header .admin-input-row-flex,
+    .admin-header-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .admin-summary-strip,
+    .admin-stock-summary {
+        width: 100%;
+    }
 }
