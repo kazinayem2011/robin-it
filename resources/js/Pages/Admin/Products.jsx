@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Package, Plus, Edit2, CheckCircle, XCircle, Crop } from 'lucide-react';
+import {
+    Package,
+    Plus,
+    Edit2,
+    CheckCircle,
+    XCircle,
+    Crop,
+    AlertTriangle,
+} from 'lucide-react';
 import {
     Modal,
     Button,
@@ -268,6 +276,22 @@ export default function Products({
                         <span className="admin-product-item-sku">
                             SKU: {p.sku || `PROD-${p.id}`}
                         </span>
+                        {/*
+                         * The PC Builder reads these specs to check whether
+                         * parts fit. A missing one is treated as "unknown"
+                         * rather than a failure, so without saying so here
+                         * the shop cannot tell a checked build from an
+                         * unchecked one.
+                         */}
+                        {p.missing_specs?.length > 0 && (
+                            <span
+                                className="admin-spec-gap"
+                                title="The PC Builder cannot check compatibility without these"
+                            >
+                                <AlertTriangle size={12} />
+                                Add spec: {p.missing_specs.join(', ')}
+                            </span>
+                        )}
                     </div>
                 </div>
             ),

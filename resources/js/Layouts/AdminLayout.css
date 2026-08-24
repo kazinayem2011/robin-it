@@ -3029,3 +3029,18 @@
     font-size: 13px;
     background: #fff;
 }
+
+/* A builder component the compatibility engine cannot check, because a spec it
+   reads is missing. Silent otherwise — an absent spec reads as "unknown". */
+.admin-spec-gap {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(217, 119, 6, 0.12);
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 600;
+}

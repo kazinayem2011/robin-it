@@ -19,6 +19,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\WarrantyClaim;
 use App\Services\OrderService;
+use App\Services\PcCompatibilityService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
 use App\Support\MailSettings;
@@ -168,6 +169,20 @@ class AdminDashboardController extends Controller
         }
 
         $products = $query->paginate(20)->withQueryString();
+
+        // Which builder components cannot be compatibility-checked because a
+        // spec the engine reads is missing. It treats an absent spec as
+        // "unknown" rather than a failure, which is right at check time and
+        // invisible at catalogue time — the shop cannot tell "these fit" from
+        // "we never said".
+        $compatibility = app(PcCompatibilityService::class);
+        $products->getCollection()->each(function (Product $product) use ($compatibility) {
+            $product->setAttribute(
+                'missing_specs',
+                $compatibility->missingSpecsFor($product->loadMissing('specifications', 'category.parent'))
+            );
+        });
+
         $categories = Category::all(['id', 'name', 'slug', 'parent_id']);
         $brands = Brand::all(['id', 'name', 'slug']);
 

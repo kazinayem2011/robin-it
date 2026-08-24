@@ -130,6 +130,93 @@ class PcCompatibilityService
     /**
      * The load-bearing rule: a CPU only physically seats in a matching socket.
      */
+    /**
+     * The specs each kind of component must carry for the checks to work.
+     *
+     * The engine reads these by name and treats a missing one as "unknown"
+     * rather than a failure, which is the right call at check time and useless
+     * at catalogue time: a shop cannot tell the difference between "these parts
+     * are compatible" and "we never said". This is what turns that silence into
+     * something an admin can act on.
+     *
+     * Names match the aliases the checks accept, first one being the canonical.
+     *
+     * @var array<string, array<int, array<int, string>>>
+     */
+    public const REQUIRED_SPECS = [
+        self::SLOT_CPU => [
+            ['Socket', 'CPU Socket'],
+            ['TDP', 'Power Draw', 'Wattage', 'Power'],
+        ],
+        self::SLOT_MOTHERBOARD => [
+            ['Socket', 'CPU Socket'],
+            ['Memory Type', 'Memory', 'Type'],
+            ['Form Factor', 'Size'],
+        ],
+        self::SLOT_RAM => [
+            ['Memory Type', 'Memory', 'Speed', 'Type'],
+        ],
+        self::SLOT_GPU => [
+            ['TDP', 'Power Draw', 'Wattage', 'Power'],
+        ],
+        self::SLOT_PSU => [
+            ['Wattage', 'Power Output', 'Output', 'Power'],
+        ],
+        self::SLOT_COOLER => [
+            ['Socket', 'Compatibility', 'Supported Sockets'],
+        ],
+        self::SLOT_CASE => [
+            ['Motherboard Support', 'Form Factor', 'Compatibility'],
+        ],
+    ];
+
+    /**
+     * Which compatibility specs a product is missing.
+     *
+     * Returns the canonical name of each group where none of the accepted
+     * aliases is present. An empty array means the engine can fully check this
+     * product against a build.
+     *
+     * @return array<int, string>
+     */
+    public function missingSpecsFor(Product $product, ?string $slot = null): array
+    {
+        $slot ??= $this->slotForProduct($product);
+
+        if (! $slot || ! isset(self::REQUIRED_SPECS[$slot])) {
+            return [];
+        }
+
+        $missing = [];
+
+        foreach (self::REQUIRED_SPECS[$slot] as $aliases) {
+            if ($product->spec($aliases) === null) {
+                $missing[] = $aliases[0];
+            }
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Which builder slot a product belongs to, by walking up its category tree.
+     */
+    public function slotForProduct(Product $product): ?string
+    {
+        $category = $product->category;
+        $guard = 0;
+
+        while ($category && $guard++ < 6) {
+            if (isset(self::REQUIRED_SPECS[$category->slug])) {
+                return $category->slug;
+            }
+
+            $category = $category->parent;
+        }
+
+        return null;
+    }
+
     private function checkCpuSocket(array $selection): ?array
     {
         $cpu = $selection[self::SLOT_CPU] ?? null;
