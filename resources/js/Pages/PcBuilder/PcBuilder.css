@@ -79,6 +79,75 @@
     color: var(--white);
 }
 
+/* A finished set of essentials reads as done rather than as another number. */
+.stat-pill.is-complete .stat-pill-value {
+    color: #4ade80;
+}
+
+/*
+ * An empty required slot should not read the same as an empty optional one —
+ * "No component selected" says nothing about whether that matters.
+ */
+.empty-component-placeholder.is-required {
+    color: var(--primary);
+    font-style: normal;
+    font-weight: 600;
+}
+
+/* The prompt shown before a build with gaps in it goes to the cart. */
+.build-gap-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    margin: 20px 24px 0;
+    border: 1px solid #f0d391;
+    border-radius: var(--radius-sm);
+    background: #fdf6e3;
+    color: #7a5c12;
+}
+
+.build-gap-notice svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.build-gap-notice p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.build-gap-list {
+    margin: 14px 24px 24px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.build-gap-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark-900);
+}
+
+.build-gap-list li::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+}
+
 .pc-builder-components-table {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
@@ -609,15 +678,14 @@
         color: #a7e3bf;
     }
 
-    .selected-product-badge {
-        background: rgba(34, 197, 94, 0.16);
-        color: #6ee7a0;
-    }
-
-    .selected-product-badge.is-out {
-        background: rgba(248, 113, 113, 0.16);
-        color: #f5a3a7;
-    }
+    /*
+     * The stock badge and the build-gap notice deliberately have no dark
+     * variant. There is no dark palette for the site as a whole — body stays
+     * on the light background whatever the OS asks for — so a component that
+     * darkens on its own ends up as a dark panel on a light page. The compat
+     * panels above already do that and should be reconsidered together with a
+     * real dark theme rather than one component at a time.
+     */
 }
 
 /*

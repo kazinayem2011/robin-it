@@ -1,0 +1,41 @@
+/**
+ * Build completeness.
+ *
+ * A rig needs a processor, motherboard, memory, storage, a power supply and a
+ * case before it will boot. The server marks those slots `required` when it
+ * sends the builder its categories, and this reads that flag rather than
+ * keeping a second list here that could drift away from it.
+ *
+ * What it deliberately does not do is decide whether the customer may buy.
+ * Plenty of real orders are upgrades — a processor and board for a machine that
+ * already has a case and a supply — so missing essentials are something to say
+ * out loud, not something to refuse.
+ */
+export const essentialsStatus = (categories = [], items = []) => {
+    const chosenIds = new Set(
+        (items || []).map((item) => item?.componentId).filter(Boolean),
+    );
+
+    const essentials = (categories || []).filter((cat) => cat?.required);
+
+    const missing = essentials
+        .filter((cat) => !chosenIds.has(cat.id))
+        .map((cat) => ({ id: cat.id, name: cat.name }));
+
+    return {
+        total: essentials.length,
+        chosen: essentials.length - missing.length,
+        missing,
+        complete: essentials.length > 0 && missing.length === 0,
+    };
+};
+
+/** "a Power Supply and a PC Case" — for a sentence, not a list. */
+export const listNames = (entries = []) => {
+    const names = entries.map((entry) => entry?.name).filter(Boolean);
+
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+
+    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+};

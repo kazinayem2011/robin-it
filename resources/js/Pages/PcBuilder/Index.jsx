@@ -13,6 +13,8 @@ import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
+import { essentialsStatus, listNames } from '../../utils/pcBuild';
+import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,
     Server,
@@ -67,6 +69,7 @@ export default function PcBuilderIndex() {
     );
     const clearPcBuilder = useAppStore((state) => state.clearPcBuilder);
     const [compat, setCompat] = useState(null);
+    const [gapPrompt, setGapPrompt] = useState(false);
     const [checkingCompat, setCheckingCompat] = useState(false);
 
     useEffect(() => {
@@ -173,18 +176,38 @@ export default function PcBuilderIndex() {
             return sum + (Number.isFinite(watts) && watts > 0 ? watts : 50);
         }, 100);
 
+    // Which of the parts a machine cannot boot without are still empty.
+    const essentials = essentialsStatus(categories, pcBuilderItems);
+
     const handleAddAllToCart = async () => {
         if (pcBuilderItems.length === 0) {
             toast.warning('Please choose components before adding to cart.');
             return;
         }
 
-        // Don't let someone buy parts we know do not work together.
+        /*
+         * Incompatible and incomplete are refused differently on purpose.
+         *
+         * Two parts that provably cannot connect is never something the
+         * customer meant, so that stays a hard stop. Missing essentials often
+         * is what they meant — upgrades reuse the case and the supply — so it
+         * asks instead of refusing.
+         */
         if (compat?.status === 'fail') {
             toast.error(compat.issues[0].message, 'Incompatible Build');
             return;
         }
 
+        if (essentials.missing.length > 0) {
+            setGapPrompt(true);
+            return;
+        }
+
+        await addItemsToCart();
+    };
+
+    const addItemsToCart = async () => {
+        setGapPrompt(false);
         setAddingToCart(true);
         const failures = [];
 
@@ -298,6 +321,16 @@ export default function PcBuilderIndex() {
                     </div>
 
                     <div className="pc-builder-stats">
+                        <div
+                            className={`stat-pill ${
+                                essentials.complete ? 'is-complete' : ''
+                            }`}
+                        >
+                            <span className="stat-pill-label">Essentials</span>
+                            <span className="stat-pill-value">
+                                {essentials.chosen} / {essentials.total}
+                            </span>
+                        </div>
                         <div className="stat-pill">
                             <span className="stat-pill-label">
                                 Estimated Wattage
@@ -388,7 +421,10 @@ export default function PcBuilderIndex() {
                                             </span>
                                         </div>
                                     )}
-                                    <div className="pc-builder-row">
+                                    <div
+                                        className="pc-builder-row"
+                                        id={`slot-${cat.id}`}
+                                    >
                                         {/* Type Column */}
                                         <div className="component-type-col">
                                             <div className="component-icon-box">
@@ -462,8 +498,16 @@ export default function PcBuilderIndex() {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="empty-component-placeholder">
-                                                    No component selected
+                                                <div
+                                                    className={`empty-component-placeholder ${
+                                                        cat.required
+                                                            ? 'is-required'
+                                                            : ''
+                                                    }`}
+                                                >
+                                                    {cat.required
+                                                        ? 'Needed for the build'
+                                                        : 'No component selected'}
                                                 </div>
                                             )}
                                         </div>
@@ -576,6 +620,27 @@ export default function PcBuilderIndex() {
                     </div>
                 </div>
             </div>
+
+            <IncompleteBuildModal
+                isOpen={gapPrompt}
+                onClose={() => setGapPrompt(false)}
+                onLocateMissing={() => {
+                    setGapPrompt(false);
+                    // The label says it takes you to them, so it should.
+                    const first = essentials.missing[0];
+                    if (first) {
+                        document
+                            .getElementById(`slot-${first.id}`)
+                            ?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center',
+                            });
+                    }
+                }}
+                onConfirm={addItemsToCart}
+                missing={essentials.missing}
+                adding={addingToCart}
+            />
 
             {/* Official Branded Quotation Print / PDF Modal */}
             <PcBuilderQuotationModal
