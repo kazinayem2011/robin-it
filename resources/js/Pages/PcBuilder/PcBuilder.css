@@ -545,6 +545,14 @@
     display: flex;
     align-items: center;
     gap: 18px;
+    /*
+     * Takes the space that is left and gives it back when there is not enough.
+     * A flex child defaults to min-width:auto, so a long compatibility note
+     * refused to wrap any further and pushed the price and button column
+     * instead of yielding to it.
+     */
+    flex: 1;
+    min-width: 0;
 }
 
 .component-select-img {
@@ -579,6 +587,17 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    /*
+     * Never compressed. On a card carrying an incompatibility note the left
+     * column grew to 1052px and squeezed this to 198px, which folded "Add to
+     * Rig" onto three lines and left one card's button twice the height of
+     * the one below it.
+     */
+    flex-shrink: 0;
+}
+
+.component-select-right .btn {
+    white-space: nowrap;
 }
 
 .component-select-price-box {
@@ -626,6 +645,9 @@
     .component-select-right {
         width: 100%;
         justify-content: space-between;
+    }
+    .component-select-left {
+        width: 100%;
     }
 }
 
