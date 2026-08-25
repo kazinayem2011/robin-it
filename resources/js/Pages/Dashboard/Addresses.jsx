@@ -6,6 +6,7 @@ import AccountLayout from './AccountLayout';
 import AddressFormModal from './AddressFormModal';
 import { deliveryAddressSchema } from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
+import { formatBdPhone } from '@/utils/formatters';
 
 export default function Addresses({
     user,
@@ -94,25 +95,80 @@ export default function Addresses({
                         </button>
                     </div>
                 ) : (
-                    <div className="addresses-grid">
+                    /*
+                     * Built on the same three-part card as an order — tinted
+                     * header carrying the label and a badge, plain body, tinted
+                     * footer holding the action. Two different card shapes in
+                     * one account area read as two different products.
+                     */
+                    <div className="addresses-list-wrapper">
                         {addresses.map((addr) => (
-                            <div
-                                key={addr.id}
-                                className={`address-item-card ${addr.is_default ? 'is-default-address' : ''}`}
-                            >
-                                {addr.is_default && (
-                                    <span className="default-addr-badge">
-                                        DEFAULT ADDRESS
+                            <div key={addr.id} className="address-history-card">
+                                <div className="address-card-header">
+                                    <div>
+                                        <span className="dash-address-label">
+                                            Deliver to:{' '}
+                                        </span>
+                                        <strong className="dash-address-name">
+                                            {addr.name || user?.name}
+                                        </strong>
+                                        {/* An address saved before the phone
+                                            field was required has none, and
+                                            formatBdPhone answers "—" for that.
+                                            Better to show nothing than a dash
+                                            standing in for a number. */}
+                                        {addr.phone && (
+                                            <>
+                                                <span className="dash-order-divider">
+                                                    |
+                                                </span>
+                                                <span className="dash-address-phone">
+                                                    {formatBdPhone(addr.phone)}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                    {addr.is_default && (
+                                        <span className="address-default-badge">
+                                            Default
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="address-card-body">
+                                    <MapPin size={15} />
+                                    <div>
+                                        <p className="dash-address-street">
+                                            {addr.address}
+                                        </p>
+                                        <p className="dash-address-region">
+                                            {/* Deduplicated: for the
+                                                capitals the district and the
+                                                division carry the same name,
+                                                which read as "Dhaka, Dhaka". */}
+                                            {[
+                                                ...new Set(
+                                                    [
+                                                        addr.city,
+                                                        addr.district,
+                                                        addr.division,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .map((part) =>
+                                                            part.trim(),
+                                                        ),
+                                                ),
+                                            ].join(', ')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="address-card-footer">
+                                    <span className="dash-address-hint">
+                                        {addr.is_default
+                                            ? 'Used for new orders'
+                                            : 'Saved address'}
                                     </span>
-                                )}
-                                <h4>
-                                    {addr.city}, {addr.district}
-                                </h4>
-                                <p>{addr.address}</p>
-                                <span className="dash-address-meta">
-                                    Division: <strong>{addr.division}</strong>
-                                </span>
-                                <div className="dash-address-actions">
                                     <button
                                         className="btn btn-outline btn-sm dash-address-remove-btn"
                                         onClick={() =>
