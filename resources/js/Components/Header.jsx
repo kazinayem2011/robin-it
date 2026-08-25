@@ -22,6 +22,7 @@ import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import { getCategoryIcon } from '../utils/iconMap';
 import { splitAnnouncement } from '../utils/announcement';
+import { useMarqueeDuration } from '../hooks';
 import { categoryService, settingService } from '../services';
 import useAppStore from '../store/useAppStore';
 
@@ -115,41 +116,7 @@ export const Header = () => {
     const { label: announcementLabel, message: announcementMessage } =
         splitAnnouncement(announcement);
 
-    /*
-     * The announcement is editable, so its width is not known ahead of time.
-     * A fixed duration would mean a long message races past and a short one
-     * crawls; deriving it from the measured width keeps the reading speed the
-     * same whatever an admin writes.
-     */
-    useLayoutEffect(() => {
-        const track = marqueeRef.current;
-
-        if (!track || typeof ResizeObserver === 'undefined') return;
-
-        const PIXELS_PER_SECOND = 70;
-
-        const publish = () => {
-            const copy = track.firstElementChild;
-
-            if (!copy) return;
-
-            const width = copy.getBoundingClientRect().width;
-
-            if (width > 0) {
-                track.style.setProperty(
-                    '--ticker-duration',
-                    `${(width / PIXELS_PER_SECOND).toFixed(1)}s`,
-                );
-            }
-        };
-
-        publish();
-
-        const observer = new ResizeObserver(publish);
-        observer.observe(track);
-
-        return () => observer.disconnect();
-    }, [announcementMessage]);
+    useMarqueeDuration(marqueeRef, [announcementMessage]);
 
     return (
         <header className="site-header-wrapper">
@@ -172,9 +139,9 @@ export const Header = () => {
                         {announcementLabel && (
                             <p className="ticker-label">{announcementLabel}</p>
                         )}
-                        <div className="ticker-marquee">
+                        <div className="header-marquee">
                             <div
-                                className="ticker-marquee-track"
+                                className="header-marquee-track"
                                 ref={marqueeRef}
                             >
                                 <p className="ticker-text">

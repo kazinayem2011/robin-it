@@ -101,10 +101,10 @@
  * category and brand marquees on the home page: the content is rendered twice
  * and the track travels exactly one copy's width, so the loop has no seam.
  */
-.ticker-marquee {
-    /* Takes the room left over beside the badge. min-width:0 because a flex
-       child will not shrink below its content otherwise, and this content is
-       one long unbreakable line. */
+.header-marquee {
+    /* Takes the room left over beside the fixed heading. min-width:0 because a
+       flex child will not shrink below its content otherwise, and this content
+       is one long unbreakable line. */
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -125,20 +125,25 @@
     );
 }
 
-.ticker-marquee-track {
+.header-marquee-track {
     display: flex;
+    align-items: center;
     width: max-content;
-    /* Set from the measured text width in Header.jsx, so the speed stays the
-       same however long the announcement is. The fallback covers first paint. */
-    animation: tickerMarqueeSlide var(--ticker-duration, 14s) linear infinite;
+    /* Set from the measured content width by useMarqueeDuration, so the speed
+       stays the same however long the content is. Fallback covers first paint. */
+    animation: headerMarqueeSlide var(--marquee-duration, 14s) linear infinite;
 }
 
-/* So it can be read rather than chased. */
-.ticker-marquee:hover .ticker-marquee-track {
+/*
+ * So it can be read rather than chased — and, in the trending row, so a moving
+ * keyword can actually be clicked.
+ */
+.header-marquee:hover .header-marquee-track,
+.header-marquee:focus-within .header-marquee-track {
     animation-play-state: paused;
 }
 
-@keyframes tickerMarqueeSlide {
+@keyframes headerMarqueeSlide {
     from {
         transform: translateX(0);
     }
@@ -149,21 +154,26 @@
 
 /*
  * Motion nobody asked for and cannot stop is the kind people turn off at the
- * OS level. It holds still and truncates instead, the way it did before.
+ * OS level. These hold still instead, and stay reachable by scrolling.
  */
 @media (prefers-reduced-motion: reduce) {
-    .ticker-marquee-track {
-        animation: none;
-        width: 100%;
+    .header-marquee {
+        overflow-x: auto;
+        scrollbar-width: none;
+        mask-image: none;
+        -webkit-mask-image: none;
     }
 
-    .ticker-marquee-track .ticker-text[aria-hidden='true'] {
+    .header-marquee::-webkit-scrollbar {
         display: none;
     }
 
-    .ticker-marquee-track .ticker-text {
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .header-marquee-track {
+        animation: none;
+    }
+
+    .header-marquee-track > [aria-hidden='true'] {
+        display: none;
     }
 }
 
@@ -368,16 +378,23 @@
     gap: 6px;
     margin-top: 5px;
     font-size: 0.72rem;
-    overflow-x: auto;
     white-space: nowrap;
-    scrollbar-width: none;
+    /* The row no longer scrolls itself; the marquee inside it does, and an
+       overflow here would clip that one's edge fade. */
+    min-width: 0;
 }
 
-.search-hot-tags::-webkit-scrollbar {
-    display: none;
+/* One copy of the keyword list. Two of these make up the marquee track. */
+.hot-tag-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Spacing between the end of one copy and the start of the next. */
+    padding-right: 6px;
 }
 
 .hot-tag-label {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     gap: 3px;

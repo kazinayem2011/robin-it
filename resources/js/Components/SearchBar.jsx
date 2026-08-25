@@ -10,6 +10,7 @@ import {
     ArrowRight,
 } from 'lucide-react';
 import { productService } from '../services';
+import { useMarqueeDuration } from '../hooks';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import { formatBdt } from '../utils/formatters';
@@ -29,6 +30,10 @@ export const SearchBar = ({ onSearch }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
+    const tagsRef = useRef(null);
+
+    // Same speed as the announcement ticker, from the measured content width.
+    useMarqueeDuration(tagsRef);
     const searchRef = useRef(null);
 
     // Debounced Live Multi-Facet Search Autocomplete (SSOT)
@@ -190,22 +195,44 @@ export const SearchBar = ({ onSearch }) => {
 
             {/* Live Trending Search Tags */}
             <div className="search-hot-tags">
+                {/* Fixed, like the ticker's heading: it says what the row is,
+                    so it should not have to be chased to be read. */}
                 <span className="hot-tag-label">
                     <Flame size={12} className="text-primary" /> Hot:
                 </span>
-                {siteConfig.trendingKeywords.map((kw) => (
-                    <button
-                        key={kw}
-                        type="button"
-                        onClick={() => {
-                            setSearchQuery(kw);
-                            setSearchFocused(true);
-                        }}
-                        className="hot-tag"
-                    >
-                        {kw}
-                    </button>
-                ))}
+                <div className="header-marquee">
+                    <div className="header-marquee-track" ref={tagsRef}>
+                        {/*
+                         * Two copies so the loop has no seam. Unlike the
+                         * ticker these are real buttons, so the copy is taken
+                         * out of the tab order as well as hidden from screen
+                         * readers — otherwise every keyword is reachable twice
+                         * and one of the two goes nowhere useful.
+                         */}
+                        {[false, true].map((isDuplicate) => (
+                            <div
+                                className="hot-tag-group"
+                                key={isDuplicate ? 'copy' : 'original'}
+                                aria-hidden={isDuplicate || undefined}
+                            >
+                                {siteConfig.trendingKeywords.map((kw) => (
+                                    <button
+                                        key={kw}
+                                        type="button"
+                                        tabIndex={isDuplicate ? -1 : undefined}
+                                        onClick={() => {
+                                            setSearchQuery(kw);
+                                            setSearchFocused(true);
+                                        }}
+                                        className="hot-tag"
+                                    >
+                                        {kw}
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Live Autocomplete Results Flyout Dropdown */}
