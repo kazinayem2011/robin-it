@@ -9,6 +9,7 @@ import {
     toast,
 } from '../../Components';
 import { wishlistService, cartService } from '../../services';
+import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
@@ -56,6 +57,13 @@ export default function Wishlist() {
         setActionId(product.id);
         try {
             await cartService.addToCart(product.id, 1);
+
+            // The header badge reads from the store, so an add that does not
+            // refresh it leaves the count stale until the next full page load.
+            // Every other place that adds to the cart does this; this one did
+            // not, so moving an item here looked like nothing had happened.
+            useAppStore.getState().fetchCartCount();
+
             await wishlistService.removeFromWishlist(product.id);
             setWishlist((prev) =>
                 prev.filter(
