@@ -10,15 +10,30 @@ class CategoryService
 {
     /**
      * Get the nested category tree for the Mega Menu.
+     *
+     * Categories holding nothing are left out. Three of the nine top-level
+     * entries had no products anywhere beneath them — Accessories, Server &
+     * Storage and Offers & Deals — so a third of the main navigation led
+     * straight to "No products found". They come back on their own as soon as
+     * the shop stocks them.
+     *
+     * An offer category is the exception: its discounts live on the products,
+     * not on a category assignment, so it never has any of its own.
      */
     public function getMegaMenuTree(): Collection
     {
+        $stocked = $this->categoryIdsWithProducts();
+
         return Category::whereNull('parent_id')
             ->where('is_active', true)
-            ->with(['children' => function ($query) {
+            ->where(fn ($q) => $q->where('is_offer', true)
+                ->orWhereIn('id', $stocked))
+            ->with(['children' => function ($query) use ($stocked) {
                 $query->where('is_active', true)
-                    ->with(['children' => function ($q) {
-                        $q->where('is_active', true);
+                    ->whereIn('id', $stocked)
+                    ->with(['children' => function ($q) use ($stocked) {
+                        $q->where('is_active', true)
+                            ->whereIn('id', $stocked);
                     }]);
             }])
             ->get()
@@ -62,6 +77,44 @@ class CategoryService
                     ],
                 ];
             });
+    }
+
+    /**
+     * Every category id that has a product somewhere beneath it.
+     *
+     * Two queries regardless of depth: the products' own categories, then the
+     * count rolled up through the parent chain, so a top-level entry counts as
+     * stocked when only a grandchild holds anything.
+     *
+     * @return array<int, int>
+     */
+    private function categoryIdsWithProducts(): array
+    {
+        $direct = Product::where('is_active', true)
+            ->distinct()
+            ->pluck('category_id')
+            ->filter()
+            ->all();
+
+        if ($direct === []) {
+            return [];
+        }
+
+        $parents = Category::pluck('parent_id', 'id');
+        $stocked = array_flip($direct);
+
+        foreach ($direct as $id) {
+            $cursor = $parents[$id] ?? null;
+
+            // Walk up to the root. The guard is against a cycle in the data,
+            // which would otherwise hang the request.
+            for ($depth = 0; $cursor !== null && $depth < 10; $depth++) {
+                $stocked[$cursor] = true;
+                $cursor = $parents[$cursor] ?? null;
+            }
+        }
+
+        return array_keys($stocked);
     }
 
     /**

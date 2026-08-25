@@ -100,9 +100,16 @@ Route::get(ApiEndpoints::WEB_SUPPORT, function () {
     return Inertia::render('Support/Index');
 })->name('support');
 
-// Offers & Promos Page
+/*
+ * Offers & Promos.
+ *
+ * This rendered 'Offers/Index', a page component that was never written, so
+ * every visit — including the header's Offers button, on every page — was a
+ * 500. It is the shop listing restricted to discounted stock, which is what
+ * the page was always meant to be.
+ */
 Route::get(ApiEndpoints::WEB_OFFERS, function () {
-    return Inertia::render('Offers/Index');
+    return Inertia::render('Products/Index', ['onSaleOnly' => true]);
 })->name('offers');
 
 // Tech Journal & Blogs

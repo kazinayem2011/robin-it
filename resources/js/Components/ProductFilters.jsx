@@ -17,6 +17,9 @@ export default function ProductFilters({
     value = {},
     onChange,
     categorySlug = null,
+    // The offers page is already restricted to on-sale, so the box would be
+    // a checkbox that does nothing.
+    hideOnSale = false,
     debounceMs = 400,
 }) {
     const [minPrice, setMinPrice] = useState(value.min_price ?? '');
@@ -422,18 +425,20 @@ export default function ProductFilters({
                         />
                         <span>In stock only</span>
                     </label>
-                    <label className="plp-filter-check">
-                        <input
-                            type="checkbox"
-                            checked={Boolean(value.on_sale)}
-                            onChange={(e) =>
-                                onChange?.({
-                                    on_sale: e.target.checked || undefined,
-                                })
-                            }
-                        />
-                        <span>On sale</span>
-                    </label>
+                    {!hideOnSale && (
+                        <label className="plp-filter-check">
+                            <input
+                                type="checkbox"
+                                checked={Boolean(value.on_sale)}
+                                onChange={(e) =>
+                                    onChange?.({
+                                        on_sale: e.target.checked || undefined,
+                                    })
+                                }
+                            />
+                            <span>On sale</span>
+                        </label>
+                    )}
                 </section>
 
                 {facets && (

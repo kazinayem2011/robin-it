@@ -396,8 +396,21 @@ export const Header = () => {
                                 }}
                                 onMouseLeave={() => setHoveredCategory(null)}
                             >
+                                {/*
+                                 * An offer category has no products assigned to
+                                 * it — the discounts live on the products — so
+                                 * linking it into the shop led to an empty
+                                 * page. The flag existed and was only being
+                                 * used to colour the link.
+                                 */}
                                 <Link
-                                    href={ROUTES.SHOP_CATEGORY(category.slug)}
+                                    href={
+                                        category.isOffer
+                                            ? ROUTES.OFFERS
+                                            : ROUTES.SHOP_CATEGORY(
+                                                  category.slug,
+                                              )
+                                    }
                                     className={`nav-link-main ${category.isOffer ? 'offer-link' : ''}`}
                                 >
                                     <span>{category.name}</span>

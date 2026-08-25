@@ -26,7 +26,14 @@ import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
-export default function ProductListing({ categorySlug }) {
+/**
+ * The shop listing.
+ *
+ * `/offers` renders this too, with onSaleOnly, rather than a second listing
+ * that would have to grow its own paging, filters, URL sync and skeletons and
+ * then drift from this one.
+ */
+export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     /*
      * Paging, sorting and filtering used to start from hardcoded defaults, so
      * reloading page 3 of a filtered catalogue dropped the shopper back on
@@ -70,7 +77,15 @@ export default function ProductListing({ categorySlug }) {
         [filters],
     );
 
-    const filterKey = JSON.stringify(activeFilters);
+    // The offers page is a listing that is already narrowed; the shopper can
+    // filter within it but cannot widen back out to full price.
+    const requestFilters = useMemo(
+        () =>
+            onSaleOnly ? { ...activeFilters, on_sale: true } : activeFilters,
+        [activeFilters, onSaleOnly],
+    );
+
+    const filterKey = JSON.stringify(requestFilters);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -79,7 +94,7 @@ export default function ProductListing({ categorySlug }) {
                 page: page,
                 sort: sort,
                 category_slug: categorySlug,
-                ...activeFilters,
+                ...requestFilters,
             });
 
             setProducts(data.items);
@@ -111,7 +126,7 @@ export default function ProductListing({ categorySlug }) {
         let cancelled = false;
 
         productService
-            .getFilters({ category_slug: categorySlug, ...activeFilters })
+            .getFilters({ category_slug: categorySlug, ...requestFilters })
             .then((data) => {
                 if (!cancelled) setFacets(data);
             })
@@ -203,22 +218,32 @@ export default function ProductListing({ categorySlug }) {
               .replace(/\b\w/g, (c) => c.toUpperCase()))
         : null;
 
-    const pageTitle = categorySlug
-        ? `${categorySlug.replace(/-/g, ' ').toUpperCase()} — ${siteConfig.name}`
-        : `All Technology Products — ${siteConfig.name}`;
+    const listingName = onSaleOnly
+        ? 'Offers & Deals'
+        : (readableCategory ?? 'All Products');
+
+    const pageTitle = onSaleOnly
+        ? `Offers & Deals — ${siteConfig.name}`
+        : categorySlug
+          ? `${categorySlug.replace(/-/g, ' ').toUpperCase()} — ${siteConfig.name}`
+          : `All Technology Products — ${siteConfig.name}`;
 
     return (
         <MainLayout>
             <SEOHead
                 title={
-                    readableCategory
-                        ? `${readableCategory} — Price in Bangladesh`
-                        : 'Shop All Computer Hardware & Components'
+                    onSaleOnly
+                        ? 'Offers & Deals — Discounted PC Hardware'
+                        : readableCategory
+                          ? `${readableCategory} — Price in Bangladesh`
+                          : 'Shop All Computer Hardware & Components'
                 }
                 description={
-                    readableCategory
-                        ? `Buy genuine ${readableCategory} at the best price in Bangladesh, with official warranty and nationwide delivery.`
-                        : 'Browse processors, graphics cards, motherboards, memory and complete builds — genuine parts with official warranty and nationwide delivery.'
+                    onSaleOnly
+                        ? 'Every discounted component, laptop and build currently in stock — genuine parts with official warranty and nationwide delivery.'
+                        : readableCategory
+                          ? `Buy genuine ${readableCategory} at the best price in Bangladesh, with official warranty and nationwide delivery.`
+                          : 'Browse processors, graphics cards, motherboards, memory and complete builds — genuine parts with official warranty and nationwide delivery.'
                 }
             />
 
@@ -231,12 +256,12 @@ export default function ProductListing({ categorySlug }) {
                         <div>
                             <div className="breadcrumbs plp-breadcrumbs-spacer">
                                 <Link href={ROUTES.HOME}>Home</Link>
-                                <span className="current">
-                                    {readableCategory || 'All Products'}
-                                </span>
+                                <span className="current">{listingName}</span>
                             </div>
                             <h1 className="plp-title">
-                                {readableCategory || 'Hardware Catalog'}
+                                {onSaleOnly
+                                    ? 'Offers & Deals'
+                                    : readableCategory || 'Hardware Catalog'}
                             </h1>
                             <span className="plp-item-count">
                                 Showing {products.length} of {totalCount} items
@@ -269,6 +294,7 @@ export default function ProductListing({ categorySlug }) {
                             value={activeFilters}
                             onChange={applyFilters}
                             categorySlug={categorySlug}
+                            hideOnSale={onSaleOnly}
                         />
 
                         <div className="plp-results" id="shop-results">
@@ -290,8 +316,20 @@ export default function ProductListing({ categorySlug }) {
                                 ) : products.length === 0 ? (
                                     <div className="plp-full-span">
                                         <EmptyState
-                                            title="No products found in this category"
-                                            description="Try selecting a different category or clearing your search/filter criteria."
+                                            title={
+                                                onSaleOnly
+                                                    ? 'Nothing is on offer right now'
+                                                    : categorySlug
+                                                      ? `No products in ${readableCategory} yet`
+                                                      : 'No products match those filters'
+                                            }
+                                            description={
+                                                onSaleOnly
+                                                    ? 'Check back soon — discounts change regularly.'
+                                                    : categorySlug
+                                                      ? 'This part of the catalogue is still being stocked. Everything else is a click away.'
+                                                      : 'Try clearing a filter or two to widen the search.'
+                                            }
                                             actionLabel="Browse All Hardware"
                                             actionHref={ROUTES.SHOP}
                                         />

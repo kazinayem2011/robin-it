@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\Services;
 
+use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\CategoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -52,10 +54,25 @@ class CategoryServiceTest extends TestCase
             'is_active' => true,
         ]);
 
-        Category::create([
+        $leaf = Category::create([
             'name' => 'RTX 4090 Arena',
             'slug' => 'rtx-4090-arena',
             'parent_id' => $child->id,
+            'is_active' => true,
+        ]);
+
+        /*
+         * The menu only offers categories that have something to sell — an
+         * empty branch is a dead end for the shopper — so the tree needs one
+         * product before it will describe this structure at all.
+         */
+        Product::create([
+            'category_id' => $leaf->id,
+            'brand_id' => Brand::create(['name' => 'ASUS', 'slug' => 'asus'])->id,
+            'name' => 'ASUS ROG RTX 4090',
+            'slug' => 'asus-rog-rtx-4090',
+            'price' => 250000,
+            'stock_quantity' => 2,
             'is_active' => true,
         ]);
 
