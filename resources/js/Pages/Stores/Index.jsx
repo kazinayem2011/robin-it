@@ -43,7 +43,7 @@ export default function StoresIndex() {
         <MainLayout>
             <SEOHead
                 title="Our Showrooms & Service Centers"
-                description="Find Robin IT official showrooms, flagship outlets, and authorized customer warranty service centers nationwide."
+                description={`Find ${siteConfig.name} official showrooms, flagship outlets, and authorized customer warranty service centers nationwide.`}
             />
 
             <div className="stores-page-wrapper">

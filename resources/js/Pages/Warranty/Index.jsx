@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import MainLayout from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import { Button, FormInput, FormSelect, Tabs, toast } from '../../Components';
-import { warrantyService } from '../../services';
+import { warrantyService, storeService } from '../../services';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -55,28 +55,19 @@ const ISSUE_TYPES = [
     { value: 'Other Issue', label: 'Other Technical Defect' },
 ];
 
-const DROPOFF_BRANCHES = [
-    {
-        value: 'Robin IT Central Service Center, Multiplan Center, Dhaka',
-        label: 'Central Lab — Multiplan Center, Dhaka',
-    },
-    {
-        value: 'Robin IT Uttara Outlet, Sector 3, Dhaka',
-        label: 'Uttara Branch — Sector 3, Dhaka',
-    },
-    {
-        value: 'Robin IT Agrabad Commercial Area, Chattogram',
-        label: 'Chattogram Branch — Agrabad',
-    },
-    {
-        value: 'Robin IT Zindabazar, Sylhet',
-        label: 'Sylhet Branch — Zindabazar',
-    },
-    {
-        value: 'Doorstep Courier Pickup (All 64 Districts)',
-        label: 'Doorstep Courier Pickup (Nationwide 64 Districts)',
-    },
-];
+/*
+ * Courier pickup is always available; the branches come from the shop's own
+ * showrooms.
+ *
+ * This list used to be written out here, and it had drifted: it offered a
+ * Sylhet branch at Zindabazar that the shop does not have, and named two
+ * others differently from the stores table. Someone would have posted a faulty
+ * card to an address that does not exist.
+ */
+const COURIER_PICKUP = {
+    value: 'Doorstep Courier Pickup (All 64 Districts)',
+    label: 'Doorstep Courier Pickup (Nationwide 64 Districts)',
+};
 
 const claimValidationSchema = Yup.object().shape({
     customer_name: Yup.string().required('Customer name is required'),
@@ -98,6 +89,39 @@ const claimValidationSchema = Yup.object().shape({
 
 export default function WarrantyIndex() {
     const [activeTab, setActiveTab] = useState('lookup'); // 'lookup' | 'claim'
+    const [branches, setBranches] = useState([]);
+
+    // The drop-off points are the shop's real showrooms, so a customer is never
+    // sent to a branch that does not exist.
+    useEffect(() => {
+        let cancelled = false;
+
+        storeService
+            .getStores()
+            .then((stores) => {
+                if (cancelled) return;
+
+                setBranches(Array.isArray(stores) ? stores : []);
+            })
+            .catch(() => {
+                // Courier pickup still works if the list cannot be loaded.
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const dropoffOptions = useMemo(() => {
+        const fromStores = branches
+            .filter((store) => store?.name)
+            .map((store) => ({
+                value: [store.name, store.address].filter(Boolean).join(', '),
+                label: [store.name, store.city].filter(Boolean).join(' — '),
+            }));
+
+        return [...fromStores, COURIER_PICKUP];
+    }, [branches]);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [warrantyData, setWarrantyData] = useState(null);
@@ -134,8 +158,10 @@ export default function WarrantyIndex() {
             invoice_number: '',
             issue_type: 'Hardware Malfunction',
             issue_description: '',
-            dropoff_branch:
-                'Robin IT Central Service Center, Multiplan Center, Dhaka',
+            /* Courier pickup, because it is the one option that is always
+               available — the branches load from the shop's showrooms and are
+               not known when this form is initialised. */
+            dropoff_branch: COURIER_PICKUP.value,
         },
         validationSchema: claimValidationSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -477,9 +503,9 @@ export default function WarrantyIndex() {
                                     }}
                                 >
                                     Your warranty service request has been
-                                    logged into the Robin IT Technical Central
-                                    Lab. Please keep your RMA Ticket Code for
-                                    tracking:
+                                    logged into the {siteConfig.name} Technical
+                                    Central Lab. Please keep your RMA Ticket
+                                    Code for tracking:
                                 </p>
                                 <div className="claim-code-pill">
                                     {submittedClaim.claim_number}
@@ -567,7 +593,7 @@ export default function WarrantyIndex() {
                                             placeholder="e.g. asif@example.com"
                                         />
                                         <FormInput
-                                            label="Invoice / Order Number (if purchased from Robin IT)"
+                                            label={`Invoice / Order Number (if purchased from ${siteConfig.name})`}
                                             name="invoice_number"
                                             formik={formik}
                                             placeholder="e.g. RC-984210"
@@ -604,7 +630,7 @@ export default function WarrantyIndex() {
                                             name="dropoff_branch"
                                             required
                                             formik={formik}
-                                            options={DROPOFF_BRANCHES}
+                                            options={dropoffOptions}
                                         />
                                     </div>
 

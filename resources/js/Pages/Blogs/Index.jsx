@@ -65,7 +65,7 @@ export default function BlogsIndex() {
         <MainLayout>
             <SEOHead
                 title="Tech Journal, Hardware Reviews & Buying Guides"
-                description="Read in-depth GPU benchmarks, PC building tutorials, thermal optimization guides, and buying advice from Robin IT hardware engineers."
+                description={`Read in-depth GPU benchmarks, PC building tutorials, thermal optimization guides, and buying advice from ${siteConfig.name} hardware engineers.`}
             />
 
             {/* Tech Journal Hero Header */}

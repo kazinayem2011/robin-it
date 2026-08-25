@@ -13,6 +13,7 @@ import {
     toast,
 } from '../../Components';
 import { adminService, uploadService } from '../../services';
+import siteConfig from '@/constants/siteConfig';
 import { adminBlogSchema } from '../../validations';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -46,7 +47,7 @@ export default function AdminBlogs({ blogs = [] }) {
             excerpt: '',
             content: '',
             image_path: '',
-            author_name: 'Robin IT Lab',
+            author_name: `${siteConfig.name} Lab`,
             author_role: 'Lead Systems Engineer',
             read_time: '5 min read',
             is_published: true,
@@ -84,7 +85,7 @@ export default function AdminBlogs({ blogs = [] }) {
                 excerpt: '',
                 content: '',
                 image_path: '/images/hero_banner_beast_pc.jpg',
-                author_name: 'Robin IT Lab',
+                author_name: `${siteConfig.name} Lab`,
                 author_role: 'Lead Systems Engineer',
                 read_time: '5 min read',
                 is_published: true,
@@ -102,7 +103,7 @@ export default function AdminBlogs({ blogs = [] }) {
                 excerpt: blog.excerpt || '',
                 content: blog.content || '',
                 image_path: blog.image_path,
-                author_name: blog.author_name || 'Robin IT Lab',
+                author_name: blog.author_name || `${siteConfig.name} Lab`,
                 author_role: blog.author_role || '',
                 read_time: blog.read_time || '5 min read',
                 is_published: !!blog.is_published,
@@ -260,7 +261,7 @@ export default function AdminBlogs({ blogs = [] }) {
                 {/* Standard Reusable DataTable Component */}
                 <DataTable
                     title="Published Articles &amp; Guides"
-                    subtitle="Technical hardware reviews and buying advice authored for Robin IT customers."
+                    subtitle={`Technical hardware reviews and buying advice authored for ${siteConfig.name} customers.`}
                     columns={columns}
                     data={blogs}
                     searchable
@@ -375,7 +376,7 @@ export default function AdminBlogs({ blogs = [] }) {
                                     name="author_name"
                                     required
                                     formik={formik}
-                                    placeholder="e.g. Robin IT Benchmark Lab"
+                                    placeholder={`e.g. ${siteConfig.name} Benchmark Lab`}
                                 />
 
                                 <FormInput

@@ -64,6 +64,7 @@
         tbody td { padding: 12px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
         .num { text-align: right; white-space: nowrap; }
         .option { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+        .option.preorder { color: #b45309; font-weight: 600; }
 
         .totals { margin-left: auto; margin-top: 18px; width: 280px; }
         .totals td { padding: 6px 8px; }
@@ -169,6 +170,12 @@
                             @endif
                             @if ($item->returned_quantity > 0)
                                 <span class="option">{{ $item->returned_quantity }} returned</span>
+                            @endif
+                            {{-- An order mixing stock and pre-order lines is not
+                                 one shipment, and the paperwork has to say which
+                                 line is waiting on a delivery. --}}
+                            @if ($item->wasPreordered())
+                                <span class="option preorder">pre-order — ships when stock arrives</span>
                             @endif
                         </td>
                         <td class="num">৳{{ number_format($item->price, 2) }}</td>

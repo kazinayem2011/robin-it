@@ -775,7 +775,8 @@ export default function ProductDetails(props) {
                                                 <p>
                                                     Only customers who have
                                                     purchased this product from
-                                                    Robin IT can write a review.{' '}
+                                                    {siteConfig.name} can write a
+                                                    review.{' '}
                                                     <Link
                                                         href={ROUTES.LOGIN}
                                                         style={{
@@ -802,7 +803,8 @@ export default function ProductDetails(props) {
                                                 <p>
                                                     Only verified buyers who
                                                     have purchased this product
-                                                    from Robin IT can submit a
+                                                    from {siteConfig.name} can
+                                                    submit a
                                                     review.
                                                 </p>
                                             </div>
