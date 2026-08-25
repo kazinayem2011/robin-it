@@ -78,10 +78,16 @@ const useAppStore = create((set, get) => ({
                 { id: product.id, componentId, product },
             ],
         })),
-    removePcBuilderItem: (id) =>
+    /**
+     * Empty one slot. Keyed by componentId, not by product id: the builder has
+     * only ever passed the slot it wants cleared, so filtering on `id` compared
+     * a slug against a product id, matched nothing, and left Remove doing
+     * nothing at all.
+     */
+    removePcBuilderItem: (componentId) =>
         set((state) => ({
             pcBuilderItems: state.pcBuilderItems.filter(
-                (item) => item.id !== id,
+                (item) => item.componentId !== componentId,
             ),
         })),
     clearPcBuilder: () => set({ pcBuilderItems: [] }),

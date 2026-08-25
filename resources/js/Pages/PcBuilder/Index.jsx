@@ -13,7 +13,7 @@ import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { essentialsStatus, listNames } from '../../utils/pcBuild';
+import { essentialsStatus, listNames, isInStock } from '../../utils/pcBuild';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,
@@ -478,20 +478,27 @@ export default function PcBuilderIndex() {
                                                                     .name
                                                             }
                                                         </h5>
+                                                        {/*
+                                                         * The builder's payload
+                                                         * carries inStock, not
+                                                         * stock_quantity, so
+                                                         * this read undefined
+                                                         * and every chosen part
+                                                         * claimed to be out of
+                                                         * stock.
+                                                         */}
                                                         <span
                                                             className={`selected-product-badge${
-                                                                selectedEntry
-                                                                    .product
-                                                                    .stock_quantity >
-                                                                0
+                                                                isInStock(
+                                                                    selectedEntry.product,
+                                                                )
                                                                     ? ''
                                                                     : ' is-out'
                                                             }`}
                                                         >
-                                                            {selectedEntry
-                                                                .product
-                                                                .stock_quantity >
-                                                            0
+                                                            {isInStock(
+                                                                selectedEntry.product,
+                                                            )
                                                                 ? 'In Stock'
                                                                 : 'Out of Stock'}
                                                         </span>

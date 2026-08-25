@@ -39,3 +39,21 @@ export const listNames = (entries = []) => {
 
     return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 };
+
+/**
+ * Whether a product the builder is holding can be bought right now.
+ *
+ * The builder's own payload spells this `inStock` / `stockQuantity`, while the
+ * catalogue elsewhere sends `stock_quantity`. Reading only one of them is how
+ * every selected component came to be labelled "Out of Stock" while sitting on
+ * a shelf of 23.
+ */
+export const isInStock = (product) => {
+    if (!product) return false;
+
+    if (typeof product.inStock === 'boolean') return product.inStock;
+
+    const quantity = product.stockQuantity ?? product.stock_quantity;
+
+    return Number(quantity ?? 0) > 0;
+};

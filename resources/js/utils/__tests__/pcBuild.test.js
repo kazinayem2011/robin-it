@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { essentialsStatus, listNames } from '../pcBuild';
+import { essentialsStatus, listNames, isInStock } from '../pcBuild';
 
 const CATEGORIES = [
     { id: 'cpu', name: 'Processor / CPU', required: true },
@@ -90,5 +90,29 @@ describe('listNames', () => {
         expect(
             listNames([{ name: 'RAM' }, { name: 'a PSU' }, { name: 'a case' }]),
         ).toBe('RAM, a PSU and a case');
+    });
+});
+
+describe('isInStock', () => {
+    /* The builder's payload spells it inStock; the catalogue spells it
+     * stock_quantity. Reading one and not the other is what labelled every
+     * chosen component "Out of Stock". */
+    it('reads the builder payload', () => {
+        expect(isInStock({ inStock: true, stockQuantity: 23 })).toBe(true);
+        expect(isInStock({ inStock: false, stockQuantity: 0 })).toBe(false);
+    });
+
+    it('reads the catalogue payload', () => {
+        expect(isInStock({ stock_quantity: 5 })).toBe(true);
+        expect(isInStock({ stock_quantity: 0 })).toBe(false);
+    });
+
+    it('falls back to the camelCase quantity', () => {
+        expect(isInStock({ stockQuantity: 2 })).toBe(true);
+    });
+
+    it('does not claim stock it was never told about', () => {
+        expect(isInStock({})).toBe(false);
+        expect(isInStock(null)).toBe(false);
     });
 });
