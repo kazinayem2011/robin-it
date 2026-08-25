@@ -142,7 +142,16 @@
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr);
     gap: 28px;
-    align-items: start;
+    /*
+     * Not align-items: start. That shrinks each column to its own content, so
+     * the filter panel's containing block was exactly as tall as the panel and
+     * the sticky inside it had nowhere to travel — it scrolled away with the
+     * page instead of following it.
+     */
+}
+
+.plp-filters {
+    min-width: 0;
 }
 
 .plp-results {
@@ -151,7 +160,7 @@
 
 .plp-filters-body {
     position: sticky;
-    top: 20px;
+    top: calc(var(--site-chrome-h, 142px) + 16px);
     padding: 18px;
     border: 1px solid var(--color-border, #e2e5ea);
     border-radius: 8px;
@@ -454,7 +463,7 @@
 
 @media (max-width: 900px) {
     .plp-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 0;
     }
 

@@ -207,9 +207,14 @@
 }
 
 .dashboard-sidebar-card {
-    /* Follows the page rather than scrolling away from the section it labels. */
+    /*
+     * Clears the pinned header rather than sliding under it. --site-chrome-h is
+     * measured in Header.jsx because that block is 142px wide-screen, taller once
+     * the search bar wraps, and only the category bar on a phone. At a flat 20px
+     * the top 122px of this element sat behind the header.
+     */
     position: sticky;
-    top: 20px;
+    top: calc(var(--site-chrome-h, 142px) + 16px);
 }
 
 .dash-nav-menu {

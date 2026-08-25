@@ -39,6 +39,7 @@ export const Header = () => {
     const [siteSettings, setSiteSettings] = useState({});
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
+    const megaNavRef = useRef(null);
     const marqueeRef = useRef(null);
 
     const cartCount = useAppStore((state) => state.cartCount);
@@ -83,20 +84,28 @@ export const Header = () => {
     useLayoutEffect(() => {
         const ticker = tickerRef.current;
         const header = mainHeaderRef.current;
+        const nav = megaNavRef.current;
 
         if (!ticker || !header || typeof ResizeObserver === 'undefined') return;
 
         const publish = () => {
             const root = document.documentElement.style;
+            const tickerH = Math.round(ticker.getBoundingClientRect().height);
+            const headerH = Math.round(header.getBoundingClientRect().height);
+            const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
 
-            root.setProperty(
-                '--site-ticker-h',
-                `${Math.round(ticker.getBoundingClientRect().height)}px`,
-            );
-            root.setProperty(
-                '--site-header-h',
-                `${Math.round(header.getBoundingClientRect().height)}px`,
-            );
+            root.setProperty('--site-ticker-h', `${tickerH}px`);
+            root.setProperty('--site-header-h', `${headerH}px`);
+
+            /*
+             * What stays pinned once the ticker has scrolled away, and so how
+             * far down the page anything else can stick without hiding behind
+             * it. Below 768px only the category bar remains.
+             */
+            const pinned =
+                window.innerWidth <= 768 ? navH : headerH + navH;
+
+            root.setProperty('--site-chrome-h', `${pinned}px`);
         };
 
         publish();
@@ -104,8 +113,13 @@ export const Header = () => {
         const observer = new ResizeObserver(publish);
         observer.observe(ticker);
         observer.observe(header);
+        if (nav) observer.observe(nav);
+        window.addEventListener('resize', publish);
 
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', publish);
+        };
     }, []);
 
     const announcement =
@@ -339,7 +353,7 @@ export const Header = () => {
             </div>
 
             {/* 3. HORIZONTAL MEGA MENU NAVIGATION BAR */}
-            <nav className="site-mega-nav">
+            <nav className="site-mega-nav" ref={megaNavRef}>
                 <div className="container mega-nav-container">
                     <ul className="nav-primary-list">
                         {/* Mobile Drawer Trigger Pill (Visible on small screens) */}
