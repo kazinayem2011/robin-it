@@ -107,10 +107,21 @@ export const adminSettingsSchema = Yup.object().shape({
     site_name: Yup.string().default('Robins Computer'),
     site_tagline: Yup.string().nullable(),
     site_address: Yup.string().nullable(),
-    site_hotline: Yup.string().required('Hotline phone is required'),
+    site_legal_name: Yup.string().nullable(),
+    /*
+     * hotline_number, not site_hotline. The form was renamed to the key the
+     * storefront actually reads and this was left behind, so every save failed
+     * validation on a field that is no longer rendered — Formik never called
+     * onSubmit, and with no field to attach the error to, the Save button
+     * simply did nothing.
+     */
+    hotline_number: Yup.string().required('Hotline phone is required'),
+    hotline_hours: Yup.string().nullable(),
     support_email: Yup.string()
         .email('Invalid email')
         .required('Support email is required'),
+    sales_email: Yup.string().email('Invalid email').nullable(),
+    service_center_address: Yup.string().nullable(),
     announcement_text: Yup.string().required('Announcement text is required'),
     announcement_active: Yup.boolean().default(true),
     shipping_inside_dhaka: Yup.number()

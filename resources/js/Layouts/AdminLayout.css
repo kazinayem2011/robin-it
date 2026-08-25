@@ -2206,6 +2206,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* Matches the gap every other field leaves below itself. */
+    margin-bottom: 18px;
 }
 
 .admin-image-field-actions {
@@ -2238,11 +2240,35 @@
     background: #ffffff;
 }
 
+/*
+ * A field and the note explaining it.
+ *
+ * Without this the note was orphaned: the field wrapper's own 18px bottom
+ * margin pushed it away from the field it describes, while nothing separated
+ * it from the label beneath — so it read as a heading for the next field
+ * rather than a note about the last one. The group owns the rhythm and the
+ * note hugs what it belongs to.
+ */
+.admin-field-group {
+    margin-bottom: 18px;
+}
+
+.admin-field-group > .auth-form-group,
+.admin-field-group > .admin-image-field {
+    margin-bottom: 0;
+}
+
 .admin-field-hint {
     display: block;
+    margin-top: 6px;
     font-size: 0.75rem;
     line-height: 1.5;
     color: var(--gray-400);
+}
+
+/* Inside the flex column of an image field, the gap already spaces it. */
+.admin-image-field > .admin-field-hint {
+    margin-top: 0;
 }
 
 /* Test-email row: field and action button sit on one line. */
