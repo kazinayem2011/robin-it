@@ -1887,11 +1887,22 @@ textarea.has-error:focus,
 }
 
 /* Card Footer */
+/*
+ * Price on the left, action on the right — until they no longer fit, at which
+ * point the button takes its own line rather than being pushed out of the card.
+ *
+ * Neither side could give way before: .price-stack had no min-width so it
+ * would not shrink, and the button is white-space: nowrap so it could not
+ * either. In a three-column grid around 1024px the card is 225px wide and this
+ * row wanted 243px, so the button hung 1px past the card's edge and the footer
+ * overflowed by 18.
+ */
 .product-card-footer,
 .flash-card-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: auto;
     padding-top: 10px;
@@ -1901,6 +1912,9 @@ textarea.has-error:focus,
 .price-stack {
     display: flex;
     flex-direction: column;
+    /* A flex child will not shrink below its content otherwise, and a price
+       like ৳1,75,000 is wide at this size. */
+    min-width: 0;
 }
 
 .current-price {
@@ -1921,6 +1935,10 @@ textarea.has-error:focus,
 .btn-add-cart {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    /* Sits beside the price when there is room; fills the line when it wraps
+       below, which reads as deliberate rather than as a stray button. */
+    flex: 1 1 auto;
     gap: 6px;
     background: var(--primary);
     color: #ffffff;
