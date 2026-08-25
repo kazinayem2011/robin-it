@@ -492,3 +492,78 @@
     color: var(--color-text-muted, #6b7280);
     margin-top: 2px;
 }
+
+/*
+ * Order summary lines.
+ *
+ * These class names were in the markup from the start with no rules behind
+ * them, so the review panel on the checkout page rendered as a full-width
+ * product photo about 400px tall, with the name and quantity run together —
+ * "…Liquid CoolerQty: 1" — because .item-name defaulted to display: inline and
+ * nothing separated it from the quantity beside it.
+ */
+.summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 18px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.item-img-stub {
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    /* contain, not cover: these are boxed products shot on white and a square
+       crop loses the part that identifies them. */
+    object-fit: contain;
+    padding: 3px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* A flex child will not shrink below its content otherwise, and a product
+       name is long enough to push the price out of the panel. */
+    flex: 1;
+    min-width: 0;
+}
+
+.item-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--dark-900);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.item-qty {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.item-price {
+    flex-shrink: 0;
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    white-space: nowrap;
+}

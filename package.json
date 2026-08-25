@@ -10,7 +10,8 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "lint": "eslint resources/js --no-warn-ignored",
-        "lint:fix": "eslint resources/js --no-warn-ignored --fix"
+        "lint:fix": "eslint resources/js --no-warn-ignored --fix",
+        "lint:css-classes": "node scripts/find-unstyled-classes.mjs"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.5",
