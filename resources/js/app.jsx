@@ -5,10 +5,25 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+import siteConfig from './constants/siteConfig';
+
+/*
+ * Every page already ends its title with the shop's name, so appending
+ * VITE_APP_NAME on top produced "Custom PC Builder — Robins Computer - Laravel"
+ * — the brand twice, the second time wrong, in every browser tab and at the top
+ * of every printed page. The shop's own name is the authority here; the env
+ * value is a Laravel default nobody set.
+ */
+const siteName = siteConfig.name;
+
+const pageTitle = (title) => {
+    if (!title) return siteName;
+
+    return title.includes(siteName) ? title : `${title} — ${siteName}`;
+};
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: pageTitle,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.jsx`,

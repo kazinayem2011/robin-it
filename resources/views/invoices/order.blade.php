@@ -85,9 +85,13 @@
         /* Printing: drop the page furniture and the buttons, and let the sheet
            fill the paper rather than sitting on a grey background. */
         @media print {
-            @page { margin: 14mm; }
+            /* Zero, so there is nowhere for the browser to print its own header
+               and footer — the date, the tab title and the page number would
+               otherwise run across the top and bottom of a customer's invoice.
+               The paper margin comes from .sheet instead. */
+            @page { margin: 0; }
             body { background: #fff; padding: 0; font-size: 12px; }
-            .sheet { max-width: none; padding: 0; border-radius: 0; box-shadow: none; }
+            .sheet { max-width: none; padding: 14mm; border-radius: 0; box-shadow: none; }
             .toolbar { display: none; }
             thead { display: table-header-group; }
             tr { break-inside: avoid; }

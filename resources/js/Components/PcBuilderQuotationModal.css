@@ -281,8 +281,15 @@
         box-shadow: none;
     }
 
+    /*
+     * The paper margin comes from here rather than from @page, because the
+     * browser draws its own header and footer — the date, the tab title and the
+     * page number — inside the @page margin. Leaving that margin at 14mm gave
+     * it the room to print "25/08/2026, 13:54 Custom PC Builder ..." across the
+     * top of an official quotation.
+     */
     .quotation-sheet-body {
-        padding: 0;
+        padding: 14mm;
         overflow: visible;
     }
 
@@ -319,7 +326,8 @@
         page-break-inside: avoid;
     }
 
+    /* Zero, so there is nowhere for the browser's own header and footer to go. */
     @page {
-        margin: 14mm;
+        margin: 0;
     }
 }
