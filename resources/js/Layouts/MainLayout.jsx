@@ -2,6 +2,7 @@ import React from 'react';
 import Header from '../Components/Header';
 import Footer from '../Components/Footer';
 import ToastContainer from '../Components/Toast';
+import { useFlashToasts } from '../hooks';
 import './MainLayout.css';
 
 /**
@@ -9,6 +10,9 @@ import './MainLayout.css';
  * Composes separated Modular Header, dynamic Main content, Modular Footer, and Global Toast System.
  */
 export default function MainLayout({ children }) {
+    // Show whatever the server flashed on the last write.
+    useFlashToasts();
+
     return (
         <div className="main-layout-wrapper">
             {/* Modular Site Header (Top ticker, search, actions, mega menu) */}

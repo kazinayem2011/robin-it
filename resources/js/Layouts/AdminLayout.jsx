@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import ToastContainer from '../Components/Toast';
+import { useFlashToasts } from '../hooks';
 import {
     LayoutDashboard,
     Package,
@@ -31,6 +32,9 @@ export default function AdminLayout({
     title = 'Executive Dashboard',
     subtitle = `${siteConfig.name} Operations & Inventory`,
 }) {
+    // Show whatever the server flashed on the last write.
+    useFlashToasts();
+
     // The sidebar is a drawer below the desktop breakpoint. Without this it
     // took 260px of a 375px screen and left the page an unusable sliver.
     const [navOpen, setNavOpen] = React.useState(false);

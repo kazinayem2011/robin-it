@@ -44,6 +44,20 @@ class HandleInertiaRequests extends Middleware
             // absent from the table entirely, and every page title needs a
             // name to fall back on.
             'brand_name' => BrandDetails::name(),
+            /*
+             * Controllers flash a message on nearly every write —
+             * back()->with('success', ...) — and none of them were reaching
+             * the browser, because this was never shared. Thirty-one of them
+             * across the admin and account controllers were being discarded,
+             * which is why saving a profile or an address looked like nothing
+             * had happened.
+             */
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'warning' => fn () => $request->session()->get('warning'),
+                'info' => fn () => $request->session()->get('info'),
+            ],
             // The footer advertised "Showrooms & Outlets (15+)" while there
             // were four. A count nobody maintains drifts into a false claim,
             // so it is read from the branches that actually exist.

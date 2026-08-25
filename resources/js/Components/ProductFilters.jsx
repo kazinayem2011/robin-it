@@ -32,7 +32,10 @@ export default function ProductFilters({
     const toggleSection = (key) =>
         setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
 
-    const categories = facets?.categories ?? [];
+    const categories = useMemo(
+        () => facets?.categories ?? [],
+        [facets?.categories],
+    );
 
     /*
      * Matching a parent keeps its children, and matching a child keeps the
@@ -73,7 +76,7 @@ export default function ProductFilters({
         );
     };
 
-    const allBrands = facets?.brands ?? [];
+    const allBrands = useMemo(() => facets?.brands ?? [], [facets?.brands]);
     const brands = useMemo(() => {
         const needle = brandQuery.trim().toLowerCase();
 
@@ -235,32 +238,36 @@ export default function ProductFilters({
 
                                             {parent.children?.length > 0 &&
                                                 isExpanded(parent) && (
-                                                <ul className="plp-category-children">
-                                                    {parent.children.map(
-                                                        (child) => (
-                                                            <li key={child.id}>
-                                                                <Link
-                                                                    href={ROUTES.SHOP_CATEGORY(
-                                                                        child.slug,
-                                                                    )}
-                                                                    className={`plp-category-link is-child${categorySlug === child.slug ? ' is-current' : ''}`}
+                                                    <ul className="plp-category-children">
+                                                        {parent.children.map(
+                                                            (child) => (
+                                                                <li
+                                                                    key={
+                                                                        child.id
+                                                                    }
                                                                 >
-                                                                    <span>
-                                                                        {
-                                                                            child.name
-                                                                        }
-                                                                    </span>
-                                                                    <span className="plp-facet-count">
-                                                                        {
-                                                                            child.count
-                                                                        }
-                                                                    </span>
-                                                                </Link>
-                                                            </li>
-                                                        ),
-                                                    )}
-                                                </ul>
-                                            )}
+                                                                    <Link
+                                                                        href={ROUTES.SHOP_CATEGORY(
+                                                                            child.slug,
+                                                                        )}
+                                                                        className={`plp-category-link is-child${categorySlug === child.slug ? ' is-current' : ''}`}
+                                                                    >
+                                                                        <span>
+                                                                            {
+                                                                                child.name
+                                                                            }
+                                                                        </span>
+                                                                        <span className="plp-facet-count">
+                                                                            {
+                                                                                child.count
+                                                                            }
+                                                                        </span>
+                                                                    </Link>
+                                                                </li>
+                                                            ),
+                                                        )}
+                                                    </ul>
+                                                )}
                                         </li>
                                     ))}
 
