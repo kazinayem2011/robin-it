@@ -181,7 +181,8 @@ export default function Checkout() {
                             >
                                 <div className="form-group">
                                     <label className="form-control-label">
-                                        Full Name *
+                                        Full Name{' '}
+                                        <span className="required-asterisk">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -202,7 +203,8 @@ export default function Checkout() {
 
                                 <div className="form-group">
                                     <label className="form-control-label">
-                                        Bangladeshi Mobile Number *
+                                        Bangladeshi Mobile Number{' '}
+                                        <span className="required-asterisk">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -224,7 +226,8 @@ export default function Checkout() {
                                 <div className="checkout-form-grid">
                                     <div className="form-group">
                                         <label className="form-control-label">
-                                            City / District *
+                                            City / District{' '}
+                                            <span className="required-asterisk">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -260,7 +263,8 @@ export default function Checkout() {
 
                                 <div className="form-group">
                                     <label className="form-control-label">
-                                        Full Street Address *
+                                        Full Street Address{' '}
+                                        <span className="required-asterisk">*</span>
                                     </label>
                                     <textarea
                                         name="street_address"

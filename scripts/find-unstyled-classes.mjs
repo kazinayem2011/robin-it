@@ -44,8 +44,20 @@ for (const file of cssFiles) {
     for (const block of css.split('}')) {
         const selector = block.split('{')[0];
         if (!selector) continue;
-        for (const m of selector.matchAll(/\.(-?[A-Za-z_][\w-]*)/g)) {
-            if (!defined.has(m[1])) defined.set(m[1], relative(ROOT, file));
+        /*
+         * Only the last class in a compound counts as "this rule styles that
+         * class". `.review-form .form-group` styles .form-group inside a
+         * review form and nowhere else, so counting it as covered hid a
+         * checkout form whose fields had no spacing at all.
+         */
+        for (const part of selector.split(',')) {
+            const key = part.trim().split(/\s+|>|\+|~/).filter(Boolean).pop();
+
+            if (!key) continue;
+
+            for (const m of key.matchAll(/\.(-?[A-Za-z_][\w-]*)/g)) {
+                if (!defined.has(m[1])) defined.set(m[1], relative(ROOT, file));
+            }
         }
     }
 }

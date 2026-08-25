@@ -605,6 +605,21 @@ textarea.has-error:focus,
     background-color: var(--danger-light);
 }
 
+/*
+ * The gap between fields.
+ *
+ * .form-group only existed as `.review-form .form-group`, so anywhere else —
+ * the checkout form among them — the wrapper had no margin at all and every
+ * label sat flush against the field above it.
+ */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
 .form-control-label {
     display: block;
     font-family: var(--font-heading);
