@@ -64,7 +64,7 @@ export default function BlogsIndex() {
     return (
         <MainLayout>
             <SEOHead
-                title="Tech Journal, Hardware Reviews & Buying Guides — Robins Computer"
+                title="Tech Journal, Hardware Reviews & Buying Guides"
                 description="Read in-depth GPU benchmarks, PC building tutorials, thermal optimization guides, and buying advice from Robin IT hardware engineers."
             />
 

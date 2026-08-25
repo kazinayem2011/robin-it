@@ -5,7 +5,8 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-import siteConfig from './constants/siteConfig';
+import siteConfig, { setBrandName } from './constants/siteConfig';
+import { withBrand } from './utils/pageTitle';
 
 /*
  * Every page already ends its title with the shop's name, so appending
@@ -14,13 +15,7 @@ import siteConfig from './constants/siteConfig';
  * of every printed page. The shop's own name is the authority here; the env
  * value is a Laravel default nobody set.
  */
-const siteName = siteConfig.name;
-
-const pageTitle = (title) => {
-    if (!title) return siteName;
-
-    return title.includes(siteName) ? title : `${title} — ${siteName}`;
-};
+const pageTitle = (title) => withBrand(title, siteConfig.name);
 
 createInertiaApp({
     title: pageTitle,
@@ -38,6 +33,10 @@ createInertiaApp({
             ]),
         ),
     setup({ el, App, props }) {
+        // Before the first render, so the very first page title already uses
+        // the name the shop set rather than the literal this module ships with.
+        setBrandName(props.initialPage?.props?.brand_name);
+
         const root = createRoot(el);
 
         root.render(<App {...props} />);

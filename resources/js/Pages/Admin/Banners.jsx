@@ -140,7 +140,7 @@ export default function AdminBanners({ banners = [] }) {
             title="Marketing Banners &amp; Sliders"
             subtitle="Manage Homepage Hero Carousel, Promotional Cards &amp; Popups"
         >
-            <Head title="Admin Banners &amp; Sliders — Robin IT" />
+            <Head title="Admin Banners &amp; Sliders" />
 
             <div className="admin-page-container">
                 {/* Header Action Bar */}

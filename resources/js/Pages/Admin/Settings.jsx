@@ -190,7 +190,7 @@ export default function AdminSettings({
             title="Global Site &amp; Email Settings"
             subtitle="Configure Branding, Store Config, Email SMTP, and Header Announcement Tickers"
         >
-            <Head title="Admin Settings — Robin IT" />
+            <Head title="Admin Settings" />
 
             <div className="admin-page-container">
                 {/* Settings Tabs Navigation */}

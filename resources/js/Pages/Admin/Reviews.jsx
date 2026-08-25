@@ -143,7 +143,7 @@ export default function AdminReviews({
             title="Customer Reviews"
             subtitle="Moderate published product reviews and take down anything inappropriate"
         >
-            <Head title="Review Moderation — Robin IT" />
+            <Head title="Review Moderation" />
 
             <div className="admin-page-container">
                 <div className="admin-settings-tabs-bar">

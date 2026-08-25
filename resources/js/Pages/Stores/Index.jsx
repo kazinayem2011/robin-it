@@ -42,7 +42,7 @@ export default function StoresIndex() {
     return (
         <MainLayout>
             <SEOHead
-                title="Our Showrooms & Service Centers — Robin IT"
+                title="Our Showrooms & Service Centers"
                 description="Find Robin IT official showrooms, flagship outlets, and authorized customer warranty service centers nationwide."
             />
 

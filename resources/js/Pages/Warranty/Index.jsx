@@ -160,7 +160,7 @@ export default function WarrantyIndex() {
     return (
         <MainLayout>
             <SEOHead
-                title="Official Warranty Check & RMA Service Claim — Robins Computer"
+                title="Official Warranty Check & RMA Service Claim"
                 description="Verify product warranty by serial number, track real-time RMA service progress, or submit an official repair claim with doorstep courier pickup."
             />
 

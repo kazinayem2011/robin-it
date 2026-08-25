@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import siteConfig from '../constants/siteConfig';
+import { withBrand } from '../utils/pageTitle';
 
 export default function SEOHead({
     title,
@@ -19,8 +20,14 @@ export default function SEOHead({
     const brandName = settings.site_name || siteConfig.name;
     const brandTagline = settings.site_tagline || siteConfig.tagline;
 
+    /*
+     * Several pages pass a title that already ends with the brand, and this
+     * appended it a second time — the home page read "Robins Computer — The
+     * Store of Technology — Robins Computer". A meta_title the admin wrote is
+     * left exactly as written.
+     */
     const pageTitle = title
-        ? `${title} — ${brandName}`
+        ? withBrand(title, brandName)
         : settings.meta_title || `${brandName} | ${brandTagline}`;
     const pageDescription =
         description || settings.meta_description || siteConfig.description;

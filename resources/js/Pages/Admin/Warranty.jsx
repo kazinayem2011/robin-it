@@ -146,7 +146,7 @@ export default function AdminWarranty({ claims = [] }) {
             title="Warranty & RMA Service Center"
             subtitle="Manage hardware repair tickets, OEM warranty replacements, and diagnostic logs"
         >
-            <Head title="Admin Warranty & RMA — Robin IT" />
+            <Head title="Admin Warranty & RMA" />
 
             <div className="admin-page-container">
                 {/* Standard Reusable DataTable Component */}

@@ -3,8 +3,25 @@
  * Central site configuration, branding metadata, contact points, and navigation links.
  */
 
+/*
+ * The shop's name comes from Site Settings, which the server resolves and
+ * shares on every page as `brand_name`. It used to be hardcoded here, so the
+ * admin could rename the shop and 21 page titles would carry on saying
+ * something else. This holds whatever the server last sent; the literal below
+ * is only what renders before the first page props arrive.
+ */
+let brandName = 'Robins Computer';
+
+export const setBrandName = (name) => {
+    if (typeof name === 'string' && name.trim() !== '') {
+        brandName = name.trim();
+    }
+};
+
 export const siteConfig = {
-    name: 'Robins Computer',
+    get name() {
+        return brandName;
+    },
     tagline: 'The Store of Technology',
     legalName: 'Robins Computer & Technology Ltd.',
     hotline: '16793',

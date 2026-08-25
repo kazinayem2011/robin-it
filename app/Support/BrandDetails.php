@@ -14,12 +14,27 @@ use App\Models\SiteSetting;
 class BrandDetails
 {
     /**
+     * The shop's name.
+     *
+     * Site Settings is the authority — it is the field an admin actually edits.
+     * APP_NAME is only the fallback for an install where nobody has set one
+     * yet, which is why it reads as a generic placeholder rather than any
+     * particular shop's name.
+     */
+    public static function name(): string
+    {
+        $name = trim((string) SiteSetting::get('site_name', ''));
+
+        return $name !== '' ? $name : (string) config('app.name');
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function all(): array
     {
         return [
-            'name' => SiteSetting::get('site_name', 'Robins Computer'),
+            'name' => self::name(),
             'tagline' => SiteSetting::get('site_tagline', 'The Store of Technology'),
             'hotline' => SiteSetting::get('site_hotline', '09600-ROBIN-IT'),
             'address' => SiteSetting::get(

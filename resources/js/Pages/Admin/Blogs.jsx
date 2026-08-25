@@ -254,7 +254,7 @@ export default function AdminBlogs({ blogs = [] }) {
             title="Tech Journal &amp; Buying Guides"
             subtitle="Publish expert hardware benchmark reports, buying guides, and build analyses"
         >
-            <Head title="Admin Tech Journal — Robin IT" />
+            <Head title="Admin Tech Journal" />
 
             <div className="admin-page-container">
                 {/* Standard Reusable DataTable Component */}

@@ -193,7 +193,7 @@ export default function AdminStores({ stores = [] }) {
             title="Showroom Outlets &amp; Branches"
             subtitle="Manage offline flagship stores, express pickup locations, and service hubs"
         >
-            <Head title="Admin Stores &amp; Outlets — Robin IT" />
+            <Head title="Admin Stores &amp; Outlets" />
 
             <div className="admin-page-container">
                 {/* Reusable DataTable Component with Header Actions */}

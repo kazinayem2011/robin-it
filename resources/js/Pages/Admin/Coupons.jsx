@@ -203,7 +203,7 @@ export default function AdminCoupons({
             title="Promo Coupons &amp; Discounts"
             subtitle="Create and manage checkout discount codes and promotional vouchers"
         >
-            <Head title="Admin Coupons — Robin IT" />
+            <Head title="Admin Coupons" />
 
             <div className="admin-page-container">
                 {/* Reusable DataTable Component with Header Actions */}

@@ -4,7 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        {{-- The shop names itself in Site Settings; APP_NAME is only the
+             fallback for an install where nobody has set one yet. --}}
+        <title inertia>{{ \App\Support\BrandDetails::name() }}</title>
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
