@@ -68,6 +68,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                 profileForm.setData('name', e.target.value)
                             }
                             className={`auth-text-input ${profileForm.errors.name ? 'input-error' : ''}`}
+                            placeholder="e.g. Rahim Chowdhury"
                         />
                         {profileForm.errors.name && (
                             <span className="auth-field-error">
@@ -85,6 +86,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                 profileForm.setData('email', e.target.value)
                             }
                             className={`auth-text-input ${profileForm.errors.email ? 'input-error' : ''}`}
+                            placeholder="you@example.com"
                         />
                         {profileForm.errors.email && (
                             <span className="auth-field-error">
@@ -109,6 +111,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                     profileForm.setData('phone', e.target.value)
                                 }
                                 className={`auth-text-input phone-padded ${profileForm.errors.phone ? 'input-error' : ''}`}
+                                placeholder="1712 345678"
                             />
                         </div>
                         {profileForm.errors.phone && (
@@ -150,6 +153,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                 )
                             }
                             className={`auth-text-input ${passwordForm.errors.current_password ? 'input-error' : ''}`}
+                            placeholder="Your current password"
                         />
                         {passwordForm.errors.current_password && (
                             <span className="auth-field-error">
@@ -167,6 +171,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                 passwordForm.setData('password', e.target.value)
                             }
                             className={`auth-text-input ${passwordForm.errors.password ? 'input-error' : ''}`}
+                            placeholder="At least 8 characters"
                         />
                         {passwordForm.errors.password && (
                             <span className="auth-field-error">
@@ -189,6 +194,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                                 )
                             }
                             className={`auth-text-input ${passwordForm.errors.password_confirmation ? 'input-error' : ''}`}
+                            placeholder="Repeat the new password"
                         />
                         {passwordForm.errors.password_confirmation && (
                             <span className="auth-field-error">

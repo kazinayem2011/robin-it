@@ -3067,7 +3067,8 @@
     border-radius: 8px;
     font: inherit;
     font-size: 13px;
-    background: #fff;
+    /* Not the shorthand: it would clear the arrow's background-image. */
+    background-color: #fff;
 }
 
 /* A builder component the compatibility engine cannot check, because a spec it

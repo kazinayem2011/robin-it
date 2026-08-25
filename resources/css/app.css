@@ -257,6 +257,73 @@ textarea:focus {
     box-shadow: none;
 }
 
+/* ==========================================================================
+   SELECT CONTROLS
+   Applied to the element, so every dropdown in the app picks this up without
+   being touched — most of them carry no class at all, and the few that do only
+   set their own height.
+   ========================================================================== */
+
+select {
+    height: 46px;
+    padding: 0 14px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--dark-900);
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+/*
+ * The arrow and the room for it.
+ *
+ * :not([multiple]) is not decoration — it lifts these above the single-class
+ * rules that set `padding: 0 14px`, which would otherwise leave the text
+ * running underneath the chevron. A multi-line select has no arrow to make
+ * room for, so it keeps the browser's own presentation.
+ */
+select:not([multiple]) {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+}
+
+select:not([multiple]):hover:not(:disabled) {
+    border-color: var(--gray-300);
+}
+
+/*
+ * A focus ring, restored.
+ *
+ * The blanket `select:focus` rule below strips the outline, the border change
+ * and the shadow, which left a keyboard user with no way to tell which control
+ * they were on — the same thing that had been done to the text inputs. This
+ * sits above it on specificity and only fires for keyboard focus, so clicking
+ * a dropdown still looks calm.
+ */
+select:not([multiple]):focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(209, 33, 39, 0.12);
+}
+
+select:disabled {
+    cursor: not-allowed;
+    background-color: var(--bg-surface-subtle);
+    color: var(--gray-400);
+    opacity: 1;
+}
+
+/* An unchosen placeholder option should read as a prompt, not as an answer. */
+select:not([multiple]):has(option[value='']:checked:first-child) {
+    color: var(--gray-400);
+}
+
 input.has-error:focus,
 select.has-error:focus,
 textarea.has-error:focus,

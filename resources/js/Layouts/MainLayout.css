@@ -318,7 +318,9 @@
 
 .search-category-selector select {
     border: none;
-    background: transparent;
+    /* background-color, not the shorthand: the shorthand clears
+       background-image, and that is where the dropdown arrow lives. */
+    background-color: transparent;
     outline: none;
     font-size: 0.82rem;
     font-weight: 600;
