@@ -596,7 +596,13 @@
         var(--dark-800) 100%
     );
     border: 1px solid rgba(234, 72, 79, 0.4);
-    padding: 7px 14px;
+    /*
+     * Even on all four sides. This was 7px 14px, so the real inset — border
+     * included — was 15px at the sides against 8px top and bottom, and the box
+     * read as squashed. 10px also brings the button to 54px, the height the
+     * tool buttons beside it already are.
+     */
+    padding: 10px;
     border-radius: var(--radius-sm);
     color: var(--white);
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
