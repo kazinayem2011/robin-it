@@ -122,6 +122,9 @@ export const adminSettingsSchema = Yup.object().shape({
         .required('Support email is required'),
     sales_email: Yup.string().email('Invalid email').nullable(),
     service_center_address: Yup.string().nullable(),
+    footer_note: Yup.string()
+        .max(120, 'Keep the note under 120 characters')
+        .nullable(),
     announcement_text: Yup.string().required('Announcement text is required'),
     announcement_active: Yup.boolean().default(true),
     shipping_inside_dhaka: Yup.number()

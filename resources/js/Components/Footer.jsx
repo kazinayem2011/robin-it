@@ -214,9 +214,18 @@ export const Footer = () => {
             {/* Bottom Bar: Payment Logos & Copyright */}
             <div className="footer-bottom-bar">
                 <div className="container footer-bottom-inner">
+                    {/*
+                     * The closing note is the shop's own line rather than
+                     * boilerplate, so it comes from Site Settings — and an
+                     * admin who clears it gets the sentence dropped, not the
+                     * default put back.
+                     */}
                     <p className="copyright-text">
                         &copy; {new Date().getFullYear()} {siteConfig.legalName}
-                        . All Rights Reserved. Built with Precision &amp; Care.
+                        . All Rights Reserved.
+                        {siteConfig.footerNote
+                            ? ` ${siteConfig.footerNote}`
+                            : ''}
                     </p>
                     <div className="payment-partners-strip">
                         <span className="payment-label">

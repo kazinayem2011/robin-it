@@ -26,6 +26,7 @@ const FALLBACKS = {
     supportEmail: 'support@robinscomputer.com.bd',
     headOffice: 'Level 4, IDB Bhaban, Agargaon, Dhaka-1207',
     serviceCenter: 'Multiplan Center, Dhaka-1205',
+    footerNote: 'Built with Precision & Care.',
     logoSrc: '/images/logo.png',
 };
 
@@ -40,8 +41,18 @@ const SETTING_KEYS = {
     supportEmail: 'support_email',
     headOffice: 'site_address',
     serviceCenter: 'service_center_address',
+    footerNote: 'footer_note',
     logoSrc: 'site_logo',
 };
+
+/*
+ * Fields where clearing the box means "show nothing", not "use the default".
+ *
+ * Everything else is load-bearing — a shop with no name or no phone number is
+ * broken, so a blank there keeps the fallback. The footer note is decoration,
+ * and an admin who empties it wants it gone.
+ */
+const CLEARABLE = new Set(['footerNote']);
 
 const resolved = { ...FALLBACKS };
 
@@ -58,6 +69,8 @@ export const setSiteSettings = (settings) => {
     for (const [field, key] of Object.entries(SETTING_KEYS)) {
         if (usable(settings[key])) {
             resolved[field] = settings[key].trim();
+        } else if (CLEARABLE.has(field) && typeof settings[key] === 'string') {
+            resolved[field] = '';
         }
     }
 };
@@ -104,6 +117,10 @@ export const siteConfig = {
     },
     get serviceCenter() {
         return resolved.serviceCenter;
+    },
+    /* Optional; the footer leaves the sentence off entirely when it is blank. */
+    get footerNote() {
+        return resolved.footerNote;
     },
 
     get logo() {

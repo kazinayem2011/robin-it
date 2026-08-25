@@ -116,6 +116,13 @@ export default function AdminSettings({
             service_center_address:
                 initialMap.service_center_address ||
                 'Multiplan Center, Dhaka-1205',
+            /*
+             * ?? not ||, because '' is a real answer here: an admin who clears
+             * the note wants it gone, and || would put the default straight
+             * back every time the page loaded.
+             */
+            footer_note:
+                initialMap.footer_note ?? 'Built with Precision & Care.',
             announcement_text:
                 initialMap.announcement_text ||
                 '⚡ Ramadan Tech Fest: Up to 15% Instant Discount on All Genuine Builds! Cash on Delivery Nationwide.',
@@ -390,6 +397,20 @@ export default function AdminSettings({
                                     formik={formik}
                                     placeholder="Multiplan Center, Dhaka-1205"
                                 />
+
+                                <div className="admin-field-group">
+                                    <FormInput
+                                        label="Footer Closing Note"
+                                        name="footer_note"
+                                        formik={formik}
+                                        placeholder="Built with Precision & Care."
+                                    />
+                                    <small className="admin-field-hint">
+                                        Follows &ldquo;All Rights
+                                        Reserved&rdquo; in the footer. Leave it
+                                        empty to end the line there.
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     )}

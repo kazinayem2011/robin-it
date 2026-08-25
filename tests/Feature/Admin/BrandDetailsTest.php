@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\SiteSetting;
+use App\Models\User;
 use App\Support\BrandDetails;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -88,6 +89,57 @@ class BrandDetailsTest extends TestCase
         foreach (['site_legal_name', 'sales_email', 'service_center_address', 'hotline_number'] as $key) {
             $this->assertArrayHasKey($key, $shared, "{$key} never reaches the frontend");
         }
+    }
+
+    /**
+     * The whole path the admin form takes: post the settings, then read what
+     * the storefront would render. Each piece was covered; the round trip was
+     * not, and an intermediate save writing a blank would show up here as the
+     * legal name quietly collapsing into the shop name.
+     */
+    public function test_the_settings_form_round_trips_the_branding(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->postJson('/admin/settings', [
+            'settings' => [
+                'site_name' => 'Robins Computer',
+                'site_legal_name' => 'Acme Tech Trading PLC',
+                'sales_email' => 'hello@acme.test',
+                'service_center_address' => '3 Repair Lane, Dhaka',
+                'hotline_number' => '019000000',
+                'hotline_hours' => '10:00 AM - 6:00 PM',
+                'footer_note' => 'Assembled in Dhaka since 2009.',
+            ],
+        ])->assertStatus(200);
+
+        SiteSetting::flushCache();
+
+        $shared = SiteSetting::publicSettings();
+
+        $this->assertSame('Acme Tech Trading PLC', $shared['site_legal_name']);
+        $this->assertSame('hello@acme.test', $shared['sales_email']);
+        $this->assertSame('3 Repair Lane, Dhaka', $shared['service_center_address']);
+        $this->assertSame('019000000', $shared['hotline_number']);
+        $this->assertSame('10:00 AM - 6:00 PM', $shared['hotline_hours']);
+        $this->assertSame('Assembled in Dhaka since 2009.', $shared['footer_note']);
+
+        $this->assertSame('Acme Tech Trading PLC', BrandDetails::legalName());
+        $this->assertSame('019000000', BrandDetails::hotline());
+    }
+
+    /** Clearing the note means the footer ends after "All Rights Reserved". */
+    public function test_the_footer_note_can_be_emptied(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->postJson('/admin/settings', [
+            'settings' => ['footer_note' => ''],
+        ])->assertStatus(200);
+
+        SiteSetting::flushCache();
+
+        $this->assertSame('', SiteSetting::publicSettings()['footer_note']);
     }
 
     public function test_the_home_page_carries_them(): void

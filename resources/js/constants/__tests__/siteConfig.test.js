@@ -16,6 +16,7 @@ describe('siteConfig', () => {
             sales_email: 'sales@robinscomputer.com.bd',
             service_center_address: 'Multiplan Center, Dhaka-1205',
             site_address: 'Level 4, IDB Bhaban, Agargaon, Dhaka-1207',
+            footer_note: 'Built with Precision & Care.',
         });
     });
 
@@ -70,6 +71,28 @@ describe('siteConfig', () => {
         setBrandName('Resolved By Server');
 
         expect(siteConfig.name).toBe('Resolved By Server');
+    });
+
+    /*
+     * The footer note is decoration, so an admin who empties the box wants the
+     * sentence gone. Everything else is load-bearing and keeps its fallback.
+     */
+    it('honours a cleared footer note instead of restoring the default', () => {
+        setSiteSettings({ footer_note: '' });
+
+        expect(siteConfig.footerNote).toBe('');
+    });
+
+    it('takes a custom footer note', () => {
+        setSiteSettings({ footer_note: 'Assembled in Dhaka since 2009.' });
+
+        expect(siteConfig.footerNote).toBe('Assembled in Dhaka since 2009.');
+    });
+
+    it('keeps the default footer note when the key is absent', () => {
+        setSiteSettings({ site_name: 'Acme Tech' });
+
+        expect(siteConfig.footerNote).toBe('Built with Precision & Care.');
     });
 
     it('builds the logo alt text from the current name and tagline', () => {

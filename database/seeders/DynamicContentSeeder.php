@@ -193,6 +193,7 @@ class DynamicContentSeeder extends Seeder
 
         SiteSetting::set('announcement_badge', 'LIVE OFFER', 'announcement', 'Announcement Badge Text');
         SiteSetting::set('site_legal_name', 'Robins Computer & Technology Ltd', 'general', 'Registered Legal Name');
+        SiteSetting::set('footer_note', 'Built with Precision & Care.', 'general', 'Footer Closing Note');
         SiteSetting::set('sales_email', 'sales@robinscomputer.com.bd', 'contact', 'Sales Email');
         SiteSetting::set('service_center_address', 'Multiplan Center, Dhaka-1205', 'contact', 'Service Centre Address');
         SiteSetting::set('hotline_number', '16789', 'contact', 'Customer Hotline');
