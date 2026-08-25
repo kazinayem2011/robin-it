@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Crop,
     RotateCw,
@@ -327,7 +328,17 @@ export const ImageCropperModal = ({
 
     if (!isOpen) return null;
 
-    return (
+    /*
+     * Rendered into <body> rather than where it is called from.
+     *
+     * A modal placed inside a parent that creates a stacking context — anything
+     * positioned with a z-index, a transform, or position: sticky — has its own
+     * z-index scoped to that parent, however large the number. The avatar
+     * uploader sits in the account sidebar, which is sticky, and that was
+     * enough to paint this overlay underneath the site header: the crop
+     * dialog's title and close button vanished behind the search bar.
+     */
+    return createPortal(
         <div className="cropper-modal-overlay" onClick={onClose}>
             <div
                 className="cropper-modal-dialog"
@@ -562,7 +573,8 @@ export const ImageCropperModal = ({
                     </Button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
 

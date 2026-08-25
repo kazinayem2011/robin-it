@@ -181,7 +181,8 @@
      */
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 28px;
-    align-items: start;
+    /* Not align-items: start. The sidebar column has to stretch to the row's
+       height, or the sticky card inside it has no distance to travel. */
 }
 
 .dashboard-sidebar-card,
@@ -198,10 +199,17 @@
        for its divider to span the full width. The nav below sets its own. */
     padding: 0;
     box-shadow: var(--shadow-xs);
+}
+
+/* Stretches with the row; the card inside is what sticks. */
+.dashboard-sidebar-col {
+    min-width: 0;
+}
+
+.dashboard-sidebar-card {
     /* Follows the page rather than scrolling away from the section it labels. */
     position: sticky;
     top: 20px;
-    align-self: start;
 }
 
 .dash-nav-menu {

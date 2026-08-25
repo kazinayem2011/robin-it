@@ -91,102 +91,110 @@ export default function AccountLayout({
                      * relate to, so the content starts at the top of the page.
                      */}
                     <div className="dashboard-content-grid">
-                        <aside className="dashboard-sidebar-card">
-                            <div className="account-identity">
-                                <AvatarUploader user={user} />
+                        {/*
+                         * The column stretches to the row's height so the card
+                         * inside it has somewhere to travel. A sticky element
+                         * whose own grid area is only as tall as itself has no
+                         * room to move and simply scrolls away.
+                         */}
+                        <div className="dashboard-sidebar-col">
+                            <aside className="dashboard-sidebar-card">
+                                <div className="account-identity">
+                                    <AvatarUploader user={user} />
 
-                                <h1 className="account-identity-name">
-                                    {user?.name}
-                                </h1>
+                                    <h1 className="account-identity-name">
+                                        {user?.name}
+                                    </h1>
 
-                                <span className="account-identity-badge">
-                                    <Award size={13} />
-                                    {techPoints} pts
-                                </span>
+                                    <span className="account-identity-badge">
+                                        <Award size={13} />
+                                        {techPoints} pts
+                                    </span>
 
-                                <ul className="account-identity-meta">
-                                    <li title={user?.email}>
-                                        <Mail size={13} />
-                                        <span>{user?.email}</span>
-                                    </li>
-                                    <li>
-                                        <Phone size={13} />
-                                        <span>
-                                            {formatBdPhone(user?.phone) ||
-                                                'No number yet'}
-                                        </span>
-                                    </li>
-                                    <li className="is-verified">
-                                        <ShieldCheck size={13} />
-                                        <span>Verified member</span>
-                                    </li>
-                                </ul>
-                            </div>
+                                    <ul className="account-identity-meta">
+                                        <li title={user?.email}>
+                                            <Mail size={13} />
+                                            <span>{user?.email}</span>
+                                        </li>
+                                        <li>
+                                            <Phone size={13} />
+                                            <span>
+                                                {formatBdPhone(user?.phone) ||
+                                                    'No number yet'}
+                                            </span>
+                                        </li>
+                                        <li className="is-verified">
+                                            <ShieldCheck size={13} />
+                                            <span>Verified member</span>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                            <ul className="dash-nav-menu">
-                                {items.map(
-                                    ({
-                                        key,
-                                        label,
-                                        icon: Icon,
-                                        href,
-                                        count,
-                                    }) => (
-                                        <li key={key}>
+                                <ul className="dash-nav-menu">
+                                    {items.map(
+                                        ({
+                                            key,
+                                            label,
+                                            icon: Icon,
+                                            href,
+                                            count,
+                                        }) => (
+                                            <li key={key}>
+                                                <Link
+                                                    href={href}
+                                                    className={`dash-nav-item-btn ${current === key ? 'active-tab' : ''}`}
+                                                    aria-current={
+                                                        current === key
+                                                            ? 'page'
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <div className="dash-nav-left">
+                                                        <Icon size={18} />
+                                                        <span>{label}</span>
+                                                    </div>
+                                                    {count > 0 && (
+                                                        <span className="dash-nav-badge">
+                                                            {count}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            </li>
+                                        ),
+                                    )}
+
+                                    {user?.role === 'admin' && (
+                                        <li className="dash-admin-nav-item">
                                             <Link
-                                                href={href}
-                                                className={`dash-nav-item-btn ${current === key ? 'active-tab' : ''}`}
-                                                aria-current={
-                                                    current === key
-                                                        ? 'page'
-                                                        : undefined
-                                                }
+                                                href={ROUTES.ADMIN_DASHBOARD}
+                                                className="dash-nav-item-btn dash-admin-link"
                                             >
                                                 <div className="dash-nav-left">
-                                                    <Icon size={18} />
-                                                    <span>{label}</span>
+                                                    <ShieldCheck size={18} />
+                                                    <span>Admin Console</span>
                                                 </div>
-                                                {count > 0 && (
-                                                    <span className="dash-nav-badge">
-                                                        {count}
-                                                    </span>
-                                                )}
+                                                <ChevronRight size={16} />
                                             </Link>
                                         </li>
-                                    ),
-                                )}
+                                    )}
 
-                                {user?.role === 'admin' && (
-                                    <li className="dash-admin-nav-item">
-                                        <Link
-                                            href={ROUTES.ADMIN_DASHBOARD}
-                                            className="dash-nav-item-btn dash-admin-link"
+                                    <li className="dash-logout-li">
+                                        <button
+                                            type="button"
+                                            className="dash-nav-item-btn dash-logout-btn"
+                                            onClick={() =>
+                                                router.post(ROUTES.LOGOUT)
+                                            }
                                         >
                                             <div className="dash-nav-left">
-                                                <ShieldCheck size={18} />
-                                                <span>Admin Console</span>
+                                                <LogOut size={18} />
+                                                <span>Sign Out</span>
                                             </div>
-                                            <ChevronRight size={16} />
-                                        </Link>
+                                        </button>
                                     </li>
-                                )}
-
-                                <li className="dash-logout-li">
-                                    <button
-                                        type="button"
-                                        className="dash-nav-item-btn dash-logout-btn"
-                                        onClick={() =>
-                                            router.post(ROUTES.LOGOUT)
-                                        }
-                                    >
-                                        <div className="dash-nav-left">
-                                            <LogOut size={18} />
-                                            <span>Sign Out</span>
-                                        </div>
-                                    </button>
-                                </li>
-                            </ul>
-                        </aside>
+                                </ul>
+                            </aside>
+                        </div>
 
                         <main className="dashboard-main-surface">
                             {children}
