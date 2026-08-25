@@ -300,7 +300,7 @@ export const PcBuilderQuotationModal = ({
                                     marginTop: '2px',
                                 }}
                             >
-                                {siteConfig.name} Systems Lab
+                                {siteConfig.name}
                             </div>
                         </div>
                     </div>
