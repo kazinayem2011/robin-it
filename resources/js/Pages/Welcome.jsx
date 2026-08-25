@@ -37,6 +37,7 @@ import { getCategoryIcon } from '../utils/iconMap';
 import { formatBdt } from '../utils/formatters';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
+import { useWishlist } from '../hooks';
 import './Welcome.css';
 
 export default function Welcome({ banners = [], blogs = [] }) {
@@ -51,7 +52,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
     const [loadingBestSellers, setLoadingBestSellers] = useState(true);
     const [activeHeroSlide, setActiveHeroSlide] = useState(0);
     const [activeTab, setActiveTab] = useState('all');
-    const [wishlistIds, setWishlistIds] = useState([]);
+    const { wishlistIds, toggleWishlist } = useWishlist();
 
     // Interactive PC Builder Mini Configurator State (100% Dynamic Keys)
     const [builderCpu, setBuilderCpu] = useState('');
@@ -173,13 +174,6 @@ export default function Welcome({ banners = [], blogs = [] }) {
     }, []);
 
     // Wishlist Toggle Helper
-    const toggleWishlist = (productId) => {
-        setWishlistIds((prev) =>
-            prev.includes(productId)
-                ? prev.filter((id) => id !== productId)
-                : [...prev, productId],
-        );
-    };
 
     // Calculate Dynamic PC Builder Estimated Total Price
     const builderTotal =

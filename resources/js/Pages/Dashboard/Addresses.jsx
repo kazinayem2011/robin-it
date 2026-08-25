@@ -103,81 +103,59 @@ export default function Addresses({
                      */
                     <div className="addresses-list-wrapper">
                         {addresses.map((addr) => (
-                            <div key={addr.id} className="address-history-card">
-                                <div className="address-card-header">
-                                    <div>
-                                        <span className="dash-address-label">
-                                            Deliver to:{' '}
-                                        </span>
-                                        <strong className="dash-address-name">
+                            <div key={addr.id} className="address-row-card">
+                                <span className="address-row-pin">
+                                    <MapPin size={16} />
+                                </span>
+
+                                <div className="address-row-main">
+                                    <div className="address-row-top">
+                                        <strong className="address-row-name">
                                             {addr.name || user?.name}
                                         </strong>
-                                        {/* An address saved before the phone
-                                            field was required has none, and
-                                            formatBdPhone answers "—" for that.
-                                            Better to show nothing than a dash
-                                            standing in for a number. */}
                                         {addr.phone && (
-                                            <>
-                                                <span className="dash-order-divider">
-                                                    |
-                                                </span>
-                                                <span className="dash-address-phone">
-                                                    {formatBdPhone(addr.phone)}
-                                                </span>
-                                            </>
+                                            <span className="address-row-phone">
+                                                {formatBdPhone(addr.phone)}
+                                            </span>
+                                        )}
+                                        {addr.is_default && (
+                                            <span className="address-default-badge">
+                                                Default
+                                            </span>
                                         )}
                                     </div>
-                                    {addr.is_default && (
-                                        <span className="address-default-badge">
-                                            Default
-                                        </span>
-                                    )}
+
+                                    <p className="address-row-street">
+                                        {addr.address}
+                                    </p>
+
+                                    <p className="address-row-region">
+                                        {/* Deduplicated: for the capitals the
+                                            district and the division carry the
+                                            same name, which read as "Dhaka,
+                                            Dhaka". */}
+                                        {[
+                                            ...new Set(
+                                                [
+                                                    addr.city,
+                                                    addr.district,
+                                                    addr.division,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .map((part) => part.trim()),
+                                            ),
+                                        ].join(', ')}
+                                    </p>
                                 </div>
 
-                                <div className="address-card-body">
-                                    <MapPin size={15} />
-                                    <div>
-                                        <p className="dash-address-street">
-                                            {addr.address}
-                                        </p>
-                                        <p className="dash-address-region">
-                                            {/* Deduplicated: for the
-                                                capitals the district and the
-                                                division carry the same name,
-                                                which read as "Dhaka, Dhaka". */}
-                                            {[
-                                                ...new Set(
-                                                    [
-                                                        addr.city,
-                                                        addr.district,
-                                                        addr.division,
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .map((part) =>
-                                                            part.trim(),
-                                                        ),
-                                                ),
-                                            ].join(', ')}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="address-card-footer">
-                                    <span className="dash-address-hint">
-                                        {addr.is_default
-                                            ? 'Used for new orders'
-                                            : 'Saved address'}
-                                    </span>
-                                    <button
-                                        className="btn btn-outline btn-sm dash-address-remove-btn"
-                                        onClick={() =>
-                                            handleDeleteAddress(addr.id)
-                                        }
-                                    >
-                                        <Trash2 size={13} /> Remove
-                                    </button>
-                                </div>
+                                <button
+                                    className="address-row-remove"
+                                    onClick={() => handleDeleteAddress(addr.id)}
+                                    title="Remove this address"
+                                    aria-label="Remove this address"
+                                >
+                                    <Trash2 size={15} />
+                                </button>
                             </div>
                         ))}
                     </div>

@@ -15,6 +15,7 @@ import {
 import useAppStore from '../../store/useAppStore';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
+import { useWishlist } from '../../hooks';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
@@ -25,7 +26,7 @@ export default function ProductListing({ categorySlug }) {
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [sort, setSort] = useState('latest');
-    const [wishlistIds, setWishlistIds] = useState([]);
+    const { wishlistIds, toggleWishlist } = useWishlist();
     const [loadError, setLoadError] = useState(null);
     const [facets, setFacets] = useState(null);
     // Everything the shopper has narrowed by, kept in one object so a change
@@ -139,14 +140,6 @@ export default function ProductListing({ categorySlug }) {
         } catch (error) {
             toast.error(error?.message || 'Could not add that to your cart.');
         }
-    };
-
-    const toggleWishlist = (productId) => {
-        setWishlistIds((prev) =>
-            prev.includes(productId)
-                ? prev.filter((id) => id !== productId)
-                : [...prev, productId],
-        );
     };
 
     // Prefer the catalogue's own name for the category. Prettifying the slug
