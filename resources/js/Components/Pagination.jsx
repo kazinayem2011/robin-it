@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import './Pagination.css';
 
 /**
  * Reusable Pagination Component (Supports both Laravel Inertia links & numeric callbacks).
@@ -27,16 +28,18 @@ export const Pagination = ({
     // If Laravel Inertia paginator links are provided
     if (links && links.length > 3) {
         return (
-            <div className={`admin-pagination-wrapper ${className}`.trim()}>
+            <div
+                className={`pagination-wrapper ${total !== null ? 'has-summary' : ''} ${className}`.trim()}
+            >
                 {total !== null && (
-                    <div className="admin-pagination-summary">
+                    <div className="pagination-summary">
                         Showing <strong>{from || 1}</strong> to{' '}
                         <strong>{to || total}</strong> of{' '}
                         <strong>{total}</strong> results
                     </div>
                 )}
 
-                <div className="admin-pagination-btns">
+                <div className="pagination-btns">
                     {links.map((link, idx) => {
                         // Decode HTML entities (e.g. &laquo; Previous -> Previous)
                         let cleanLabel = link.label
@@ -55,7 +58,7 @@ export const Pagination = ({
                             return (
                                 <span
                                     key={idx}
-                                    className="admin-pagination-btn disabled"
+                                    className="pagination-btn disabled"
                                     aria-disabled="true"
                                 >
                                     {isPrev ? (
@@ -75,7 +78,7 @@ export const Pagination = ({
                                 href={link.url}
                                 preserveScroll
                                 preserveState
-                                className={`admin-pagination-btn ${link.active ? 'active' : ''}`}
+                                className={`pagination-btn ${link.active ? 'active' : ''}`}
                             >
                                 {isPrev ? (
                                     <ChevronLeft size={15} />
@@ -108,19 +111,21 @@ export const Pagination = ({
         }
 
         return (
-            <div className={`admin-pagination-wrapper ${className}`.trim()}>
+            <div
+                className={`pagination-wrapper ${total !== null ? 'has-summary' : ''} ${className}`.trim()}
+            >
                 {total !== null && (
-                    <div className="admin-pagination-summary">
+                    <div className="pagination-summary">
                         Showing <strong>{from || 1}</strong> to{' '}
                         <strong>{to || total}</strong> of{' '}
                         <strong>{total}</strong> results
                     </div>
                 )}
 
-                <div className="admin-pagination-btns">
+                <div className="pagination-btns">
                     <button
                         type="button"
-                        className="admin-pagination-btn"
+                        className="pagination-btn"
                         disabled={currentPage <= 1}
                         onClick={() =>
                             onPageChange && onPageChange(currentPage - 1)
@@ -134,15 +139,13 @@ export const Pagination = ({
                         <>
                             <button
                                 type="button"
-                                className={`admin-pagination-btn ${currentPage === 1 ? 'active' : ''}`}
+                                className={`pagination-btn ${currentPage === 1 ? 'active' : ''}`}
                                 onClick={() => onPageChange && onPageChange(1)}
                             >
                                 1
                             </button>
                             {start > 2 && (
-                                <span className="admin-pagination-ellipsis">
-                                    ...
-                                </span>
+                                <span className="pagination-ellipsis">...</span>
                             )}
                         </>
                     )}
@@ -151,7 +154,7 @@ export const Pagination = ({
                         <button
                             key={p}
                             type="button"
-                            className={`admin-pagination-btn ${currentPage === p ? 'active' : ''}`}
+                            className={`pagination-btn ${currentPage === p ? 'active' : ''}`}
                             onClick={() => onPageChange && onPageChange(p)}
                         >
                             {p}
@@ -161,13 +164,11 @@ export const Pagination = ({
                     {end < totalPages && (
                         <>
                             {end < totalPages - 1 && (
-                                <span className="admin-pagination-ellipsis">
-                                    ...
-                                </span>
+                                <span className="pagination-ellipsis">...</span>
                             )}
                             <button
                                 type="button"
-                                className={`admin-pagination-btn ${currentPage === totalPages ? 'active' : ''}`}
+                                className={`pagination-btn ${currentPage === totalPages ? 'active' : ''}`}
                                 onClick={() =>
                                     onPageChange && onPageChange(totalPages)
                                 }
@@ -179,7 +180,7 @@ export const Pagination = ({
 
                     <button
                         type="button"
-                        className="admin-pagination-btn"
+                        className="pagination-btn"
                         disabled={currentPage >= totalPages}
                         onClick={() =>
                             onPageChange && onPageChange(currentPage + 1)

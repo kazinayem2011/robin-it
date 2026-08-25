@@ -39,6 +39,40 @@ export class ApiError extends Error {
 const FALLBACK_MESSAGE =
     'Something went wrong. Please check your connection and try again.';
 
+/**
+ * Query parameters, in the shape the backend validates.
+ *
+ * axios turns a JS `true` into the string "true", and Laravel's `boolean` rule
+ * compares strictly against [true, false, 0, 1, '0', '1'] — so "true" fails.
+ * Ticking "In stock only" or "On sale" in the shop sent `in_stock=true`, got a
+ * 422 back, and replaced the whole grid with "We couldn't load these
+ * products". Both filters had never worked.
+ *
+ * Doing it here rather than at each call site means any service can pass a
+ * plain boolean and have it arrive as the backend expects. Empty values are
+ * dropped so an unset filter does not travel as `min_price=`.
+ */
+export const normaliseParams = (params) =>
+    Object.fromEntries(
+        Object.entries(params)
+            .filter(
+                ([, value]) =>
+                    value !== undefined && value !== null && value !== '',
+            )
+            .map(([key, value]) => [
+                key,
+                typeof value === 'boolean' ? (value ? 1 : 0) : value,
+            ]),
+    );
+
+axiosInstance.interceptors.request.use((config) => {
+    if (!config.params || typeof config.params !== 'object') return config;
+
+    config.params = normaliseParams(config.params);
+
+    return config;
+});
+
 // Interceptor for responses
 axiosInstance.interceptors.response.use(
     (response) => {

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+    useRef,
+} from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import { productService, cartService } from '../../services';
@@ -16,23 +22,38 @@ import useAppStore from '../../store/useAppStore';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
+import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
 export default function ProductListing({ categorySlug }) {
+    /*
+     * Paging, sorting and filtering used to start from hardcoded defaults, so
+     * reloading page 3 of a filtered catalogue dropped the shopper back on
+     * page 1 of everything — and a link to what they were looking at could not
+     * be sent. The URL is the source of truth for all three now.
+     */
+    const initial = useMemo(
+        () =>
+            parseShopQuery(
+                typeof window === 'undefined' ? '' : window.location.search,
+            ),
+        [],
+    );
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(initial.page);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const [sort, setSort] = useState('latest');
+    const [sort, setSort] = useState(initial.sort);
     const { wishlistIds, toggleWishlist } = useWishlist();
     const addToCart = useAddToCart();
     const [loadError, setLoadError] = useState(null);
     const [facets, setFacets] = useState(null);
     // Everything the shopper has narrowed by, kept in one object so a change
     // to any of it can reset paging in a single place.
-    const [filters, setFilters] = useState({});
+    const [filters, setFilters] = useState(initial.filters);
 
     // Only the keys that are actually set, so the URL and the request stay
     // free of `undefined` noise.
@@ -104,6 +125,42 @@ export default function ProductListing({ categorySlug }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categorySlug, filterKey]);
 
+    /*
+     * replaceState rather than a push: this rewrites the address so the view
+     * can be reloaded and shared, without stacking a history entry per click
+     * that Back would have to walk through. Inertia keeps its own page object
+     * in history.state, so that is passed straight back through.
+     */
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const search = buildShopSearch({ page, sort, filters: activeFilters });
+        const next = window.location.pathname + search;
+
+        if (next !== window.location.pathname + window.location.search) {
+            window.history.replaceState(window.history.state, '', next);
+        }
+    }, [page, sort, filterKey, activeFilters]);
+
+    /*
+     * A new page of results starts at the top of the grid. Without this the
+     * viewport stayed where the pagination bar had been, which on a shorter
+     * last page left the shopper looking at the footer.
+     */
+    const isFirstRender = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+
+            return;
+        }
+
+        document
+            .getElementById('shop-results')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [page]);
+
     /**
      * Narrowing always returns to page one: staying on page 4 of a result set
      * that now has two pages shows an empty grid.
@@ -113,9 +170,20 @@ export default function ProductListing({ categorySlug }) {
         setPage(1);
     }, []);
 
-    // A different category is a different selection; carrying price and brand
-    // across would silently hide most of it.
+    /*
+     * A different category is a different selection; carrying price and brand
+     * across would silently hide most of it.
+     *
+     * Only on an actual change, though. This also ran on mount, which wiped
+     * the paging and filters the URL had just been read for — landing on
+     * /products?page=2&in_stock=1 showed page one of everything.
+     */
+    const previousCategory = useRef(categorySlug);
+
     useEffect(() => {
+        if (previousCategory.current === categorySlug) return;
+
+        previousCategory.current = categorySlug;
         setFilters({});
         setPage(1);
     }, [categorySlug]);
@@ -203,7 +271,7 @@ export default function ProductListing({ categorySlug }) {
                             categorySlug={categorySlug}
                         />
 
-                        <div className="plp-results">
+                        <div className="plp-results" id="shop-results">
                             {/* Product Grid Area with Skeleton Loading Shimmers */}
                             <div className="standard-products-grid plp-grid-spacer">
                                 {loading ? (
