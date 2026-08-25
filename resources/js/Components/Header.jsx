@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
     Tag,
@@ -35,6 +35,8 @@ export const Header = () => {
     const [hoveredSubCategory, setHoveredSubCategory] = useState('sc1');
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [siteSettings, setSiteSettings] = useState({});
+    const tickerRef = useRef(null);
+    const mainHeaderRef = useRef(null);
 
     const cartCount = useAppStore((state) => state.cartCount);
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
@@ -67,10 +69,46 @@ export const Header = () => {
             );
     }, [fetchCartCount]);
 
+    /*
+     * The whole header block pins, pulled up by exactly the height of the
+     * announcement ticker so the ticker scrolls away and the header and
+     * category bar are what stay on screen.
+     *
+     * The ticker is 42px on a desktop and 38px on a phone, so the offset is
+     * measured rather than written down, and kept current as the bar reflows.
+     */
+    useLayoutEffect(() => {
+        const ticker = tickerRef.current;
+        const header = mainHeaderRef.current;
+
+        if (!ticker || !header || typeof ResizeObserver === 'undefined') return;
+
+        const publish = () => {
+            const root = document.documentElement.style;
+
+            root.setProperty(
+                '--site-ticker-h',
+                `${Math.round(ticker.getBoundingClientRect().height)}px`,
+            );
+            root.setProperty(
+                '--site-header-h',
+                `${Math.round(header.getBoundingClientRect().height)}px`,
+            );
+        };
+
+        publish();
+
+        const observer = new ResizeObserver(publish);
+        observer.observe(ticker);
+        observer.observe(header);
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <header className="site-header-wrapper">
             {/* 1. TOP ANNOUNCEMENT TICKER STRIP */}
-            <div className="top-ticker-bar">
+            <div className="top-ticker-bar" ref={tickerRef}>
                 <div className="container top-ticker-inner">
                     <div className="top-ticker-left">
                         <span className="ticker-pulse-badge">
@@ -120,7 +158,7 @@ export const Header = () => {
             </div>
 
             {/* 2. MAIN HEADER ROW */}
-            <div className="site-main-header">
+            <div className="site-main-header" ref={mainHeaderRef}>
                 <div className="container header-grid-container">
                     {/* Mobile Hamburger Trigger & Brand Logo */}
                     <div className="header-brand-box">

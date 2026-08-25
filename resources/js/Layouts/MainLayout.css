@@ -9,6 +9,39 @@
     min-height: 100vh;
 }
 
+/*
+ * The header block stays put, category bar included.
+ *
+ * It has to be this wrapper that sticks, not the bar inside it. A sticky
+ * element only stays while its own parent is on screen, and .site-main-header's
+ * parent is this header — about 184px tall — so the "sticky" header scrolled
+ * away after 184px and had never actually stayed.
+ *
+ * Pulling it up by the ticker's height lets the announcement bar scroll off
+ * while the header and the category bar below it remain. --site-ticker-h is
+ * measured in Header.jsx because that bar is 42px wide-screen and 38px on a
+ * phone; the fallback covers the first paint.
+ */
+.site-header-wrapper {
+    position: sticky;
+    top: calc(-1 * var(--site-ticker-h, 42px));
+    z-index: 120;
+}
+
+/*
+ * On a phone the header stacks to 228px — logo row, then search, then the hot
+ * tags — and pinning all of it alongside the category bar took 272px, a third
+ * of the screen, permanently. Pulling the block up by the header's height too
+ * leaves only the category bar on screen: 45px instead of 272px.
+ */
+@media (max-width: 768px) {
+    .site-header-wrapper {
+        top: calc(
+            -1 * (var(--site-ticker-h, 38px) + var(--site-header-h, 228px))
+        );
+    }
+}
+
 /* ==========================================================================
    1. TOP TICKER ANNOUNCEMENT BAR
    ========================================================================== */
@@ -104,9 +137,10 @@
     background-color: var(--white);
     border-bottom: 1px solid var(--border-color);
     padding: 14px 0;
-    position: sticky;
-    top: 0;
-    z-index: 120;
+    /* Sticky here did nothing but limit itself to this header's own height —
+       the wrapper above is what keeps the block on screen now. */
+    position: relative;
+    z-index: 2;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
 }
 
@@ -870,10 +904,15 @@
    ========================================================================== */
 
 /* ── Nav bar ─────────────────────────────────────────────────────────────── */
+/*
+ * Rides along with the sticky wrapper, so it needs no offset of its own — and
+ * an offset here would have been a hardcoded header height, wrong at every
+ * width where the search bar wraps.
+ */
 .site-mega-nav {
     background-color: var(--dark-950);
     position: relative;
-    z-index: 100;
+    z-index: 1;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
