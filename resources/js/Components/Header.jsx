@@ -16,6 +16,7 @@ import {
     Menu,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+import { ProductImage } from './ProductImage';
 import { SearchBar } from './SearchBar';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
@@ -92,7 +93,9 @@ export const Header = () => {
             const root = document.documentElement.style;
             const tickerH = Math.round(ticker.getBoundingClientRect().height);
             const headerH = Math.round(header.getBoundingClientRect().height);
-            const navH = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
+            const navH = nav
+                ? Math.round(nav.getBoundingClientRect().height)
+                : 0;
 
             root.setProperty('--site-ticker-h', `${tickerH}px`);
             root.setProperty('--site-header-h', `${headerH}px`);
@@ -102,8 +105,7 @@ export const Header = () => {
              * far down the page anything else can stick without hiding behind
              * it. Below 768px only the category bar remains.
              */
-            const pinned =
-                window.innerWidth <= 768 ? navH : headerH + navH;
+            const pinned = window.innerWidth <= 768 ? navH : headerH + navH;
 
             root.setProperty('--site-chrome-h', `${pinned}px`);
         };
@@ -541,7 +543,14 @@ export const Header = () => {
                                                                 SPOTLIGHT
                                                             </div>
                                                             <div className="spotlight-img-box">
-                                                                <img
+                                                                {/*
+                                                                 * A plain <img> here showed the alt text
+                                                                 * as soon as a spotlight pointed at a file
+                                                                 * that no longer existed — which is what
+                                                                 * two of the seeded categories did. This
+                                                                 * degrades to the placeholder instead.
+                                                                 */}
+                                                                <ProductImage
                                                                     src={
                                                                         category
                                                                             .promoBanner

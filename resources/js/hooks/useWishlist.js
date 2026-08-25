@@ -33,7 +33,9 @@ export const useWishlist = () => {
                 if (cancelled) return;
 
                 setWishlistIds(
-                    (items || []).map((entry) => entry.product_id).filter(Boolean),
+                    (items || [])
+                        .map((entry) => entry.product_id)
+                        .filter(Boolean),
                 );
             })
             .catch(() => {

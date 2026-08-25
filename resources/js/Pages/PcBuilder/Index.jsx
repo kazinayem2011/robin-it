@@ -13,11 +13,7 @@ import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import {
-    essentialsStatus,
-    listNames,
-    stockLabel,
-} from '../../utils/pcBuild';
+import { essentialsStatus, listNames, stockLabel } from '../../utils/pcBuild';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,

@@ -17,7 +17,7 @@
     </p>
 
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-panel"
-           style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; margin:0 0 28px;">
+           style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin:0 0 28px;">
         <tr>
             <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:24px; color:#475569;">
                 <strong style="color:#0f172a;">Build a PC</strong> — pick parts with live compatibility checks, then save and share the build.<br>
@@ -40,7 +40,7 @@
                 <![endif]-->
                 <!--[if !mso]><!-- -->
                 <a href="{{ $brand['url'] }}/shop"
-                   style="display:inline-block; background-color:#d12127; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; line-height:46px; text-align:center; text-decoration:none; width:260px; border-radius:6px;">
+                   style="display:inline-block; background-color:#d12127; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; line-height:46px; text-align:center; text-decoration:none; width:260px; border-radius:8px;">
                     Start shopping
                 </a>
                 <!--<![endif]-->

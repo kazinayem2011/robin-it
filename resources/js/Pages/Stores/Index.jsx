@@ -77,10 +77,7 @@ export default function StoresIndex() {
                     </div>
 
                     {loading ? (
-                        <CardGridSkeleton
-                            count={3}
-                            className="stores-grid"
-                        />
+                        <CardGridSkeleton count={3} className="stores-grid" />
                     ) : (
                         <div className="stores-grid">
                             {filteredStores.map((store) => (

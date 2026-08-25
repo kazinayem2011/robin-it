@@ -23,34 +23,52 @@ describe('updateProfileSchema', () => {
     });
 
     it('refuses a blank name', async () => {
-        expect(await check(updateProfileSchema, { ...base, name: '' })).toContain(
-            'Name is required',
-        );
+        expect(
+            await check(updateProfileSchema, { ...base, name: '' }),
+        ).toContain('Name is required');
     });
 
     it('refuses a malformed email', async () => {
         expect(
-            await check(updateProfileSchema, { ...base, email: 'not-an-email' }),
+            await check(updateProfileSchema, {
+                ...base,
+                email: 'not-an-email',
+            }),
         ).toContain('Please enter a valid email address');
     });
 
     /* The server requires this, so the browser has to as well — a laxer schema
      * only moves the rejection later. */
     it('requires a mobile number, matching the server', async () => {
-        expect(await check(updateProfileSchema, { ...base, phone: '' })).toContain(
-            'A mobile number is required',
-        );
+        expect(
+            await check(updateProfileSchema, { ...base, phone: '' }),
+        ).toContain('A mobile number is required');
     });
 
     it('refuses a number that is not a BD mobile', async () => {
-        for (const phone of ['12345', '0171234567', '01212345678', 'abcdefghijk']) {
-            expect(await check(updateProfileSchema, { ...base, phone }), phone).not.toBeNull();
+        for (const phone of [
+            '12345',
+            '0171234567',
+            '01212345678',
+            'abcdefghijk',
+        ]) {
+            expect(
+                await check(updateProfileSchema, { ...base, phone }),
+                phone,
+            ).not.toBeNull();
         }
     });
 
     it('accepts the shapes a BD number is written in', async () => {
-        for (const phone of ['01712345678', '8801712345678', '+8801712345678']) {
-            expect(await check(updateProfileSchema, { ...base, phone }), phone).toBeNull();
+        for (const phone of [
+            '01712345678',
+            '8801712345678',
+            '+8801712345678',
+        ]) {
+            expect(
+                await check(updateProfileSchema, { ...base, phone }),
+                phone,
+            ).toBeNull();
         }
     });
 });
@@ -92,16 +110,20 @@ describe('deliveryAddressSchema', () => {
     });
 
     it('requires a street line', async () => {
-        expect(await check(deliveryAddressSchema, { ...base, address: '' })).toContain(
-            'Street address is required',
-        );
+        expect(
+            await check(deliveryAddressSchema, { ...base, address: '' }),
+        ).toContain('Street address is required');
     });
 
     it('requires a reachable number', async () => {
-        expect(await check(deliveryAddressSchema, { ...base, phone: '019' })).not.toBeNull();
+        expect(
+            await check(deliveryAddressSchema, { ...base, phone: '019' }),
+        ).not.toBeNull();
     });
 
     it('lets the city be left out', async () => {
-        expect(await check(deliveryAddressSchema, { ...base, city: '' })).toBeNull();
+        expect(
+            await check(deliveryAddressSchema, { ...base, city: '' }),
+        ).toBeNull();
     });
 });

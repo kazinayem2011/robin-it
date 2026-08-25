@@ -147,7 +147,10 @@ export default function Compare() {
                 </div>
 
                 {loading ? (
-                    <CardGridSkeleton count={4} className="compare-grid-skeleton" />
+                    <CardGridSkeleton
+                        count={4}
+                        className="compare-grid-skeleton"
+                    />
                 ) : compareProducts.length === 0 ? (
                     <EmptyState
                         icon={Scale}

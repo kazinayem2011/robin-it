@@ -223,7 +223,7 @@
 /* Reads as a label rather than a bare asterisk orphaned on its own line. */
 .required-pill {
     padding: 1px 7px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: rgba(209, 32, 47, 0.1);
     color: var(--primary);
     font-size: 0.62rem;
@@ -664,7 +664,7 @@
     margin-bottom: 18px;
     border: 1px solid;
     border-left-width: 4px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     line-height: 1.55;
 }
@@ -721,7 +721,7 @@
     margin-bottom: 12px;
     background: var(--bg-surface-subtle, #f7f8fa);
     border: 1px dashed var(--border-color, #d9dde3);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     cursor: pointer;
     user-select: none;
@@ -760,7 +760,6 @@
  * dark theme is ever built, it belongs in the token layer in app.css, not in
  * one component at a time.
  */
-
 
 /*
  * Clearance for the sticky summary bar, which was covering the final slot so

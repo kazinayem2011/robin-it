@@ -603,7 +603,10 @@ export default function ProductDetails(props) {
                             {/* Nobody should reach the payment page and only
                                 then discover this ships later. */}
                             {isPreorder && (
-                                <div className="pdp-preorder-notice" role="status">
+                                <div
+                                    className="pdp-preorder-notice"
+                                    role="status"
+                                >
                                     <Clock size={18} />
                                     <div>
                                         <strong>Pre-order</strong>
@@ -775,8 +778,8 @@ export default function ProductDetails(props) {
                                                 <p>
                                                     Only customers who have
                                                     purchased this product from
-                                                    {siteConfig.name} can write a
-                                                    review.{' '}
+                                                    {siteConfig.name} can write
+                                                    a review.{' '}
                                                     <Link
                                                         href={ROUTES.LOGIN}
                                                         style={{
@@ -804,8 +807,7 @@ export default function ProductDetails(props) {
                                                     Only verified buyers who
                                                     have purchased this product
                                                     from {siteConfig.name} can
-                                                    submit a
-                                                    review.
+                                                    submit a review.
                                                 </p>
                                             </div>
                                         </div>

@@ -537,7 +537,7 @@ textarea.has-error:focus,
     width: 18px;
     height: 18px;
     border: 1px solid var(--gray-300);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background-color: var(--white);
     display: grid;
     place-content: center;

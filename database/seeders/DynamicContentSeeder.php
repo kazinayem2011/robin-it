@@ -204,7 +204,7 @@ class DynamicContentSeeder extends Seeder
             $laptopCat->update([
                 'spotlight_title' => 'Laptops Collection',
                 'spotlight_subtitle' => 'Official 100% Genuine Tech with Warranty',
-                'spotlight_image' => '/images/product_laptop_rog.jpg',
+                'spotlight_image' => '/images/hero_laptop.jpg',
                 'spotlight_link' => '/shop/laptops',
             ]);
         }
@@ -214,7 +214,7 @@ class DynamicContentSeeder extends Seeder
             $compCat->update([
                 'spotlight_title' => 'Flagship Hardware',
                 'spotlight_subtitle' => 'Unlocked CPUs, RTX 40 GPUs & DDR5 RAM',
-                'spotlight_image' => '/images/product_gpu_rtx4090.jpg',
+                'spotlight_image' => '/images/promo_gpu.jpg',
                 'spotlight_link' => '/shop/components',
             ]);
         }
@@ -223,7 +223,7 @@ class DynamicContentSeeder extends Seeder
         if ($desktopCat) {
             $desktopCat->update([
                 'spotlight_title' => 'Custom Gaming Rigs',
-                'spotlight_subtitle' => 'Built, Tested & Benchmarked by Robin IT Engineers',
+                'spotlight_subtitle' => 'Built, Tested & Benchmarked by Our Engineers',
                 'spotlight_image' => '/images/product_cpu_i9.jpg',
                 'spotlight_link' => '/pc-builder',
             ]);

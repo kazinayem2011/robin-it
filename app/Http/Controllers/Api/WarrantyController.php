@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\WarrantyClaim;
+use App\Support\BrandDetails;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -115,14 +116,18 @@ class WarrantyController extends Controller
         $claim->claim_number = $this->generateClaimNumber();
         $claim->user_id = auth('sanctum')->id() ?? auth()->id();
         $claim->status = 'received';
-        $claim->diagnostic_notes = 'Claim logged. Hardware awaiting intake diagnosis at Robin IT Central Service Lab.';
+        $claim->diagnostic_notes = 'Claim logged. Hardware awaiting intake diagnosis at the '
+            .BrandDetails::name().' service lab.';
         $claim->save();
 
         return $this->successResponse([
             'claim_number' => $claim->claim_number,
             'product_name' => $claim->product_name,
             'status' => $claim->status,
-            'dropoff_branch' => $claim->dropoff_branch ?: 'Robin IT Central Service Center, Multiplan Center, Dhaka',
+            // Courier pickup, to match the form's default — naming a branch
+            // here once meant echoing back a service centre that had been
+            // renamed, and the customer would post the unit to it.
+            'dropoff_branch' => $claim->dropoff_branch ?: 'Doorstep Courier Pickup (All 64 Districts)',
             'created_at' => $claim->created_at->format('d M Y, h:i A'),
         ], "Warranty claim #{$claim->claim_number} logged successfully! Our service technicians will inspect your unit.", 201);
     }

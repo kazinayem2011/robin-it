@@ -36,7 +36,7 @@
         .toolbar { max-width: 760px; margin: 0 auto 16px; display: flex; gap: 10px; justify-content: flex-end; }
 
         .btn {
-            padding: 9px 18px; border: 1px solid var(--line); border-radius: 6px;
+            padding: 9px 18px; border: 1px solid var(--line); border-radius: 8px;
             background: #fff; color: var(--ink); font: inherit; font-size: 13px;
             font-weight: 600; text-decoration: none; cursor: pointer;
         }

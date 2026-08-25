@@ -39,7 +39,10 @@ describe('splitAnnouncement', () => {
 
     it('survives an empty or missing announcement', () => {
         expect(splitAnnouncement('')).toEqual({ label: '', message: '' });
-        expect(splitAnnouncement(undefined)).toEqual({ label: '', message: '' });
+        expect(splitAnnouncement(undefined)).toEqual({
+            label: '',
+            message: '',
+        });
         expect(splitAnnouncement(null)).toEqual({ label: '', message: '' });
     });
 

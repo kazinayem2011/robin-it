@@ -11,7 +11,8 @@
         "test:watch": "vitest",
         "lint": "eslint resources/js --no-warn-ignored",
         "lint:fix": "eslint resources/js --no-warn-ignored --fix",
-        "lint:css-classes": "node scripts/find-unstyled-classes.mjs"
+        "lint:css-classes": "node scripts/find-unstyled-classes.mjs",
+        "lint:radius": "node scripts/check-radius.mjs"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.5",

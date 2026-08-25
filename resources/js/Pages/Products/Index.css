@@ -168,7 +168,7 @@
     top: calc(var(--site-chrome-h, 142px) + 16px);
     padding: 18px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
 }
 
@@ -388,7 +388,7 @@
     min-width: 0;
     padding: 8px 10px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font: inherit;
     font-size: 13px;
 }
@@ -449,7 +449,7 @@
     margin-bottom: 14px;
     padding: 10px 14px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
     font: inherit;
     font-size: 14px;
@@ -460,7 +460,7 @@
 .plp-filters-count {
     margin-left: auto;
     padding: 1px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: var(--color-brand-red, #d1202f);
     color: #fff;
     font-size: 12px;

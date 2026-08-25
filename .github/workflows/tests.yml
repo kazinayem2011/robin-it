@@ -115,6 +115,13 @@ jobs:
       - name: Lint JavaScript
         run: npm run lint
 
+      # Every card, button, input, select and dropdown is meant to be rounded
+      # 8px. A literal typed into any of the twenty-five stylesheets renders
+      # slightly off and is only ever caught by eye — 6px, 10px and 9999px all
+      # got in that way.
+      - name: Check corner rounding
+        run: npm run lint:radius
+
       # React component and hook behaviour. The admin search box once fired an
       # unbounded request loop — 280 requests in 6 seconds — which was likewise
       # invisible to the PHP suite.

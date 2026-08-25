@@ -27,7 +27,7 @@
     justify-content: center;
     background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 3px 6px;
     min-width: 32px;
     text-align: center;
@@ -66,7 +66,7 @@
 .timer-variant-badge {
     background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 9999px;
+    border-radius: var(--radius-full);
     padding: 3px 10px;
 }
 
@@ -86,7 +86,7 @@
 .timer-variant-pill {
     background: rgba(209, 33, 39, 0.12);
     border: 1px solid rgba(209, 33, 39, 0.3);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 4px 12px;
 }
 

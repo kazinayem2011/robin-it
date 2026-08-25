@@ -169,6 +169,9 @@ Route::middleware(['auth'])->group(function () {
 
 // Authenticated Admin Dashboard Routes
 Route::middleware(['auth', 'admin'])->prefix(ApiEndpoints::ADMIN_PREFIX)->name('admin.')->group(function () {
+    // Typing the bare /admin used to 404 — nothing links to it, but it is the
+    // URL an admin reaches for.
+    Route::redirect('/', ApiEndpoints::ADMIN_PREFIX.'/'.ApiEndpoints::ADMIN_DASHBOARD);
     Route::get(ApiEndpoints::ADMIN_DASHBOARD, [AdminDashboardController::class, 'dashboard'])->name('dashboard');
     Route::get(ApiEndpoints::ADMIN_ORDERS, [AdminDashboardController::class, 'orders'])->name('orders');
     Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminDashboardController::class, 'updateOrderStatus'])->name('orders.status');

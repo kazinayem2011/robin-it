@@ -14,7 +14,11 @@ import { useLayoutEffect } from 'react';
  * @param {Array}  deps      re-measure when the content changes
  * @param {number} pixelsPerSecond
  */
-export const useMarqueeDuration = (trackRef, deps = [], pixelsPerSecond = 70) => {
+export const useMarqueeDuration = (
+    trackRef,
+    deps = [],
+    pixelsPerSecond = 70,
+) => {
     useLayoutEffect(() => {
         const track = trackRef.current;
 

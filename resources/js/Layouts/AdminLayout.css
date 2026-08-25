@@ -1214,7 +1214,7 @@
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
     padding: 2px 7px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     text-transform: uppercase;
 }
 
@@ -1222,7 +1222,7 @@
     font-size: 0.62rem;
     font-weight: 800;
     padding: 2px 7px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     line-height: 1.2;
     text-transform: uppercase;
     letter-spacing: 0.4px;
@@ -2393,7 +2393,7 @@
     color: var(--color-text-muted, #8a8f98);
     background: rgba(0, 0, 0, 0.05);
     padding: 2px 6px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
 }
 
 /* ── Receiving ─────────────────────────────────────────────────────────────── */
@@ -2434,7 +2434,7 @@
     margin-bottom: 4px;
     background: none;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     padding: 8px;
     cursor: pointer;
     color: var(--color-text-muted, #8a8f98);
@@ -2481,7 +2481,7 @@
 .admin-adjust-projection {
     margin-top: 12px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(16, 143, 74, 0.08);
     color: #0d7a3f;
     font-size: 13px;
@@ -2512,7 +2512,7 @@
 .admin-ledger-drift {
     margin-bottom: 14px;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(217, 48, 37, 0.08);
     color: #b3261e;
     font-size: 13px;
@@ -2540,7 +2540,7 @@
     margin: 18px 0;
     padding: 16px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.015);
 }
 
@@ -2561,7 +2561,7 @@
     align-items: start;
     padding: 12px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
 }
 
@@ -2579,7 +2579,7 @@
 .admin-variant-stock {
     padding: 9px 12px;
     border: 1px dashed var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     color: var(--color-text-muted, #8a8f98);
     background: rgba(0, 0, 0, 0.02);
@@ -2588,7 +2588,7 @@
 .admin-variant-allocation {
     margin: 12px 0;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 13px;
 }
 
@@ -2605,7 +2605,7 @@
 .admin-variant-warning {
     margin: 12px 0;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(217, 119, 6, 0.1);
     color: #92400e;
     font-size: 13px;
@@ -2620,7 +2620,7 @@
     gap: 10px;
     padding: 9px 12px;
     border: 1px dashed var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.02);
 }
 
@@ -2659,7 +2659,7 @@
     margin: 6px 0 14px;
     padding: 14px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.015);
 }
 
@@ -2678,7 +2678,7 @@
     gap: 7px;
     padding: 6px 11px;
     border: 1.5px solid var(--color-border, #e2e5ea);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: #fff;
     font-size: 13px;
     cursor: pointer;
@@ -2713,7 +2713,7 @@
     padding: 14px 16px;
     border: 1px solid rgba(179, 38, 30, 0.3);
     border-left: 4px solid #b3261e;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(217, 48, 37, 0.06);
     color: #7f1d1b;
 }
@@ -2744,7 +2744,7 @@
     align-self: flex-start;
     margin-top: 4px;
     padding: 4px 8px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.06);
     font-size: 12px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -2763,7 +2763,7 @@
     width: 38px;
     height: 38px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--color-border, #e2e5ea);
     object-fit: cover;
     background: #fff;
@@ -2852,7 +2852,7 @@
     flex: 1 1 180px;
     padding: 12px 14px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
     text-align: left;
 }
@@ -2934,7 +2934,7 @@
     left: 0;
     right: 0;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
     overflow: hidden;
@@ -2985,7 +2985,7 @@
     width: 100%;
     padding: 8px 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: none;
     font: inherit;
     font-size: 14px;
@@ -3023,7 +3023,7 @@
 .admin-supplier-retired {
     margin-left: 8px;
     padding: 2px 7px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: rgba(0, 0, 0, 0.06);
     color: var(--color-text-muted, #8a8f98);
     font-size: 11px;
@@ -3045,7 +3045,7 @@
     gap: 5px;
     padding: 2px 8px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     font-size: 11px;
     white-space: nowrap;
     color: var(--color-text-muted, #6b7280);
@@ -3064,7 +3064,7 @@
     width: 100%;
     padding: 5px 8px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font: inherit;
     font-size: 13px;
     /* Not the shorthand: it would clear the arrow's background-image. */
@@ -3079,7 +3079,7 @@
     gap: 5px;
     margin-top: 4px;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: rgba(217, 119, 6, 0.12);
     color: #92400e;
     font-size: 11px;
@@ -3103,7 +3103,7 @@
     height: 40px;
     margin-right: 12px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background: #fff;
     color: var(--dark-900);
     cursor: pointer;

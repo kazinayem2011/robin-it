@@ -49,7 +49,9 @@
      * A ring rather than a coloured glow. The glow was the one element here
      * that read as dated, and it also bled colour into the panel's whitespace.
      */
-    box-shadow: 0 0 0 3px var(--bg-surface), 0 0 0 4px var(--border-color);
+    box-shadow:
+        0 0 0 3px var(--bg-surface),
+        0 0 0 4px var(--border-color);
 }
 
 .account-avatar-disc img {
@@ -807,7 +809,7 @@
     margin-bottom: 14px;
     padding: 8px 14px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 600;
     color: var(--color-text, #0f172a);

@@ -132,41 +132,55 @@ export default function SupportIndex() {
                 </header>
 
                 <section className="support-channels" aria-label="Contact us">
-                    {channels.map(({ icon: Icon, title, value, hint, href, to }) => {
-                        const inner = (
-                            <>
-                                <span className="support-channel-icon">
-                                    <Icon size={20} />
-                                </span>
-                                <span className="support-channel-body">
-                                    <strong>{title}</strong>
-                                    <span className="support-channel-value">
-                                        {value}
+                    {channels.map(
+                        ({ icon: Icon, title, value, hint, href, to }) => {
+                            const inner = (
+                                <>
+                                    <span className="support-channel-icon">
+                                        <Icon size={20} />
                                     </span>
-                                    <span className="support-channel-hint">
-                                        {hint}
+                                    <span className="support-channel-body">
+                                        <strong>{title}</strong>
+                                        <span className="support-channel-value">
+                                            {value}
+                                        </span>
+                                        <span className="support-channel-hint">
+                                            {hint}
+                                        </span>
                                     </span>
-                                </span>
-                            </>
-                        );
+                                </>
+                            );
 
-                        return to ? (
-                            <Link key={title} href={to} className="support-channel">
-                                {inner}
-                            </Link>
-                        ) : (
-                            <a key={title} href={href} className="support-channel">
-                                {inner}
-                            </a>
-                        );
-                    })}
+                            return to ? (
+                                <Link
+                                    key={title}
+                                    href={to}
+                                    className="support-channel"
+                                >
+                                    {inner}
+                                </Link>
+                            ) : (
+                                <a
+                                    key={title}
+                                    href={href}
+                                    className="support-channel"
+                                >
+                                    {inner}
+                                </a>
+                            );
+                        },
+                    )}
                 </section>
 
                 <section className="support-tools" aria-label="Self service">
                     <h2 className="support-section-title">Do it yourself</h2>
                     <div className="support-tools-grid">
                         {tools.map(({ icon: Icon, title, body, to }) => (
-                            <Link key={title} href={to} className="support-tool">
+                            <Link
+                                key={title}
+                                href={to}
+                                className="support-tool"
+                            >
                                 <span className="support-tool-icon">
                                     <Icon size={18} />
                                 </span>

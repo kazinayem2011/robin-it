@@ -13,7 +13,8 @@ const CATEGORIES = [
     { id: 'monitors', name: 'Monitors', required: false },
 ];
 
-const pick = (...ids) => ids.map((id) => ({ componentId: id, product: { id } }));
+const pick = (...ids) =>
+    ids.map((id) => ({ componentId: id, product: { id } }));
 
 describe('essentialsStatus', () => {
     it('counts the six slots a machine cannot boot without', () => {

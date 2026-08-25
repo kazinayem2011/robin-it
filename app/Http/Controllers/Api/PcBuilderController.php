@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\SavedPcBuild;
 use App\Services\PcCompatibilityService;
 use App\Services\ProductService;
+use App\Support\BrandDetails;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -40,7 +41,7 @@ class PcBuilderController extends Controller
         $build = SavedPcBuild::create([
             'share_code' => strtoupper(Str::random(8)),
             'user_id' => auth('sanctum')->id() ?? auth()->id(),
-            'build_name' => $validated['build_name'] ?? 'Robin IT Custom Build',
+            'build_name' => $validated['build_name'] ?? BrandDetails::name().' Custom Build',
             'components' => $validated['components'],
             'total_price' => $totalPrice,
             'customer_name' => $validated['customer_name'] ?? null,
