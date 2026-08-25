@@ -193,6 +193,10 @@
 }
 
 .component-type-info h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
     font-size: 0.92rem;
     font-weight: 700;
     color: var(--dark-900);
@@ -214,13 +218,6 @@
     font-size: 0.74rem;
     line-height: 1.4;
     color: var(--gray-500);
-}
-
-.component-type-info h4 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 /* Reads as a label rather than a bare asterisk orphaned on its own line. */
@@ -352,6 +349,73 @@
 
 .component-action-col {
     text-align: right;
+}
+
+/*
+ * Choose was a bare <a> with an inline SVG and a text node after it, and no
+ * rule of its own anywhere. An inline SVG sits on the text baseline rather
+ * than on the text's centre, which put the plus 2px above the word next to it,
+ * and without padding or a border it did not read as something to press.
+ */
+.btn-choose-component {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    color: var(--dark-900);
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.btn-choose-component:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.btn-choose-component svg {
+    flex-shrink: 0;
+}
+
+/* Same story: an icon-only control with nothing centring the icon in it. */
+.btn-remove-component {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-remove-component:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.component-live-price {
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.price-dash {
+    color: var(--gray-400);
+    font-weight: 600;
 }
 
 .pc-builder-floating-bar {
