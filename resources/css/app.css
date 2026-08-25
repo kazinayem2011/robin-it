@@ -1726,11 +1726,18 @@ textarea.has-error:focus,
 /* Product Image Box */
 .product-image-box {
     width: 100%;
-    height: 200px;
+    /*
+     * Scales with the card instead of a flat 200px. In a three- or four-column
+     * grid the card is only ~238px wide, so a fixed 200px image was nearly
+     * square and took 42% of the card's height. The cap keeps it from growing
+     * unreasonably on a wide card.
+     */
+    aspect-ratio: 4 / 3;
+    max-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     padding: 10px;
     background: var(--bg-surface-subtle);
     border-radius: var(--radius-sm);
@@ -1797,7 +1804,7 @@ textarea.has-error:focus,
     display: flex;
     flex-direction: column;
     gap: 3px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     min-height: 48px;
 }
 
@@ -1833,7 +1840,7 @@ textarea.has-error:focus,
 
 /* Stock Status Pill */
 .stock-status-row {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .in-stock-pill {
@@ -1909,9 +1916,16 @@ textarea.has-error:focus,
     border-top: 1px solid var(--border-light);
 }
 
+/*
+ * Side by side rather than stacked. Two lines of price cost 41px in a card
+ * that is already tall, and the old price reads perfectly well next to the new
+ * one — which is where a shopper compares them anyway.
+ */
 .price-stack {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 7px;
     /* A flex child will not shrink below its content otherwise, and a price
        like ৳1,75,000 is wide at this size. */
     min-width: 0;
@@ -1929,7 +1943,6 @@ textarea.has-error:focus,
     font-size: 0.75rem;
     color: var(--gray-400);
     text-decoration: line-through;
-    margin-top: 1px;
 }
 
 .btn-add-cart {
