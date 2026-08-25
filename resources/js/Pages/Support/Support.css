@@ -1,0 +1,208 @@
+/* Customer support hub */
+
+.support-page {
+    padding: 24px 0 64px;
+}
+
+.support-header {
+    margin: 8px 0 28px;
+}
+
+.support-header h1 {
+    margin: 0 0 6px;
+    font-size: 1.9rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--dark-900);
+}
+
+.support-header p {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.95rem;
+}
+
+.support-section-title {
+    margin: 0 0 14px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--dark-900);
+}
+
+/* Contact channels */
+.support-channels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.support-channel {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-xs);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    /* A grid child will not shrink below its content otherwise, and an email
+       address is one long unbreakable word. */
+    min-width: 0;
+}
+
+.support-channel:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.support-channel-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.support-channel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.support-channel-body strong {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.support-channel-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--primary);
+    overflow-wrap: anywhere;
+}
+
+.support-channel-hint {
+    font-size: 0.76rem;
+    color: var(--gray-500);
+}
+
+/* Self-service tools */
+.support-tools {
+    margin-bottom: 40px;
+}
+
+.support-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.support-tool {
+    display: block;
+    padding: 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.support-tool:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.support-tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 10px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.support-tool strong {
+    display: block;
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    margin-bottom: 4px;
+}
+
+.support-tool p {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--gray-600);
+}
+
+/* FAQ */
+.support-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.support-faq-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.support-faq-item.is-open {
+    border-color: var(--primary);
+}
+
+.support-faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 15px 18px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    cursor: pointer;
+}
+
+.support-faq-question svg {
+    flex-shrink: 0;
+    color: var(--gray-500);
+    transition: transform var(--transition-fast);
+}
+
+.support-faq-item.is-open .support-faq-question svg {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.support-faq-answer {
+    margin: 0;
+    padding: 0 18px 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--gray-600);
+}
+
+@media (max-width: 600px) {
+    .support-header h1 {
+        font-size: 1.5rem;
+    }
+}
