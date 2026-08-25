@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useFormik } from 'formik';
+import { router } from '@inertiajs/react';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 import AccountLayout from './AccountLayout';
 import AddressFormModal from './AddressFormModal';
+import { deliveryAddressSchema } from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
 
 export default function Addresses({
@@ -13,26 +15,34 @@ export default function Addresses({
 }) {
     const [showAddressModal, setShowAddressModal] = useState(false);
 
-    const addressForm = useForm({
-        name: user?.name || '',
-        phone: user?.phone || '',
-        division: 'Dhaka',
-        district: 'Dhaka',
-        city: '',
-        address: '',
-        is_default: true,
+    /*
+     * Checked here before it is sent. A courier cannot deliver to an address
+     * with no street line or an unreachable number, and the round trip to be
+     * told so is wasted on a mobile connection.
+     */
+    const addressForm = useFormik({
+        initialValues: {
+            name: user?.name || '',
+            phone: user?.phone || '',
+            division: 'Dhaka',
+            district: 'Dhaka',
+            city: '',
+            address: '',
+            is_default: true,
+        },
+        validationSchema: deliveryAddressSchema,
+        onSubmit: (values, { setSubmitting, setErrors, resetForm }) => {
+            router.post(API_ENDPOINTS.ACCOUNT.ADDRESS, values, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowAddressModal(false);
+                    resetForm();
+                },
+                onError: (errors) => setErrors(errors),
+                onFinish: () => setSubmitting(false),
+            });
+        },
     });
-
-    const handleAddressSubmit = (e) => {
-        e.preventDefault();
-        addressForm.post(API_ENDPOINTS.ACCOUNT.ADDRESS, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setShowAddressModal(false);
-                addressForm.reset();
-            },
-        });
-    };
 
     const handleDeleteAddress = (id) => {
         if (confirm('Are you sure you want to remove this delivery address?')) {
@@ -122,7 +132,7 @@ export default function Addresses({
                 showAddressModal={showAddressModal}
                 setShowAddressModal={setShowAddressModal}
                 addressForm={addressForm}
-                handleAddressSubmit={handleAddressSubmit}
+                handleAddressSubmit={addressForm.handleSubmit}
             />
         </AccountLayout>
     );

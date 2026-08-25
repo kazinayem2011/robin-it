@@ -302,11 +302,21 @@ export const Header = () => {
                                 <div
                                     className={`tool-icon-box user-avatar-box ${auth.user.role === 'admin' ? 'user-avatar-admin' : 'user-avatar-customer'}`}
                                 >
-                                    <span className="user-avatar-initials">
-                                        {auth.user.name
-                                            ?.charAt(0)
-                                            .toUpperCase()}
-                                    </span>
+                                    {/* The picture where there is one; the
+                                        initial is the fallback, not the rule. */}
+                                    {auth.user.avatar ? (
+                                        <img
+                                            src={auth.user.avatar}
+                                            alt={auth.user.name || 'Profile'}
+                                            className="user-avatar-photo"
+                                        />
+                                    ) : (
+                                        <span className="user-avatar-initials">
+                                            {auth.user.name
+                                                ?.charAt(0)
+                                                .toUpperCase()}
+                                        </span>
+                                    )}
                                 </div>
                                 <span className="tool-label tool-label-ellipsis">
                                     {auth.user.name?.split(' ')[0]}

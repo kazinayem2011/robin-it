@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { isBDPhone } from '../constants/patterns';
 
 export const updateProfileSchema = Yup.object().shape({
     name: Yup.string()
@@ -8,6 +9,48 @@ export const updateProfileSchema = Yup.object().shape({
     email: Yup.string()
         .required('Email address is required')
         .email('Please enter a valid email address'),
+    /*
+     * Required, and required to be a real Bangladeshi mobile — matching what
+     * DashboardController::updateProfile enforces. A schema that is laxer than
+     * the server just moves the rejection later.
+     *
+     * Uniqueness is the server's alone to judge; the browser cannot know which
+     * numbers other accounts already hold, and that error comes back through
+     * onError.
+     */
+    phone: Yup.string()
+        .required('A mobile number is required')
+        .test(
+            'bd-phone',
+            'Enter a valid 11-digit BD mobile number (e.g. 01711223344)',
+            (value) => isBDPhone(value || ''),
+        ),
+});
+
+/**
+ * A delivery address. The courier reads these, so the parts that get a parcel
+ * to a door are required and the rest is not.
+ */
+export const deliveryAddressSchema = Yup.object().shape({
+    name: Yup.string()
+        .required("Recipient's name is required")
+        .max(120, 'Name cannot exceed 120 characters'),
+    phone: Yup.string()
+        .required('A mobile number is required for delivery')
+        .test(
+            'bd-phone',
+            'Enter a valid 11-digit BD mobile number (e.g. 01711223344)',
+            (value) => isBDPhone(value || ''),
+        ),
+    division: Yup.string().required('Please choose a division'),
+    district: Yup.string()
+        .required('District is required')
+        .max(80, 'District cannot exceed 80 characters'),
+    city: Yup.string().max(120, 'City cannot exceed 120 characters'),
+    address: Yup.string()
+        .required('Street address is required')
+        .min(6, 'Please give enough detail to find the door')
+        .max(255, 'Address cannot exceed 255 characters'),
 });
 
 export const updatePasswordSchema = Yup.object().shape({

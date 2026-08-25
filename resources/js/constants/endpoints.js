@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
         ADDRESS: '/account/address',
         ADDRESS_ITEM: (id) => `/account/address/${id}`,
         PASSWORD: '/account/password',
+        AVATAR: '/account/avatar',
         ORDER_CANCEL: (id) => `/account/orders/${id}/cancel`,
     },
 

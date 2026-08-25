@@ -8,81 +8,156 @@
     min-height: 80vh;
 }
 
-.dashboard-header-banner {
-    background: linear-gradient(
-        135deg,
-        var(--dark-950) 0%,
-        var(--dark-900) 100%
-    );
-    border-radius: var(--radius-lg);
-    padding: 28px 32px;
-    margin-bottom: 28px;
-    color: #ffffff;
+/*
+ * The member panel, at the top of the sidebar.
+ *
+ * This was a full-width banner above the whole page, which on a laptop pushed
+ * the section you had actually clicked below the fold. Beside the nav it
+ * relates to, the content starts at the top of the window.
+ */
+.account-identity {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    padding: 20px 16px 18px;
+    border-bottom: 1px solid var(--border-light);
 }
 
-.user-profile-header-left {
+.account-avatar {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 6px;
 }
 
-.user-avatar-disc {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, var(--primary) 0%, #d32f2f 100%);
+.account-avatar-disc {
+    position: relative;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, #d32f2f 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
+    font-size: 1.7rem;
     font-weight: 900;
     color: #ffffff;
-    box-shadow: 0 6px 18px rgba(234, 72, 79, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 18px rgba(234, 72, 79, 0.35);
 }
 
-.user-meta-info h1 {
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin-bottom: 4px;
+.account-avatar-disc img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.account-avatar-disc.is-busy {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Sits on the rim rather than over the face. */
+.account-avatar-change {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-surface);
+    background: var(--dark-900);
     color: #ffffff;
-    font-family: var(--font-heading);
-}
-
-.user-contact-pills {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 0.8rem;
-    color: var(--gray-300);
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition-fast);
 }
 
-.user-contact-pills span {
+.account-avatar-change:hover:not(:disabled) {
+    background: var(--primary);
+}
+
+.account-avatar-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    cursor: pointer;
+}
+
+.account-avatar-remove:hover:not(:disabled) {
+    color: var(--primary);
+}
+
+.account-identity-name {
+    margin: 12px 0 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    /* A long name must wrap rather than widen the sidebar. */
+    overflow-wrap: anywhere;
+}
+
+.account-identity-badge {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
-.user-vip-badge {
-    background: rgba(234, 72, 79, 0.18);
-    border: 1px solid var(--primary);
-    color: #ffa4a8;
-    padding: 6px 14px;
-    border-radius: var(--radius-full);
-    font-size: 0.76rem;
-    font-weight: 800;
+.account-identity-meta {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.account-identity-meta li {
     display: flex;
     align-items: center;
-    gap: 6px;
-    letter-spacing: 0.5px;
+    gap: 7px;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    /* A flex child will not shrink below its content, and an email address is
+       one long unbreakable word in a 260px column. */
+    min-width: 0;
 }
 
-/* 2-Column Dashboard Grid */
+.account-identity-meta li span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-identity-meta li svg {
+    flex-shrink: 0;
+    color: var(--gray-400);
+}
+
+.account-identity-meta .is-verified,
+.account-identity-meta .is-verified svg {
+    color: var(--success, #16a34a);
+}
+
 .dashboard-content-grid {
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -95,8 +170,18 @@
     background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 12px;
+    /* No padding of its own: the member panel needs to reach the card's edges
+       for its divider to span the full width. The nav below sets its own. */
+    padding: 0;
     box-shadow: var(--shadow-xs);
+    /* Follows the page rather than scrolling away from the section it labels. */
+    position: sticky;
+    top: 20px;
+    align-self: start;
+}
+
+.dash-nav-menu {
+    padding: 12px;
 }
 
 .dash-nav-menu {

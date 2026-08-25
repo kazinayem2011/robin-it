@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\ComparisonController;
+use App\Http\Controllers\Customer\AvatarController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
@@ -154,6 +155,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get(ApiEndpoints::DASHBOARD_ADDRESSES, [DashboardController::class, 'addresses'])->name('dashboard.addresses');
     Route::get(ApiEndpoints::DASHBOARD_PROFILE, [DashboardController::class, 'profile'])->name('dashboard.profile');
     Route::post(ApiEndpoints::ACCOUNT_PROFILE, [DashboardController::class, 'updateProfile'])->name('account.profile');
+    Route::post(ApiEndpoints::ACCOUNT_AVATAR, [AvatarController::class, 'store'])->name('account.avatar');
+    Route::delete(ApiEndpoints::ACCOUNT_AVATAR, [AvatarController::class, 'destroy'])->name('account.avatar.delete');
     Route::post(ApiEndpoints::ACCOUNT_ADDRESS, [DashboardController::class, 'saveAddress'])->name('account.address');
     Route::delete(ApiEndpoints::ACCOUNT_ADDRESS_ITEM, [DashboardController::class, 'deleteAddress'])->name('account.address.delete');
     Route::put(ApiEndpoints::ACCOUNT_PASSWORD, [DashboardController::class, 'updatePassword'])->name('account.password');

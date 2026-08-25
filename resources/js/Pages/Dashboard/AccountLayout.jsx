@@ -15,6 +15,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { formatBdPhone } from '@/utils/formatters';
+import AvatarUploader from './AvatarUploader';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
 import './Dashboard.css';
@@ -83,42 +84,45 @@ export default function AccountLayout({
 
             <div className="dashboard-layout-container">
                 <div className="container">
-                    <div className="dashboard-header-banner">
-                        <div className="user-profile-header-left">
-                            <div className="user-avatar-disc">
-                                {user?.name
-                                    ? user.name.charAt(0).toUpperCase()
-                                    : 'U'}
-                            </div>
-                            <div className="user-meta-info">
-                                <h1>{user?.name}</h1>
-                                <div className="user-contact-pills">
-                                    <span>
-                                        <Mail size={14} /> {user?.email}
-                                    </span>
-                                    <span>
-                                        <Phone size={14} /> 🇧🇩{' '}
-                                        {formatBdPhone(user?.phone)}
-                                    </span>
-                                    <span>
-                                        <ShieldCheck
-                                            size={14}
-                                            className="text-emerald"
-                                        />{' '}
-                                        Verified Member
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="user-vip-badge">
-                            <Award size={16} />
-                            <span>TECHCLUB VIP ({techPoints} PTS)</span>
-                        </div>
-                    </div>
-
+                    {/*
+                     * The member details used to sit in a full-width banner
+                     * above everything, which pushed the section itself below
+                     * the fold on a laptop. They belong beside the nav they
+                     * relate to, so the content starts at the top of the page.
+                     */}
                     <div className="dashboard-content-grid">
                         <aside className="dashboard-sidebar-card">
+                            <div className="account-identity">
+                                <AvatarUploader user={user} />
+
+                                <h1 className="account-identity-name">
+                                    {user?.name}
+                                </h1>
+
+                                <span className="account-identity-badge">
+                                    <Award size={13} />
+                                    {techPoints} pts
+                                </span>
+
+                                <ul className="account-identity-meta">
+                                    <li title={user?.email}>
+                                        <Mail size={13} />
+                                        <span>{user?.email}</span>
+                                    </li>
+                                    <li>
+                                        <Phone size={13} />
+                                        <span>
+                                            {formatBdPhone(user?.phone) ||
+                                                'No number yet'}
+                                        </span>
+                                    </li>
+                                    <li className="is-verified">
+                                        <ShieldCheck size={13} />
+                                        <span>Verified member</span>
+                                    </li>
+                                </ul>
+                            </div>
+
                             <ul className="dash-nav-menu">
                                 {items.map(
                                     ({

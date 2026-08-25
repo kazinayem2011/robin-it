@@ -166,6 +166,8 @@ class ApiEndpoints
 
     public const ACCOUNT_PASSWORD = '/account/password';
 
+    public const ACCOUNT_AVATAR = '/account/avatar';
+
     public const ACCOUNT_ORDER_CANCEL = '/account/orders/{id}/cancel';
 
     /** Printable invoice, for the customer and the admin alike. */
