@@ -4,37 +4,113 @@
  */
 
 /*
- * The shop's name comes from Site Settings, which the server resolves and
- * shares on every page as `brand_name`. It used to be hardcoded here, so the
- * admin could rename the shop and 21 page titles would carry on saying
- * something else. This holds whatever the server last sent; the literal below
- * is only what renders before the first page props arrive.
+ * Branding comes from Site Settings, which the server shares with every page.
+ *
+ * These were plain literals, so the admin could edit the shop's name, address,
+ * hotline or support address and the site carried on showing something else —
+ * the footer's legal name and contact block, the header's phone number, 21
+ * page titles. Worse, they had drifted apart: the hotline here said 16793
+ * while the shop's actual number was 16789.
+ *
+ * The literals survive as the fallback, which is all that renders in the
+ * moment before the first page props arrive, and all an install has before
+ * anybody fills the settings in.
  */
-let brandName = 'Robins Computer';
+const FALLBACKS = {
+    name: 'Robins Computer',
+    legalName: 'Robins Computer & Technology Ltd',
+    tagline: 'The Store of Technology',
+    hotline: '16789',
+    hotlineHours: '9:00 AM - 8:00 PM (Everyday)',
+    salesEmail: 'sales@robinscomputer.com.bd',
+    supportEmail: 'support@robinscomputer.com.bd',
+    headOffice: 'Level 4, IDB Bhaban, Agargaon, Dhaka-1207',
+    serviceCenter: 'Multiplan Center, Dhaka-1205',
+    logoSrc: '/images/logo.png',
+};
 
+/** Which setting key backs each field. */
+const SETTING_KEYS = {
+    name: 'site_name',
+    legalName: 'site_legal_name',
+    tagline: 'site_tagline',
+    hotline: 'hotline_number',
+    hotlineHours: 'hotline_hours',
+    salesEmail: 'sales_email',
+    supportEmail: 'support_email',
+    headOffice: 'site_address',
+    serviceCenter: 'service_center_address',
+    logoSrc: 'site_logo',
+};
+
+const resolved = { ...FALLBACKS };
+
+/** A setting only counts if it has something in it. */
+const usable = (value) => typeof value === 'string' && value.trim() !== '';
+
+/**
+ * Apply the settings the server shared. Anything blank or missing keeps its
+ * fallback rather than blanking the site.
+ */
+export const setSiteSettings = (settings) => {
+    if (!settings || typeof settings !== 'object') return;
+
+    for (const [field, key] of Object.entries(SETTING_KEYS)) {
+        if (usable(settings[key])) {
+            resolved[field] = settings[key].trim();
+        }
+    }
+};
+
+/**
+ * The shop's name, resolved server-side — site_name can be absent from the
+ * table entirely, and every page title needs something to fall back on.
+ */
 export const setBrandName = (name) => {
-    if (typeof name === 'string' && name.trim() !== '') {
-        brandName = name.trim();
+    if (usable(name)) {
+        resolved.name = name.trim();
     }
 };
 
 export const siteConfig = {
     get name() {
-        return brandName;
+        return resolved.name;
     },
-    tagline: 'The Store of Technology',
-    legalName: 'Robins Computer & Technology Ltd.',
-    hotline: '16793',
-    hotlineHours: '9:00 AM - 8:00 PM (Everyday)',
-    salesEmail: 'sales@robinscomputer.com.bd',
-    supportEmail: 'support@robinscomputer.com.bd',
+    get tagline() {
+        return resolved.tagline;
+    },
+    /*
+     * No trailing full stop: the footer adds its own, so a legal name written
+     * "… Ltd." rendered as "Robins Computer & Technology Ltd.. All Rights
+     * Reserved".
+     */
+    get legalName() {
+        return resolved.legalName.replace(/\.\s*$/, '');
+    },
+    get hotline() {
+        return resolved.hotline;
+    },
+    get hotlineHours() {
+        return resolved.hotlineHours;
+    },
+    get salesEmail() {
+        return resolved.salesEmail;
+    },
+    get supportEmail() {
+        return resolved.supportEmail;
+    },
+    get headOffice() {
+        return resolved.headOffice;
+    },
+    get serviceCenter() {
+        return resolved.serviceCenter;
+    },
 
-    headOffice: 'Level 4, IDB Bhaban, Agargaon, Dhaka-1207',
-    serviceCenter: 'Multiplan Center, Dhaka-1205',
-
-    logo: {
-        src: '/images/logo.png',
-        alt: 'Robins Computer — The Store of Technology',
+    get logo() {
+        return {
+            src: resolved.logoSrc,
+            alt: `${resolved.name} — ${resolved.tagline}`,
+        };
     },
     productPlaceholder: '/images/product-placeholder.svg',
 

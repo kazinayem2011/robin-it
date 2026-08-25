@@ -216,7 +216,7 @@ export const Footer = () => {
                 <div className="container footer-bottom-inner">
                     <p className="copyright-text">
                         &copy; {new Date().getFullYear()} {siteConfig.legalName}
-                        . All Rights Reserved. Built with Precision & Care.
+                        . All Rights Reserved. Built with Precision &amp; Care.
                     </p>
                     <div className="payment-partners-strip">
                         <span className="payment-label">

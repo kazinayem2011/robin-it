@@ -192,6 +192,9 @@ class DynamicContentSeeder extends Seeder
         );
 
         SiteSetting::set('announcement_badge', 'LIVE OFFER', 'announcement', 'Announcement Badge Text');
+        SiteSetting::set('site_legal_name', 'Robins Computer & Technology Ltd', 'general', 'Registered Legal Name');
+        SiteSetting::set('sales_email', 'sales@robinscomputer.com.bd', 'contact', 'Sales Email');
+        SiteSetting::set('service_center_address', 'Multiplan Center, Dhaka-1205', 'contact', 'Service Centre Address');
         SiteSetting::set('hotline_number', '16789', 'contact', 'Customer Hotline');
         SiteSetting::set('hotline_hours', '9:00 AM – 9:00 PM (Everyday)', 'contact', 'Hotline Operating Hours');
         SiteSetting::set('free_shipping_threshold', '50000', 'general', 'Free Shipping Threshold (BDT)');

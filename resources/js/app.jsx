@@ -5,7 +5,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-import siteConfig, { setBrandName } from './constants/siteConfig';
+import siteConfig, {
+    setBrandName,
+    setSiteSettings,
+} from './constants/siteConfig';
 import { withBrand } from './utils/pageTitle';
 
 /*
@@ -35,6 +38,9 @@ createInertiaApp({
     setup({ el, App, props }) {
         // Before the first render, so the very first page title already uses
         // the name the shop set rather than the literal this module ships with.
+        // Settings first, then the resolved name, which wins because the server
+        // has already applied its own fallback to it.
+        setSiteSettings(props.initialPage?.props?.site_settings);
         setBrandName(props.initialPage?.props?.brand_name);
 
         const root = createRoot(el);

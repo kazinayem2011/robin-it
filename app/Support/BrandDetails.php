@@ -29,14 +29,49 @@ class BrandDetails
     }
 
     /**
+     * The registered company name, for the footer copyright and anywhere else
+     * the legal entity is named rather than the shop.
+     *
+     * Any trailing full stop is trimmed: it is followed by ". All Rights
+     * Reserved", and a name written "… Ltd." rendered as "Ltd..".
+     */
+    public static function legalName(): string
+    {
+        $legal = trim((string) SiteSetting::get('site_legal_name', ''));
+
+        return rtrim($legal !== '' ? $legal : self::name(), '. ');
+    }
+
+    /**
+     * The shop's phone number.
+     *
+     * hotline_number is what the storefront reads; site_hotline is the older
+     * key the admin form used to write, kept so an install that only has that
+     * one does not lose its number.
+     */
+    public static function hotline(): string
+    {
+        foreach (['hotline_number', 'site_hotline'] as $key) {
+            $value = trim((string) SiteSetting::get($key, ''));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '16789';
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function all(): array
     {
         return [
             'name' => self::name(),
+            'legal_name' => self::legalName(),
             'tagline' => SiteSetting::get('site_tagline', 'The Store of Technology'),
-            'hotline' => SiteSetting::get('site_hotline', '09600-ROBIN-IT'),
+            'hotline' => self::hotline(),
             'address' => SiteSetting::get(
                 'site_address',
                 'Shop #301-304, Level 3, IDB Bhaban, Agargaon, Dhaka - 1207'
@@ -124,8 +159,6 @@ class BrandDetails
     /** Digits only, for a tel: link. */
     public static function hotlineHref(): string
     {
-        $hotline = SiteSetting::get('site_hotline', '09600-ROBIN-IT');
-
-        return 'tel:'.preg_replace('/[^0-9+]/', '', $hotline);
+        return 'tel:'.preg_replace('/[^0-9+]/', '', self::hotline());
     }
 }

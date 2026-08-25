@@ -96,9 +96,26 @@ export default function AdminSettings({
             site_address:
                 initialMap.site_address ||
                 'Shop #301-304, Level 3, IDB Bhaban, Agargaon, Dhaka',
-            site_hotline: initialMap.site_hotline || '09600-ROBIN-IT',
+            site_legal_name:
+                initialMap.site_legal_name ||
+                'Robins Computer & Technology Ltd',
+            /*
+             * hotline_number, not site_hotline: the header and footer read the
+             * former, so edits to the latter changed nothing anyone could see.
+             * The old key is carried over as the starting value for an install
+             * that only has that one.
+             */
+            hotline_number:
+                initialMap.hotline_number || initialMap.site_hotline || '16789',
+            hotline_hours:
+                initialMap.hotline_hours || '9:00 AM - 8:00 PM (Everyday)',
             support_email:
                 initialMap.support_email || 'support@robinscomputer.com',
+            sales_email:
+                initialMap.sales_email || 'sales@robinscomputer.com.bd',
+            service_center_address:
+                initialMap.service_center_address ||
+                'Multiplan Center, Dhaka-1205',
             announcement_text:
                 initialMap.announcement_text ||
                 '⚡ Ramadan Tech Fest: Up to 15% Instant Discount on All Genuine Builds! Cash on Delivery Nationwide.',
@@ -310,14 +327,37 @@ export default function AdminSettings({
                                     </small>
                                 </div>
 
+                                <div className="admin-field-group">
+                                    <FormInput
+                                        label="Registered Legal Name"
+                                        name="site_legal_name"
+                                        formik={formik}
+                                        placeholder="Robins Computer & Technology Ltd"
+                                    />
+                                    <small className="admin-field-hint">
+                                        The registered company name, used in the
+                                        footer copyright line. Leave off any
+                                        trailing full stop — one is added.
+                                    </small>
+                                </div>
+
                                 <div className="form-row-2col">
                                     <FormInput
                                         label="Official Hotline Phone"
-                                        name="site_hotline"
+                                        name="hotline_number"
                                         required
                                         formik={formik}
-                                        placeholder="09600-ROBIN-IT"
+                                        placeholder="16789"
                                     />
+                                    <FormInput
+                                        label="Hotline Opening Hours"
+                                        name="hotline_hours"
+                                        formik={formik}
+                                        placeholder="9:00 AM - 8:00 PM (Everyday)"
+                                    />
+                                </div>
+
+                                <div className="form-row-2col">
                                     <FormInput
                                         label="Official Support Email"
                                         name="support_email"
@@ -325,6 +365,13 @@ export default function AdminSettings({
                                         required
                                         formik={formik}
                                         placeholder="support@robinscomputer.com"
+                                    />
+                                    <FormInput
+                                        label="Sales Email"
+                                        name="sales_email"
+                                        type="email"
+                                        formik={formik}
+                                        placeholder="sales@robinscomputer.com.bd"
                                     />
                                 </div>
 
@@ -335,6 +382,13 @@ export default function AdminSettings({
                                     rows={2}
                                     formik={formik}
                                     placeholder="Shop #301-304, Level 3, IDB Bhaban, Agargaon, Dhaka"
+                                />
+
+                                <FormInput
+                                    label="Service Centre Address"
+                                    name="service_center_address"
+                                    formik={formik}
+                                    placeholder="Multiplan Center, Dhaka-1205"
                                 />
                             </div>
                         </div>
