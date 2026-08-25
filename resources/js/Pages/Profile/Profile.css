@@ -66,7 +66,11 @@
    out as an oversized unstyled logo.
    --------------------------------------------------------------- */
 .profile-page-wrapper {
-    padding: 28px 0 60px;
+    /* Top and bottom only: this element also carries .container, and a
+       shorthand would zero the left and right and take the container's 16px
+       with it. */
+    padding-top: 28px;
+    padding-bottom: 60px;
 }
 
 .profile-breadcrumbs {

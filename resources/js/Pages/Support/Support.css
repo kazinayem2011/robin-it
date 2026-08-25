@@ -1,7 +1,14 @@
 /* Customer support hub */
 
+/*
+ * Top and bottom only. This element also carries .container, and a padding
+ * shorthand here would set the left and right to 0 as well, dropping the
+ * container's own 16px — which left the page flush to the window edge while
+ * the header and footer stayed inset.
+ */
 .support-page {
-    padding: 24px 0 64px;
+    padding-top: 24px;
+    padding-bottom: 64px;
 }
 
 .support-header {
