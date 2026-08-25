@@ -473,17 +473,10 @@
     text-decoration: underline;
 }
 
-@media (prefers-color-scheme: dark) {
-    .cart-alert-banner {
-        background: #2a1416;
-        border-color: #5c2b2f;
-        color: #f5b5ba;
-    }
-
-    .cart-alert-link {
-        color: #f5b5ba;
-    }
-}
+/*
+ * No dark-mode block here on purpose — see the note in PcBuilder.css. Without a
+ * site-wide dark palette this banner turned dark against a light checkout.
+ */
 
 /* The chosen option, so a cart holding both the 16GB and the 32GB of one
    product reads as two distinguishable lines. */

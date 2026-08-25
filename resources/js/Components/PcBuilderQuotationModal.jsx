@@ -20,9 +20,35 @@ export const PcBuilderQuotationModal = ({
     totalPrice = 0,
     estimatedWattage = 450,
 }) => {
-    const [clientName, setClientName] = useState('Valued Customer');
+    const [clientName, setClientName] = useState('');
     const [clientPhone, setClientPhone] = useState('');
-    const quoteRef = `EST-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    /*
+     * The reference was computed in the render body, so any re-render produced
+     * a different number — the quotation would renumber itself as soon as
+     * anything on the page changed. It is issued once, when the sheet opens.
+     *
+     * Six random digits alone collide often enough to matter for a shop that
+     * issues these daily, so the date leads and only the tail is random: the
+     * number sorts by day and two quotes only clash if they are raised on the
+     * same date and draw the same tail.
+     */
+    const [quoteRef, setQuoteRef] = useState('');
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const now = new Date();
+        const stamp = [
+            String(now.getFullYear()).slice(2),
+            String(now.getMonth() + 1).padStart(2, '0'),
+            String(now.getDate()).padStart(2, '0'),
+        ].join('');
+        const tail = Math.floor(1000 + Math.random() * 9000);
+
+        setQuoteRef(`EST-${stamp}-${tail}`);
+    }, [isOpen]);
+
     const today = new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
@@ -74,7 +100,30 @@ export const PcBuilderQuotationModal = ({
                             Official Hardware Price Quotation Sheet
                         </strong>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    {/*
+                     * The sheet displayed a customer name and phone but offered
+                     * no way to enter either, so every "official quotation"
+                     * went out addressed to "Valued Customer". These live in
+                     * the toolbar, which the print stylesheet already hides.
+                     */}
+                    <div className="quotation-client-fields">
+                        <input
+                            type="text"
+                            value={clientName}
+                            onChange={(e) => setClientName(e.target.value)}
+                            placeholder="Customer name"
+                            aria-label="Customer name for this quotation"
+                        />
+                        <input
+                            type="tel"
+                            value={clientPhone}
+                            onChange={(e) => setClientPhone(e.target.value)}
+                            placeholder="Contact phone"
+                            aria-label="Customer phone for this quotation"
+                        />
+                    </div>
+
+                    <div className="quotation-toolbar-actions">
                         <button
                             type="button"
                             className="btn btn-primary btn-sm"
@@ -132,7 +181,8 @@ export const PcBuilderQuotationModal = ({
                     {/* Client Information */}
                     <div className="quotation-client-bar">
                         <div>
-                            <strong>Quotation For:</strong> {clientName}
+                            <strong>Quotation For:</strong>{' '}
+                            {clientName.trim() || 'Valued Customer'}
                         </div>
                         {clientPhone && (
                             <div>

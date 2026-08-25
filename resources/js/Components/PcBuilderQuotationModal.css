@@ -36,6 +36,64 @@
     color: #ffffff;
 }
 
+/* Entering who the quotation is for. On-screen only; the toolbar is hidden
+   when printing, so these never appear on the sheet itself. */
+.quotation-client-fields {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    /* A flex child will not shrink below its content otherwise, and this sits
+       between a title and two buttons. */
+    min-width: 0;
+    justify-content: flex-end;
+}
+
+.quotation-client-fields input {
+    width: 150px;
+    min-width: 0;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-size: 0.8rem;
+}
+
+.quotation-client-fields input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.quotation-client-fields input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.quotation-toolbar-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+    .quotation-sheet-toolbar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .quotation-client-fields {
+        order: 3;
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .quotation-client-fields input {
+        flex: 1;
+        width: auto;
+    }
+}
+
 .quotation-sheet-body {
     padding: 36px 40px;
     overflow-y: auto;

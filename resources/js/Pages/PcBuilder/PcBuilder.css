@@ -751,34 +751,16 @@
     color: #8a6100;
 }
 
-@media (prefers-color-scheme: dark) {
-    .pc-compat-panel.is-error {
-        background: #2a1416;
-        border-color: #5c2b2f;
-        color: #f5b5ba;
-    }
+/*
+ * No dark-mode block here on purpose.
+ *
+ * The site has no dark palette — body keeps its light background whatever the
+ * OS asks for — so a component that darkened on its own became a dark panel on
+ * a light page. These compatibility panels used to do exactly that. If a real
+ * dark theme is ever built, it belongs in the token layer in app.css, not in
+ * one component at a time.
+ */
 
-    .pc-compat-panel.is-warning {
-        background: #2a2413;
-        border-color: #5c4f22;
-        color: #f0d391;
-    }
-
-    .pc-compat-panel.is-ok {
-        background: #13291d;
-        border-color: #2c5c3e;
-        color: #a7e3bf;
-    }
-
-    /*
-     * The stock badge and the build-gap notice deliberately have no dark
-     * variant. There is no dark palette for the site as a whole — body stays
-     * on the light background whatever the OS asks for — so a component that
-     * darkens on its own ends up as a dark panel on a light page. The compat
-     * panels above already do that and should be reconsidered together with a
-     * real dark theme rather than one component at a time.
-     */
-}
 
 /*
  * Clearance for the sticky summary bar, which was covering the final slot so
