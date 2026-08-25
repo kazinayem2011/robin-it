@@ -83,6 +83,20 @@
 }
 
 /*
+ * The heading stays where it is. It is the part that says what the ticker is
+ * for, so chasing it across the bar to read "Flash Deals Live" makes the bar
+ * harder to use, not livelier.
+ */
+.ticker-label {
+    flex-shrink: 0;
+    margin: 0;
+    color: var(--white);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/*
  * The announcement scrolls instead of being clipped. Same approach as the
  * category and brand marquees on the home page: the content is rendered twice
  * and the track travels exactly one copy's width, so the loop has no seam.

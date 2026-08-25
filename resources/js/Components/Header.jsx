@@ -21,6 +21,7 @@ import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import { getCategoryIcon } from '../utils/iconMap';
+import { splitAnnouncement } from '../utils/announcement';
 import { categoryService, settingService } from '../services';
 import useAppStore from '../store/useAppStore';
 
@@ -110,6 +111,10 @@ export const Header = () => {
         siteSettings.announcement_ticker ||
         '⚡ Flash Deals Live: Save up to 40% OFF on Gaming Laptops & Graphics Cards! Free 64-District Express Delivery on orders over ৳50,000.';
 
+    // The heading stays put; only the offer itself travels.
+    const { label: announcementLabel, message: announcementMessage } =
+        splitAnnouncement(announcement);
+
     /*
      * The announcement is editable, so its width is not known ahead of time.
      * A fixed duration would mean a long message races past and a short one
@@ -144,7 +149,7 @@ export const Header = () => {
         observer.observe(track);
 
         return () => observer.disconnect();
-    }, [announcement]);
+    }, [announcementMessage]);
 
     return (
         <header className="site-header-wrapper">
@@ -164,14 +169,19 @@ export const Header = () => {
                          * the second copy is hidden from screen readers, which
                          * would otherwise announce it all again.
                          */}
+                        {announcementLabel && (
+                            <p className="ticker-label">{announcementLabel}</p>
+                        )}
                         <div className="ticker-marquee">
                             <div
                                 className="ticker-marquee-track"
                                 ref={marqueeRef}
                             >
-                                <p className="ticker-text">{announcement}</p>
+                                <p className="ticker-text">
+                                    {announcementMessage}
+                                </p>
                                 <p className="ticker-text" aria-hidden="true">
-                                    {announcement}
+                                    {announcementMessage}
                                 </p>
                             </div>
                         </div>
