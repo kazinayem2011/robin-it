@@ -15,7 +15,7 @@ import {
 import useAppStore from '../../store/useAppStore';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { useWishlist } from '../../hooks';
+import { useWishlist, useAddToCart } from '../../hooks';
 import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
@@ -27,6 +27,7 @@ export default function ProductListing({ categorySlug }) {
     const [totalCount, setTotalCount] = useState(0);
     const [sort, setSort] = useState('latest');
     const { wishlistIds, toggleWishlist } = useWishlist();
+    const addToCart = useAddToCart();
     const [loadError, setLoadError] = useState(null);
     const [facets, setFacets] = useState(null);
     // Everything the shopper has narrowed by, kept in one object so a change
@@ -124,23 +125,6 @@ export default function ProductListing({ categorySlug }) {
      * button in the shop did nothing at all — no request, no message, no
      * navigation.
      */
-    const addToCart = async (product) => {
-        // A product sold by option cannot be added from a card; the shopper
-        // has to pick one first.
-        if (product.has_variants) {
-            router.visit(ROUTES.PRODUCT_DETAIL(product.slug));
-
-            return;
-        }
-
-        try {
-            await cartService.addToCart(product.id, 1);
-            useAppStore.getState().fetchCartCount();
-            toast.success(`Added "${product.name}" to your cart.`);
-        } catch (error) {
-            toast.error(error?.message || 'Could not add that to your cart.');
-        }
-    };
 
     // Prefer the catalogue's own name for the category. Prettifying the slug
     // turned "pc-case" into "Pc Case", which is not what the shop calls it.

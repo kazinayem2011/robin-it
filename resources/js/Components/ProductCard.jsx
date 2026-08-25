@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ShoppingCart,
     Heart,
@@ -33,6 +33,7 @@ export const ProductCard = ({
     // product and then with one changes its hook count and throws
     // "Rendered more hooks than during the previous render".
     const [showQuickView, setShowQuickView] = useState(false);
+    const [buying, setBuying] = useState(false);
 
     if (!product) return null;
 
@@ -71,6 +72,31 @@ export const ProductCard = ({
         e.stopPropagation();
         if (onAddToCart) {
             onAddToCart(product);
+        }
+    };
+
+    /*
+     * The card already offers add-to-cart on the icon rail, so the button does
+     * the other thing: it adds and takes the shopper to checkout. The label was
+     * "Buy" once before while only adding to the cart, which reads as going to
+     * checkout and does not — so this only navigates when the product actually
+     * reached the cart. A product with options routes to its own page instead,
+     * because it cannot be bought without choosing one.
+     */
+    const handleBuyNow = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!onAddToCart || buying) return;
+
+        setBuying(true);
+
+        try {
+            const added = await Promise.resolve(onAddToCart(product));
+
+            if (added) router.visit(ROUTES.CHECKOUT);
+        } finally {
+            setBuying(false);
         }
     };
 
@@ -122,6 +148,7 @@ export const ProductCard = ({
     );
     const canBuy = inStock || isPreorder;
 
+    // The rail icon adds to the cart; the button buys.
     const cartActionLabel = isPreorder
         ? 'Pre-order'
         : !inStock
@@ -129,6 +156,14 @@ export const ProductCard = ({
           : hasOptions
             ? 'Choose options'
             : 'Add to cart';
+
+    const buyActionLabel = isPreorder
+        ? 'Pre-order'
+        : !inStock
+          ? 'Out of stock'
+          : hasOptions
+            ? 'Choose options'
+            : 'Buy Now';
 
     if (variant === 'flash') {
         return (
@@ -280,17 +315,17 @@ export const ProductCard = ({
 
                             <button
                                 type="button"
-                                onClick={handleAddToCart}
+                                onClick={handleBuyNow}
                                 className="btn-add-cart"
-                                disabled={!canBuy}
-                                title={cartActionLabel}
+                                disabled={!canBuy || buying}
+                                title={buyActionLabel}
                             >
                                 <ShoppingCart size={16} />
                                 <span>
                                     {isPreorder
                                         ? 'Pre-order'
                                         : inStock
-                                          ? 'Add to Cart'
+                                          ? 'Buy Now'
                                           : 'Sold out'}
                                 </span>
                             </button>
@@ -319,7 +354,7 @@ export const ProductCard = ({
 
                 {/* Quick Floating Action Tools */}
                 <div className="card-floating-actions">
-                        <button
+                    <button
                         type="button"
                         onClick={handleAddToCart}
                         className="card-action-btn card-action-cart"
@@ -425,17 +460,17 @@ export const ProductCard = ({
                          */}
                         <button
                             type="button"
-                            onClick={handleAddToCart}
+                            onClick={handleBuyNow}
                             className="btn-add-cart"
-                            disabled={!canBuy}
-                            title={cartActionLabel}
+                            disabled={!canBuy || buying}
+                            title={buyActionLabel}
                         >
                             <ShoppingCart size={16} />
                             <span>
                                 {isPreorder
                                     ? 'Pre-order'
                                     : inStock
-                                      ? 'Add to Cart'
+                                      ? 'Buy Now'
                                       : 'Sold out'}
                             </span>
                         </button>

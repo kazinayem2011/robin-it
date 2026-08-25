@@ -37,7 +37,7 @@ import { getCategoryIcon } from '../utils/iconMap';
 import { formatBdt } from '../utils/formatters';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
-import { useWishlist } from '../hooks';
+import { useWishlist, useAddToCart } from '../hooks';
 import './Welcome.css';
 
 export default function Welcome({ banners = [], blogs = [] }) {
@@ -53,6 +53,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
     const [activeHeroSlide, setActiveHeroSlide] = useState(0);
     const [activeTab, setActiveTab] = useState('all');
     const { wishlistIds, toggleWishlist } = useWishlist();
+    const addToCart = useAddToCart();
 
     // Interactive PC Builder Mini Configurator State (100% Dynamic Keys)
     const [builderCpu, setBuilderCpu] = useState('');
@@ -459,6 +460,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                     isWishlisted={wishlistIds.includes(
                                         product.id,
                                     )}
+                                    onAddToCart={addToCart}
                                     onToggleWishlist={() =>
                                         toggleWishlist(product.id)
                                     }
@@ -604,6 +606,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                     isWishlisted={wishlistIds.includes(
                                         product.id,
                                     )}
+                                    onAddToCart={addToCart}
                                     onToggleWishlist={() =>
                                         toggleWishlist(product.id)
                                     }
