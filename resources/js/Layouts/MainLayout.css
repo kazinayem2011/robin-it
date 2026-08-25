@@ -1079,7 +1079,7 @@
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.18s ease;
-    border-radius: 2px 2px 0 0;
+    border-radius: 8px 2px 0 0;
 }
 
 .nav-link-main:hover,
@@ -1115,7 +1115,7 @@
     font-size: 0.6rem;
     font-weight: 800;
     padding: 2px 7px;
-    border-radius: 4px;
+    border-radius: 8px;
     line-height: 1.2;
     text-transform: uppercase;
     letter-spacing: 0.4px;

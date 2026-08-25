@@ -822,7 +822,7 @@
     margin-top: 18px;
     padding: 16px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 10px;
+    border-radius: 8px;
     background: rgba(0, 0, 0, 0.02);
 }
 
@@ -897,7 +897,7 @@
     margin-top: 18px;
     padding: 14px 16px;
     border: 1px solid var(--color-border, #e2e5ea);
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .pdp-branches-label {

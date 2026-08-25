@@ -165,20 +165,27 @@
     --shadow-glow: 0 0 25px var(--primary-glow);
 
     /*
-     * Border radii.
+     * Border radii — one corner, 8px, on every box.
      *
-     * These were all set to 8px, which flattened the whole interface: a badge,
-     * a button, a card and a modal all had the same corner, so nothing read as
-     * bigger or smaller than anything else. Worse, --radius-full was 8px too,
-     * so the forty-odd rules written expecting a pill — status chips, tags,
-     * counts, avatars — all rendered as small boxes.
+     * The scale that was here graded a badge, a button, a card and a modal
+     * differently. That is a defensible way to build an interface, but it is
+     * not the one this shop wants: everything square-cornered is to read as
+     * the same family, so every step is 8px and the names are kept only so
+     * the existing rules do not all have to change.
+     *
+     * --radius-full is the deliberate exception and must stay a large number.
+     * Roughly forty rules use it for something that is meant to be a pill or a
+     * circle — status chips, tags, counts, the avatar, the round card actions —
+     * and it was 8px once before, which turned every one of them into a small
+     * box. Circles drawn with border-radius: 50% are left alone for the same
+     * reason.
      */
-    --radius-xs: 6px;
+    --radius-xs: 8px;
     --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
-    --radius-2xl: 28px;
+    --radius-md: 8px;
+    --radius-lg: 8px;
+    --radius-xl: 8px;
+    --radius-2xl: 8px;
     --radius-full: 999px;
 
     /* Transitions */
@@ -442,7 +449,7 @@ textarea.has-error:focus,
     width: 18px;
     height: 18px;
     border: 1px solid var(--gray-300);
-    border-radius: 4px;
+    border-radius: 8px;
     background-color: var(--white);
     display: grid;
     place-content: center;
