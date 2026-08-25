@@ -83,7 +83,18 @@ class StockService
                 ? $this->lockBranchBalance($product->id, $variant?->id, $storeId)
                 : null;
 
-            if ($branchBefore !== null && $branchBefore + $delta < 0) {
+            /*
+             * Only a sale may take a balance negative, and only on a product
+             * set up for pre-order. Everything else — adjustments, transfers,
+             * write-offs — still refuses: you cannot write off or move units
+             * that are not there, whatever the product's settings say.
+             */
+            $mayGoNegative = $type === StockMovement::SALE;
+
+            if ($branchBefore !== null
+                && $branchBefore + $delta < 0
+                && ! ($mayGoNegative && $product->allowsBalance($branchBefore + $delta))
+            ) {
                 throw StorefrontException::outOfStock(
                     $this->unitName($product, $variant),
                     max(0, $branchBefore)
@@ -92,7 +103,9 @@ class StockService
 
             $balanceAfter = $current + $delta;
 
-            if ($balanceAfter < 0) {
+            if ($balanceAfter < 0
+                && ! ($mayGoNegative && $product->allowsBalance($balanceAfter))
+            ) {
                 throw StorefrontException::outOfStock(
                     $this->unitName($product, $variant),
                     max(0, $current)

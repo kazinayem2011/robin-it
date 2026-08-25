@@ -33,6 +33,7 @@ import {
     Scale,
     ShoppingCart,
     Check,
+    Clock,
     ShieldCheck,
     Truck,
     RefreshCw,
@@ -80,7 +81,24 @@ export default function ProductDetails(props) {
     // A variant product with nothing chosen yet cannot be bought.
     const needsVariantChoice =
         Boolean(product?.has_variants) && !selectedVariant;
-    const soldOut = !needsVariantChoice && availableStock === 0;
+    const outOfStock = !needsVariantChoice && availableStock <= 0;
+
+    /*
+     * Pre-order is set on the product, so it covers every option of a variant
+     * product. An empty shelf then means "ships when the delivery lands"
+     * rather than "you cannot have this".
+     */
+    const allowsPreorder = Boolean(product?.allow_preorder);
+    const isPreorder = outOfStock && allowsPreorder;
+    const soldOut = outOfStock && !allowsPreorder;
+
+    const releaseDate = product?.preorder_release_at
+        ? new Date(product.preorder_release_at).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+          })
+        : null;
 
     // Reviews & Ratings State
     const [reviewsData, setReviewsData] = useState({
@@ -393,7 +411,9 @@ export default function ProductDetails(props) {
                                             ? 'Choose an option'
                                             : availableStock > 0
                                               ? `In Stock (${availableStock} available)`
-                                              : 'Out of Stock'}
+                                              : isPreorder
+                                                ? 'Available to pre-order'
+                                                : 'Out of Stock'}
                                     </span>
                                 </div>
                                 <div className="meta-item">
@@ -558,7 +578,9 @@ export default function ProductDetails(props) {
                                         ? 'Out of Stock'
                                         : needsVariantChoice
                                           ? 'Choose an option'
-                                          : 'Buy Now'}
+                                          : isPreorder
+                                            ? 'Pre-order Now'
+                                            : 'Buy Now'}
                                 </Button>
                                 <Button
                                     variant={addedToCart ? 'dark' : 'secondary'}
@@ -572,9 +594,27 @@ export default function ProductDetails(props) {
                                         ? 'Out of Stock'
                                         : addedToCart
                                           ? 'Added to Cart'
-                                          : 'Add to Cart'}
+                                          : isPreorder
+                                            ? 'Pre-order'
+                                            : 'Add to Cart'}
                                 </Button>
                             </div>
+
+                            {/* Nobody should reach the payment page and only
+                                then discover this ships later. */}
+                            {isPreorder && (
+                                <div className="pdp-preorder-notice" role="status">
+                                    <Clock size={18} />
+                                    <div>
+                                        <strong>Pre-order</strong>
+                                        <p>
+                                            {releaseDate
+                                                ? `This is out of stock now and expected back on ${releaseDate}. Order it today and it ships as soon as the delivery arrives.`
+                                                : 'This is out of stock now. Order it today and it ships as soon as the next delivery arrives.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Only when the thing being looked at is actually
                                 unavailable — on a variant product that means

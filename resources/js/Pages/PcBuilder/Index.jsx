@@ -13,7 +13,11 @@ import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { essentialsStatus, listNames, isInStock } from '../../utils/pcBuild';
+import {
+    essentialsStatus,
+    listNames,
+    stockLabel,
+} from '../../utils/pcBuild';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,
@@ -489,18 +493,16 @@ export default function PcBuilderIndex() {
                                                          */}
                                                         <span
                                                             className={`selected-product-badge${
-                                                                isInStock(
+                                                                stockLabel(
                                                                     selectedEntry.product,
-                                                                )
-                                                                    ? ''
-                                                                    : ' is-out'
+                                                                ).tone
                                                             }`}
                                                         >
-                                                            {isInStock(
-                                                                selectedEntry.product,
-                                                            )
-                                                                ? 'In Stock'
-                                                                : 'Out of Stock'}
+                                                            {
+                                                                stockLabel(
+                                                                    selectedEntry.product,
+                                                                ).text
+                                                            }
                                                         </span>
                                                     </div>
                                                 </div>

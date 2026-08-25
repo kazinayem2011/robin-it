@@ -284,6 +284,12 @@ class ProductService
             'totalStock' => $stock + $sold,
             'inStock' => $product->isInStock(),
             'stockQuantity' => $stock,
+            // Sold ahead of a delivery. `preorder` is only true when the shelf
+            // is empty and the setting is on, so the UI never has to work out
+            // which of the two states it is looking at.
+            'allowsPreorder' => $product->allowsPreorder(),
+            'preorder' => $product->allowsPreorder() && ! $product->isInStock(),
+            'preorderReleaseAt' => $product->preorder_release_at?->toDateString(),
             'wattage' => $product->estimatedWattage(),
             'specs' => $product->specifications->take(3)->map(function ($s) {
                 return $s->name.': '.$s->value;

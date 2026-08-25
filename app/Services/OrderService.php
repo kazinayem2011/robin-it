@@ -166,7 +166,11 @@ class OrderService
             // parcels has none, and promising those units would be a lie.
             $available = $this->onlineAvailability($product, $variant);
 
-            if ($available < $item->quantity) {
+            // A pre-order product is allowed to ship from a branch that has
+            // none: the balance goes negative and the units are owed until the
+            // delivery lands.
+            if ($available < $item->quantity
+                && ! $product->allowsBalance($available - $item->quantity)) {
                 throw StorefrontException::outOfStock($item->displayName(), max(0, $available));
             }
         }
@@ -395,7 +399,11 @@ class OrderService
 
             $available = $this->onlineAvailability($product, $variant);
 
-            if ($available < $item->quantity) {
+            // Reopening re-reserves the units. A pre-order product may go back
+            // below zero to do that, exactly as it did on the original sale;
+            // anything else has to have the stock on hand.
+            if ($available < $item->quantity
+                && ! $product->allowsBalance($available - $item->quantity)) {
                 throw new StorefrontException(
                     "Cannot reopen this order: only {$available} x {$item->display_name} left in stock, "
                         ."but the order needs {$item->quantity}.",

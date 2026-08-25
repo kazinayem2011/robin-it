@@ -294,7 +294,10 @@ class CartService
             // Stock lives on the option when the product has them.
             $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
 
-            if ($available < $item->quantity) {
+            // A pre-ordered line is not an unavailable one; the customer has
+            // already been told it ships when the delivery lands.
+            if ($available < $item->quantity
+                && ! $product->allowsBalance($available - $item->quantity)) {
                 $issues[] = [
                     'item_id' => $item->id,
                     'product_name' => $item->displayName(),
@@ -325,19 +328,25 @@ class CartService
      */
     private function assertStockCovers(Product $product, int $quantity, ?ProductVariant $variant = null): void
     {
-        if ($variant) {
-            if ($variant->stock_quantity < $quantity) {
-                throw StorefrontException::outOfStock(
-                    "{$product->name} ({$variant->name})",
-                    max(0, (int) $variant->stock_quantity)
-                );
-            }
+        if (! $product->is_active) {
+            throw StorefrontException::unavailable($product->name);
+        }
 
+        /*
+         * The same rule the ledger applies, asked one step earlier: what would
+         * the balance be, and is the product allowed to sit there? On a
+         * pre-order product that permits it, this lets the line through and the
+         * shelf goes negative at checkout, meaning units owed.
+         */
+        $onHand = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+
+        if ($product->allowsBalance($onHand - $quantity)) {
             return;
         }
 
-        if (! $product->canFulfil($quantity)) {
-            throw StorefrontException::outOfStock($product->name, max(0, $product->stock_quantity));
-        }
+        throw StorefrontException::outOfStock(
+            $variant ? "{$product->name} ({$variant->name})" : $product->name,
+            max(0, $onHand)
+        );
     }
 }

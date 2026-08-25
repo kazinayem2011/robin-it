@@ -51,6 +51,17 @@ const buildProductPayload = (values, editingProduct) => {
             ? null
             : Number(rest.reorder_level);
 
+    /*
+     * A blank limit means no cap rather than zero, and a blank date means none
+     * was promised. Sending '' would fail validation as a non-integer/non-date.
+     */
+    rest.allow_preorder = Boolean(rest.allow_preorder);
+    rest.preorder_limit =
+        rest.preorder_limit === '' || rest.preorder_limit === null
+            ? null
+            : Number(rest.preorder_limit);
+    rest.preorder_release_at = rest.preorder_release_at || null;
+
     if (!hasVariants) {
         return { ...rest, has_variants: false };
     }
@@ -121,6 +132,9 @@ export default function Products({
             is_featured: false,
             is_active: true,
             reorder_level: '',
+            allow_preorder: false,
+            preorder_limit: '',
+            preorder_release_at: '',
             has_variants: false,
             variant_attributes: [],
             variants: [],
@@ -211,6 +225,9 @@ export default function Products({
                 is_featured: false,
                 is_active: true,
                 reorder_level: '',
+                allow_preorder: false,
+                preorder_limit: '',
+                preorder_release_at: '',
                 has_variants: false,
                 variant_attributes: [],
                 variants: [],
@@ -235,6 +252,11 @@ export default function Products({
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
                 reorder_level: p.reorder_level ?? '',
+                allow_preorder: Boolean(p.allow_preorder),
+                preorder_limit: p.preorder_limit ?? '',
+                preorder_release_at: p.preorder_release_at
+                    ? String(p.preorder_release_at).slice(0, 10)
+                    : '',
                 has_variants: Boolean(p.has_variants),
                 variant_attributes: p.variant_attributes || [],
                 variants: (p.variants || [])
@@ -566,6 +588,55 @@ export default function Products({
                             placeholder="Store default"
                             helperText="Flag this for reordering once stock falls to here."
                         />
+
+                        {/*
+                         * Pre-order. Selling past zero takes the balance
+                         * negative, which is what "units owed" looks like in
+                         * the ledger, so it stays off unless someone turns it
+                         * on for this product.
+                         */}
+                        <div className="auth-form-group">
+                            <Checkbox
+                                id="allow_preorder"
+                                name="allow_preorder"
+                                label="Allow pre-order when out of stock"
+                                checked={formik.values.allow_preorder}
+                                onChange={formik.handleChange}
+                            />
+                            <p className="admin-field-hint">
+                                Customers can buy this with an empty shelf. The
+                                balance goes negative by the number of units
+                                owed, and the next delivery clears it.
+                            </p>
+                        </div>
+
+                        {formik.values.allow_preorder && (
+                            <>
+                                <FormInput
+                                    id="preorder_limit"
+                                    name="preorder_limit"
+                                    label="Pre-order limit"
+                                    type="number"
+                                    min="1"
+                                    value={formik.values.preorder_limit}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    placeholder="No limit"
+                                    helperText="Most units sellable beyond the shelf. Blank means no cap — worth setting, or one scripted buyer can commit you to any number."
+                                />
+
+                                <FormInput
+                                    id="preorder_release_at"
+                                    name="preorder_release_at"
+                                    label="Expected in stock"
+                                    type="date"
+                                    value={formik.values.preorder_release_at}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    helperText="Shown to the customer. A pre-order without a date is a delay they did not agree to."
+                                />
+                            </>
+                        )}
 
                         {editingProduct ? (
                             <div className="auth-form-group">

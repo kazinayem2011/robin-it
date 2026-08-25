@@ -233,6 +233,14 @@ class AdminDashboardController extends Controller
             // because it moves nothing.
             'reorder_level' => 'nullable|integer|min:0|max:100000',
 
+            // Selling ahead of a delivery, decided per product. The limit is
+            // how far the balance may go below zero: without one a single
+            // scripted buyer can commit the shop to any number of units, so it
+            // is worth setting even though it is optional.
+            'allow_preorder' => 'nullable|boolean',
+            'preorder_limit' => 'nullable|integer|min:1|max:100000',
+            'preorder_release_at' => 'nullable|date',
+
             // Options. Stock is deliberately absent from every one of these:
             // editing a product must never move a unit.
             'has_variants' => 'nullable|boolean',
@@ -344,6 +352,14 @@ class AdminDashboardController extends Controller
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
             'reorder_level' => 'nullable|integer|min:0|max:100000',
+
+            // Selling ahead of a delivery, decided per product. The limit is
+            // how far the balance may go below zero: without one a single
+            // scripted buyer can commit the shop to any number of units, so it
+            // is worth setting even though it is optional.
+            'allow_preorder' => 'nullable|boolean',
+            'preorder_limit' => 'nullable|integer|min:1|max:100000',
+            'preorder_release_at' => 'nullable|date',
         ]);
 
         $validated['slug'] = $this->uniqueSlug(Product::class, $validated['name']);

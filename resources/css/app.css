@@ -1231,6 +1231,37 @@ textarea.has-error:focus,
  * people who ask the OS to reduce it, and a static block reads as loading just
  * as well.
  */
+/* Pre-order, said before the customer reaches the payment page. */
+.pdp-preorder-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 14px 16px;
+    border: 1px solid #f0d391;
+    border-radius: var(--radius-sm);
+    background: #fdf6e3;
+    color: #7a5c12;
+}
+
+.pdp-preorder-notice svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pdp-preorder-notice strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin-bottom: 3px;
+}
+
+.pdp-preorder-notice p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
 .compare-grid-skeleton {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

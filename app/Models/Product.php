@@ -11,6 +11,7 @@ class Product extends Model
         'discount_price', 'stock_quantity', 'short_description',
         'description', 'is_featured', 'is_active',
         'has_variants', 'variant_attributes', 'reorder_level',
+        'allow_preorder', 'preorder_limit', 'preorder_release_at',
     ];
 
     /**
@@ -23,7 +24,7 @@ class Product extends Model
      * Computed pricing/availability the frontend can trust, present on every
      * serialized product so the UI never has to re-derive "is this discounted?".
      */
-    protected $appends = ['effective_price', 'has_discount', 'in_stock'];
+    protected $appends = ['effective_price', 'has_discount', 'in_stock', 'is_preorder'];
 
     /**
      * Without these casts the MySQL driver hands decimals back as strings, so
@@ -38,6 +39,9 @@ class Product extends Model
         'has_variants' => 'boolean',
         'variant_attributes' => 'array',
         'reorder_level' => 'integer',
+        'allow_preorder' => 'boolean',
+        'preorder_limit' => 'integer',
+        'preorder_release_at' => 'date',
     ];
 
     public function category()
@@ -162,6 +166,63 @@ class Product extends Model
         return $this->is_active && $this->stock_quantity > 0;
     }
 
+    /** Sold ahead of the delivery, rather than only off the shelf. */
+    public function allowsPreorder(): bool
+    {
+        return $this->is_active && (bool) $this->allow_preorder;
+    }
+
+    /**
+     * The one rule every stock path asks.
+     *
+     * A negative balance is not corruption, it is the number of units owed to
+     * customers who have already paid. It is only ever allowed to happen on a
+     * sale of a product whose owner has opted into pre-order, and only as far
+     * as the limit they set — without one, a single scripted buyer can commit
+     * the shop to any number of units.
+     */
+    public function allowsBalance(int $balanceAfter): bool
+    {
+        if ($balanceAfter >= 0) {
+            return true;
+        }
+
+        if (! $this->allowsPreorder()) {
+            return false;
+        }
+
+        return $this->preorder_limit === null
+            || abs($balanceAfter) <= (int) $this->preorder_limit;
+    }
+
+    /**
+     * How many units may still be sold, counting pre-order headroom.
+     *
+     * Null means the owner set no cap. Callers that need a number for a message
+     * should say "available to order" rather than "in stock" — these are not
+     * units anybody can pick off a shelf today.
+     */
+    public function sellableCeiling(?int $onHand = null): ?int
+    {
+        $onHand ??= (int) $this->stock_quantity;
+
+        if (! $this->allowsPreorder()) {
+            return max(0, $onHand);
+        }
+
+        if ($this->preorder_limit === null) {
+            return null;
+        }
+
+        return max(0, $onHand + (int) $this->preorder_limit);
+    }
+
+    /** Units already sold beyond the shelf, i.e. owed to customers. */
+    public function preorderedUnits(?int $onHand = null): int
+    {
+        return max(0, -($onHand ?? (int) $this->stock_quantity));
+    }
+
     /**
      * The level at which this should be reordered, falling back to the
      * store-wide default when it has not been set for this product.
@@ -273,6 +334,18 @@ class Product extends Model
     public function getInStockAttribute(): bool
     {
         return $this->isInStock();
+    }
+
+    /**
+     * Whether buying this today means waiting for a delivery.
+     *
+     * Only true when the shelf is empty and pre-order is on, so nothing reading
+     * this has to work out which of the two states it is looking at. Reads
+     * columns only — safe to append.
+     */
+    public function getIsPreorderAttribute(): bool
+    {
+        return $this->allowsPreorder() && ! $this->isInStock();
     }
 
     /**

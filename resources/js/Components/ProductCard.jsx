@@ -111,11 +111,24 @@ export const ProductCard = ({
     // A product with options cannot be added blind — the handler sends those
     // to the detail page, so the control should not promise a cart either.
     const hasOptions = Boolean(product.has_variants ?? product.hasVariants);
-    const cartActionLabel = !inStock
-        ? 'Out of stock'
-        : hasOptions
-          ? 'Choose options'
-          : 'Add to cart';
+
+    /*
+     * Sold out and available to pre-order look identical from the stock number
+     * alone, and they are not the same offer. A pre-order can still be bought;
+     * it just ships when the delivery lands.
+     */
+    const isPreorder = Boolean(
+        product.preorder ?? product.is_preorder ?? false,
+    );
+    const canBuy = inStock || isPreorder;
+
+    const cartActionLabel = isPreorder
+        ? 'Pre-order'
+        : !inStock
+          ? 'Out of stock'
+          : hasOptions
+            ? 'Choose options'
+            : 'Add to cart';
 
     if (variant === 'flash') {
         return (
@@ -134,7 +147,7 @@ export const ProductCard = ({
                             type="button"
                             onClick={handleAddToCart}
                             className="card-action-btn card-action-cart"
-                            disabled={!inStock}
+                            disabled={!canBuy}
                             title={cartActionLabel}
                             aria-label={cartActionLabel}
                         >
@@ -269,12 +282,16 @@ export const ProductCard = ({
                                 type="button"
                                 onClick={handleAddToCart}
                                 className="btn-add-cart"
-                                disabled={!inStock}
+                                disabled={!canBuy}
                                 title={cartActionLabel}
                             >
                                 <ShoppingCart size={16} />
                                 <span>
-                                    {inStock ? 'Add to Cart' : 'Sold out'}
+                                    {isPreorder
+                                        ? 'Pre-order'
+                                        : inStock
+                                          ? 'Add to Cart'
+                                          : 'Sold out'}
                                 </span>
                             </button>
                         </div>
@@ -306,7 +323,7 @@ export const ProductCard = ({
                         type="button"
                         onClick={handleAddToCart}
                         className="card-action-btn card-action-cart"
-                        disabled={!inStock}
+                        disabled={!canBuy}
                         title={cartActionLabel}
                         aria-label={cartActionLabel}
                     >
@@ -410,11 +427,17 @@ export const ProductCard = ({
                             type="button"
                             onClick={handleAddToCart}
                             className="btn-add-cart"
-                            disabled={!inStock}
-                            title={inStock ? 'Add to cart' : 'Out of stock'}
+                            disabled={!canBuy}
+                            title={cartActionLabel}
                         >
                             <ShoppingCart size={16} />
-                            <span>{inStock ? 'Add to Cart' : 'Sold out'}</span>
+                            <span>
+                                {isPreorder
+                                    ? 'Pre-order'
+                                    : inStock
+                                      ? 'Add to Cart'
+                                      : 'Sold out'}
+                            </span>
                         </button>
                     </div>
                 </div>

@@ -57,3 +57,22 @@ export const isInStock = (product) => {
 
     return Number(quantity ?? 0) > 0;
 };
+
+/**
+ * What the badge on a chosen component should say.
+ *
+ * Three states, not two: on the shelf, orderable ahead of a delivery, or not
+ * available at all. Collapsing the middle one into "Out of Stock" tells a
+ * customer they cannot have something they can.
+ */
+export const stockLabel = (product) => {
+    if (isInStock(product)) {
+        return { text: 'In Stock', tone: '' };
+    }
+
+    const preorder = product?.preorder ?? product?.is_preorder ?? false;
+
+    return preorder
+        ? { text: 'Pre-order', tone: ' is-preorder' }
+        : { text: 'Out of Stock', tone: ' is-out' };
+};

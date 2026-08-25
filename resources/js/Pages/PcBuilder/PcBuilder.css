@@ -333,6 +333,12 @@
     color: var(--primary);
 }
 
+/* Neither on the shelf nor unavailable — it can be ordered, it just waits. */
+.selected-product-badge.is-preorder {
+    background: rgba(217, 119, 6, 0.12);
+    color: #b45309;
+}
+
 .empty-component-placeholder {
     font-size: 0.84rem;
     color: var(--gray-400);
