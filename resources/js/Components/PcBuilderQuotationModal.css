@@ -244,37 +244,82 @@
 
 /* Print Overrides */
 @media print {
-    body * {
-        visibility: hidden;
+    /*
+     * The sheet is portalled to <body>, so everything else can be taken out of
+     * the layout rather than merely made invisible. visibility:hidden left the
+     * whole app occupying its space, which is why the quotation started several
+     * blank pages in.
+     */
+    body.is-printing-quotation > *:not(.quotation-modal-backdrop) {
+        display: none !important;
     }
 
-    .quotation-sheet-container,
-    .quotation-sheet-container * {
-        visibility: visible;
+    /*
+     * Both of these go back into normal flow. The container used to be
+     * position:fixed, and a fixed element prints on the first page only — a
+     * build long enough to run over was simply cut off.
+     */
+    .quotation-modal-backdrop {
+        position: static;
+        display: block;
+        inset: auto;
+        background: none;
+        backdrop-filter: none;
+        padding: 0;
+        overflow: visible;
     }
 
     .quotation-sheet-container {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        max-width: 100%;
-        box-shadow: none;
-        border: none;
-        max-height: none;
-    }
-
-    .quotation-modal-backdrop {
         position: static;
-        background: transparent;
-        padding: 0;
+        display: block;
+        width: auto;
+        max-width: none;
+        max-height: none;
+        overflow: visible;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
     }
 
+    .quotation-sheet-body {
+        padding: 0;
+        overflow: visible;
+    }
+
+    /* On-screen controls are not part of the document. */
     .quotation-sheet-toolbar {
         display: none !important;
     }
 
-    .quotation-sheet-body {
-        padding: 20px;
+    /*
+     * Browsers drop background colours when printing unless told otherwise,
+     * which flattened the letterhead, the table header and the totals band
+     * into unreadable white-on-white.
+     */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* A table row split across a page break is unreadable on a quotation. */
+    .quotation-table {
+        page-break-inside: auto;
+    }
+
+    .quotation-table tr {
+        page-break-inside: avoid;
+    }
+
+    .quotation-table thead {
+        display: table-header-group;
+    }
+
+    .quotation-summary-grid,
+    .quotation-letterhead {
+        page-break-inside: avoid;
+    }
+
+    @page {
+        margin: 14mm;
     }
 }

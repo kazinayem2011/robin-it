@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { formatBdt } from '../utils/formatters';
 import siteConfig from '../constants/siteConfig';
 import {
@@ -28,13 +29,32 @@ export const PcBuilderQuotationModal = ({
         year: 'numeric',
     });
 
+    /*
+     * Printing used to hide the rest of the page with visibility:hidden, which
+     * leaves those elements taking up their space, and pinned the sheet with
+     * position:fixed, which browsers render on the first page only — so a
+     * quotation ran off the bottom and the pages before it came out blank.
+     *
+     * Rendering into <body> instead lets the print stylesheet remove the app
+     * from the layout entirely and leave the sheet in normal flow, where it
+     * paginates like any other document. Marking the body while it is open is
+     * what gives that CSS something to hook on to.
+     */
+    useEffect(() => {
+        if (!isOpen) return;
+
+        document.body.classList.add('is-printing-quotation');
+
+        return () => document.body.classList.remove('is-printing-quotation');
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const handlePrint = () => {
         window.print();
     };
 
-    return (
+    return createPortal(
         <div className="quotation-modal-backdrop" onClick={onClose}>
             <div
                 className="quotation-sheet-container"
@@ -157,7 +177,9 @@ export const PcBuilderQuotationModal = ({
                                     <tr key={idx}>
                                         <td className="quotation-cat-cell">
                                             {entry.category_name ||
-                                                entry.category_slug}
+                                                entry.category_slug ||
+                                                entry.componentId ||
+                                                '—'}
                                         </td>
                                         <td>
                                             <p className="quotation-prod-title">
@@ -284,7 +306,8 @@ export const PcBuilderQuotationModal = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
 

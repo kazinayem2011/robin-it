@@ -652,10 +652,22 @@ export default function PcBuilderIndex() {
             />
 
             {/* Official Branded Quotation Print / PDF Modal */}
+            {/*
+             * A builder item is { id, componentId, product } and carries no
+             * slot name, so the quotation's Component column read
+             * entry.category_name and printed nothing. The page holds the
+             * categories, so it resolves the label here rather than teaching
+             * the sheet how the builder stores its slots.
+             */}
             <PcBuilderQuotationModal
                 isOpen={quotationOpen}
                 onClose={() => setQuotationOpen(false)}
-                components={pcBuilderItems}
+                components={pcBuilderItems.map((item) => ({
+                    ...item,
+                    category_name:
+                        categories.find((cat) => cat.id === item.componentId)
+                            ?.name ?? item.componentId,
+                }))}
                 totalPrice={totalCost}
                 estimatedWattage={estimatedWattage}
             />
