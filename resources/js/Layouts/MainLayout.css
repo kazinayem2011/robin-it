@@ -82,9 +82,84 @@
     letter-spacing: 0.5px;
 }
 
+/*
+ * The announcement scrolls instead of being clipped. Same approach as the
+ * category and brand marquees on the home page: the content is rendered twice
+ * and the track travels exactly one copy's width, so the loop has no seam.
+ */
+.ticker-marquee {
+    /* Takes the room left over beside the badge. min-width:0 because a flex
+       child will not shrink below its content otherwise, and this content is
+       one long unbreakable line. */
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    /* Fades in and out at the edges rather than appearing to be chopped. */
+    mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        black 24px,
+        black calc(100% - 24px),
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        black 24px,
+        black calc(100% - 24px),
+        transparent 100%
+    );
+}
+
+.ticker-marquee-track {
+    display: flex;
+    width: max-content;
+    /* Set from the measured text width in Header.jsx, so the speed stays the
+       same however long the announcement is. The fallback covers first paint. */
+    animation: tickerMarqueeSlide var(--ticker-duration, 14s) linear infinite;
+}
+
+/* So it can be read rather than chased. */
+.ticker-marquee:hover .ticker-marquee-track {
+    animation-play-state: paused;
+}
+
+@keyframes tickerMarqueeSlide {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+/*
+ * Motion nobody asked for and cannot stop is the kind people turn off at the
+ * OS level. It holds still and truncates instead, the way it did before.
+ */
+@media (prefers-reduced-motion: reduce) {
+    .ticker-marquee-track {
+        animation: none;
+        width: 100%;
+    }
+
+    .ticker-marquee-track .ticker-text[aria-hidden='true'] {
+        display: none;
+    }
+
+    .ticker-marquee-track .ticker-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 .ticker-text {
     color: var(--gray-300);
     font-size: 0.78rem;
+    /* Spacing between the end of one copy and the start of the next. */
+    padding-right: 64px;
+    margin: 0;
+    white-space: nowrap;
 }
 
 .ticker-text strong {

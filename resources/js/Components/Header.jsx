@@ -37,6 +37,7 @@ export const Header = () => {
     const [siteSettings, setSiteSettings] = useState({});
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
+    const marqueeRef = useRef(null);
 
     const cartCount = useAppStore((state) => state.cartCount);
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
@@ -105,6 +106,46 @@ export const Header = () => {
         return () => observer.disconnect();
     }, []);
 
+    const announcement =
+        siteSettings.announcement_ticker ||
+        '⚡ Flash Deals Live: Save up to 40% OFF on Gaming Laptops & Graphics Cards! Free 64-District Express Delivery on orders over ৳50,000.';
+
+    /*
+     * The announcement is editable, so its width is not known ahead of time.
+     * A fixed duration would mean a long message races past and a short one
+     * crawls; deriving it from the measured width keeps the reading speed the
+     * same whatever an admin writes.
+     */
+    useLayoutEffect(() => {
+        const track = marqueeRef.current;
+
+        if (!track || typeof ResizeObserver === 'undefined') return;
+
+        const PIXELS_PER_SECOND = 70;
+
+        const publish = () => {
+            const copy = track.firstElementChild;
+
+            if (!copy) return;
+
+            const width = copy.getBoundingClientRect().width;
+
+            if (width > 0) {
+                track.style.setProperty(
+                    '--ticker-duration',
+                    `${(width / PIXELS_PER_SECOND).toFixed(1)}s`,
+                );
+            }
+        };
+
+        publish();
+
+        const observer = new ResizeObserver(publish);
+        observer.observe(track);
+
+        return () => observer.disconnect();
+    }, [announcement]);
+
     return (
         <header className="site-header-wrapper">
             {/* 1. TOP ANNOUNCEMENT TICKER STRIP */}
@@ -115,10 +156,25 @@ export const Header = () => {
                             <span className="live-dot"></span>{' '}
                             {siteSettings.announcement_badge || 'LIVE OFFER'}
                         </span>
-                        <p className="ticker-text">
-                            {siteSettings.announcement_ticker ||
-                                '⚡ Flash Deals Live: Save up to 40% OFF on Gaming Laptops & Graphics Cards! Free 64-District Express Delivery on orders over ৳50,000.'}
-                        </p>
+                        {/*
+                         * The announcement scrolls rather than being cut off
+                         * mid-word by the width of the bar. The text is
+                         * rendered twice so the track can travel exactly one
+                         * copy's width and start over with no visible jump;
+                         * the second copy is hidden from screen readers, which
+                         * would otherwise announce it all again.
+                         */}
+                        <div className="ticker-marquee">
+                            <div
+                                className="ticker-marquee-track"
+                                ref={marqueeRef}
+                            >
+                                <p className="ticker-text">{announcement}</p>
+                                <p className="ticker-text" aria-hidden="true">
+                                    {announcement}
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="top-ticker-right">
