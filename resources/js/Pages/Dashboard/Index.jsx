@@ -870,10 +870,10 @@ export default function Index({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`auth-input ${profileForm.errors.name ? 'has-error' : ''}`}
+                                                className={`auth-text-input ${profileForm.errors.name ? 'input-error' : ''}`}
                                             />
                                             {profileForm.errors.name && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {profileForm.errors.name}
                                                 </span>
                                             )}
@@ -892,10 +892,10 @@ export default function Index({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`auth-input ${profileForm.errors.email ? 'has-error' : ''}`}
+                                                className={`auth-text-input ${profileForm.errors.email ? 'input-error' : ''}`}
                                             />
                                             {profileForm.errors.email && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {profileForm.errors.email}
                                                 </span>
                                             )}
@@ -906,9 +906,14 @@ export default function Index({
                                                 Bangladeshi Mobile Number
                                             </label>
                                             <div className="auth-input-wrapper">
-                                                <span className="bd-phone-prefix-pill">
-                                                    🇧🇩 +88
-                                                </span>
+                                                <div className="phone-prefix-box">
+                                                    <span className="bd-flag">
+                                                        🇧🇩
+                                                    </span>
+                                                    <span className="prefix-text">
+                                                        +880
+                                                    </span>
+                                                </div>
                                                 <input
                                                     type="tel"
                                                     value={
@@ -920,11 +925,11 @@ export default function Index({
                                                             e.target.value,
                                                         )
                                                     }
-                                                    className={`auth-input with-bd-prefix ${profileForm.errors.phone ? 'has-error' : ''}`}
+                                                    className={`auth-text-input phone-padded ${profileForm.errors.phone ? 'input-error' : ''}`}
                                                 />
                                             </div>
                                             {profileForm.errors.phone && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {profileForm.errors.phone}
                                                 </span>
                                             )}
@@ -966,11 +971,11 @@ export default function Index({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`auth-input ${passwordForm.errors.current_password ? 'has-error' : ''}`}
+                                                className={`auth-text-input ${passwordForm.errors.current_password ? 'input-error' : ''}`}
                                             />
                                             {passwordForm.errors
                                                 .current_password && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {
                                                         passwordForm.errors
                                                             .current_password
@@ -994,10 +999,10 @@ export default function Index({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`auth-input ${passwordForm.errors.password ? 'has-error' : ''}`}
+                                                className={`auth-text-input ${passwordForm.errors.password ? 'input-error' : ''}`}
                                             />
                                             {passwordForm.errors.password && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {
                                                         passwordForm.errors
                                                             .password
@@ -1022,11 +1027,11 @@ export default function Index({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`auth-input ${passwordForm.errors.password_confirmation ? 'has-error' : ''}`}
+                                                className={`auth-text-input ${passwordForm.errors.password_confirmation ? 'input-error' : ''}`}
                                             />
                                             {passwordForm.errors
                                                 .password_confirmation && (
-                                                <span className="auth-error-msg">
+                                                <span className="auth-field-error">
                                                     {
                                                         passwordForm.errors
                                                             .password_confirmation
@@ -1071,7 +1076,7 @@ export default function Index({
                             onChange={(e) =>
                                 addressForm.setData('division', e.target.value)
                             }
-                            className="auth-input dash-input-pad"
+                            className="auth-text-input dash-input-pad"
                         >
                             <option value="Dhaka">Dhaka</option>
                             <option value="Chattogram">Chattogram</option>
@@ -1093,7 +1098,7 @@ export default function Index({
                                 addressForm.setData('district', e.target.value)
                             }
                             placeholder="e.g. Dhaka"
-                            className="auth-input dash-input-pad"
+                            className="auth-text-input dash-input-pad"
                         />
                     </div>
 
@@ -1108,7 +1113,7 @@ export default function Index({
                                 addressForm.setData('city', e.target.value)
                             }
                             placeholder="e.g. Dhanmondi, Gulshan, Agrabad"
-                            className="auth-input dash-input-pad"
+                            className="auth-text-input dash-input-pad"
                         />
                     </div>
 
@@ -1122,7 +1127,7 @@ export default function Index({
                                 addressForm.setData('address', e.target.value)
                             }
                             placeholder="House, Road, Block, Flat Number"
-                            className="auth-input dash-textarea-custom"
+                            className="auth-text-input dash-textarea-custom"
                         />
                     </div>
 
