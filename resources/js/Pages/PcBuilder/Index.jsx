@@ -661,47 +661,41 @@ export default function PcBuilderIndex() {
             />
 
             {/* Share PC Build Modal */}
-            {shareModalOpen && (
-                <div
-                    className="pc-builder-modal-overlay"
-                    onClick={() => setShareModalOpen(false)}
-                >
-                    <div
-                        className="pc-builder-modal-card"
-                        onClick={(e) => e.stopPropagation()}
+            {/*
+             * Hand-rolled overlay and card before this, against class names
+             * that had no CSS anywhere — so there was no backdrop, no dialog
+             * box and no positioning, and it rendered as bare text down the
+             * left edge of the page under the footer. Modal already does all
+             * of that, plus the escape key and the scroll lock.
+             */}
+            <Modal
+                isOpen={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                title="Share Your Custom PC Build"
+                maxWidth="540px"
+            >
+                <p className="share-link-help">
+                    Anyone with this link can view and load your exact hardware
+                    configuration:
+                </p>
+                <div className="share-link-row">
+                    <input
+                        type="text"
+                        readOnly
+                        value={shareUrl}
+                        className="share-url-input"
+                        onFocus={(e) => e.target.select()}
+                        aria-label="Shareable build link"
+                    />
+                    <Button
+                        variant="primary"
+                        icon={copied ? Check : Copy}
+                        onClick={handleCopyLink}
                     >
-                        <div className="modal-header-row">
-                            <h3>Share Your Custom PC Build</h3>
-                            <button
-                                type="button"
-                                className="modal-close-btn"
-                                onClick={() => setShareModalOpen(false)}
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <p className="modal-desc-text">
-                            Anyone with this link can view and load your exact
-                            hardware configuration:
-                        </p>
-                        <div className="share-link-input-row">
-                            <input
-                                type="text"
-                                readOnly
-                                value={shareUrl}
-                                className="share-url-input"
-                            />
-                            <Button
-                                variant="primary"
-                                icon={copied ? Check : Copy}
-                                onClick={handleCopyLink}
-                            >
-                                {copied ? 'Copied' : 'Copy'}
-                            </Button>
-                        </div>
-                    </div>
+                        {copied ? 'Copied' : 'Copy'}
+                    </Button>
                 </div>
-            )}
+            </Modal>
         </MainLayout>
     );
 }

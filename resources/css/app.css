@@ -1231,6 +1231,47 @@ textarea.has-error:focus,
  * people who ask the OS to reduce it, and a static block reads as loading just
  * as well.
  */
+/* Share-a-build link, inside the standard modal. */
+.share-link-help {
+    margin: 0 0 14px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--gray-600);
+}
+
+.share-link-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.share-url-input {
+    /* A long URL must shrink inside the row rather than push the Copy button
+       out of the dialog: a flex child will not shrink past its content
+       otherwise. */
+    flex: 1;
+    min-width: 0;
+    padding: 0 14px;
+    height: 42px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
+    color: var(--dark-900);
+    font-size: 0.88rem;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
+    text-overflow: ellipsis;
+}
+
+.share-url-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(209, 33, 39, 0.12);
+}
+
+.share-link-row .btn {
+    flex-shrink: 0;
+}
+
 /* Pre-order, said before the customer reaches the payment page. */
 .pdp-preorder-notice {
     display: flex;
