@@ -623,18 +623,25 @@ export default function WarrantyIndex() {
                                             onChange={formik.handleChange}
                                             onBlur={formik.handleBlur}
                                             rows="4"
-                                            className={`form-control ${
+                                            /* .form-control, .is-invalid and
+                                               .invalid-feedback are Bootstrap
+                                               names and this project has no
+                                               Bootstrap, so the field was an
+                                               unstyled browser textarea whose
+                                               errors showed no colour at all.
+                                               These are the project's own. */
+                                            className={`form-control-input ${
                                                 formik.touched
                                                     .issue_description &&
                                                 formik.errors.issue_description
-                                                    ? 'is-invalid'
+                                                    ? 'has-error'
                                                     : ''
                                             }`}
                                             placeholder="Please describe when the issue happens, error codes on screen, BIOS beeps, or LED indicator behaviors..."
                                         />
                                         {formik.touched.issue_description &&
                                             formik.errors.issue_description && (
-                                                <div className="invalid-feedback">
+                                                <div className="form-control-error">
                                                     {
                                                         formik.errors
                                                             .issue_description

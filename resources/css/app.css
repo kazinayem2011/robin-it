@@ -257,6 +257,27 @@ textarea:focus {
     box-shadow: none;
 }
 
+/*
+ * The spinner in the search dropdown's loading row. It is an empty <span>, so
+ * without a rule the row read "Searching catalogue..." with nothing beside it.
+ */
+.mini-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border: 2px solid var(--gray-200);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mini-spinner {
+        animation-duration: 2s;
+    }
+}
+
 /* ==========================================================================
    SELECT CONTROLS
    Applied to the element, so every dropdown in the app picks this up without
@@ -562,10 +583,21 @@ textarea.has-error:focus,
     transition: all var(--transition-fast);
 }
 
+/*
+ * The third place this had been done. Stripping the outline, the border change
+ * and the shadow leaves a keyboard user with no way to tell which field they
+ * are in — already fixed for .auth-text-input and for select; this is the
+ * checkout and warranty forms.
+ */
 .form-control-input:focus {
     outline: none;
-    border-color: var(--border-color);
-    box-shadow: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(209, 33, 39, 0.12);
+}
+
+.form-control-input.has-error:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
 
 .form-control-input.has-error {

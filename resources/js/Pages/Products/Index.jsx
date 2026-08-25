@@ -205,7 +205,7 @@ export default function ProductListing({ categorySlug }) {
                             <select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
-                                className="form-control plp-sort-select"
+                                className="plp-sort-select"
                             >
                                 <option value="latest">Latest Arrivals</option>
                                 <option value="price_low_high">
