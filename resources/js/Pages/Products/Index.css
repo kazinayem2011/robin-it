@@ -189,7 +189,7 @@
 }
 
 .plp-filter-group {
-    padding: 14px 0;
+    padding: 12px 0;
     border-top: 1px solid var(--color-border, #e2e5ea);
 }
 
@@ -198,13 +198,157 @@
     padding-top: 0;
 }
 
+/*
+ * The heading is the collapse control, so it is a full-width button that still
+ * reads as a heading rather than a control bolted next to one.
+ */
+.plp-filter-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-500);
+}
+
+.plp-filter-legend svg {
+    transition: transform var(--transition-fast);
+}
+
+.plp-filter-legend[aria-expanded='false'] svg {
+    transform: rotate(-90deg);
+}
+
+.plp-filter-legend:hover h4,
+.plp-filter-legend:hover svg {
+    color: var(--dark-900);
+}
+
 .plp-filter-group h4 {
-    margin: 0 0 10px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-500);
+}
+
+/* Searching a list is only worth offering when the list is long. */
+.plp-filter-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
+    color: var(--gray-400);
+}
+
+.plp-filter-search:focus-within {
+    border-color: var(--primary);
+    background: var(--bg-surface);
+}
+
+.plp-filter-search input {
+    flex: 1;
+    /* A flex child will not shrink below its content, and this sits in a
+       narrow sidebar. */
+    min-width: 0;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 12.5px;
+    color: var(--dark-900);
+}
+
+/* Chrome draws its own clear button on type=search; it fights the icon. */
+.plp-filter-search input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.plp-filter-empty {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--gray-400);
+}
+
+/* Category tree */
+/* A backstop for a catalogue with many top-level categories. */
+.plp-category-tree {
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.plp-category-tree::-webkit-scrollbar {
+    width: 5px;
+}
+
+.plp-category-tree::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: var(--radius-sm);
+}
+
+.plp-category-tree,
+.plp-category-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.plp-category-children {
+    margin: 2px 0 6px 10px;
+    padding-left: 8px;
+    border-left: 1px solid var(--border-light);
+}
+
+.plp-category-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark-800);
+    text-decoration: none;
+    transition: background var(--transition-fast);
+}
+
+.plp-category-link.is-child {
+    font-weight: 500;
+    font-size: 12.5px;
+    color: var(--gray-600);
+}
+
+.plp-category-link:hover {
+    background: var(--bg-surface-subtle);
+    color: var(--primary);
+}
+
+.plp-category-link.is-current {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.plp-facet-count {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-400);
+}
+
+.plp-category-link.is-current .plp-facet-count {
+    color: var(--primary);
 }
 
 .plp-filter-hint {
@@ -244,16 +388,34 @@
 .plp-filter-options {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 220px;
+    gap: 2px;
+}
+
+.plp-filter-scroll {
+    max-height: 210px;
     overflow-y: auto;
+    /* Room for the scrollbar so it does not sit on top of the labels. */
+    padding-right: 4px;
+}
+
+.plp-filter-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.plp-filter-scroll::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: var(--radius-sm);
 }
 
 .plp-filter-check {
     display: flex;
     align-items: center;
     gap: 9px;
-    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    font-size: 13px;
     cursor: pointer;
     user-select: none;
 }
@@ -309,4 +471,8 @@
     .plp-filters.is-open .plp-filters-body {
         display: block;
     }
+}
+
+.plp-filter-check:hover {
+    background: var(--bg-surface-subtle);
 }

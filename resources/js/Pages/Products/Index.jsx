@@ -223,6 +223,7 @@ export default function ProductListing({ categorySlug }) {
                             facets={facets}
                             value={activeFilters}
                             onChange={applyFilters}
+                            categorySlug={categorySlug}
                         />
 
                         <div className="plp-results">

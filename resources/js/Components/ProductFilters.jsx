@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
 import { formatBdt } from '../utils/formatters';
+import { ROUTES } from '../constants/endpoints';
 
 /**
  * The shop's filter panel.
@@ -14,13 +16,71 @@ export default function ProductFilters({
     facets = null,
     value = {},
     onChange,
+    categorySlug = null,
     debounceMs = 400,
 }) {
     const [minPrice, setMinPrice] = useState(value.min_price ?? '');
     const [maxPrice, setMaxPrice] = useState(value.max_price ?? '');
     const [open, setOpen] = useState(false);
 
-    const brands = facets?.brands ?? [];
+    // Long lists get a search box. Short ones do not need one and a box over
+    // four options is just clutter.
+    const [categoryQuery, setCategoryQuery] = useState('');
+    const [brandQuery, setBrandQuery] = useState('');
+    const [collapsed, setCollapsed] = useState({});
+
+    const toggleSection = (key) =>
+        setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+
+    const categories = facets?.categories ?? [];
+
+    /*
+     * Matching a parent keeps its children, and matching a child keeps the
+     * parent so the result is not an orphaned row with no idea where it sits.
+     */
+    const visibleCategories = useMemo(() => {
+        const needle = categoryQuery.trim().toLowerCase();
+
+        if (!needle) return categories;
+
+        return categories
+            .map((parent) => {
+                const parentHit = parent.name.toLowerCase().includes(needle);
+                const children = (parent.children ?? []).filter((child) =>
+                    child.name.toLowerCase().includes(needle),
+                );
+
+                if (parentHit) return parent;
+                if (children.length) return { ...parent, children };
+
+                return null;
+            })
+            .filter(Boolean);
+    }, [categories, categoryQuery]);
+
+    /*
+     * Only the branch being browsed is opened, plus anything a search matched.
+     * Expanding all of them at once made the sidebar 5,800px tall — longer than
+     * the results it is meant to filter.
+     */
+    const isExpanded = (parent) => {
+        if (categoryQuery.trim()) return true;
+        if (!categorySlug) return false;
+
+        return (
+            parent.slug === categorySlug ||
+            (parent.children ?? []).some((c) => c.slug === categorySlug)
+        );
+    };
+
+    const allBrands = facets?.brands ?? [];
+    const brands = useMemo(() => {
+        const needle = brandQuery.trim().toLowerCase();
+
+        return needle
+            ? allBrands.filter((b) => b.name.toLowerCase().includes(needle))
+            : allBrands;
+    }, [allBrands, brandQuery]);
     const selectedBrands = useMemo(
         () => value.brand_ids ?? [],
         [value.brand_ids],
@@ -120,70 +180,229 @@ export default function ProductFilters({
                     )}
                 </div>
 
-                <section className="plp-filter-group">
-                    <h4>Price</h4>
-                    {facets && facets.max_price > 0 && (
-                        <p className="plp-filter-hint">
-                            {formatBdt(facets.min_price)} –{' '}
-                            {formatBdt(facets.max_price)} available
-                        </p>
-                    )}
-                    <div className="plp-price-inputs">
-                        <input
-                            type="number"
-                            min="0"
-                            inputMode="numeric"
-                            value={minPrice}
-                            onChange={(e) => setMinPrice(e.target.value)}
-                            placeholder={
-                                facets
-                                    ? String(Math.floor(facets.min_price))
-                                    : 'Min'
-                            }
-                            aria-label="Minimum price"
-                        />
-                        <span>to</span>
-                        <input
-                            type="number"
-                            min="0"
-                            inputMode="numeric"
-                            value={maxPrice}
-                            onChange={(e) => setMaxPrice(e.target.value)}
-                            placeholder={
-                                facets
-                                    ? String(Math.ceil(facets.max_price))
-                                    : 'Max'
-                            }
-                            aria-label="Maximum price"
-                        />
-                    </div>
-                </section>
-
-                {brands.length > 0 && (
+                {categories.length > 0 && (
                     <section className="plp-filter-group">
-                        <h4>Brand</h4>
-                        <div className="plp-filter-options">
-                            {brands.map((brand) => (
-                                <label
-                                    key={brand.id}
-                                    className="plp-filter-check"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedBrands.includes(
-                                            brand.id,
-                                        )}
-                                        onChange={() => toggleBrand(brand.id)}
-                                    />
-                                    <span>{brand.name}</span>
-                                </label>
-                            ))}
-                        </div>
+                        <button
+                            type="button"
+                            className="plp-filter-legend"
+                            aria-expanded={!collapsed.category}
+                            onClick={() => toggleSection('category')}
+                        >
+                            <h4>Category</h4>
+                            <ChevronDown size={15} />
+                        </button>
+
+                        {!collapsed.category && (
+                            <>
+                                {categories.length > 5 && (
+                                    <div className="plp-filter-search">
+                                        <Search size={13} />
+                                        <input
+                                            type="search"
+                                            value={categoryQuery}
+                                            onChange={(e) =>
+                                                setCategoryQuery(e.target.value)
+                                            }
+                                            placeholder="Search categories"
+                                            aria-label="Search categories"
+                                        />
+                                    </div>
+                                )}
+
+                                <ul className="plp-category-tree">
+                                    <li>
+                                        <Link
+                                            href={ROUTES.SHOP}
+                                            className={`plp-category-link${!categorySlug ? ' is-current' : ''}`}
+                                        >
+                                            All products
+                                        </Link>
+                                    </li>
+
+                                    {visibleCategories.map((parent) => (
+                                        <li key={parent.id}>
+                                            <Link
+                                                href={ROUTES.SHOP_CATEGORY(
+                                                    parent.slug,
+                                                )}
+                                                className={`plp-category-link${categorySlug === parent.slug ? ' is-current' : ''}`}
+                                            >
+                                                <span>{parent.name}</span>
+                                                <span className="plp-facet-count">
+                                                    {parent.count}
+                                                </span>
+                                            </Link>
+
+                                            {parent.children?.length > 0 &&
+                                                isExpanded(parent) && (
+                                                <ul className="plp-category-children">
+                                                    {parent.children.map(
+                                                        (child) => (
+                                                            <li key={child.id}>
+                                                                <Link
+                                                                    href={ROUTES.SHOP_CATEGORY(
+                                                                        child.slug,
+                                                                    )}
+                                                                    className={`plp-category-link is-child${categorySlug === child.slug ? ' is-current' : ''}`}
+                                                                >
+                                                                    <span>
+                                                                        {
+                                                                            child.name
+                                                                        }
+                                                                    </span>
+                                                                    <span className="plp-facet-count">
+                                                                        {
+                                                                            child.count
+                                                                        }
+                                                                    </span>
+                                                                </Link>
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            )}
+                                        </li>
+                                    ))}
+
+                                    {visibleCategories.length === 0 && (
+                                        <li className="plp-filter-empty">
+                                            No category matches “{categoryQuery}
+                                            ”
+                                        </li>
+                                    )}
+                                </ul>
+                            </>
+                        )}
                     </section>
                 )}
 
                 <section className="plp-filter-group">
-                    <h4>Availability</h4>
+                    <button
+                        type="button"
+                        className="plp-filter-legend"
+                        aria-expanded={!collapsed.price}
+                        onClick={() => toggleSection('price')}
+                    >
+                        <h4>Price</h4>
+                        <ChevronDown size={15} />
+                    </button>
+                    {!collapsed.price && (
+                        <>
+                            {facets && facets.max_price > 0 && (
+                                <p className="plp-filter-hint">
+                                    {formatBdt(facets.min_price)} –{' '}
+                                    {formatBdt(facets.max_price)} available
+                                </p>
+                            )}
+                            <div className="plp-price-inputs">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    inputMode="numeric"
+                                    value={minPrice}
+                                    onChange={(e) =>
+                                        setMinPrice(e.target.value)
+                                    }
+                                    placeholder={
+                                        facets
+                                            ? String(
+                                                  Math.floor(facets.min_price),
+                                              )
+                                            : 'Min'
+                                    }
+                                    aria-label="Minimum price"
+                                />
+                                <span>to</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    inputMode="numeric"
+                                    value={maxPrice}
+                                    onChange={(e) =>
+                                        setMaxPrice(e.target.value)
+                                    }
+                                    placeholder={
+                                        facets
+                                            ? String(
+                                                  Math.ceil(facets.max_price),
+                                              )
+                                            : 'Max'
+                                    }
+                                    aria-label="Maximum price"
+                                />
+                            </div>
+                        </>
+                    )}
+                </section>
+
+                {allBrands.length > 0 && (
+                    <section className="plp-filter-group">
+                        <button
+                            type="button"
+                            className="plp-filter-legend"
+                            aria-expanded={!collapsed.brand}
+                            onClick={() => toggleSection('brand')}
+                        >
+                            <h4>Brand</h4>
+                            <ChevronDown size={15} />
+                        </button>
+
+                        {!collapsed.brand && (
+                            <>
+                                {allBrands.length > 8 && (
+                                    <div className="plp-filter-search">
+                                        <Search size={13} />
+                                        <input
+                                            type="search"
+                                            value={brandQuery}
+                                            onChange={(e) =>
+                                                setBrandQuery(e.target.value)
+                                            }
+                                            placeholder="Search brands"
+                                            aria-label="Search brands"
+                                        />
+                                    </div>
+                                )}
+                                <div className="plp-filter-options plp-filter-scroll">
+                                    {brands.map((brand) => (
+                                        <label
+                                            key={brand.id}
+                                            className="plp-filter-check"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedBrands.includes(
+                                                    brand.id,
+                                                )}
+                                                onChange={() =>
+                                                    toggleBrand(brand.id)
+                                                }
+                                            />
+                                            <span>{brand.name}</span>
+                                        </label>
+                                    ))}
+
+                                    {brands.length === 0 && (
+                                        <p className="plp-filter-empty">
+                                            No brand matches “{brandQuery}”
+                                        </p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </section>
+                )}
+
+                <section className="plp-filter-group">
+                    <button
+                        type="button"
+                        className="plp-filter-legend"
+                        aria-expanded={!collapsed.availability}
+                        onClick={() => toggleSection('availability')}
+                    >
+                        <h4>Availability</h4>
+                        <ChevronDown size={15} />
+                    </button>
                     <label className="plp-filter-check">
                         <input
                             type="checkbox"

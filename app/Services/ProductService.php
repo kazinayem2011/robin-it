@@ -183,6 +183,7 @@ class ProductService
             'min_price' => (float) ($bounds->min_price ?? 0),
             'max_price' => (float) ($bounds->max_price ?? 0),
             'brands' => $brands,
+            'categories' => $this->categoryFacet($scoped),
             'total' => (clone $query)->reorder()->count(),
             'category' => $category ? [
                 'id' => $category->id,
@@ -242,6 +243,77 @@ class ProductService
         return $query->take($this->clampLimit($limit))
             ->get()
             ->map(fn (Product $p) => $this->formatProductCardData($p));
+    }
+
+    /**
+     * The categories a shopper can still narrow to, as a two-level tree with
+     * counts.
+     *
+     * Built without the category filter applied, for the same reason the brand
+     * list is: narrowing it to the category already chosen would leave nothing
+     * else to pick and the sidebar would be a dead end.
+     *
+     * Products hang off leaf categories, so the counts are rolled up to the
+     * parents — a top-level entry reads as everything beneath it, which is what
+     * its own link actually returns.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function categoryFacet(array $scoped): array
+    {
+        $scope = array_diff_key($scoped, array_flip(['category_slug', 'category_id']));
+
+        $counts = $this->baseFilteredQuery($scope)
+            ->reorder()
+            ->selectRaw('category_id, COUNT(*) as total')
+            ->groupBy('category_id')
+            ->pluck('total', 'category_id');
+
+        if ($counts->isEmpty()) {
+            return [];
+        }
+
+        $categories = Category::where('is_active', true)
+            ->get(['id', 'name', 'slug', 'parent_id'])
+            ->keyBy('id');
+
+        // Roll each leaf's count up through its ancestors.
+        $totals = [];
+
+        foreach ($counts as $categoryId => $total) {
+            $node = $categories->get($categoryId);
+            $guard = 0;
+
+            while ($node && $guard++ < 10) {
+                $totals[$node->id] = ($totals[$node->id] ?? 0) + (int) $total;
+                $node = $node->parent_id ? $categories->get($node->parent_id) : null;
+            }
+        }
+
+        $node = fn (Category $c) => [
+            'id' => $c->id,
+            'name' => $c->name,
+            'slug' => $c->slug,
+            'count' => $totals[$c->id] ?? 0,
+        ];
+
+        return $categories
+            ->whereNull('parent_id')
+            ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0)
+            ->sortBy('name')
+            ->map(function (Category $parent) use ($categories, $totals, $node) {
+                return $node($parent) + [
+                    'children' => $categories
+                        ->where('parent_id', $parent->id)
+                        ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0)
+                        ->sortBy('name')
+                        ->map($node)
+                        ->values()
+                        ->all(),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     /**
