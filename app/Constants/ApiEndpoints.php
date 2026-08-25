@@ -143,6 +143,19 @@ class ApiEndpoints
     // Customer Account
     public const DASHBOARD = '/dashboard';
 
+    /*
+     * The account area is a page per section rather than one screen switching
+     * tabs in the browser, so each has a URL that can be linked, bookmarked and
+     * come back to.
+     */
+    public const DASHBOARD_ORDERS = '/dashboard/orders';
+
+    public const DASHBOARD_WISHLIST = '/dashboard/wishlist';
+
+    public const DASHBOARD_ADDRESSES = '/dashboard/addresses';
+
+    public const DASHBOARD_PROFILE = '/dashboard/profile';
+
     public const ACCOUNT = '/account';
 
     public const ACCOUNT_PROFILE = '/account/profile';

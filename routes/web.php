@@ -145,6 +145,14 @@ Route::middleware('throttle:api')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get(ApiEndpoints::DASHBOARD, [DashboardController::class, 'index'])->name('dashboard');
     Route::get(ApiEndpoints::ACCOUNT, [DashboardController::class, 'index'])->name('account');
+
+    // One page per section. Each loads only its own data: the single-page
+    // version fetched every order with its items, every address and every
+    // wishlist product on every visit, whichever tab you were looking at.
+    Route::get(ApiEndpoints::DASHBOARD_ORDERS, [DashboardController::class, 'orders'])->name('dashboard.orders');
+    Route::get(ApiEndpoints::DASHBOARD_WISHLIST, [DashboardController::class, 'wishlist'])->name('dashboard.wishlist');
+    Route::get(ApiEndpoints::DASHBOARD_ADDRESSES, [DashboardController::class, 'addresses'])->name('dashboard.addresses');
+    Route::get(ApiEndpoints::DASHBOARD_PROFILE, [DashboardController::class, 'profile'])->name('dashboard.profile');
     Route::post(ApiEndpoints::ACCOUNT_PROFILE, [DashboardController::class, 'updateProfile'])->name('account.profile');
     Route::post(ApiEndpoints::ACCOUNT_ADDRESS, [DashboardController::class, 'saveAddress'])->name('account.address');
     Route::delete(ApiEndpoints::ACCOUNT_ADDRESS_ITEM, [DashboardController::class, 'deleteAddress'])->name('account.address.delete');

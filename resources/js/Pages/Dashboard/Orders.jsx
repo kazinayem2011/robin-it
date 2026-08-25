@@ -1,0 +1,187 @@
+import React, { useState, useEffect } from 'react';
+import { Link, router } from '@inertiajs/react';
+import { Eye, XCircle } from 'lucide-react';
+import AccountLayout from './AccountLayout';
+import OrderInvoiceModal from './OrderInvoiceModal';
+import { StatusBadge } from '@/Components/StatusBadge';
+import { ProductImage } from '@/Components/ProductImage';
+import { formatBdt, formatDate } from '@/utils/formatters';
+import { ROUTES, API_ENDPOINTS } from '@/constants/endpoints';
+
+export default function Orders({ user, navCounts, techPoints, orders = [] }) {
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [cancellingId, setCancellingId] = useState(null);
+
+    /*
+     * The overview links here with ?order=<id> when someone asks to see one in
+     * full. On the single-page version that was a tab switch carrying the order
+     * in local state; across a real navigation it has to travel in the URL.
+     */
+    useEffect(() => {
+        const wanted = new URLSearchParams(window.location.search).get('order');
+
+        if (!wanted) return;
+
+        const match = orders.find((o) => String(o.id) === String(wanted));
+
+        if (match) setSelectedOrder(match);
+    }, [orders]);
+
+    // Mirrors Order::isCancellableByCustomer() — cancellable until it ships.
+    const isCancellable = (order) =>
+        ['pending', 'processing'].includes(order.status);
+
+    const cancelOrder = (order) => {
+        if (
+            !window.confirm(
+                `Cancel order #${order.order_number}? The items will be returned to stock.`,
+            )
+        ) {
+            return;
+        }
+
+        setCancellingId(order.id);
+        router.post(
+            API_ENDPOINTS.ACCOUNT.ORDER_CANCEL(order.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setCancellingId(null),
+            },
+        );
+    };
+
+    return (
+        <AccountLayout
+            title="My Orders"
+            active="orders"
+            user={user}
+            navCounts={navCounts}
+            techPoints={techPoints}
+        >
+            <div>
+                <div className="dash-tab-header">
+                    <div>
+                        <h2>My Hardware Orders</h2>
+                        <p>
+                            Track your active shipments, delivery status, and
+                            invoices.
+                        </p>
+                    </div>
+                </div>
+
+                {orders.length === 0 ? (
+                    <div className="dash-empty-box">
+                        <p className="dash-empty-text">
+                            You haven't placed any orders yet.
+                        </p>
+                        <Link
+                            href={ROUTES.SHOP}
+                            className="btn btn-primary btn-sm mt-3"
+                        >
+                            Browse Products
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="orders-list-wrapper">
+                        {orders.map((order) => (
+                            <div key={order.id} className="order-history-card">
+                                <div className="order-card-header">
+                                    <div>
+                                        <span className="dash-order-num-label">
+                                            Order Number:{' '}
+                                        </span>
+                                        <strong className="dash-order-num-strong">
+                                            #{order.order_number}
+                                        </strong>
+                                        <span className="dash-order-divider">
+                                            |
+                                        </span>
+                                        <span className="dash-order-date">
+                                            {formatDate(order.created_at)}
+                                        </span>
+                                    </div>
+                                    <StatusBadge status={order.status} />
+                                </div>
+
+                                <div className="order-card-body">
+                                    <div className="order-items-grid">
+                                        {order.items?.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="order-item-row"
+                                            >
+                                                <ProductImage
+                                                    product={item.product}
+                                                    alt={item.product_name}
+                                                    className="order-item-thumb"
+                                                />
+                                                <div className="order-item-details">
+                                                    <div className="order-item-name">
+                                                        {item.product_name}
+                                                        {item.variant_name
+                                                            ? ` (${item.variant_name})`
+                                                            : ''}
+                                                    </div>
+                                                    <div className="order-item-sub">
+                                                        Qty: {item.quantity} ×{' '}
+                                                        {formatBdt(item.price)}
+                                                    </div>
+                                                </div>
+                                                <div className="order-item-price">
+                                                    {formatBdt(item.total)}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="order-card-footer">
+                                    <div>
+                                        <span className="dash-order-total-label">
+                                            Total:{' '}
+                                        </span>
+                                        <strong className="dash-order-total-val">
+                                            {formatBdt(order.total)}
+                                        </strong>
+                                    </div>
+                                    <div className="dash-order-actions-row">
+                                        <button
+                                            className="btn btn-outline btn-sm"
+                                            onClick={() =>
+                                                setSelectedOrder(order)
+                                            }
+                                        >
+                                            <Eye size={14} /> Order Invoice
+                                        </button>
+                                        {isCancellable(order) && (
+                                            <button
+                                                className="btn btn-outline btn-sm dash-order-cancel-btn"
+                                                disabled={
+                                                    cancellingId === order.id
+                                                }
+                                                onClick={() =>
+                                                    cancelOrder(order)
+                                                }
+                                            >
+                                                <XCircle size={14} />{' '}
+                                                {cancellingId === order.id
+                                                    ? 'Cancelling…'
+                                                    : 'Cancel Order'}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <OrderInvoiceModal
+                selectedOrder={selectedOrder}
+                setSelectedOrder={setSelectedOrder}
+            />
+        </AccountLayout>
+    );
+}

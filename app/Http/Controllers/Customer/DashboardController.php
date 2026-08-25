@@ -21,41 +21,102 @@ class DashboardController extends Controller
     /**
      * Display the Customer Account Dashboard.
      */
+    /**
+     * What every account page needs: who is signed in, the counts beside the
+     * sidebar links, and the points shown in the header.
+     *
+     * @return array<string, mixed>
+     */
+    private function shell($user): array
+    {
+        $spend = (float) Order::where('user_id', $user->id)
+            ->where('status', '!=', 'cancelled')
+            ->sum('total');
+
+        return [
+            'user' => $user,
+            'navCounts' => [
+                'orders' => Order::where('user_id', $user->id)->count(),
+                'wishlist' => Wishlist::where('user_id', $user->id)->count(),
+            ],
+            'techPoints' => (int) floor($spend / 100),
+        ];
+    }
+
+    /**
+     * Account overview.
+     *
+     * Only the few most recent orders are loaded. This used to send every order
+     * with all its items, every address and every wishlist product on every
+     * visit, whichever section the customer was actually looking at.
+     */
     public function index(Request $request): Response
     {
         $user = Auth::user();
 
-        // Fetch User's Orders with eager-loaded items
-        $orders = Order::where('user_id', $user->id)
-            ->with(['items.product.images'])
-            ->latest()
-            ->get();
+        $counts = Order::where('user_id', $user->id)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        // Fetch User's Saved Delivery Addresses
-        $addresses = Address::where('user_id', $user->id)->get();
+        $spend = (float) Order::where('user_id', $user->id)
+            ->where('status', '!=', 'cancelled')
+            ->sum('total');
 
-        // Fetch User's Wishlist Items
-        $wishlistItems = Wishlist::where('user_id', $user->id)
-            ->with(['product.brand', 'product.images'])
-            ->get();
-
-        // Calculate summary stats
         $stats = [
-            'total_orders' => $orders->count(),
-            'pending_orders' => $orders->whereIn('status', ['pending', 'processing', 'shipped'])->count(),
-            'completed_orders' => $orders->where('status', 'delivered')->count(),
-            'wishlist_count' => $wishlistItems->count(),
-            'total_spent' => (float) $orders->where('status', '!=', 'cancelled')->sum('total'),
-            'tech_points' => floor($orders->where('status', '!=', 'cancelled')->sum('total') / 100),
+            'total_orders' => (int) $counts->sum(),
+            'pending_orders' => (int) $counts->only(['pending', 'processing', 'shipped'])->sum(),
+            'completed_orders' => (int) ($counts['delivered'] ?? 0),
+            'wishlist_count' => Wishlist::where('user_id', $user->id)->count(),
+            'total_spent' => $spend,
+            'tech_points' => (int) floor($spend / 100),
         ];
 
-        return Inertia::render('Dashboard/Index', [
-            'user' => $user,
-            'orders' => $orders,
-            'addresses' => $addresses,
-            'wishlistItems' => $wishlistItems,
+        return Inertia::render('Dashboard/Index', array_merge($this->shell($user), [
+            'recentOrders' => Order::where('user_id', $user->id)
+                ->with(['items.product.images'])
+                ->latest()
+                ->take(3)
+                ->get(),
             'stats' => $stats,
-        ]);
+        ]));
+    }
+
+    public function orders(Request $request): Response
+    {
+        $user = Auth::user();
+
+        return Inertia::render('Dashboard/Orders', array_merge($this->shell($user), [
+            'orders' => Order::where('user_id', $user->id)
+                ->with(['items.product.images'])
+                ->latest()
+                ->get(),
+        ]));
+    }
+
+    public function wishlist(Request $request): Response
+    {
+        $user = Auth::user();
+
+        return Inertia::render('Dashboard/Wishlist', array_merge($this->shell($user), [
+            'wishlistItems' => Wishlist::where('user_id', $user->id)
+                ->with(['product.brand', 'product.images'])
+                ->get(),
+        ]));
+    }
+
+    public function addresses(Request $request): Response
+    {
+        $user = Auth::user();
+
+        return Inertia::render('Dashboard/Addresses', array_merge($this->shell($user), [
+            'addresses' => Address::where('user_id', $user->id)->get(),
+        ]));
+    }
+
+    public function profile(Request $request): Response
+    {
+        return Inertia::render('Dashboard/Profile', $this->shell(Auth::user()));
     }
 
     /**
