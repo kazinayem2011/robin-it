@@ -317,6 +317,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             onChange={applyFilters}
                             categorySlug={categorySlug}
                             hideOnSale={onSaleOnly}
+                            loading={facets === null}
                         />
 
                         <div className="plp-results" id="shop-results">

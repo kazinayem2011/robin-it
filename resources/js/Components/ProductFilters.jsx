@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
 import { formatBdt } from '../utils/formatters';
 import { ROUTES } from '../constants/endpoints';
+import { FilterFacetSkeleton } from './Skeleton';
 
 /**
  * The shop's filter panel.
@@ -20,6 +21,12 @@ export default function ProductFilters({
     // The offers page is already restricted to on-sale, so the box would be
     // a checkbox that does nothing.
     hideOnSale = false,
+    /*
+     * The facets have not arrived yet. Category and Brand are built entirely
+     * from them, so without a placeholder those two sections simply are not
+     * there and the sidebar collapses to a third of its height.
+     */
+    loading = false,
     debounceMs = 400,
 }) {
     const [minPrice, setMinPrice] = useState(value.min_price ?? '');
@@ -186,7 +193,9 @@ export default function ProductFilters({
                     )}
                 </div>
 
-                {categories.length > 0 && (
+                {loading && <FilterFacetSkeleton />}
+
+                {!loading && categories.length > 0 && (
                     <section className="plp-filter-group">
                         <button
                             type="button"
@@ -345,7 +354,7 @@ export default function ProductFilters({
                     )}
                 </section>
 
-                {allBrands.length > 0 && (
+                {!loading && allBrands.length > 0 && (
                     <section className="plp-filter-group">
                         <button
                             type="button"

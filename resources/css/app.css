@@ -1600,10 +1600,15 @@ textarea.has-error:focus,
 /* Standard Product Card */
 .standard-product-card,
 .flash-product-card {
+    /*
+     * Named so the image can cancel exactly this much and sit flush with the
+     * card edge, whichever card it is in — the flash variant sets 20px.
+     */
+    --card-pad: 16px;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 16px;
+    padding: var(--card-pad);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1725,7 +1730,19 @@ textarea.has-error:focus,
 
 /* Product Image Box */
 .product-image-box {
-    width: 100%;
+    /*
+     * Full-bleed: the image spans the card rather than sitting in a padded
+     * frame inside it. The negative margins cancel the card's own padding on
+     * the three edges it touches, and the card's overflow: hidden clips the
+     * top corners to the card's radius, so the box needs none of its own.
+     *
+     * object-fit stays contain — a product photo cropped to fill would lose
+     * the ends of a graphics card or the corners of a case.
+     */
+    margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) 12px;
+    padding: 0;
+    border-radius: 0;
+    width: auto;
     /*
      * Scales with the card instead of a flat 200px. In a three- or four-column
      * grid the card is only ~238px wide, so a fixed 200px image was nearly
@@ -1737,19 +1754,15 @@ textarea.has-error:focus,
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
-    padding: 10px;
     background: var(--bg-surface-subtle);
-    border-radius: var(--radius-sm);
     overflow: hidden;
     text-decoration: none;
 }
 
 .product-image-box img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
+    /* Fills the box it is given; contain keeps the product uncropped. */
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     transition: transform var(--transition-normal);
 }
@@ -2549,4 +2562,16 @@ textarea.has-error:focus,
 
 .mb-4 {
     margin-bottom: 16px;
+}
+
+/*
+ * Placeholder rows for the filter sidebar's Category and Brand sections while
+ * the facets load. Spacing matches the real rows, so the sidebar keeps close
+ * to its final height instead of collapsing and springing back.
+ */
+.plp-filter-skeleton-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0 2px;
 }

@@ -19,6 +19,7 @@ export {
     LineItemsSkeleton,
     ProductDetailSkeleton,
     BuilderRowsSkeleton,
+    FilterFacetSkeleton,
 } from './Skeleton';
 export { default as EmptyState } from './EmptyState';
 export { default as ToastContainer, Toast, toast } from './Toast';

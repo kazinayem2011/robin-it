@@ -675,7 +675,8 @@
 
 .flash-product-card {
     background: #ffffff;
-    padding: 20px;
+    --card-pad: 20px;
+    padding: var(--card-pad);
     position: relative;
     display: flex;
     flex-direction: column;

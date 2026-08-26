@@ -169,4 +169,41 @@ export const BuilderRowsSkeleton = ({ count = 8 }) => (
     </div>
 );
 
+/**
+ * The two filter sections that only exist once the facets arrive.
+ *
+ * Category links are Inertia visits, so choosing one remounts the listing and
+ * the facets start again from nothing. Without a placeholder the sidebar
+ * dropped from roughly 2300px to 720px and sprang back a moment later, which
+ * shoved the page around on every category click.
+ */
+export const FilterFacetSkeleton = () => (
+    <>
+        <section className="plp-filter-group">
+            <div className="plp-filter-legend" aria-hidden="true">
+                <h4>Category</h4>
+            </div>
+            {/* The real section carries a search box above six or more rows. */}
+            <div className="plp-filter-skeleton-rows">
+                <Skeleton height="34px" />
+                {range(8).map((i) => (
+                    <Skeleton key={i} height="17px" width={`${88 - i * 6}%`} />
+                ))}
+            </div>
+        </section>
+
+        <section className="plp-filter-group">
+            <div className="plp-filter-legend" aria-hidden="true">
+                <h4>Brand</h4>
+            </div>
+            <div className="plp-filter-skeleton-rows">
+                <Skeleton height="34px" />
+                {range(8).map((i) => (
+                    <Skeleton key={i} height="17px" width={`${76 - i * 4}%`} />
+                ))}
+            </div>
+        </section>
+    </>
+);
+
 export default Skeleton;
