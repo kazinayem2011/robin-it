@@ -2575,3 +2575,26 @@ textarea.has-error:focus,
     gap: 12px;
     padding: 4px 0 2px;
 }
+
+/*
+ * The filters while their counts are being refreshed.
+ *
+ * Choosing one starts a request, and until it answers every number beside
+ * every other option is about to change. The panel stays exactly where it is —
+ * replacing it with placeholders would hide something the shopper is reading —
+ * but it stops taking clicks, so a second choice cannot be made against counts
+ * that are already stale. The product grid shows its own skeletons meanwhile,
+ * which is where the waiting belongs.
+ */
+.plp-filters-body.is-busy {
+    pointer-events: none;
+    opacity: 0.55;
+    transition: opacity var(--transition-fast);
+}
+
+/* Nothing beneath is reachable by keyboard while it is out of action either. */
+.plp-filters-body.is-busy a,
+.plp-filters-body.is-busy button,
+.plp-filters-body.is-busy input {
+    pointer-events: none;
+}

@@ -27,6 +27,12 @@ export default function ProductFilters({
      * there and the sidebar collapses to a third of its height.
      */
     loading = false,
+    /*
+     * A refresh is in flight but the sidebar already has something to show.
+     * It stays visible and stops taking clicks, rather than being replaced by
+     * placeholders for content the shopper is looking at.
+     */
+    busy = false,
     debounceMs = 400,
 }) {
     const [minPrice, setMinPrice] = useState(value.min_price ?? '');
@@ -38,6 +44,26 @@ export default function ProductFilters({
     const [categoryQuery, setCategoryQuery] = useState('');
     const [brandQuery, setBrandQuery] = useState('');
     const [collapsed, setCollapsed] = useState({});
+    const bodyRef = useRef(null);
+
+    /*
+     * pointer-events stops the mouse but not the keyboard — a link reached by
+     * Tab is still activatable with Enter. `inert` takes the whole subtree out
+     * of focus order and out of the accessibility tree for as long as it is
+     * out of action. React 18 does not know the attribute, so it is set on the
+     * node directly.
+     */
+    useEffect(() => {
+        const node = bodyRef.current;
+
+        if (!node) return;
+
+        if (busy && !loading) {
+            node.setAttribute('inert', '');
+        } else {
+            node.removeAttribute('inert');
+        }
+    }, [busy, loading]);
 
     const toggleSection = (key) =>
         setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -179,7 +205,11 @@ export default function ProductFilters({
                 )}
             </button>
 
-            <div className="plp-filters-body">
+            <div
+                ref={bodyRef}
+                className={`plp-filters-body${busy && !loading ? ' is-busy' : ''}`}
+                aria-busy={busy || undefined}
+            >
                 <div className="plp-filters-head">
                     <h3>Filters</h3>
                     {activeCount > 0 && (

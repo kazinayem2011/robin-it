@@ -33,6 +33,17 @@ import './Index.css';
  * that would have to grow its own paging, filters, URL sync and skeletons and
  * then drift from this one.
  */
+/*
+ * The last facets we were given, kept outside the component.
+ *
+ * Choosing a category is an Inertia visit, which remounts this page, so
+ * component state cannot carry the sidebar across it. Without somewhere to
+ * hold them the filter had nothing to draw and fell back to placeholders on
+ * every click — a skeleton for something the shopper was already looking at.
+ * They are only a frame stale: the request for the new ones is already out.
+ */
+let lastFacets = null;
+
 export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     /*
      * Paging, sorting and filtering used to start from hardcoded defaults, so
@@ -65,7 +76,11 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     const { wishlistIds, toggleWishlist } = useWishlist();
     const addToCart = useAddToCart();
     const [loadError, setLoadError] = useState(null);
-    const [facets, setFacets] = useState(null);
+    const [facets, setFacets] = useState(lastFacets);
+
+    // In flight. The sidebar stays on screen but stops accepting clicks, so a
+    // second choice cannot be made against counts that are about to change.
+    const [facetsBusy, setFacetsBusy] = useState(true);
     // Everything the shopper has narrowed by, kept in one object so a change
     // to any of it can reset paging in a single place.
     const [filters, setFilters] = useState(initial.filters);
@@ -133,13 +148,23 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     useEffect(() => {
         let cancelled = false;
 
+        setFacetsBusy(true);
+
         productService
             .getFilters({ category_slug: categorySlug, ...requestFilters })
             .then((data) => {
-                if (!cancelled) setFacets(data);
+                if (cancelled) return;
+
+                lastFacets = data;
+                setFacets(data);
             })
             .catch(() => {
-                if (!cancelled) setFacets(null);
+                // Leave whatever is on screen rather than emptying the sidebar
+                // — a failed refresh should not take the filters away.
+                if (!cancelled && facets === null) setFacets(null);
+            })
+            .finally(() => {
+                if (!cancelled) setFacetsBusy(false);
             });
 
         return () => {
@@ -317,7 +342,10 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             onChange={applyFilters}
                             categorySlug={categorySlug}
                             hideOnSale={onSaleOnly}
+                            /* Placeholders only when there is nothing at all
+                               to show — the very first listing of the session. */
                             loading={facets === null}
+                            busy={facetsBusy}
                         />
 
                         <div className="plp-results" id="shop-results">
