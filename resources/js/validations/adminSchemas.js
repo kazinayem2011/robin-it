@@ -127,6 +127,9 @@ export const adminSettingsSchema = Yup.object().shape({
         .nullable(),
     announcement_text: Yup.string().required('Announcement text is required'),
     announcement_active: Yup.boolean().default(true),
+    announcement_badge: Yup.string()
+        .max(24, 'Keep the badge short — it is a pill, not a sentence')
+        .nullable(),
     shipping_inside_dhaka: Yup.number()
         .min(0)
         .required('Shipping rate is required'),

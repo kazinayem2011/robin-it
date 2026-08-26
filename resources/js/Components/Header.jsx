@@ -87,11 +87,20 @@ export const Header = () => {
         const header = mainHeaderRef.current;
         const nav = megaNavRef.current;
 
-        if (!ticker || !header || typeof ResizeObserver === 'undefined') return;
+        /*
+         * The ticker can be switched off in Settings, in which case there is
+         * no element to measure. Everything else still has to be published —
+         * bailing out here would leave --site-header-h and --site-chrome-h
+         * unset, and the sticky header and every sidebar that pins beneath it
+         * depend on them.
+         */
+        if (!header || typeof ResizeObserver === 'undefined') return;
 
         const publish = () => {
             const root = document.documentElement.style;
-            const tickerH = Math.round(ticker.getBoundingClientRect().height);
+            const tickerH = ticker
+                ? Math.round(ticker.getBoundingClientRect().height)
+                : 0;
             const headerH = Math.round(header.getBoundingClientRect().height);
             const navH = nav
                 ? Math.round(nav.getBoundingClientRect().height)
@@ -113,7 +122,7 @@ export const Header = () => {
         publish();
 
         const observer = new ResizeObserver(publish);
-        observer.observe(ticker);
+        if (ticker) observer.observe(ticker);
         observer.observe(header);
         if (nav) observer.observe(nav);
         window.addEventListener('resize', publish);
@@ -124,9 +133,22 @@ export const Header = () => {
         };
     }, []);
 
+    /*
+     * announcement_text is the key the admin form writes. This read
+     * announcement_ticker, which nothing has ever stored, so the ticker always
+     * fell through to the line below — editing it under Settings changed
+     * nothing on the site.
+     */
     const announcement =
-        siteSettings.announcement_ticker ||
+        siteSettings.announcement_text ||
         '⚡ Flash Deals Live: Save up to 40% OFF on Gaming Laptops & Graphics Cards! Free 64-District Express Delivery on orders over ৳50,000.';
+
+    /*
+     * The settings screen has an on/off switch for the ticker that nothing was
+     * reading either. Stored as '1'/'0'; anything else — including the key
+     * being absent on an older install — means on.
+     */
+    const announcementActive = siteSettings.announcement_active !== '0';
 
     // The heading stays put; only the offer itself travels.
     const { label: announcementLabel, message: announcementMessage } =
@@ -137,74 +159,85 @@ export const Header = () => {
     return (
         <header className="site-header-wrapper">
             {/* 1. TOP ANNOUNCEMENT TICKER STRIP */}
-            <div className="top-ticker-bar" ref={tickerRef}>
-                <div className="container top-ticker-inner">
-                    <div className="top-ticker-left">
-                        <span className="ticker-pulse-badge">
-                            <span className="live-dot"></span>{' '}
-                            {siteSettings.announcement_badge || 'LIVE OFFER'}
-                        </span>
-                        {/*
-                         * The announcement scrolls rather than being cut off
-                         * mid-word by the width of the bar. The text is
-                         * rendered twice so the track can travel exactly one
-                         * copy's width and start over with no visible jump;
-                         * the second copy is hidden from screen readers, which
-                         * would otherwise announce it all again.
-                         */}
-                        {announcementLabel && (
-                            <p className="ticker-label">{announcementLabel}</p>
-                        )}
-                        <div className="header-marquee">
-                            <div
-                                className="header-marquee-track"
-                                ref={marqueeRef}
-                            >
-                                <p className="ticker-text">
-                                    {announcementMessage}
+            {announcementActive && (
+                <div className="top-ticker-bar" ref={tickerRef}>
+                    <div className="container top-ticker-inner">
+                        <div className="top-ticker-left">
+                            <span className="ticker-pulse-badge">
+                                <span className="live-dot"></span>{' '}
+                                {siteSettings.announcement_badge ||
+                                    'LIVE OFFER'}
+                            </span>
+                            {/*
+                             * The announcement scrolls rather than being cut off
+                             * mid-word by the width of the bar. The text is
+                             * rendered twice so the track can travel exactly one
+                             * copy's width and start over with no visible jump;
+                             * the second copy is hidden from screen readers, which
+                             * would otherwise announce it all again.
+                             */}
+                            {announcementLabel && (
+                                <p className="ticker-label">
+                                    {announcementLabel}
                                 </p>
-                                <p className="ticker-text" aria-hidden="true">
-                                    {announcementMessage}
-                                </p>
+                            )}
+                            <div className="header-marquee">
+                                <div
+                                    className="header-marquee-track"
+                                    ref={marqueeRef}
+                                >
+                                    <p className="ticker-text">
+                                        {announcementMessage}
+                                    </p>
+                                    <p
+                                        className="ticker-text"
+                                        aria-hidden="true"
+                                    >
+                                        {announcementMessage}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="top-ticker-right">
-                        <a
-                            href={`tel:${siteSettings.hotline_number || siteConfig.hotline}`}
-                            className="ticker-link hotline-pill"
-                        >
-                            <PhoneCall size={13} className="ticker-icon" />
-                            <span>
-                                {siteSettings.hotline_number ||
-                                    siteConfig.hotline}{' '}
-                                (
-                                {siteSettings.hotline_hours ||
-                                    siteConfig.hotlineHours
-                                        .split('(')[0]
-                                        .trim()}
-                                )
-                            </span>
-                        </a>
-                        <span className="ticker-divider"></span>
-                        <Link href={ROUTES.TRACK} className="ticker-link">
-                            <Truck size={13} className="ticker-icon" />
-                            <span>Track Order</span>
-                        </Link>
-                        <span className="ticker-divider"></span>
-                        <Link href={ROUTES.STORES} className="ticker-link">
-                            <MapPin size={13} className="ticker-icon" />
-                            <span>Showrooms</span>
-                        </Link>
-                        <span className="ticker-divider"></span>
-                        <Link href={ROUTES.SUPPORT} className="ticker-link">
-                            <ShieldCheck size={13} className="ticker-icon" />
-                            <span>Warranty Claim</span>
-                        </Link>
+                        <div className="top-ticker-right">
+                            <a
+                                href={`tel:${siteSettings.hotline_number || siteConfig.hotline}`}
+                                className="ticker-link hotline-pill"
+                            >
+                                <PhoneCall size={13} className="ticker-icon" />
+                                <span>
+                                    {siteSettings.hotline_number ||
+                                        siteConfig.hotline}{' '}
+                                    (
+                                    {siteSettings.hotline_hours ||
+                                        siteConfig.hotlineHours
+                                            .split('(')[0]
+                                            .trim()}
+                                    )
+                                </span>
+                            </a>
+                            <span className="ticker-divider"></span>
+                            <Link href={ROUTES.TRACK} className="ticker-link">
+                                <Truck size={13} className="ticker-icon" />
+                                <span>Track Order</span>
+                            </Link>
+                            <span className="ticker-divider"></span>
+                            <Link href={ROUTES.STORES} className="ticker-link">
+                                <MapPin size={13} className="ticker-icon" />
+                                <span>Showrooms</span>
+                            </Link>
+                            <span className="ticker-divider"></span>
+                            <Link href={ROUTES.SUPPORT} className="ticker-link">
+                                <ShieldCheck
+                                    size={13}
+                                    className="ticker-icon"
+                                />
+                                <span>Warranty Claim</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* 2. MAIN HEADER ROW */}
             <div className="site-main-header" ref={mainHeaderRef}>

@@ -127,6 +127,7 @@ export default function AdminSettings({
                 initialMap.announcement_text ||
                 '⚡ Ramadan Tech Fest: Up to 15% Instant Discount on All Genuine Builds! Cash on Delivery Nationwide.',
             announcement_active: initialMap.announcement_active !== '0',
+            announcement_badge: initialMap.announcement_badge || 'LIVE OFFER',
             shipping_inside_dhaka: Number(
                 initialMap.shipping_inside_dhaka || 60,
             ),
@@ -726,15 +727,40 @@ export default function AdminSettings({
                                 </div>
                             </div>
                             <div className="admin-card-body">
-                                <FormInput
-                                    label="Broadcast Message Text"
-                                    name="announcement_text"
-                                    type="textarea"
-                                    rows={2}
-                                    required
-                                    formik={formik}
-                                    placeholder="Enter promotional banner announcement..."
-                                />
+                                <div className="admin-field-group">
+                                    <FormInput
+                                        label="Broadcast Message Text"
+                                        name="announcement_text"
+                                        type="textarea"
+                                        rows={2}
+                                        required
+                                        formik={formik}
+                                        placeholder="Enter promotional banner announcement..."
+                                    />
+                                    <small className="admin-field-hint">
+                                        Anything before the first colon becomes
+                                        a heading that stays put while the rest
+                                        scrolls.
+                                    </small>
+                                </div>
+
+                                {/*
+                                 * The header has always rendered this badge and
+                                 * there was no field for it, so "LIVE OFFER"
+                                 * could not be changed from the admin at all.
+                                 */}
+                                <div className="admin-field-group">
+                                    <FormInput
+                                        label="Badge Text"
+                                        name="announcement_badge"
+                                        formik={formik}
+                                        placeholder="LIVE OFFER"
+                                    />
+                                    <small className="admin-field-hint">
+                                        The pill at the far left of the ticker,
+                                        beside the pulsing dot.
+                                    </small>
+                                </div>
                                 <div className="form-checkbox-row">
                                     <input
                                         type="checkbox"
