@@ -211,7 +211,7 @@ export const Footer = () => {
                 </div>
             </div>
 
-            {/* Bottom Bar: Payment Logos & Copyright */}
+            {/* Bottom Bar: Copyright */}
             <div className="footer-bottom-bar">
                 <div className="container footer-bottom-inner">
                     {/*
@@ -227,17 +227,6 @@ export const Footer = () => {
                             ? ` ${siteConfig.footerNote}`
                             : ''}
                     </p>
-                    <div className="payment-partners-strip">
-                        <span className="payment-label">
-                            Accepted Payments:
-                        </span>
-                        <span className="pay-chip">bKash</span>
-                        <span className="pay-chip">Nagad</span>
-                        <span className="pay-chip">VISA</span>
-                        <span className="pay-chip">MasterCard</span>
-                        <span className="pay-chip">AMEX</span>
-                        <span className="pay-chip">COD Available</span>
-                    </div>
                 </div>
             </div>
         </footer>

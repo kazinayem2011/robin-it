@@ -1716,44 +1716,22 @@
     background-color: var(--dark-950);
 }
 
+/*
+ * A single centred line since the "Accepted Payments" chips came out — with
+ * nothing to sit opposite, space-between just pinned the copyright to the
+ * left edge of a very wide bar.
+ */
 .footer-bottom-inner {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: 20px;
+    text-align: center;
 }
 
 .copyright-text {
     font-size: 0.8rem;
     color: var(--gray-500);
-}
-
-.payment-partners-strip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    /*
-     * Wraps rather than running off the side. A non-wrapping flex row of
-     * payment chips came to 470px, which on a 375px phone made every page on
-     * the site scroll sideways — the footer is on all of them.
-     */
-    flex-wrap: wrap;
-}
-
-.payment-label {
-    font-size: 0.75rem;
-    color: var(--gray-400);
-    font-weight: 600;
-}
-
-.pay-chip {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--white);
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: var(--radius-xs);
 }
 
 /* ── Mobile Menu Trigger Buttons ────────────────────────────────────────── */
@@ -2202,6 +2180,5 @@
     }
     .footer-bottom-inner {
         flex-direction: column;
-        text-align: center;
     }
 }
