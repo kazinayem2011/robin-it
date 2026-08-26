@@ -15,10 +15,16 @@
  * Sorts the listing offers; anything else in the URL is ignored.
  *
  * These must stay in step with the API, which validates
- * `in:latest,price_low_high,price_high_low,name_asc` — a value this list lets
- * through but the backend rejects would 422 the whole listing.
+ * `in:latest,price_low_high,price_high_low,name_asc,discount_high` — a value
+ * this list lets through but the backend rejects would 422 the whole listing.
  */
-const SORTS = ['latest', 'price_low_high', 'price_high_low', 'name_asc'];
+const SORTS = [
+    'latest',
+    'price_low_high',
+    'price_high_low',
+    'name_asc',
+    'discount_high',
+];
 
 const DEFAULT_SORT = 'latest';
 
@@ -30,9 +36,12 @@ const toPositiveInt = (raw) => {
 
 /**
  * @param {string} search - `window.location.search`
+ * @param {string} defaultSort - what this listing sorts by when the URL says
+ *   nothing. The offers page leads with the deepest discount rather than the
+ *   newest arrival.
  * @returns {{page: number, sort: string, filters: object}}
  */
-export const parseShopQuery = (search = '') => {
+export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
     const params = new URLSearchParams(search);
     const filters = {};
 
@@ -58,7 +67,7 @@ export const parseShopQuery = (search = '') => {
 
     return {
         page: toPositiveInt(params.get('page')) ?? 1,
-        sort: SORTS.includes(sort) ? sort : DEFAULT_SORT,
+        sort: SORTS.includes(sort) ? sort : defaultSort,
         filters,
     };
 };
@@ -73,6 +82,7 @@ export const buildShopSearch = ({
     page = 1,
     sort = DEFAULT_SORT,
     filters = {},
+    defaultSort = DEFAULT_SORT,
 } = {}) => {
     const params = new URLSearchParams();
 
@@ -86,7 +96,8 @@ export const buildShopSearch = ({
     if (filters.in_stock) params.set('in_stock', '1');
     if (filters.on_sale) params.set('on_sale', '1');
 
-    if (sort && sort !== DEFAULT_SORT) params.set('sort', sort);
+    // Only worth naming when it differs from what this listing does anyway.
+    if (sort && sort !== defaultSort) params.set('sort', sort);
     if (page > 1) params.set('page', String(page));
 
     const query = params.toString();

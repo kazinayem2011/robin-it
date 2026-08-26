@@ -36,7 +36,7 @@ class ProductController extends Controller
             'min_price' => 'nullable|numeric|min:0',
             'max_price' => 'nullable|numeric|min:0',
             'search' => 'nullable|string|max:120',
-            'sort' => 'nullable|string|in:latest,price_low_high,price_high_low,name_asc',
+            'sort' => 'nullable|string|in:latest,price_low_high,price_high_low,name_asc,discount_high',
             'per_page' => 'nullable|integer|min:1|max:'.ProductService::MAX_PER_PAGE,
             'page' => 'nullable|integer|min:1',
         ]);

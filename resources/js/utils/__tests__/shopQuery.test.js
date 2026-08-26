@@ -52,6 +52,60 @@ describe('parseShopQuery', () => {
     });
 });
 
+describe('per-listing default sort', () => {
+    /*
+     * The offers page leads with the deepest discount. Its default must not
+     * appear in the URL, or every visit would rewrite /offers to
+     * /offers?sort=discount_high.
+     */
+    it('falls back to the listing default rather than latest', () => {
+        expect(parseShopQuery('', 'discount_high').sort).toBe('discount_high');
+    });
+
+    it('still lets the URL override the listing default', () => {
+        expect(
+            parseShopQuery('?sort=price_low_high', 'discount_high').sort,
+        ).toBe('price_low_high');
+    });
+
+    it('rejects an unknown sort back to the listing default', () => {
+        expect(parseShopQuery('?sort=nonsense', 'discount_high').sort).toBe(
+            'discount_high',
+        );
+    });
+
+    it('omits the listing default from the querystring', () => {
+        expect(
+            buildShopSearch({
+                sort: 'discount_high',
+                defaultSort: 'discount_high',
+            }),
+        ).toBe('');
+    });
+
+    it('names a sort that differs from the listing default', () => {
+        expect(
+            buildShopSearch({ sort: 'latest', defaultSort: 'discount_high' }),
+        ).toBe('?sort=latest');
+    });
+
+    it('round-trips against a non-default listing sort', () => {
+        const state = { page: 2, sort: 'latest', filters: { on_sale: true } };
+        const search = buildShopSearch({
+            ...state,
+            defaultSort: 'discount_high',
+        });
+
+        expect(parseShopQuery(search, 'discount_high')).toEqual(state);
+    });
+
+    it('accepts the discount sort the API validates', () => {
+        expect(parseShopQuery('?sort=discount_high').sort).toBe(
+            'discount_high',
+        );
+    });
+});
+
 describe('buildShopSearch', () => {
     it('is empty for an untouched listing', () => {
         expect(buildShopSearch({ page: 1, sort: 'latest', filters: {} })).toBe(

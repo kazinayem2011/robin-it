@@ -20,6 +20,17 @@ class ProductService
     /** SQL for "the price the customer actually pays", matching Product::hasDiscount(). */
     private const EFFECTIVE_PRICE_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price THEN discount_price ELSE price END';
 
+    /**
+     * How deep the discount is, as a percentage of the original price.
+     *
+     * Percentage rather than the amount saved, so a ৳900 saving on a ৳3,000
+     * cooler outranks the same ৳900 off a ৳90,000 graphics card — which is the
+     * one a shopper would call the better deal. Anything not discounted scores
+     * zero and sinks to the bottom rather than being excluded, so this is a
+     * safe sort for the full catalogue and not only the offers page.
+     */
+    private const DISCOUNT_DEPTH_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price AND price > 0 THEN (price - discount_price) * 100.0 / price ELSE 0 END';
+
     public function __construct(
         protected CategoryService $categoryService,
         protected PcCompatibilityService $compatibility
@@ -40,6 +51,10 @@ class ProductService
             'price_low_high' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' asc'),
             'price_high_low' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' desc'),
             'name_asc' => $query->orderBy('name', 'asc'),
+            // Ties broken by newest, so the order is stable across pages
+            // rather than left to whatever the database returns.
+            'discount_high' => $query->orderByRaw(self::DISCOUNT_DEPTH_SQL.' desc')
+                ->orderByDesc('id'),
             default => $query->latest(),
         };
 

@@ -40,12 +40,20 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
      * page 1 of everything — and a link to what they were looking at could not
      * be sent. The URL is the source of truth for all three now.
      */
+    /*
+     * A deals page leads with the deepest discount; the catalogue leads with
+     * what arrived most recently. Either can still be overridden from the
+     * dropdown or the URL.
+     */
+    const defaultSort = onSaleOnly ? 'discount_high' : 'latest';
+
     const initial = useMemo(
         () =>
             parseShopQuery(
                 typeof window === 'undefined' ? '' : window.location.search,
+                defaultSort,
             ),
-        [],
+        [defaultSort],
     );
 
     const [products, setProducts] = useState([]);
@@ -149,13 +157,18 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const search = buildShopSearch({ page, sort, filters: activeFilters });
+        const search = buildShopSearch({
+            page,
+            sort,
+            filters: activeFilters,
+            defaultSort,
+        });
         const next = window.location.pathname + search;
 
         if (next !== window.location.pathname + window.location.search) {
             window.history.replaceState(window.history.state, '', next);
         }
-    }, [page, sort, filterKey, activeFilters]);
+    }, [page, sort, filterKey, activeFilters, defaultSort]);
 
     /*
      * A new page of results starts at the top of the grid. Without this the
@@ -278,12 +291,21 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                 className="plp-sort-select"
                             >
                                 <option value="latest">Latest Arrivals</option>
+                                {/*
+                                 * The API has always accepted these two and
+                                 * the dropdown never offered them, so neither
+                                 * was reachable without hand-editing the URL.
+                                 */}
+                                <option value="discount_high">
+                                    Biggest Discount
+                                </option>
                                 <option value="price_low_high">
                                     Price: Low to High
                                 </option>
                                 <option value="price_high_low">
                                     Price: High to Low
                                 </option>
+                                <option value="name_asc">Name: A to Z</option>
                             </select>
                         </div>
                     </div>

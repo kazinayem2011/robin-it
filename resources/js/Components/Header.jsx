@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Tag,
     Cpu,
     Scale,
     Heart,
@@ -269,15 +268,6 @@ export const Header = () => {
                                     PC BUILDER
                                 </span>
                             </div>
-                        </Link>
-
-                        {/* Offers Hot Button */}
-                        <Link href={ROUTES.OFFERS} className="header-tool-btn">
-                            <div className="tool-icon-box">
-                                <Tag size={20} />
-                                <span className="tool-badge-dot"></span>
-                            </div>
-                            <span className="tool-label">Offers</span>
                         </Link>
 
                         {/* Compare */}
