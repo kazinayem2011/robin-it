@@ -223,6 +223,25 @@
     border-color: var(--primary);
 }
 
+/*
+ * The one link in this bar the shop wants noticed. Solid brand red rather than
+ * the hotline's tinted pill, so it reads as the action rather than another
+ * utility link — and it is the only solid fill in a bar of muted greys.
+ */
+.ticker-link-featured {
+    background: var(--primary);
+    color: var(--white) !important;
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--primary);
+    font-weight: 700;
+}
+
+.ticker-link-featured:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
 .ticker-divider {
     width: 1px;
     height: 12px;

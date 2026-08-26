@@ -11,7 +11,6 @@ import {
     PhoneCall,
     MapPin,
     Truck,
-    ShieldCheck,
     ArrowRight,
     Menu,
 } from 'lucide-react';
@@ -217,7 +216,10 @@ export const Header = () => {
                                 </span>
                             </a>
                             <span className="ticker-divider"></span>
-                            <Link href={ROUTES.TRACK} className="ticker-link">
+                            <Link
+                                href={ROUTES.TRACK}
+                                className="ticker-link ticker-link-featured"
+                            >
                                 <Truck size={13} className="ticker-icon" />
                                 <span>Track Order</span>
                             </Link>
@@ -225,14 +227,6 @@ export const Header = () => {
                             <Link href={ROUTES.STORES} className="ticker-link">
                                 <MapPin size={13} className="ticker-icon" />
                                 <span>Showrooms</span>
-                            </Link>
-                            <span className="ticker-divider"></span>
-                            <Link href={ROUTES.SUPPORT} className="ticker-link">
-                                <ShieldCheck
-                                    size={13}
-                                    className="ticker-icon"
-                                />
-                                <span>Warranty Claim</span>
                             </Link>
                         </div>
                     </div>
