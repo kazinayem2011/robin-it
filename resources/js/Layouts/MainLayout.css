@@ -298,9 +298,19 @@
 }
 
 /* Central Search Bar */
+/*
+ * The search takes whatever the row has spare, which grew when the Offers
+ * button left the action group.
+ *
+ * min-width: 0 because a flex child will not shrink below its content by
+ * default, and this one refused to: between roughly 993px and 1180px the row
+ * came to 1107px and pushed the whole page into sideways scrolling — above the
+ * 992px breakpoint that gives the search its own line, so nothing caught it.
+ */
 .main-search-wrapper {
     flex: 1;
-    max-width: 480px;
+    min-width: 0;
+    max-width: 680px;
     position: relative;
 }
 
@@ -2173,6 +2183,14 @@
     }
     .main-search-wrapper {
         order: 3;
+        /*
+         * flex-basis, not just width: the base rule sets flex: 1, whose basis
+         * of 0 leaves the item with a hypothetical size of nothing, so it
+         * never forces the wrap this breakpoint exists to cause. It used to
+         * wrap by accident, on a min-content floor that also overflowed the
+         * row on desktop.
+         */
+        flex: 1 0 100%;
         max-width: 100%;
         width: 100%;
     }
