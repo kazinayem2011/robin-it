@@ -631,6 +631,20 @@
     font-size: 0.85rem;
 }
 
+/*
+ * The spinner and its label are two inline elements in a centred block, so the
+ * spinner sat on the text baseline — 2px above the middle of the words — and
+ * JSX strips the newline between sibling elements, leaving them overlapping by
+ * 1.4px rather than merely touching. A flex row centres them against each
+ * other and puts a deliberate gap between them.
+ */
+.search-loading-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 .search-suggestions-dropdown {
     position: absolute;
     top: calc(100% + 4px);
