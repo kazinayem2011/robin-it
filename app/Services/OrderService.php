@@ -335,6 +335,24 @@ class OrderService
             );
         }
 
+        /*
+         * Cancelling a delivered order used to put its units back on the shelf.
+         * The goods are with the customer at that point, so the shop was left
+         * believing it held stock it does not have — and would sell it again.
+         *
+         * There is already a correct path for goods coming back after delivery:
+         * a return, which records how many came back and in what condition, so
+         * damaged units are written off instead of being resold.
+         */
+        if ($status === 'cancelled' && $order->status === 'delivered') {
+            throw new StorefrontException(
+                'This order has already been delivered, so cancelling it would put stock back '
+                    .'that the customer still has. Process it as a return instead.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
         if ($order->status === $status) {
             return $order;
         }
