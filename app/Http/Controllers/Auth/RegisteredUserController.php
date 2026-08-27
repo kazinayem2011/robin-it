@@ -32,13 +32,16 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'phone');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'phone' => [
                 'required',
                 'string',
-                'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/',
+                PhoneHelper::RULE,
                 'unique:'.User::class.',phone',
             ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],

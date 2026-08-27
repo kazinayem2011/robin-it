@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Helpers\PhoneHelper;
 use App\Support\Roles;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -17,6 +18,12 @@ class StaffRequest extends AdminRequest
     /**
      * @return array<string, mixed>
      */
+    /** The rules judge the number, not its punctuation. */
+    protected function prepareForValidation(): void
+    {
+        PhoneHelper::canonicalise($this, 'phone');
+    }
+
     public function rules(): array
     {
         $id = $this->routeId();
@@ -25,7 +32,7 @@ class StaffRequest extends AdminRequest
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($id)],
             'phone' => ['nullable', 'string', 'max:20',
-                'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/',
+                PhoneHelper::RULE,
                 Rule::unique('users', 'phone')->ignore($id)],
             'role' => ['required', Rule::in(Roles::staffRoles())],
             // A member of staff tied to a branch works that branch's stock.

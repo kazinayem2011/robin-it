@@ -171,13 +171,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'phone');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => [
                 'required',
                 'string',
-                'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/',
+                PhoneHelper::RULE,
                 'unique:users,phone,'.$user->id,
             ],
         ], [

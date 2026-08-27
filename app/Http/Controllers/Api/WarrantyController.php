@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApiCode;
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\WarrantyClaim;
@@ -94,9 +95,12 @@ class WarrantyController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'customer_phone');
+
         $validated = $request->validate([
             'customer_name' => 'required|string|max:100',
-            'customer_phone' => ['required', 'string', 'max:20', 'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/'],
+            'customer_phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
             'customer_email' => 'nullable|email|max:150',
             'product_name' => 'required|string|max:150',
             'serial_number' => 'required|string|max:100',

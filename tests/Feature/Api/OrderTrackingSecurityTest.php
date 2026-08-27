@@ -59,7 +59,9 @@ class OrderTrackingSecurityTest extends TestCase
             'single digit' => ['8'],
             'two digits' => ['78'],
             'last four' => ['5678'],
-            'missing first digit' => ['1712345678'],
+            'last six' => ['345678'],
+            'all but the operator prefix' => ['12345678'],
+            'nine digits' => ['712345678'],
         ];
     }
 
@@ -113,6 +115,30 @@ class OrderTrackingSecurityTest extends TestCase
         $this->postJson('/api/'.ApiEndpoints::ORDERS_TRACK, [
             'order_number' => $orderNumber,
             'phone' => '+8801712345678',
+        ])->assertStatus(200)->assertJsonPath('data.order_number', $orderNumber);
+    }
+
+    /**
+     * Written without its leading zero, which is the same number.
+     *
+     * This used to sit among the partial guesses above, from the days when the
+     * endpoint matched on a suffix and any tail of the number would do. It is
+     * not a partial one: every Bangladeshi mobile begins 01, so the zero
+     * carries no information and dropping it narrows nothing — the nine digits
+     * that identify the subscriber are all still there, and the comparison is
+     * an exact one. What invites the mistake is the app's own display,
+     * "+880 1712-345678", which puts the country code and the number on either
+     * side of a space and so gets copied in halves.
+     *
+     * The genuinely partial forms above stay refused.
+     */
+    public function test_the_same_number_without_its_leading_zero_is_accepted(): void
+    {
+        $orderNumber = $this->placeOrder();
+
+        $this->postJson('/api/'.ApiEndpoints::ORDERS_TRACK, [
+            'order_number' => $orderNumber,
+            'phone' => '1712-345678',
         ])->assertStatus(200)->assertJsonPath('data.order_number', $orderNumber);
     }
 

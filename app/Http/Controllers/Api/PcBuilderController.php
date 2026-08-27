@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApiCode;
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\SavedPcBuild;
@@ -20,6 +21,9 @@ class PcBuilderController extends Controller
 
     public function save(Request $request): JsonResponse
     {
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'customer_phone');
+
         $validated = $request->validate([
             'components' => 'required|array|min:1|max:'.self::MAX_COMPONENTS,
             'components.*.componentId' => 'required|string|max:120',
@@ -27,7 +31,7 @@ class PcBuilderController extends Controller
             'components.*.quantity' => 'nullable|integer|min:1|max:10',
             'build_name' => 'nullable|string|max:150',
             'customer_name' => 'nullable|string|max:100',
-            'customer_phone' => ['nullable', 'string', 'max:20', 'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/'],
+            'customer_phone' => ['nullable', 'string', 'max:20', PhoneHelper::RULE],
         ], [
             'components.required' => 'Pick at least one component before saving your build.',
             'components.max' => 'A saved build can hold up to '.self::MAX_COMPONENTS.' components.',

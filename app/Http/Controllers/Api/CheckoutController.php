@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Order;
@@ -23,9 +24,12 @@ class CheckoutController extends Controller
 
     public function process(Request $request): JsonResponse
     {
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'phone');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => ['required', 'string', 'max:20', 'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/'],
+            'phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
             'street_address' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'zone' => 'nullable|string|max:100',
@@ -111,10 +115,13 @@ class CheckoutController extends Controller
      */
     public function track(Request $request): JsonResponse
     {
+        // The rules judge the number, not its punctuation.
+        PhoneHelper::canonicalise($request, 'phone');
+
         $validated = $request->validate([
             'order_number' => 'required|string|max:64',
             // A full mobile number is the proof of ownership for this order.
-            'phone' => ['required', 'string', 'max:20', 'regex:/^(?:\+?88|88)?01[3-9]\d{8}$/'],
+            'phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
         ], [
             'phone.regex' => 'Please enter the full 11-digit mobile number used when placing the order.',
         ]);
