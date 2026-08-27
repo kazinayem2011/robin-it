@@ -161,9 +161,9 @@ class BranchStockTest extends TestCase
         $this->assertSame(8, $product->fresh()->stock_quantity);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 2]);
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 2]);
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(422);
@@ -179,8 +179,8 @@ class BranchStockTest extends TestCase
         $stock->transfer($product->fresh(), null, 5, $this->showroom->id, $this->online->id);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 2]);
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 2]);
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
@@ -198,8 +198,8 @@ class BranchStockTest extends TestCase
         $stock->record($product->fresh(), null, 5, StockMovement::PURCHASE, ['store_id' => $this->showroom->id]);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 3]);
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 3]);
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
@@ -317,8 +317,8 @@ class BranchStockTest extends TestCase
         $product->update(['stock_quantity' => 5]);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => 1]);
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 1]);
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);

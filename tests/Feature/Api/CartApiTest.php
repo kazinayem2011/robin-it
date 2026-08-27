@@ -27,7 +27,7 @@ class CartApiTest extends TestCase
         ]);
 
         // Add to cart
-        $response = $this->actingAs($user)->postJson('/'.ApiEndpoints::CART, [
+        $response = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id,
             'quantity' => 2,
         ]);
@@ -38,7 +38,7 @@ class CartApiTest extends TestCase
         $itemId = $response->json('data.id');
 
         // Update item quantity
-        $updateResponse = $this->actingAs($user)->patchJson('/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM), [
+        $updateResponse = $this->actingAs($user)->patchJson('/api/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM), [
             'quantity' => 3,
         ]);
 
@@ -46,12 +46,12 @@ class CartApiTest extends TestCase
             ->assertJsonPath('data.quantity', 3);
 
         // Fetch cart
-        $cartResponse = $this->actingAs($user)->getJson('/'.ApiEndpoints::CART);
+        $cartResponse = $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART);
         $cartResponse->assertStatus(200)
             ->assertJsonPath('data.items.0.quantity', 3);
 
         // Delete item
-        $deleteResponse = $this->actingAs($user)->deleteJson('/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM));
+        $deleteResponse = $this->actingAs($user)->deleteJson('/api/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM));
         $deleteResponse->assertStatus(200)
             ->assertJsonPath('error', false);
     }

@@ -37,13 +37,13 @@ class PreorderPaperworkTest extends TestCase
     private function buy(User $user, array $lines): Order
     {
         foreach ($lines as [$product, $quantity]) {
-            $this->actingAs($user)->postJson('/cart-api', [
+            $this->actingAs($user)->postJson('/api/cart', [
                 'product_id' => $product->id,
                 'quantity' => $quantity,
             ])->assertSuccessful();
         }
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);

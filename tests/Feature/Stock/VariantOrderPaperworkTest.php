@@ -63,13 +63,13 @@ class VariantOrderPaperworkTest extends TestCase
     {
         $variant = $this->product->fresh('variants')->variants->firstWhere('name', '32GB');
 
-        $this->actingAs($this->user)->postJson('/cart-api', [
+        $this->actingAs($this->user)->postJson('/api/cart', [
             'product_id' => $this->product->id,
             'product_variant_id' => $variant->id,
             'quantity' => 1,
         ])->assertStatus(200);
 
-        $this->actingAs($this->user)->postJson('/checkout-api', [
+        $this->actingAs($this->user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);

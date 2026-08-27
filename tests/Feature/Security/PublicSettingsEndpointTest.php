@@ -22,7 +22,7 @@ class PublicSettingsEndpointTest extends TestCase
     private function saveSmtp(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']))
-            ->postJson('/admin/settings', [
+            ->postJson('/api/admin/settings', [
                 'settings' => [
                     'mail_host' => 'smtp.example.com',
                     'mail_port' => '2525',

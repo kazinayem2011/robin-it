@@ -67,7 +67,7 @@ class VariantCommerceTest extends TestCase
 
     private function addToCart(User $user, ?int $variantId, int $qty = 1)
     {
-        return $this->actingAs($user)->postJson('/cart-api', array_filter([
+        return $this->actingAs($user)->postJson('/api/cart', array_filter([
             'product_id' => $this->product->id,
             'product_variant_id' => $variantId,
             'quantity' => $qty,
@@ -76,7 +76,7 @@ class VariantCommerceTest extends TestCase
 
     private function checkout(User $user)
     {
-        return $this->actingAs($user)->postJson('/checkout-api', [
+        return $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ]);
@@ -193,7 +193,7 @@ class VariantCommerceTest extends TestCase
         ]);
         app(StockService::class)->receive([], [['product_id' => $other->id, 'quantity' => 5]]);
 
-        $response = $this->actingAs(User::factory()->create())->postJson('/cart-api', [
+        $response = $this->actingAs(User::factory()->create())->postJson('/api/cart', [
             'product_id' => $other->id,
             'product_variant_id' => $this->small->id,
             'quantity' => 1,

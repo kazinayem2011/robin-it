@@ -41,11 +41,11 @@ class OrderTrackingSecurityTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($user)->postJson('/'.ApiEndpoints::CART, [
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        return $this->actingAs($user)->postJson('/'.ApiEndpoints::CHECKOUT, [
+        return $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CHECKOUT, [
             'name' => 'Rahim Chowdhury',
             'phone' => self::REAL_PHONE,
             'street_address' => 'House 45, Road 7, Gulshan 2',

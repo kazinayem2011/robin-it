@@ -70,7 +70,7 @@ class ScopedCouponTest extends TestCase
     private function fill(User $user, array $lines): void
     {
         foreach ($lines as [$product, $qty]) {
-            $this->actingAs($user)->postJson('/cart-api', [
+            $this->actingAs($user)->postJson('/api/cart', [
                 'product_id' => $product->id, 'quantity' => $qty,
             ])->assertStatus(200);
         }
@@ -78,7 +78,7 @@ class ScopedCouponTest extends TestCase
 
     private function checkout(User $user, string $code)
     {
-        return $this->actingAs($user)->postJson('/checkout-api', [
+        return $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
             'coupon_code' => $code,

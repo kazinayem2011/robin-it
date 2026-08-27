@@ -22,6 +22,98 @@ class SiteSetting extends Model
 
     private const TTL = 3600;
 
+    /**
+     * Every setting the admin form is allowed to write, grouped as the form
+     * groups them.
+     *
+     * This is an allowlist, and it is the security boundary. The save endpoint
+     * used to validate only that each value was scalar and never looked at the
+     * key, so an admin request could write any key at all — and because what
+     * reaches the browser was decided by a *denylist* of name patterns, a key
+     * that dodged those patterns (`payment_gateway_creds`, say) was published
+     * into the props of every public page. Nothing outside this list can be
+     * saved, and nothing outside PUBLIC_GROUPS is ever published.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const GROUPS = [
+        'general' => [
+            'site_name',
+            'site_tagline',
+            'site_logo',
+            'site_legal_name',
+            'site_address',
+            'footer_note',
+        ],
+        'contact' => [
+            'hotline_number',
+            'hotline_hours',
+            'support_email',
+            'sales_email',
+            'service_center_address',
+        ],
+        'shipping' => [
+            'shipping_inside_dhaka',
+            'shipping_outside_dhaka',
+            'free_shipping_threshold',
+            'delivery_charge_dhaka',
+            'delivery_charge_outside',
+        ],
+        'seo' => [
+            'meta_title',
+            'meta_description',
+            'meta_keywords',
+            'og_image',
+            'google_analytics_id',
+            'google_site_verification',
+        ],
+        'announcement' => [
+            'announcement_text',
+            'announcement_badge',
+            'announcement_active',
+        ],
+        // Credentials. Writable from the Settings screen, never published.
+        'mail' => [
+            'mail_mailer',
+            'mail_host',
+            'mail_port',
+            'mail_username',
+            'mail_password',
+            'mail_encryption',
+            'mail_from_address',
+            'mail_from_name',
+        ],
+    ];
+
+    /** Groups whose values are safe in a browser. */
+    private const PUBLIC_GROUPS = ['general', 'contact', 'shipping', 'seo', 'announcement'];
+
+    /**
+     * Keys the admin Settings form may write.
+     *
+     * @return array<int, string>
+     */
+    public static function editableKeys(): array
+    {
+        return array_merge(...array_values(self::GROUPS));
+    }
+
+    /**
+     * Keys that may be sent to the browser.
+     *
+     * @return array<int, string>
+     */
+    public static function publicKeys(): array
+    {
+        $keys = array_merge(
+            ...array_values(array_intersect_key(self::GROUPS, array_flip(self::PUBLIC_GROUPS)))
+        );
+
+        // Belt and braces: a key added to a public group but named like a
+        // credential is still withheld.
+        return array_values(array_filter($keys, fn ($key) => ! self::isPrivateKey($key)));
+    }
+
     public static function get(string $key, $default = null)
     {
         return Cache::remember("site_setting_{$key}", self::TTL, function () use ($key, $default) {
@@ -80,13 +172,16 @@ class SiteSetting extends Model
 
     /**
      * Settings safe to expose to the frontend — branding, SEO, shipping, ticker.
+     *
+     * Filtered by allowlist rather than by name pattern: a key nobody thought to
+     * name like a credential is withheld too, simply because it is not on the
+     * list of things this application publishes.
      */
     public static function publicSettings(): array
     {
-        return array_filter(
+        return array_intersect_key(
             self::getAllSettings(),
-            fn ($key) => ! self::isPrivateKey($key),
-            ARRAY_FILTER_USE_KEY
+            array_flip(self::publicKeys())
         );
     }
 

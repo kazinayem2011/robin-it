@@ -31,7 +31,7 @@ class MediaUploadTest extends TestCase
 
     public function test_an_admin_can_upload_an_image(): void
     {
-        $response = $this->actingAs($this->admin())->postJson('/admin/media', [
+        $response = $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('banner.jpg', 1200, 675),
             'folder' => 'banners',
         ]);
@@ -47,7 +47,7 @@ class MediaUploadTest extends TestCase
 
     public function test_the_returned_path_is_publicly_addressable(): void
     {
-        $response = $this->actingAs($this->admin())->postJson('/admin/media', [
+        $response = $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('cover.png'),
             'folder' => 'blogs',
         ]);
@@ -58,7 +58,7 @@ class MediaUploadTest extends TestCase
 
     public function test_the_client_filename_is_never_reused(): void
     {
-        $response = $this->actingAs($this->admin())->postJson('/admin/media', [
+        $response = $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('../../evil shell.php.jpg'),
         ]);
 
@@ -83,7 +83,7 @@ class MediaUploadTest extends TestCase
     #[DataProvider('rejectedFileProvider')]
     public function test_non_image_uploads_are_refused(string $filename, string $mime): void
     {
-        $response = $this->actingAs($this->admin())->postJson('/admin/media', [
+        $response = $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->create($filename, 16, $mime),
         ]);
 
@@ -93,7 +93,7 @@ class MediaUploadTest extends TestCase
 
     public function test_oversized_images_are_refused(): void
     {
-        $response = $this->actingAs($this->admin())->postJson('/admin/media', [
+        $response = $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->create('huge.jpg', 6144, 'image/jpeg'),
         ]);
 
@@ -103,7 +103,7 @@ class MediaUploadTest extends TestCase
 
     public function test_an_unknown_destination_folder_is_refused(): void
     {
-        $this->actingAs($this->admin())->postJson('/admin/media', [
+        $this->actingAs($this->admin())->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('a.jpg'),
             'folder' => '../../../public',
         ])->assertStatus(422);
@@ -114,7 +114,7 @@ class MediaUploadTest extends TestCase
     public function test_a_customer_cannot_upload(): void
     {
         $response = $this->actingAs(User::factory()->create(['role' => 'customer']))
-            ->postJson('/admin/media', ['image' => UploadedFile::fake()->image('a.jpg')]);
+            ->postJson('/api/admin/media', ['image' => UploadedFile::fake()->image('a.jpg')]);
 
         $this->assertContains($response->status(), [302, 403]);
         $this->assertCount(0, Storage::disk('public')->allFiles());
@@ -122,7 +122,7 @@ class MediaUploadTest extends TestCase
 
     public function test_a_guest_cannot_upload(): void
     {
-        $response = $this->postJson('/admin/media', [
+        $response = $this->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('a.jpg'),
         ]);
 
@@ -134,11 +134,11 @@ class MediaUploadTest extends TestCase
     {
         $admin = $this->admin();
 
-        $path = $this->actingAs($admin)->postJson('/admin/media', [
+        $path = $this->actingAs($admin)->postJson('/api/admin/media', [
             'image' => UploadedFile::fake()->image('a.jpg'),
         ])->json('data.path');
 
-        $this->actingAs($admin)->deleteJson('/admin/media', ['path' => $path])
+        $this->actingAs($admin)->deleteJson('/api/admin/media', ['path' => $path])
             ->assertStatus(200);
 
         Storage::disk('public')->assertMissing(str_replace('/storage/', '', $path));
@@ -163,7 +163,7 @@ class MediaUploadTest extends TestCase
         Storage::disk('public')->put('important.jpg', 'seeded artwork');
 
         $this->actingAs($this->admin())
-            ->deleteJson('/admin/media', ['path' => $path])
+            ->deleteJson('/api/admin/media', ['path' => $path])
             ->assertStatus(422);
 
         Storage::disk('public')->assertExists('important.jpg');

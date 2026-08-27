@@ -53,8 +53,8 @@ class CatalogIntegrityTest extends TestCase
         $this->productIn($grand, 'deep-product');
 
         $this->actingAs($this->admin())
-            ->delete("/admin/categories/{$root->id}")
-            ->assertRedirect();
+            ->deleteJson("/api/admin/categories/{$root->id}")
+            ->assertStatus(422);
 
         $this->assertDatabaseCount('products', 1);
         $this->assertDatabaseCount('categories', 3);
@@ -80,8 +80,8 @@ class CatalogIntegrityTest extends TestCase
         [$root] = $this->tree();
 
         $this->actingAs($this->admin())
-            ->delete("/admin/categories/{$root->id}")
-            ->assertRedirect();
+            ->deleteJson("/api/admin/categories/{$root->id}")
+            ->assertStatus(200);
 
         $this->assertDatabaseCount('categories', 0);
     }
@@ -90,7 +90,7 @@ class CatalogIntegrityTest extends TestCase
     {
         [$root, $child, $grand] = $this->tree();
 
-        $this->actingAs($this->admin())->delete("/admin/categories/{$root->id}");
+        $this->actingAs($this->admin())->deleteJson("/api/admin/categories/{$root->id}");
 
         // Previously "Intel" survived with parent_id = NULL and appeared as a
         // brand-new top-level entry in the mega menu.
@@ -102,7 +102,7 @@ class CatalogIntegrityTest extends TestCase
     {
         // `'is_published' => 'boolean'` leaves the key absent when not posted;
         // reading it unguarded threw an ErrorException and returned a 500.
-        $this->actingAs($this->admin())->post('/admin/blogs', [
+        $this->actingAs($this->admin())->postJson('/api/admin/blogs', [
             'title' => 'Best GPUs of 2026',
             'category' => 'Guides',
             'excerpt' => 'A roundup of this year’s best graphics cards.',
@@ -120,7 +120,7 @@ class CatalogIntegrityTest extends TestCase
 
     public function test_publishing_a_blog_post_stamps_published_at(): void
     {
-        $this->actingAs($this->admin())->post('/admin/blogs', [
+        $this->actingAs($this->admin())->postJson('/api/admin/blogs', [
             'title' => 'Live Article',
             'category' => 'News',
             'excerpt' => 'Short excerpt.',
@@ -140,7 +140,7 @@ class CatalogIntegrityTest extends TestCase
         $category = Category::create(['name' => 'CPU', 'slug' => 'cpu', 'is_active' => true]);
 
         foreach (range(1, 3) as $ignored) {
-            $this->actingAs($admin)->post('/admin/products', [
+            $this->actingAs($admin)->postJson('/api/admin/products', [
                 'category_id' => $category->id,
                 'name' => 'Identical Product Name',
                 'price' => 1000,
@@ -157,16 +157,16 @@ class CatalogIntegrityTest extends TestCase
     {
         $admin = $this->admin();
 
-        SiteSetting::create(['key' => 'ticker_text', 'value' => 'Old announcement']);
-        $this->assertSame('Old announcement', SiteSetting::getAllSettings()['ticker_text']);
+        SiteSetting::create(['key' => 'announcement_text', 'value' => 'Old announcement']);
+        $this->assertSame('Old announcement', SiteSetting::getAllSettings()['announcement_text']);
 
-        $this->actingAs($admin)->post('/admin/settings', [
-            'settings' => ['ticker_text' => 'New announcement'],
-        ])->assertRedirect();
+        $this->actingAs($admin)->postJson('/api/admin/settings', [
+            'settings' => ['announcement_text' => 'New announcement'],
+        ])->assertStatus(200);
 
         // The save used to forget a different cache key, so the storefront kept
         // serving the old value for up to an hour.
-        $this->assertSame('New announcement', SiteSetting::getAllSettings()['ticker_text']);
+        $this->assertSame('New announcement', SiteSetting::getAllSettings()['announcement_text']);
     }
 
     public function test_cancelling_an_order_from_the_admin_restores_stock(): void
@@ -176,11 +176,11 @@ class CatalogIntegrityTest extends TestCase
         $category = Category::create(['name' => 'CPU', 'slug' => 'cpu', 'is_active' => true]);
         $product = $this->productIn($category, 'cancellable-product');
 
-        $this->actingAs($customer)->postJson('/cart-api', [
+        $this->actingAs($customer)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 2,
         ])->assertStatus(200);
 
-        $this->actingAs($customer)->postJson('/checkout-api', [
+        $this->actingAs($customer)->postJson('/api/checkout', [
             'name' => 'Rahim', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
@@ -188,9 +188,9 @@ class CatalogIntegrityTest extends TestCase
         $this->assertSame(3, $product->fresh()->stock_quantity);
 
         $order = Order::first();
-        $this->actingAs($admin)->patch("/admin/orders/{$order->id}/status", [
+        $this->actingAs($admin)->patchJson("/api/admin/orders/{$order->id}/status", [
             'status' => 'cancelled',
-        ])->assertRedirect();
+        ])->assertStatus(200);
 
         $this->assertSame(5, $product->fresh()->stock_quantity);
     }

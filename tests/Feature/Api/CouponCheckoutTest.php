@@ -43,7 +43,7 @@ class CouponCheckoutTest extends TestCase
 
     private function cartWith(User $user, Product $product, int $qty = 1): void
     {
-        $this->actingAs($user)->postJson('/'.ApiEndpoints::CART, [
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id,
             'quantity' => $qty,
         ])->assertStatus(200);
@@ -73,7 +73,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'SAVE10'])
         );
 
@@ -99,7 +99,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'FLAT500'])
         )->assertStatus(201);
 
@@ -123,7 +123,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'ONCE'])
         )->assertStatus(201);
 
@@ -145,7 +145,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'SPENT'])
         )->assertStatus(422)->assertJsonPath('code', 'COUPON_INVALID');
 
@@ -166,7 +166,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'OLD'])
         )->assertStatus(422)->assertJsonPath('code', 'COUPON_INVALID');
     }
@@ -192,7 +192,7 @@ class CouponCheckoutTest extends TestCase
         ])->assertStatus(422)->assertJsonPath('code', 'COUPON_INVALID');
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'BIGSPEND'])
         )->assertStatus(422)->assertJsonPath('code', 'COUPON_INVALID');
     }
@@ -211,7 +211,7 @@ class CouponCheckoutTest extends TestCase
         ]);
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'CAPPED'])
         )->assertStatus(201)->assertJsonPath('data.discount', 2000);
     }
@@ -222,7 +222,7 @@ class CouponCheckoutTest extends TestCase
         $this->cartWith($user, $this->product(5000));
 
         $this->actingAs($user)->postJson(
-            '/'.ApiEndpoints::CHECKOUT,
+            '/api/'.ApiEndpoints::CHECKOUT,
             $this->address(['coupon_code' => 'NOPE'])
         )->assertStatus(422)->assertJsonPath('code', 'COUPON_INVALID');
 

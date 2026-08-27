@@ -46,8 +46,8 @@ class StorefrontContractTest extends TestCase
     public static function spaEndpointProvider(): array
     {
         return [
-            'cart' => ['get', '/api/cart-api'],
-            'compare' => ['get', '/api/compare-api'],
+            'cart' => ['get', '/api/cart'],
+            'compare' => ['get', '/api/compare'],
         ];
     }
 
@@ -65,12 +65,12 @@ class StorefrontContractTest extends TestCase
         $user = User::factory()->create();
         $product = $this->product();
 
-        $this->actingAs($user)->postJson('/api/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(200)->assertJsonPath('error', false);
 
-        $this->actingAs($user)->getJson('/api/cart-api')
+        $this->actingAs($user)->getJson('/api/cart')
             ->assertStatus(200)
             ->assertJsonPath('data.items.0.quantity', 1);
     }
@@ -80,11 +80,11 @@ class StorefrontContractTest extends TestCase
         $user = User::factory()->create();
         $product = $this->product();
 
-        $this->actingAs($user)->postJson('/api/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        $this->actingAs($user)->postJson('/api/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury',
             'phone' => '01712345678',
             'street_address' => 'House 45, Road 7',
@@ -204,11 +204,11 @@ class StorefrontContractTest extends TestCase
         $user = User::factory()->create();
         $product = $this->product();
 
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        $orderNumber = $this->actingAs($user)->postJson('/checkout-api', [
+        $orderNumber = $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45, Road 7', 'city' => 'Dhaka',
         ])->json('data.order_number');
@@ -300,9 +300,9 @@ class StorefrontContractTest extends TestCase
     {
         $paths = [
             'api/wishlist',
-            'api/cart-api',
-            'api/compare-api',
-            'api/checkout-api',
+            'api/cart',
+            'api/compare',
+            'api/checkout',
             'api/coupons/apply',
         ];
 
@@ -334,7 +334,7 @@ class StorefrontContractTest extends TestCase
 
     public function test_browsing_the_cart_does_not_create_rows_for_every_visitor(): void
     {
-        $this->getJson('/api/cart-api')->assertStatus(200)->assertJsonPath('data.items', []);
+        $this->getJson('/api/cart')->assertStatus(200)->assertJsonPath('data.items', []);
 
         $this->assertDatabaseCount('carts', 0);
     }

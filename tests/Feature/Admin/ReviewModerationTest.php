@@ -72,7 +72,7 @@ class ReviewModerationTest extends TestCase
         $review = $this->review($this->product());
 
         $this->actingAs($admin)
-            ->patchJson("/admin/reviews/{$review->id}/status", ['is_approved' => false])
+            ->patchJson("/api/admin/reviews/{$review->id}/status", ['is_approved' => false])
             ->assertStatus(200)
             ->assertJsonPath('error', false);
 
@@ -89,7 +89,7 @@ class ReviewModerationTest extends TestCase
             ->assertJsonPath('data.total_reviews', 1);
 
         $this->actingAs($admin)
-            ->patchJson("/admin/reviews/{$review->id}/status", ['is_approved' => false])
+            ->patchJson("/api/admin/reviews/{$review->id}/status", ['is_approved' => false])
             ->assertStatus(200);
 
         $this->getJson("/api/products/{$product->slug}/reviews")
@@ -114,7 +114,7 @@ class ReviewModerationTest extends TestCase
         $this->getJson('/api/products')->assertJsonPath('data.0.rating', 3);
 
         $this->actingAs($admin)
-            ->patchJson("/admin/reviews/{$five->id}/status", ['is_approved' => false])
+            ->patchJson("/api/admin/reviews/{$five->id}/status", ['is_approved' => false])
             ->assertStatus(200);
 
         $this->getJson('/api/products')
@@ -128,7 +128,7 @@ class ReviewModerationTest extends TestCase
         $review = $this->review($this->product(), approved: false);
 
         $this->actingAs($admin)
-            ->patchJson("/admin/reviews/{$review->id}/status", ['is_approved' => true])
+            ->patchJson("/api/admin/reviews/{$review->id}/status", ['is_approved' => true])
             ->assertStatus(200);
 
         $this->assertTrue($review->fresh()->is_approved);
@@ -140,7 +140,7 @@ class ReviewModerationTest extends TestCase
         $review = $this->review($this->product());
 
         $this->actingAs($admin)
-            ->deleteJson("/admin/reviews/{$review->id}")
+            ->deleteJson("/api/admin/reviews/{$review->id}")
             ->assertStatus(200);
 
         $this->assertDatabaseCount('product_reviews', 0);
@@ -152,7 +152,7 @@ class ReviewModerationTest extends TestCase
         $review = $this->review($this->product());
 
         $response = $this->actingAs($customer)
-            ->patchJson("/admin/reviews/{$review->id}/status", ['is_approved' => false]);
+            ->patchJson("/api/admin/reviews/{$review->id}/status", ['is_approved' => false]);
 
         $this->assertContains($response->status(), [302, 403]);
         $this->assertTrue($review->fresh()->is_approved, 'A customer must not be able to hide reviews.');

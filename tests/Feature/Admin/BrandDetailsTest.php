@@ -101,7 +101,7 @@ class BrandDetailsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($admin)->postJson('/admin/settings', [
+        $this->actingAs($admin)->postJson('/api/admin/settings', [
             'settings' => [
                 'site_name' => 'Robins Computer',
                 'site_legal_name' => 'Acme Tech Trading PLC',
@@ -133,7 +133,7 @@ class BrandDetailsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($admin)->postJson('/admin/settings', [
+        $this->actingAs($admin)->postJson('/api/admin/settings', [
             'settings' => ['footer_note' => ''],
         ])->assertStatus(200);
 

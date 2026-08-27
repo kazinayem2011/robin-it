@@ -25,7 +25,7 @@ class MailSettingsTest extends TestCase
 
     private function saveSmtp(array $overrides = []): void
     {
-        $this->actingAs($this->admin())->postJson('/admin/settings', [
+        $this->actingAs($this->admin())->postJson('/api/admin/settings', [
             'settings' => array_merge([
                 'mail_mailer' => 'smtp',
                 'mail_host' => 'smtp.example.com',
@@ -140,7 +140,7 @@ class MailSettingsTest extends TestCase
     public function test_a_customer_cannot_send_a_test_email(): void
     {
         $response = $this->actingAs(User::factory()->create(['role' => 'customer']))
-            ->postJson('/admin/settings/test-email', ['email' => 'someone@example.com']);
+            ->postJson('/api/admin/settings/test-email', ['email' => 'someone@example.com']);
 
         $this->assertContains($response->status(), [302, 403]);
     }
@@ -148,13 +148,13 @@ class MailSettingsTest extends TestCase
     public function test_the_test_email_endpoint_validates_the_address(): void
     {
         $this->actingAs($this->admin())
-            ->postJson('/admin/settings/test-email', ['email' => 'not-an-email'])
+            ->postJson('/api/admin/settings/test-email', ['email' => 'not-an-email'])
             ->assertStatus(422);
     }
 
     public function test_seo_settings_round_trip_and_are_public(): void
     {
-        $this->actingAs($this->admin())->postJson('/admin/settings', [
+        $this->actingAs($this->admin())->postJson('/api/admin/settings', [
             'settings' => [
                 'meta_title' => 'Genuine PC Hardware in Bangladesh',
                 'meta_description' => 'Shop processors, graphics cards and custom builds.',

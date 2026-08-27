@@ -27,13 +27,13 @@ class CheckoutApiTest extends TestCase
         ]);
 
         // Add to cart first as user
-        $this->actingAs($user)->postJson('/'.ApiEndpoints::CART, [
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(200);
 
         // Submit checkout as user
-        $checkoutResponse = $this->actingAs($user)->postJson('/'.ApiEndpoints::CHECKOUT, [
+        $checkoutResponse = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CHECKOUT, [
             'name' => 'Rahim Chowdhury',
             'phone' => '01712345678',
             'street_address' => 'House 45, Road 7, Gulshan 2',
@@ -56,7 +56,7 @@ class CheckoutApiTest extends TestCase
         ]);
 
         // Cart should now be empty
-        $cartResponse = $this->actingAs($user)->getJson('/'.ApiEndpoints::CART);
+        $cartResponse = $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART);
         $this->assertEmpty($cartResponse->json('data.items'));
     }
 
@@ -64,7 +64,7 @@ class CheckoutApiTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson('/'.ApiEndpoints::CHECKOUT, [
+        $response = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CHECKOUT, [
             'name' => 'Rahim Chowdhury',
             'phone' => '01712345678',
             'street_address' => 'House 45, Road 7, Gulshan 2',

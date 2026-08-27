@@ -1,10 +1,19 @@
 <?php
 
 use App\Constants\ApiEndpoints;
-use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\MediaUploadController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
@@ -56,8 +65,6 @@ Route::middleware('throttle:api')->group(function () {
     Route::get(ApiEndpoints::PRODUCT_BRANCHES, [ProductController::class, 'branchAvailability']);
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
-    // Product Reviews (read)
-
     // Showroom Stores API
     Route::get(ApiEndpoints::STORES, [StoreController::class, 'index']);
 
@@ -105,10 +112,6 @@ Route::middleware('throttle:submissions')->group(function () {
 |--------------------------------------------------------------------------
 | Cart, comparison, coupons and checkout rely on the session (guest carts) and
 | on CSRF protection, so they run through the `web` middleware group.
-|
-| The browser client calls these under the /api prefix (axios baseURL '/api').
-| They were previously only registered at the site root, which meant every cart,
-| compare and checkout request from the SPA 404'd.
 */
 Route::middleware(['web', 'throttle:api'])->group(function () {
     Route::get(ApiEndpoints::CART, [CartController::class, 'index']);
@@ -142,9 +145,7 @@ Route::middleware(['web', 'throttle:api'])->group(function () {
 | Bearer-token clients still authenticate through the same auth:sanctum guard.
 */
 Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', fn (Request $request) => $request->user());
 
     // Wishlist
     Route::get(ApiEndpoints::WISHLIST, [WishlistController::class, 'index']);
@@ -154,77 +155,79 @@ Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin API management endpoints
+| Admin management endpoints
 |--------------------------------------------------------------------------
+| The admin UI talks to these through axios, whose baseURL is '/api'. This is
+| the only place they are declared: they used to be registered here *and* at
+| the site root under /admin, pointing at the same controller methods, so every
+| one of those methods carried a branch asking which shape to answer in.
+|
+| The `web` group is required for the session, and `admin` for the role check.
 */
-/*
- * The admin UI talks to these through axios, whose baseURL is '/api', so every
- * endpoint adminService calls has to exist here. Only categories, products and
- * order status did — saving settings, banners, blogs, coupons, stores and
- * uploading media all 404'd from the admin screens.
- *
- * The `web` group is required for the session, and `admin` for the role check.
- */
-Route::middleware(['web', 'auth', 'admin', 'throttle:api'])->prefix(ApiEndpoints::ADMIN_PREFIX)->group(function () {
-    // Catalogue
-    Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminDashboardController::class, 'storeCategory']);
-    Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminDashboardController::class, 'updateCategory']);
-    Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminDashboardController::class, 'destroyCategory']);
-    Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminDashboardController::class, 'storeProduct']);
-    Route::patch(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminDashboardController::class, 'updateProduct']);
+Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
+    ->prefix(ApiEndpoints::ADMIN_PREFIX)
+    ->name('api.admin.')
+    ->group(function () {
+        // Catalogue
+        Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store']);
+        Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'store']);
+        Route::patch(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminProductController::class, 'update']);
 
-    // Orders
-    Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminDashboardController::class, 'updateOrderStatus']);
-    Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
+        // Orders
+        Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus']);
+        Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
 
-    // Stock
-    Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive']);
-    Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts']);
-    Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
-    Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
-    Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
-    Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer']);
-    Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches']);
-    // Suppliers. `options` is declared before the {id} route or it is matched
-    // as an id.
-    Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options']);
-    Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index']);
-    Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store']);
-    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update']);
-    Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy']);
+        // Stock
+        Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive']);
+        Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts']);
+        Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
+        Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
+        Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
+        Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer']);
+        Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches']);
 
-    // Banners
-    Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminDashboardController::class, 'storeBanner']);
-    Route::patch(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminDashboardController::class, 'updateBanner']);
-    Route::delete(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminDashboardController::class, 'destroyBanner']);
+        // Suppliers. `options` is declared before the {id} route or it is
+        // matched as an id.
+        Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options']);
+        Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index']);
+        Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy']);
 
-    // Coupons
-    Route::post(ApiEndpoints::ADMIN_COUPONS, [AdminDashboardController::class, 'storeCoupon']);
-    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminDashboardController::class, 'updateCoupon']);
-    Route::delete(ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminDashboardController::class, 'destroyCoupon']);
+        // Banners
+        Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'store']);
+        Route::patch(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'destroy']);
 
-    // Showrooms
-    Route::post(ApiEndpoints::ADMIN_STORES, [AdminDashboardController::class, 'storeStore']);
-    Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminDashboardController::class, 'updateStore']);
-    Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminDashboardController::class, 'destroyStore']);
+        // Coupons
+        Route::post(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'destroy']);
 
-    // Tech journal
-    Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminDashboardController::class, 'storeBlog']);
-    Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'updateBlog']);
-    Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminDashboardController::class, 'destroyBlog']);
+        // Showrooms
+        Route::post(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'destroy']);
 
-    // Reviews
-    Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminDashboardController::class, 'updateReviewStatus']);
-    Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminDashboardController::class, 'destroyReview']);
+        // Tech journal
+        Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'store']);
+        Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'destroy']);
 
-    // Warranty
-    Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminDashboardController::class, 'updateWarrantyStatus']);
+        // Reviews
+        Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminReviewController::class, 'updateStatus']);
+        Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminReviewController::class, 'destroy']);
 
-    // Settings
-    Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminDashboardController::class, 'updateSettings']);
-    Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminDashboardController::class, 'sendTestEmail']);
+        // Warranty
+        Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus']);
 
-    // Media uploads
-    Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store']);
-    Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy']);
-});
+        // Settings
+        Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update']);
+        Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminSettingController::class, 'sendTestEmail']);
+
+        // Media uploads
+        Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store']);
+        Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy']);
+    });

@@ -45,11 +45,11 @@ class OrderStockLifecycleTest extends TestCase
 
     private function placeOrder(User $user, Product $product, int $qty = 3): Order
     {
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => $qty,
         ])->assertStatus(200);
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45, Road 7', 'city' => 'Dhaka',
         ])->assertStatus(201);

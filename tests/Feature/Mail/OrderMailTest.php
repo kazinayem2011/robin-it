@@ -356,11 +356,11 @@ class OrderMailTest extends TestCase
             'price' => 5000, 'stock_quantity' => 10, 'is_active' => true,
         ]);
 
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);

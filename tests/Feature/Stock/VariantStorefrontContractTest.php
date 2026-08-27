@@ -96,7 +96,7 @@ class VariantStorefrontContractTest extends TestCase
         $user = User::factory()->create();
         $variant = $this->product->fresh('variants')->variants->firstWhere('name', '32GB');
 
-        $response = $this->actingAs($user)->postJson('/cart-api', [
+        $response = $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $this->product->id,
             'product_variant_id' => $variant->id,
             'quantity' => 1,
@@ -107,7 +107,7 @@ class VariantStorefrontContractTest extends TestCase
         $this->assertSame('32GB', $response->json('data.variant.name'));
         $this->assertEqualsWithDelta(8200.0, $response->json('data.variant.effective_price'), 0.01);
 
-        $cart = $this->actingAs($user)->getJson('/cart-api')->json('data');
+        $cart = $this->actingAs($user)->getJson('/api/cart')->json('data');
         $line = $cart['items'][0];
 
         $this->assertSame('32GB', $line['variant']['name']);

@@ -38,11 +38,11 @@ class PaymentAndCouponPolicyTest extends TestCase
 
     private function checkout(User $user, array $extra = [])
     {
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $this->product()->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        return $this->actingAs($user)->postJson('/checkout-api', array_merge([
+        return $this->actingAs($user)->postJson('/api/checkout', array_merge([
             'name' => 'Rahim Chowdhury',
             'phone' => '01712345678',
             'street_address' => 'House 45, Road 7',
@@ -222,7 +222,7 @@ class PaymentAndCouponPolicyTest extends TestCase
         $this->checkout($user, ['coupon_code' => 'ONCEONLY'])->assertStatus(201);
 
         // Fill the cart again so the coupon preview has a subtotal to work with.
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $this->product()->id, 'quantity' => 1,
         ])->assertStatus(200);
 

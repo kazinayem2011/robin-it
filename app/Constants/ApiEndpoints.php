@@ -46,13 +46,21 @@ class ApiEndpoints
     // Orders Tracking
     public const ORDERS_TRACK = 'orders/track';
 
-    // Cart
-    public const CART = 'cart-api';
+    /*
+     * Cart, checkout and comparison.
+     *
+     * These were named `cart-api` / `checkout-api` / `compare-api` because they
+     * were also registered at the site root, where `/cart` and `/checkout` are
+     * already the page routes. The root registrations are gone — the browser
+     * client has always called them under /api — so they can be named for what
+     * they are.
+     */
+    public const CART = 'cart';
 
-    public const CART_ITEM = 'cart-api/{itemId}';
+    public const CART_ITEM = 'cart/{itemId}';
 
     // Checkout
-    public const CHECKOUT = 'checkout-api';
+    public const CHECKOUT = 'checkout';
 
     // Wishlist
     public const WISHLIST = 'wishlist';
@@ -60,9 +68,9 @@ class ApiEndpoints
     public const WISHLIST_ITEM = 'wishlist/{productId}';
 
     // Comparison
-    public const COMPARE = 'compare-api';
+    public const COMPARE = 'compare';
 
-    public const COMPARE_ITEM = 'compare-api/{productId}';
+    public const COMPARE_ITEM = 'compare/{productId}';
 
     // Banners & Promos
     public const BANNERS = 'banners';

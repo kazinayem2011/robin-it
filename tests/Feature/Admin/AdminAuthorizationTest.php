@@ -20,20 +20,20 @@ class AdminAuthorizationTest extends TestCase
     public static function adminWriteRouteProvider(): array
     {
         return [
-            'create product' => ['post', '/admin/products'],
-            'update product' => ['patch', '/admin/products/1'],
-            'create category' => ['post', '/admin/categories'],
-            'update category' => ['patch', '/admin/categories/1'],
-            'delete category' => ['delete', '/admin/categories/1'],
-            'update order status' => ['patch', '/admin/orders/1/status'],
-            'create banner' => ['post', '/admin/banners'],
-            'delete banner' => ['delete', '/admin/banners/1'],
-            'create coupon' => ['post', '/admin/coupons'],
-            'delete coupon' => ['delete', '/admin/coupons/1'],
-            'create blog' => ['post', '/admin/blogs'],
-            'delete blog' => ['delete', '/admin/blogs/1'],
-            'update settings' => ['post', '/admin/settings'],
-            'create store' => ['post', '/admin/stores'],
+            'create product' => ['postJson', '/api/admin/products'],
+            'update product' => ['patchJson', '/api/admin/products/1'],
+            'create category' => ['postJson', '/api/admin/categories'],
+            'update category' => ['patchJson', '/api/admin/categories/1'],
+            'delete category' => ['deleteJson', '/api/admin/categories/1'],
+            'update order status' => ['patchJson', '/api/admin/orders/1/status'],
+            'create banner' => ['postJson', '/api/admin/banners'],
+            'delete banner' => ['deleteJson', '/api/admin/banners/1'],
+            'create coupon' => ['postJson', '/api/admin/coupons'],
+            'delete coupon' => ['deleteJson', '/api/admin/coupons/1'],
+            'create blog' => ['postJson', '/api/admin/blogs'],
+            'delete blog' => ['deleteJson', '/api/admin/blogs/1'],
+            'update settings' => ['postJson', '/api/admin/settings'],
+            'create store' => ['postJson', '/api/admin/stores'],
         ];
     }
 
@@ -46,7 +46,7 @@ class AdminAuthorizationTest extends TestCase
 
         $this->assertContains(
             $response->status(),
-            [302, 403],
+            [401, 403],
             "{$verb} {$uri} must not be reachable by a customer (got {$response->status()})."
         );
 
@@ -107,12 +107,12 @@ class AdminAuthorizationTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $category = Category::create(['name' => 'CPU', 'slug' => 'cpu', 'is_active' => true]);
 
-        $this->actingAs($admin)->post('/admin/products', [
+        $this->actingAs($admin)->postJson('/api/admin/products', [
             'category_id' => $category->id,
             'name' => 'Admin Created CPU',
             'price' => 25000,
             'stock_quantity' => 5,
-        ])->assertRedirect();
+        ])->assertStatus(201);
 
         $this->assertDatabaseHas('products', ['name' => 'Admin Created CPU']);
     }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Stock;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -11,6 +12,7 @@ use App\Services\OrderService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -39,16 +41,16 @@ class PreorderTest extends TestCase
         ], $attributes));
     }
 
-    private function buy(Product $product, int $quantity = 1): \Illuminate\Testing\TestResponse
+    private function buy(Product $product, int $quantity = 1): TestResponse
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id,
             'quantity' => $quantity,
         ])->assertSuccessful();
 
-        return $this->actingAs($user)->postJson('/checkout-api', [
+        return $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ]);
@@ -65,7 +67,7 @@ class PreorderTest extends TestCase
         app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 2]]);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 3,
         ])->assertStatus(422);
 
@@ -98,7 +100,7 @@ class PreorderTest extends TestCase
         $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 2]);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 3,
         ])->assertStatus(422);
 
@@ -166,7 +168,7 @@ class PreorderTest extends TestCase
         $this->assertSame(-3, $product->fresh()->stock_quantity);
 
         $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(422);
     }
@@ -179,7 +181,7 @@ class PreorderTest extends TestCase
     {
         $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 10]);
 
-        $this->expectException(\App\Exceptions\StorefrontException::class);
+        $this->expectException(StorefrontException::class);
 
         app(StockService::class)->record(
             $product, null, -1, StockMovement::WRITE_OFF, ['note' => 'damaged']
@@ -190,7 +192,7 @@ class PreorderTest extends TestCase
     {
         $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 10]);
 
-        $this->expectException(\App\Exceptions\StorefrontException::class);
+        $this->expectException(StorefrontException::class);
 
         app(StockService::class)->record(
             $product, null, -1, StockMovement::ADJUSTMENT, ['note' => 'recount']
@@ -208,13 +210,13 @@ class PreorderTest extends TestCase
         $variant = $product->fresh('variants')->variants->first();
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id,
             'product_variant_id' => $variant->id,
             'quantity' => 2,
         ])->assertSuccessful();
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);

@@ -48,10 +48,10 @@ class InvoiceTest extends TestCase
     {
         $request = $user ? $this->actingAs($user) : $this;
 
-        $request->postJson('/cart-api', ['product_id' => $product->id, 'quantity' => $qty])
+        $request->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => $qty])
             ->assertStatus(200);
 
-        ($user ? $this->actingAs($user) : $this)->postJson('/checkout-api', [
+        ($user ? $this->actingAs($user) : $this)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45, Road 7', 'city' => 'Dhaka',
         ])->assertStatus(201);
@@ -185,13 +185,13 @@ class InvoiceTest extends TestCase
         ]]);
         $user = User::factory()->create();
 
-        $this->actingAs($user)->postJson('/cart-api', [
+        $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $product->id,
             'product_variant_id' => $variant->id,
             'quantity' => 1,
         ])->assertStatus(200);
 
-        $this->actingAs($user)->postJson('/checkout-api', [
+        $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
