@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Courier;
+use App\Services\Courier\CourierDriverRegistry;
 use Illuminate\Validation\Rule;
 
 class CourierRequest extends AdminRequest
@@ -28,6 +29,12 @@ class CourierRequest extends AdminRequest
              * instead.
              */
             'tracking_url_template' => 'nullable|string|max:500',
+            'driver' => 'nullable|string|in:'.implode(',', app(CourierDriverRegistry::class)->keys()),
+            // Each driver names its own fields, so the values are validated as
+            // strings and the driver decides what it actually needs.
+            'credentials' => 'nullable|array',
+            'credentials.*' => 'nullable|string|max:500',
+            'is_sandbox' => 'nullable|boolean',
             'phone' => 'nullable|string|max:40',
             'note' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0|max:999',

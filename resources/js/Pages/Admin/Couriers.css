@@ -1,0 +1,20 @@
+/* Credentials for a carrier's API, set apart from the carrier's own details. */
+
+.courier-credentials {
+    margin: 16px 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.courier-credentials > strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+    color: var(--dark-900);
+}
+
+.courier-credentials > .admin-field-hint {
+    margin-bottom: 12px;
+}

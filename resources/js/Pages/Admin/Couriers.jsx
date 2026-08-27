@@ -5,17 +5,23 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { Truck, Plus, Edit2, Trash2 } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
+import Checkbox from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
+import FormSelect from '@/Components/FormSelect';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { adminCourierSchema } from '@/validations';
+import './Couriers.css';
 
 const empty = {
     name: '',
+    driver: 'manual',
+    is_sandbox: false,
     tracking_url_template: '',
     phone: '',
     note: '',
+    credentials: {},
 };
 
 /**
@@ -28,6 +34,7 @@ const empty = {
 export default function AdminCouriers({
     couriers = [],
     placeholder = '{tracking}',
+    drivers = [],
 }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -57,6 +64,9 @@ export default function AdminCouriers({
         },
     });
 
+    const activeDriver = drivers.find((d) => d.key === formik.values.driver);
+    const hasCredentials = Boolean(editing?.has_credentials);
+
     const openCreate = () => {
         setEditing(null);
         formik.resetForm({ values: empty });
@@ -68,9 +78,14 @@ export default function AdminCouriers({
         formik.resetForm({
             values: {
                 name: courier.name || '',
+                driver: courier.driver || 'manual',
+                is_sandbox: Boolean(courier.is_sandbox),
                 tracking_url_template: courier.tracking_url_template || '',
                 phone: courier.phone || '',
                 note: courier.note || '',
+                // Never sent back down, so the boxes start empty. Leaving one
+                // blank keeps whatever is already saved.
+                credentials: {},
             },
         });
         setModalOpen(true);
@@ -130,6 +145,25 @@ export default function AdminCouriers({
                     <span className="admin-field-hint">
                         No public lookup — number recorded only
                     </span>
+                ),
+        },
+        {
+            key: 'booking',
+            header: 'Booking',
+            render: (c) =>
+                c.can_book ? (
+                    <span className="admin-badge-stock admin-badge-stock-ok">
+                        Books via API
+                    </span>
+                ) : c.driver && c.driver !== 'manual' ? (
+                    // A driver exists but there are no keys, so it still
+                    // dispatches by hand. Worth saying, because it looks
+                    // integrated from the outside.
+                    <span className="admin-field-hint">
+                        API available — add credentials
+                    </span>
+                ) : (
+                    <span className="admin-field-hint">Number typed in</span>
                 ),
         },
         {
@@ -222,6 +256,60 @@ export default function AdminCouriers({
                         required
                         placeholder="Pathao Courier"
                     />
+
+                    <FormSelect
+                        label="How parcels are booked"
+                        name="driver"
+                        formik={formik}
+                        options={drivers.map((d) => ({
+                            value: d.key,
+                            label: d.label,
+                        }))}
+                    />
+
+                    {activeDriver?.fields?.length > 0 && (
+                        <div className="courier-credentials">
+                            <strong>{activeDriver.label} credentials</strong>
+                            <span className="admin-field-hint">
+                                From your merchant panel. Stored encrypted, and
+                                never shown again — leave a box blank to keep
+                                what is already saved.
+                                {hasCredentials && ' Credentials are saved.'}
+                            </span>
+
+                            {activeDriver.fields.map((field) => (
+                                <FormInput
+                                    key={field.name}
+                                    label={field.label}
+                                    name={`credentials.${field.name}`}
+                                    type={field.secret ? 'password' : 'text'}
+                                    formik={formik}
+                                    placeholder={
+                                        hasCredentials
+                                            ? '•••••• (unchanged)'
+                                            : ''
+                                    }
+                                />
+                            ))}
+                            {activeDriver.fields
+                                .filter((f) => f.hint)
+                                .map((f) => (
+                                    <span
+                                        key={`${f.name}-hint`}
+                                        className="admin-field-hint"
+                                    >
+                                        {f.label}: {f.hint}
+                                    </span>
+                                ))}
+
+                            <Checkbox
+                                name="is_sandbox"
+                                label="Use the courier's sandbox (test bookings, no real parcels)"
+                                checked={formik.values.is_sandbox}
+                                onChange={formik.handleChange}
+                            />
+                        </div>
+                    )}
 
                     <FormInput
                         label="Tracking link"

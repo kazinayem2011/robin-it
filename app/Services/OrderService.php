@@ -17,6 +17,7 @@ use App\Models\ProductStock;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Services\Courier\CourierDriverRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -26,7 +27,8 @@ class OrderService
 {
     public function __construct(
         protected CartService $cartService,
-        protected StockService $stock
+        protected StockService $stock,
+        protected CourierDriverRegistry $couriers,
     ) {}
 
     /**
@@ -437,12 +439,32 @@ class OrderService
             );
         }
 
-        DB::transaction(function () use ($order, $courier, $trackingNumber) {
+        /*
+         * Book with the carrier before touching the order.
+         *
+         * If the carrier refuses — an address it will not serve, a missing
+         * phone number, an expired key — the exception propagates and the
+         * order stays where it was. Marking it shipped and then failing to
+         * book would leave a customer told their parcel is on its way when
+         * nobody has it.
+         *
+         * Carriers with no API, and integrated ones with no credentials saved,
+         * fall back to the number the admin typed.
+         */
+        $consignment = null;
+
+        if ($courier->canBook()) {
+            $consignment = $this->couriers->for($courier)->createConsignment($order, $courier);
+        }
+
+        $tracking = $consignment?->trackingNumber ?? $trackingNumber;
+
+        DB::transaction(function () use ($order, $courier, $tracking) {
             $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
 
             $fresh->forceFill([
                 'courier_id' => $courier->id,
-                'tracking_number' => filled($trackingNumber) ? trim($trackingNumber) : null,
+                'tracking_number' => filled($tracking) ? trim($tracking) : null,
                 // The moment it left, which is not the same as the moment the
                 // row was last touched.
                 'dispatched_at' => $fresh->dispatched_at ?? now(),
