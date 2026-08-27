@@ -255,6 +255,11 @@ export default function AdminSettings({
                             icon: Truck,
                         },
                         {
+                            key: 'tax',
+                            label: 'VAT',
+                            icon: Percent,
+                        },
+                        {
                             key: 'email',
                             label: 'Email & SMTP Config',
                             icon: Mail,
@@ -495,7 +500,7 @@ export default function AdminSettings({
                                 </div>
                             </div>
                             <div className="admin-card-body">
-                                <div className="admin-checkbox-row">
+                                <div className="form-checkbox-row">
                                     <input
                                         type="checkbox"
                                         name="vat_enabled"
@@ -532,7 +537,7 @@ export default function AdminSettings({
                                             />
                                         </div>
 
-                                        <div className="admin-checkbox-row">
+                                        <div className="form-checkbox-row">
                                             <input
                                                 type="checkbox"
                                                 name="vat_inclusive"
