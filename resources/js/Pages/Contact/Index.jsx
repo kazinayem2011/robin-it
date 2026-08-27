@@ -89,7 +89,7 @@ export default function Contact({ showrooms = [], contact = null }) {
                             </div>
                         )}
 
-                        <form onSubmit={formik.handleSubmit}>
+                        <form onSubmit={formik.handleSubmit} noValidate>
                             <div className="contact-form-row">
                                 <FormInput
                                     id="name"

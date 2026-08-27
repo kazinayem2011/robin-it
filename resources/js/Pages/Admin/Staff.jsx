@@ -234,7 +234,7 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
                     </div>
                 }
             >
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} noValidate>
                     <div className="admin-grid-equal-2col">
                         <FormInput
                             label="Name"

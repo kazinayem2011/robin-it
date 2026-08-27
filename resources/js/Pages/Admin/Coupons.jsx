@@ -240,7 +240,7 @@ export default function AdminCoupons({
                     }
                     maxWidth="540px"
                 >
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <div className="admin-form-stack">
                             <FormInput
                                 label="Coupon Code (e.g. WELCOME10)"

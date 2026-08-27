@@ -18,7 +18,7 @@ export default function AddressFormModal({
             }
             maxWidth="480px"
         >
-            <form onSubmit={handleAddressSubmit}>
+            <form onSubmit={handleAddressSubmit} noValidate>
                 <div className="auth-form-group">
                     <label className="auth-label">Division</label>
                     <select

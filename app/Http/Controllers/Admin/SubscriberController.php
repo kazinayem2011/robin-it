@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subscriber;
+use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,22 +16,49 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class SubscriberController extends Controller
 {
+    /** Only these, so a query string cannot order by an arbitrary column. */
+    private const SORTABLE = ['email', 'name', 'source', 'subscribed_at', 'unsubscribed_at'];
+
+    public function __construct(private readonly SubscriptionService $subscriptions) {}
+
     public function index(Request $request): Response
     {
+        $showing = $request->query('status') === 'unsubscribed' ? 'unsubscribed' : 'subscribed';
+        [$by, $dir] = $this->sort($request, $showing === 'unsubscribed' ? 'unsubscribed_at' : 'subscribed_at');
+
         return Inertia::render('Admin/Subscribers', [
             'subscribers' => Subscriber::query()
-                ->when($request->query('status') === 'unsubscribed',
+                ->when($showing === 'unsubscribed',
                     fn ($q) => $q->where('status', Subscriber::UNSUBSCRIBED),
                     fn ($q) => $q->active())
-                ->latest('subscribed_at')
+                ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
+                    $term = '%'.$request->query('q').'%';
+                    $w->where('email', 'like', $term)->orWhere('name', 'like', $term);
+                }))
+                ->orderBy($by, $dir)
                 ->paginate(30)
                 ->withQueryString(),
-            'filters' => ['status' => $request->query('status', 'subscribed')],
+            'filters' => [
+                'status' => $showing,
+                'q' => $request->query('q', ''),
+                'sort' => ['by' => $by, 'dir' => $dir],
+            ],
             'counts' => [
                 'subscribed' => Subscriber::active()->count(),
                 'unsubscribed' => Subscriber::where('status', Subscriber::UNSUBSCRIBED)->count(),
             ],
         ]);
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function sort(Request $request, string $default): array
+    {
+        $by = $request->query('sort');
+        $dir = strtolower((string) $request->query('dir')) === 'asc' ? 'asc' : 'desc';
+
+        return [in_array($by, self::SORTABLE, true) ? $by : $default, $dir];
     }
 
     /**
@@ -63,21 +91,41 @@ class SubscriberController extends Controller
     }
 
     /**
-     * Take someone off by hand, when they have asked another way.
+     * Turn emails to this address on or off.
      *
-     * Marked as unsubscribed rather than deleted — a deleted row is added back
-     * by the next import, and the record is what proves the request was
-     * honoured.
+     * Nothing here deletes a subscriber. A deleted row is added back by the
+     * next import as though they had never asked to be left alone, and the
+     * record of the request is what proves it was honoured — so the address
+     * stays and only the switch moves.
      */
-    public function destroy(int $id): JsonResponse
+    public function toggle(Request $request, int $id): JsonResponse
     {
         $subscriber = Subscriber::findOrFail($id);
+        $wantsEmail = $request->boolean('active');
+
+        if ($wantsEmail) {
+            // Through the service, so they get a fresh token: a link from the
+            // emails they had before must not take them off again.
+            $subscriber = $this->subscriptions->subscribe(
+                $subscriber->email,
+                $subscriber->name,
+                $subscriber->source
+            );
+
+            return $this->successResponse(
+                ['status' => $subscriber->status],
+                "{$subscriber->email} will receive email again."
+            );
+        }
 
         $subscriber->forceFill([
             'status' => Subscriber::UNSUBSCRIBED,
             'unsubscribed_at' => now(),
         ])->save();
 
-        return $this->successResponse([], "{$subscriber->email} will not be emailed again.");
+        return $this->successResponse(
+            ['status' => $subscriber->status],
+            "{$subscriber->email} will not be emailed."
+        );
     }
 }

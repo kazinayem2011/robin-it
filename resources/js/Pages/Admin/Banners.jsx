@@ -214,7 +214,7 @@ export default function AdminBanners({ banners = [] }) {
                     }
                     maxWidth="640px"
                 >
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <div className="admin-form-stack">
                             <FormInput
                                 label="Banner Headline Title"

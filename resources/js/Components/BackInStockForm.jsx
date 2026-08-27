@@ -86,7 +86,7 @@ export default function BackInStockForm({
     }
 
     return (
-        <form className="pdp-notify" onSubmit={formik.handleSubmit}>
+        <form className="pdp-notify" onSubmit={formik.handleSubmit} noValidate>
             <div className="pdp-notify-head">
                 <Bell size={17} />
                 <div>

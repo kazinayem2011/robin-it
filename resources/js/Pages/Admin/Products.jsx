@@ -506,7 +506,7 @@ export default function Products({
                 }
                 maxWidth="640px"
             >
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} noValidate>
                     <FormInput
                         id="name"
                         name="name"

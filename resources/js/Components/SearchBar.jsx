@@ -140,6 +140,7 @@ export const SearchBar = ({ onSearch }) => {
             <form
                 onSubmit={handleSubmit}
                 className={`main-search-bar ${searchFocused ? 'search-focused' : ''}`}
+                noValidate
             >
                 <div className="search-category-selector">
                     <SlidersHorizontal size={14} className="cat-select-icon" />

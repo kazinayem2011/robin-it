@@ -291,7 +291,7 @@ export default function AdminBlogs({ blogs = [] }) {
                     }
                     maxWidth="720px"
                 >
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <div className="admin-form-stack">
                             <FormInput
                                 label="Article Headline Title"

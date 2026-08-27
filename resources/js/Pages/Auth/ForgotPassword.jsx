@@ -43,7 +43,7 @@ export default function ForgotPassword({ status, errors: serverErrors }) {
                         <div className="auth-status-alert">{status}</div>
                     )}
 
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <FormInput
                             id="email"
                             name="email"

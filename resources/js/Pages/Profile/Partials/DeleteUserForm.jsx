@@ -54,7 +54,11 @@ export default function DeleteUserForm() {
             </Button>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal}>
-                <form onSubmit={deleteUser} className="profile-delete-modal">
+                <form
+                    onSubmit={deleteUser}
+                    className="profile-delete-modal"
+                    noValidate
+                >
                     <h2 className="profile-section-title">
                         Delete your account?
                     </h2>

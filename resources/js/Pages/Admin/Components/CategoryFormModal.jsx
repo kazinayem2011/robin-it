@@ -31,7 +31,7 @@ export const CategoryFormModal = ({
             }
             maxWidth="560px"
         >
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} noValidate>
                 {/* Visual Target Hierarchy Banner */}
                 {modalState.parentCategory && (
                     <div className="admin-summary-box flex items-center gap-2">

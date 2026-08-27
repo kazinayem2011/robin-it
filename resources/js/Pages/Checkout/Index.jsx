@@ -268,6 +268,7 @@ export default function Checkout({ addresses = [], contact = null }) {
                             <form
                                 id="checkout-form"
                                 onSubmit={formik.handleSubmit}
+                                noValidate
                             >
                                 <div className="form-group">
                                     <label className="form-control-label">
@@ -486,6 +487,7 @@ export default function Checkout({ addresses = [], contact = null }) {
                                     <form
                                         onSubmit={handleApplyCoupon}
                                         className="coupon-form"
+                                        noValidate
                                     >
                                         <input
                                             type="text"

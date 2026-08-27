@@ -37,7 +37,7 @@ export default function ReviewForm({
     return (
         <div className="write-review-card">
             <h4>{title}</h4>
-            <form onSubmit={handleSubmit} className="review-form">
+            <form onSubmit={handleSubmit} className="review-form" noValidate>
                 <div className="review-form-rating-row">
                     <label className="review-form-label">Your Rating:</label>
                     <StarRating

@@ -259,6 +259,7 @@ export default function WarrantyIndex() {
                             <form
                                 onSubmit={handleSearch}
                                 className="warranty-input-box"
+                                noValidate
                             >
                                 <input
                                     type="text"
@@ -269,17 +270,23 @@ export default function WarrantyIndex() {
                                     }
                                     className="warranty-search-field"
                                 />
+                                {/*
+                                 * icon=, not an icon element among the
+                                 * children: Button gives the prop its own slot
+                                 * and the gap that goes with it, while a child
+                                 * icon lands inside the label's span and reads
+                                 * as one word — "⌕Check Status".
+                                 */}
                                 <Button
                                     type="submit"
                                     variant="primary"
+                                    icon={Search}
+                                    loading={isSearching}
                                     disabled={isSearching}
                                 >
-                                    <Search size={16} />
-                                    <span>
-                                        {isSearching
-                                            ? 'Verifying...'
-                                            : 'Check Status'}
-                                    </span>
+                                    {isSearching
+                                        ? 'Verifying…'
+                                        : 'Check Status'}
                                 </Button>
                             </form>
                         </div>
@@ -566,7 +573,7 @@ export default function WarrantyIndex() {
                                     components.
                                 </p>
 
-                                <form onSubmit={formik.handleSubmit}>
+                                <form onSubmit={formik.handleSubmit} noValidate>
                                     <div className="form-row-2col">
                                         <FormInput
                                             label="Full Name"
@@ -679,19 +686,15 @@ export default function WarrantyIndex() {
                                         <Button
                                             type="submit"
                                             variant="primary"
-                                            style={{
-                                                width: '100%',
-                                                height: '48px',
-                                                fontSize: '1rem',
-                                            }}
+                                            size="lg"
+                                            fullWidth
+                                            icon={Wrench}
+                                            loading={formik.isSubmitting}
                                             disabled={formik.isSubmitting}
                                         >
-                                            <Wrench size={18} />
-                                            <span>
-                                                {formik.isSubmitting
-                                                    ? 'Registering Claim...'
-                                                    : 'Submit Official Warranty Claim'}
-                                            </span>
+                                            {formik.isSubmitting
+                                                ? 'Registering claim…'
+                                                : 'Submit official warranty claim'}
                                         </Button>
                                     </div>
                                 </form>

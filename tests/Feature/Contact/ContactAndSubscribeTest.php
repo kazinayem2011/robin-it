@@ -304,16 +304,59 @@ class ContactAndSubscribeTest extends TestCase
             ->assertRedirect();
     }
 
-    /** Removing someone by hand keeps the record that they asked. */
-    public function test_removing_a_subscriber_marks_them_rather_than_deleting_them(): void
+    /**
+     * Nothing deletes a subscriber; the switch moves and the row stays.
+     *
+     * A deleted address is added back by the next import as though they had
+     * never asked to be left alone.
+     */
+    public function test_a_subscriber_is_switched_off_rather_than_deleted(): void
     {
         $subscriber = app(SubscriptionService::class)->subscribe('reader@example.com');
+        $staff = $this->staff(Roles::MANAGER);
 
-        $this->actingAs($this->staff(Roles::MANAGER))
-            ->deleteJson("/api/admin/subscribers/{$subscriber->id}")
+        $this->actingAs($staff)
+            ->patchJson("/api/admin/subscribers/{$subscriber->id}", ['active' => false])
             ->assertSuccessful();
 
         $this->assertSame(1, Subscriber::count());
         $this->assertFalse($subscriber->fresh()->isSubscribed());
+
+        $this->actingAs($staff)
+            ->patchJson("/api/admin/subscribers/{$subscriber->id}", ['active' => true])
+            ->assertSuccessful();
+
+        $this->assertTrue($subscriber->fresh()->isSubscribed());
+        $this->assertSame(1, Subscriber::count());
+    }
+
+    /** Switched back on, they get a fresh token, as anyone resubscribing does. */
+    public function test_switching_someone_back_on_reissues_their_token(): void
+    {
+        $subscriber = app(SubscriptionService::class)->subscribe('reader@example.com');
+        $old = $subscriber->token;
+        $staff = $this->staff(Roles::MANAGER);
+
+        $this->actingAs($staff)
+            ->patchJson("/api/admin/subscribers/{$subscriber->id}", ['active' => false])
+            ->assertSuccessful();
+        $this->actingAs($staff)
+            ->patchJson("/api/admin/subscribers/{$subscriber->id}", ['active' => true])
+            ->assertSuccessful();
+
+        $this->assertNotSame($old, $subscriber->fresh()->token);
+    }
+
+    /** A query string must not order by a column of its choosing. */
+    public function test_an_unknown_sort_column_is_ignored(): void
+    {
+        app(SubscriptionService::class)->subscribe('reader@example.com');
+
+        $props = $this->actingAs($this->staff(Roles::MANAGER))
+            ->get('/admin/subscribers?sort=password&dir=asc')
+            ->assertStatus(200)
+            ->viewData('page')['props'];
+
+        $this->assertSame('subscribed_at', $props['filters']['sort']['by']);
     }
 }

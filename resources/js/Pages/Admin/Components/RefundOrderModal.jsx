@@ -120,7 +120,7 @@ export default function RefundOrderModal({
                     This order has already been refunded in full.
                 </p>
             ) : (
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} noValidate>
                     <div className="admin-grid-equal-2col">
                         <FormInput
                             label="Amount (৳ BDT)"

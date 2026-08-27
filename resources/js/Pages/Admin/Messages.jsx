@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
+    ChevronDown,
+    ChevronUp,
     Inbox,
     Mail,
     Phone,
@@ -14,17 +16,19 @@ import {
 import Button from '@/Components/Button';
 import Tabs from '@/Components/Tabs';
 import Pagination from '@/Components/Pagination';
+import { SearchInput } from '@/Components/SearchInput';
 import EmptyState from '@/Components/EmptyState';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { ROUTES } from '@/constants/endpoints';
 import './Messages.css';
 
+// `key`, not `id` — Tabs reads tab.key, and an `id` made every tab inert.
 const TABS = [
-    { id: '', label: 'All' },
-    { id: 'new', label: 'New' },
-    { id: 'open', label: 'In progress' },
-    { id: 'closed', label: 'Closed' },
+    { key: '', label: 'All' },
+    { key: 'new', label: 'New' },
+    { key: 'open', label: 'In progress' },
+    { key: 'closed', label: 'Closed' },
 ];
 
 /**
@@ -46,12 +50,37 @@ export default function AdminMessages({
         setDraft('');
     };
 
+    const sort = filters.sort ?? { by: null, dir: 'desc' };
+
+    const go = (params) =>
+        router.get(
+            ROUTES.ADMIN_MESSAGES,
+            {
+                status: filters.status || undefined,
+                q: filters.q || undefined,
+                sort: sort.by || undefined,
+                dir: sort.by ? sort.dir : undefined,
+                ...params,
+            },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+
     const filterBy = (status) =>
-        router.get(ROUTES.ADMIN_MESSAGES, status ? { status } : {}, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
+        go({ status: status || undefined, sort: undefined, dir: undefined });
+
+    // Clicking the column you are already on turns the order around.
+    const sortBy = (by) =>
+        go({
+            sort: by,
+            dir: sort.by === by && sort.dir === 'desc' ? 'asc' : 'desc',
         });
+
+    const SORTS = [
+        { key: 'created_at', label: 'When it arrived' },
+        { key: 'name', label: 'Who sent it' },
+        { key: 'subject', label: 'Subject' },
+        { key: 'status', label: 'Status' },
+    ];
 
     const send = async (message, andClose) => {
         if (!draft.trim()) {
@@ -106,14 +135,38 @@ export default function AdminMessages({
                 variant="enclosed"
                 tabs={TABS.map((t) => ({
                     ...t,
-                    label:
-                        t.id && counts[t.id]
-                            ? `${t.label} (${counts[t.id]})`
-                            : t.label,
+                    badge: t.key ? (counts[t.key] ?? 0) : undefined,
                 }))}
                 activeTab={filters.status || ''}
                 onChange={filterBy}
             />
+
+            <div className="msg-toolbar">
+                <SearchInput
+                    value={filters.q || ''}
+                    onSearch={(q) => go({ q: q || undefined })}
+                    placeholder="Search subject, name, email or message…"
+                />
+                <div className="msg-sorts">
+                    <span className="admin-field-hint">Sort by</span>
+                    {SORTS.map((s) => (
+                        <button
+                            key={s.key}
+                            type="button"
+                            className={`msg-sort-btn ${sort.by === s.key ? 'is-active' : ''}`}
+                            onClick={() => sortBy(s.key)}
+                        >
+                            {s.label}
+                            {sort.by === s.key &&
+                                (sort.dir === 'asc' ? (
+                                    <ChevronUp size={13} />
+                                ) : (
+                                    <ChevronDown size={13} />
+                                ))}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {rows.length === 0 ? (
                 <EmptyState

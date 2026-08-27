@@ -48,7 +48,11 @@ export default function UpdatePasswordForm({ className = '' }) {
                 </p>
             </header>
 
-            <form onSubmit={formik.handleSubmit} className="profile-form-box">
+            <form
+                onSubmit={formik.handleSubmit}
+                className="profile-form-box"
+                noValidate
+            >
                 <FormInput
                     id="current_password"
                     name="current_password"

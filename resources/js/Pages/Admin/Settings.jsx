@@ -284,6 +284,7 @@ export default function AdminSettings({
                 <form
                     onSubmit={formik.handleSubmit}
                     className="admin-settings-form"
+                    noValidate
                 >
                     {/* TAB 1: General & Branding */}
                     {activeTab === 'general' && (

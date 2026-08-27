@@ -80,7 +80,7 @@ export default function DispatchOrderModal({
                 </div>
             }
         >
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} noValidate>
                 <FormSelect
                     label="Courier"
                     name="courier_id"

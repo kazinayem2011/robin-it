@@ -232,7 +232,7 @@ export default function AdminStores({ stores = [] }) {
                     }
                     maxWidth="580px"
                 >
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <div className="admin-form-stack">
                             <FormInput
                                 label="Branch Outlet Name"

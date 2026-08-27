@@ -229,6 +229,7 @@ export const Footer = () => {
                         <form
                             className="footer-newsletter-form"
                             onSubmit={subscribe}
+                            noValidate
                         >
                             <input
                                 type="email"

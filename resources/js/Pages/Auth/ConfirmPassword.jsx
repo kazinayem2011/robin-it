@@ -44,7 +44,7 @@ export default function ConfirmPassword() {
                         </span>
                     </p>
 
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         <FormInput
                             label="Password"
                             name="password"

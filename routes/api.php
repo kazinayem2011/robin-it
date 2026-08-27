@@ -268,7 +268,8 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::post(ApiEndpoints::ADMIN_MESSAGE_REPLY, [AdminContactMessageController::class, 'reply'])->middleware('can:support');
         Route::patch(ApiEndpoints::ADMIN_MESSAGE_STATUS, [AdminContactMessageController::class, 'updateStatus'])->middleware('can:support');
 
-        Route::delete(ApiEndpoints::ADMIN_SUBSCRIBER_ITEM, [AdminSubscriberController::class, 'destroy'])->middleware('can:marketing');
+        // Turned off and on, never deleted.
+        Route::patch(ApiEndpoints::ADMIN_SUBSCRIBER_ITEM, [AdminSubscriberController::class, 'toggle'])->middleware('can:marketing');
 
         // Running costs
         Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store'])->middleware('can:finance');

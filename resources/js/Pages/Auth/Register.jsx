@@ -54,7 +54,7 @@ export default function Register({ errors: serverErrors }) {
 
                 {/* Card Body */}
                 <div className="auth-card-body">
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         {/* Full Name */}
                         <FormInput
                             id="name"

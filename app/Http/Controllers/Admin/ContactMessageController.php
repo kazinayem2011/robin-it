@@ -19,24 +19,43 @@ class ContactMessageController extends Controller
 {
     public function __construct(private readonly ContactService $contact) {}
 
+    /** Only these, so a query string cannot order by an arbitrary column. */
+    private const SORTABLE = ['created_at', 'name', 'subject', 'status'];
+
     public function index(Request $request): Response
     {
         $status = $request->query('status');
+        $sortBy = in_array($request->query('sort'), self::SORTABLE, true)
+            ? $request->query('sort')
+            : null;
+        $dir = strtolower((string) $request->query('dir')) === 'asc' ? 'asc' : 'desc';
 
         $messages = ContactMessage::query()
             ->when(in_array($status, ContactMessage::STATUSES, true),
                 fn ($q) => $q->where('status', $status))
+            ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
+                $term = '%'.$request->query('q').'%';
+                $w->where('subject', 'like', $term)
+                    ->orWhere('name', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('message', 'like', $term);
+            }))
             ->with([
                 'replies:id,contact_message_id,author_name,body,emailed,created_at',
                 'assignee:id,name',
             ])
-            ->inbox()
+            // Asked for an order, honour it; otherwise the one waiting longest.
+            ->when($sortBy, fn ($q) => $q->orderBy($sortBy, $dir), fn ($q) => $q->inbox())
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/Messages', [
             'messages' => $messages,
-            'filters' => ['status' => $status],
+            'filters' => [
+                'status' => $status,
+                'q' => $request->query('q', ''),
+                'sort' => ['by' => $sortBy, 'dir' => $dir],
+            ],
             // So the tabs can show what is waiting without loading each list.
             'counts' => [
                 'new' => ContactMessage::where('status', ContactMessage::STATUS_NEW)->count(),

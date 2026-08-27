@@ -2,12 +2,12 @@ import React from 'react';
 import { SearchInput } from './SearchInput';
 import { EmptyState } from './EmptyState';
 import { Pagination } from './Pagination';
-import { Database } from 'lucide-react';
+import { Database, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 /**
  * Reusable Data Table Component (SSOT).
  *
- * @param {Array} columns - Array of column configs: [{ key, header, render, align, width, className }]
+ * @param {Array} columns - Array of column configs: [{ key, header, render, align, width, className, sortable }]
  * @param {Array|Object} data - Array of rows, or Laravel paginator object { data, links, total, from, to }
  * @param {string} keyField - Unique row key identifier (default 'id')
  * @param {string} title - Optional table card title
@@ -24,11 +24,15 @@ import { Database } from 'lucide-react';
  * @param {string} emptyDescription - Description when no records
  * @param {any} emptyIcon - Lucide icon for empty state
  * @param {string} className - Additional CSS class for table card
+ * @param {{by: string, dir: 'asc'|'desc'}} sort - Which column the rows are ordered by
+ * @param {Function} onSort - Called with a column key when its header is clicked
  */
 export const DataTable = ({
     columns = [],
     data = [],
     keyField = 'id',
+    sort = null,
+    onSort = null,
     title = '',
     subtitle = '',
     searchable = false,
@@ -113,18 +117,60 @@ export const DataTable = ({
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                {columns.map((col, idx) => (
-                                    <th
-                                        key={col.key || idx}
-                                        className={col.className || ''}
-                                        style={{
-                                            textAlign: col.align || 'left',
-                                            width: col.width || 'auto',
-                                        }}
-                                    >
-                                        {col.header}
-                                    </th>
-                                ))}
+                                {columns.map((col, idx) => {
+                                    // Sortable only where the caller says so
+                                    // and has given somewhere to send it.
+                                    const canSort =
+                                        col.sortable && onSort && col.key;
+                                    const isSorted = sort?.by === col.key;
+
+                                    return (
+                                        <th
+                                            key={col.key || idx}
+                                            className={`${col.className || ''} ${canSort ? 'is-sortable' : ''}`.trim()}
+                                            aria-sort={
+                                                isSorted
+                                                    ? sort.dir === 'asc'
+                                                        ? 'ascending'
+                                                        : 'descending'
+                                                    : undefined
+                                            }
+                                            style={{
+                                                textAlign: col.align || 'left',
+                                                width: col.width || 'auto',
+                                            }}
+                                        >
+                                            {canSort ? (
+                                                <button
+                                                    type="button"
+                                                    className={`admin-th-sort ${isSorted ? 'is-active' : ''}`}
+                                                    onClick={() =>
+                                                        onSort(col.key)
+                                                    }
+                                                >
+                                                    <span>{col.header}</span>
+                                                    {isSorted ? (
+                                                        sort.dir === 'asc' ? (
+                                                            <ChevronUp
+                                                                size={13}
+                                                            />
+                                                        ) : (
+                                                            <ChevronDown
+                                                                size={13}
+                                                            />
+                                                        )
+                                                    ) : (
+                                                        <ChevronsUpDown
+                                                            size={13}
+                                                        />
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                col.header
+                                            )}
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody>

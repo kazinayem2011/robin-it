@@ -83,6 +83,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                 <form
                     onSubmit={profileForm.handleSubmit}
                     className="dash-profile-form"
+                    noValidate
                 >
                     <h3 className="dash-profile-form-title">
                         Personal Details
@@ -168,6 +169,7 @@ export default function Profile({ user, navCounts, techPoints }) {
                 <form
                     onSubmit={passwordForm.handleSubmit}
                     className="dash-password-form"
+                    noValidate
                 >
                     <h3 className="dash-profile-form-title">
                         Change Account Password

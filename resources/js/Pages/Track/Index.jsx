@@ -185,7 +185,7 @@ export default function TrackOrder({ orderNumber = null }) {
                             )}
                         </p>
 
-                        <form onSubmit={formik.handleSubmit}>
+                        <form onSubmit={formik.handleSubmit} noValidate>
                             <div className="tracking-form-grid">
                                 <FormInput
                                     id="order_number"

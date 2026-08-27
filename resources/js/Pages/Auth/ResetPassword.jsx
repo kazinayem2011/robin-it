@@ -50,7 +50,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                 </div>
 
                 <div className="auth-card-body">
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         {/* Email Address */}
                         <FormInput
                             id="email"

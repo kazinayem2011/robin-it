@@ -236,7 +236,7 @@ export default function AdminSuppliers({ suppliers = {}, filters = {} }) {
                     </div>
                 }
             >
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} noValidate>
                     <FormInput
                         label="Supplier name"
                         name="name"

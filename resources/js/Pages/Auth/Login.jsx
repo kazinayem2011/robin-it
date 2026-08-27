@@ -110,7 +110,7 @@ export default function Login({
                         <div className="auth-status-alert">{status}</div>
                     )}
 
-                    <form onSubmit={formik.handleSubmit}>
+                    <form onSubmit={formik.handleSubmit} noValidate>
                         {/* Email or Bangladeshi Mobile Input */}
                         <FormInput
                             id="login"

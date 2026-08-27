@@ -51,7 +51,11 @@ export default function UpdateProfileInformation({
                 </p>
             </header>
 
-            <form onSubmit={formik.handleSubmit} className="profile-form-box">
+            <form
+                onSubmit={formik.handleSubmit}
+                className="profile-form-box"
+                noValidate
+            >
                 <FormInput
                     id="name"
                     name="name"

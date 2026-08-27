@@ -549,9 +549,15 @@ export const adminService = {
         return response?.data || response;
     },
 
-    async removeSubscriber(id) {
-        const response = await axiosInstance.delete(
+    /**
+     * Turn emails to an address on or off. Nothing here deletes a subscriber:
+     * a deleted row is added back by the next import as though they had never
+     * asked to be left alone.
+     */
+    async setSubscriberActive(id, active) {
+        const response = await axiosInstance.patch(
             API_ENDPOINTS.ADMIN.SUBSCRIBER_ITEM(id),
+            { active },
         );
         return response?.data || response;
     },

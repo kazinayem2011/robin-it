@@ -182,7 +182,7 @@ export default function ReceiveStockModal({
                 </div>
             }
         >
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} noValidate>
                 <div className="admin-grid-3col">
                     {/* Suppliers are maintained in their own section; this
                         only picks one. */}

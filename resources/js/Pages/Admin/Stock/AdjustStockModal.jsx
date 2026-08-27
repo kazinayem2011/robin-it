@@ -108,7 +108,7 @@ export default function AdjustStockModal({
                 </div>
             }
         >
-            <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit} noValidate>
                 <div className="admin-adjust-summary">
                     <div className="admin-adjust-name">
                         {product?.name}

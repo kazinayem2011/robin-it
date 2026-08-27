@@ -363,7 +363,7 @@ export default function AdminExpenses({
                     </div>
                 }
             >
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={formik.handleSubmit} noValidate>
                     <FormInput
                         label="What was it for"
                         name="description"

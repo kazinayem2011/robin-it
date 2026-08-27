@@ -45,7 +45,7 @@ export default function VerifyEmail({ status }) {
                         </span>
                     </p>
 
-                    <form onSubmit={submit}>
+                    <form onSubmit={submit} noValidate>
                         <Button
                             type="submit"
                             variant="primary"
