@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Enums\ApiCode;
+use App\Models\Category;
+use App\Models\Product;
+use App\Services\CategoryService;
 use App\Support\MailSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -28,9 +31,27 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         $this->configureRateLimiting();
+        $this->invalidateCatalogueCacheOnWrite();
 
         // SMTP credentials saved in the admin override the .env defaults.
         MailSettings::apply();
+    }
+
+    /**
+     * Keep the cached mega menu and featured categories honest.
+     *
+     * Hung off the models rather than off the admin controllers so a seeder, a
+     * tinker session or a future screen cannot leave the navigation showing a
+     * category that no longer exists.
+     */
+    protected function invalidateCatalogueCacheOnWrite(): void
+    {
+        $flush = static fn () => CategoryService::flush();
+
+        foreach ([Category::class, Product::class] as $model) {
+            $model::saved($flush);
+            $model::deleted($flush);
+        }
     }
 
     /**

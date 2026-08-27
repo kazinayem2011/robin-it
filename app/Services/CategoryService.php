@@ -5,9 +5,35 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryService
 {
+    /**
+     * The mega menu is rebuilt on every page the header renders, which is every
+     * page — a read of the whole category table, a distinct scan of products,
+     * and a tree walk, per visitor per navigation. It changes when an admin
+     * edits the catalogue and at no other time, so it is cached until then.
+     */
+    public const MEGA_MENU_KEY = 'catalog.mega_menu';
+
+    public const FEATURED_KEY = 'catalog.featured_categories';
+
+    /** Long, because every write path invalidates explicitly. */
+    private const TTL = 21600;
+
+    /**
+     * Drop the cached catalogue views.
+     *
+     * Wired to Category and Product model events in AppServiceProvider, so it
+     * covers seeders, tinker and any future writer as well as the admin screens.
+     */
+    public static function flush(): void
+    {
+        Cache::forget(self::MEGA_MENU_KEY);
+        Cache::forget(self::FEATURED_KEY);
+    }
+
     /**
      * Get the nested category tree for the Mega Menu.
      *
@@ -21,6 +47,30 @@ class CategoryService
      * not on a category assignment, so it never has any of its own.
      */
     public function getMegaMenuTree(): Collection
+    {
+        /*
+         * Plain arrays go into the cache, never objects.
+         *
+         * config/cache.php sets `serializable_classes => false`, which is
+         * Laravel's secure default: nothing read back out of the cache may
+         * reconstruct a PHP class. Caching the Collection this used to return
+         * meant every cache *hit* came back as __PHP_Incomplete_Class and threw
+         * — while every cache miss worked, so it only failed on the second
+         * request. An array survives any driver.
+         */
+        $tree = Cache::remember(
+            self::MEGA_MENU_KEY,
+            self::TTL,
+            fn () => $this->buildMegaMenuTree()
+        );
+
+        return collect($tree);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildMegaMenuTree(): array
     {
         $stocked = $this->categoryIdsWithProducts();
 
@@ -60,9 +110,9 @@ class CategoryService
                                         || str_contains(strtolower($child->name), '5090')
                                         || str_contains(strtolower($child->name), 'ultra beast'),
                                 ];
-                            }),
+                            })->all(),
                         ];
-                    }),
+                    })->all(),
                     'promoBanner' => [
                         'title' => $cat->spotlight_title ?: ($cat->name.' Collection'),
                         'subtitle' => $cat->spotlight_subtitle ?: 'Official 100% Genuine Tech with Warranty',
@@ -76,7 +126,8 @@ class CategoryService
                         }),
                     ],
                 ];
-            });
+            })
+            ->all();
     }
 
     /**
@@ -125,6 +176,15 @@ class CategoryService
      * back in a single grouped query, so it is a fixed 2 queries regardless of size.
      */
     public function getFeaturedCategories(): array
+    {
+        return Cache::remember(
+            self::FEATURED_KEY,
+            self::TTL,
+            fn () => $this->buildFeaturedCategories()
+        );
+    }
+
+    private function buildFeaturedCategories(): array
     {
         $categories = Category::where('is_active', true)
             ->where(function ($q) {

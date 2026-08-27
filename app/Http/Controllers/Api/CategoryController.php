@@ -4,29 +4,30 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\CategoryService;
-use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class CategoryController extends Controller
 {
-    use ApiResponse;
-
     public function __construct(
         protected CategoryService $categoryService
     ) {}
 
     /**
      * Get the nested category tree for the Mega Menu.
+     *
+     * No try/catch: these used to answer a failure with
+     * "Failed to fetch mega menu: " . $e->getMessage() and a 500, on a public
+     * unauthenticated route — so a broken query handed its SQL, and a broken
+     * include handed its filesystem path, to anyone who asked. The handler in
+     * bootstrap/app.php already turns an unexpected throwable into a generic
+     * 500 in the standard envelope, which is what should have been happening.
      */
     public function megaMenu(): JsonResponse
     {
-        try {
-            $categories = $this->categoryService->getMegaMenuTree();
-
-            return $this->successResponse($categories, 'Mega menu categories fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to fetch mega menu: '.$e->getMessage(), 500);
-        }
+        return $this->successResponse(
+            $this->categoryService->getMegaMenuTree(),
+            'Mega menu categories fetched successfully.'
+        );
     }
 
     /**
@@ -34,12 +35,9 @@ class CategoryController extends Controller
      */
     public function featured(): JsonResponse
     {
-        try {
-            $categories = $this->categoryService->getFeaturedCategories();
-
-            return $this->successResponse($categories, 'Featured bubble categories fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->errorResponse('Failed to fetch featured categories: '.$e->getMessage(), 500);
-        }
+        return $this->successResponse(
+            $this->categoryService->getFeaturedCategories(),
+            'Featured bubble categories fetched successfully.'
+        );
     }
 }
