@@ -259,11 +259,34 @@ class Coupon extends Model
     }
 
     /**
-     * Atomically record one redemption. Returns false when the limit was hit
-     * concurrently, so the caller can back out rather than oversell the promo.
+     * Atomically record one redemption.
+     *
+     * Returns false when a limit was hit concurrently, so the caller can back
+     * out rather than oversell the promo.
+     *
+     * The shop-wide `usage_limit` is enforced by the conditional UPDATE below:
+     * two simultaneous checkouts cannot both take the last use, because only one
+     * of them matches `used_count < usage_limit`.
+     *
+     * `per_user_limit` cannot be done that way — it is a count of that
+     * customer's orders, not a column on this row — so it is re-counted here
+     * behind a row lock. It was previously only checked in the controller,
+     * before the transaction opened, which meant two checkouts fired together by
+     * one customer both read "0 used" and both went through.
+     *
+     * Must be called inside a transaction; placeOrder() provides one.
      */
-    public function redeem(): bool
+    public function redeem(?int $userId = null): bool
     {
+        // Serialise redemptions of this coupon against each other. Without the
+        // lock the per-user re-count below is the same race, one step later.
+        static::whereKey($this->getKey())->lockForUpdate()->first();
+
+        if ($userId && $this->per_user_limit !== null
+            && $this->redemptionsBy($userId) >= $this->per_user_limit) {
+            return false;
+        }
+
         $query = static::whereKey($this->getKey());
 
         if ($this->usage_limit !== null) {

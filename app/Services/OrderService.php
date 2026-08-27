@@ -58,7 +58,11 @@ class OrderService
                 // browser — and only against the lines the coupon covers.
                 $discount = $coupon->discountFor($coupon->eligibleSubtotal($cart));
 
-                if (! $coupon->redeem()) {
+                // The customer is passed so the per-customer cap is re-counted
+                // here, under a row lock, rather than only in the controller
+                // before the transaction opened — where two checkouts fired at
+                // once both read "not used yet" and both went through.
+                if (! $coupon->redeem($userId)) {
                     throw new StorefrontException(
                         'This coupon has just reached its usage limit. Please remove it and try again.',
                         422,
