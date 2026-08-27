@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import {
-    Button,
-    BuilderRowsSkeleton,
-    toast,
-    Modal,
-    PcBuilderQuotationModal,
-} from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import Button from '../../Components/Button';
+import Modal from '../../Components/Modal';
+import PcBuilderQuotationModal from '../../Components/PcBuilderQuotationModal';
+import { BuilderRowsSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import { pcBuilderService, cartService } from '../../services';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { essentialsStatus, listNames, stockLabel } from '../../utils/pcBuild';
+import { essentialsStatus, stockLabel } from '../../utils/pcBuild';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,
@@ -30,11 +28,9 @@ import {
     ShoppingCart,
     Printer,
     RotateCcw,
-    Sparkles,
     Share2,
     Copy,
     Check,
-    FileText,
     AlertTriangle,
     CheckCircle2,
 } from 'lucide-react';
@@ -124,7 +120,9 @@ export default function PcBuilderIndex() {
             }
         };
         fetchCategories();
-    }, []);
+        // setPcBuilderItem is a zustand action: its identity never changes, so
+        // naming it here cannot re-run the fetch.
+    }, [setPcBuilderItem]);
 
     // Ask the server to validate the build whenever the selection changes.
     useEffect(() => {
@@ -283,12 +281,8 @@ export default function PcBuilderIndex() {
         setTimeout(() => setCopied(false), 3000);
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     return (
-        <MainLayout>
+        <>
             <Head title={`Custom PC Builder — ${siteConfig.name}`} />
 
             <div className="pc-builder-wrapper container">
@@ -704,6 +698,9 @@ export default function PcBuilderIndex() {
                     </Button>
                 </div>
             </Modal>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+PcBuilderIndex.layout = mainLayout;

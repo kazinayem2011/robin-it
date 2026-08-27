@@ -7,11 +7,10 @@ import {
     ZoomOut,
     Check,
     X,
-    Maximize2,
     RefreshCw,
     Upload,
 } from 'lucide-react';
-import { Button } from './index';
+import Button from './Button';
 
 /**
  * Reusable Image Cropper Modal (SSOT & Pure React Canvas)
@@ -59,30 +58,34 @@ export const ImageCropperModal = ({
     const [customHeight, setCustomHeight] = useState(targetHeight);
 
     const canvasRef = useRef(null);
-    const previewCanvasRef = useRef(null);
 
     // Validate and Load File
-    const validateAndProcessFile = (file) => {
-        setFileError(null);
+    const validateAndProcessFile = useCallback(
+        (file) => {
+            setFileError(null);
 
-        // 1. Type validation
-        if (!acceptedTypes.includes(file.type)) {
-            const errorMsg = `Unsupported file type (${file.type || 'unknown'}). Supported formats: JPG, PNG, WebP, AVIF.`;
-            setFileError(errorMsg);
-            return false;
-        }
+            // 1. Type validation
+            if (!acceptedTypes.includes(file.type)) {
+                const errorMsg = `Unsupported file type (${file.type || 'unknown'}). Supported formats: JPG, PNG, WebP, AVIF.`;
+                setFileError(errorMsg);
+                return false;
+            }
 
-        // 2. Size validation
-        const maxBytes = maxSizeMB * 1024 * 1024;
-        if (file.size > maxBytes) {
-            const actualMB = (file.size / (1024 * 1024)).toFixed(1);
-            const errorMsg = `File size (${actualMB} MB) exceeds the maximum limit of ${maxSizeMB} MB.`;
-            setFileError(errorMsg);
-            return false;
-        }
+            // 2. Size validation
+            const maxBytes = maxSizeMB * 1024 * 1024;
+            if (file.size > maxBytes) {
+                const actualMB = (file.size / (1024 * 1024)).toFixed(1);
+                const errorMsg = `File size (${actualMB} MB) exceeds the maximum limit of ${maxSizeMB} MB.`;
+                setFileError(errorMsg);
+                return false;
+            }
 
-        return true;
-    };
+            return true;
+            // Rebuilt only when the limits it enforces change, so the effect below
+            // can name it as a dependency without re-running on every render.
+        },
+        [acceptedTypes, maxSizeMB],
+    );
 
     // Load Image Object from src / File
     useEffect(() => {
@@ -111,7 +114,7 @@ export const ImageCropperModal = ({
             setOffset({ x: 0, y: 0 });
             setFileError(null);
         };
-    }, [imageSrc]);
+    }, [imageSrc, validateAndProcessFile]);
 
     // Handle Local File Upload from modal
     const handleFileChange = (e) => {
@@ -303,12 +306,19 @@ export const ImageCropperModal = ({
         outCtx.drawImage(imageObj, -dw / 2, -dh / 2, dw, dh);
         outCtx.restore();
 
-        const dataUrl = outCanvas.toDataURL('image/jpeg', 0.92);
+        /*
+         * outputFormat and outputQuality are documented props that were never
+         * read — the export hardcoded JPEG at 0.92, so asking the cropper for a
+         * WebP or a PNG silently produced a JPEG with the wrong file extension.
+         */
+        const dataUrl = outCanvas.toDataURL(outputFormat, outputQuality);
+        const extension =
+            outputFormat.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
 
         outCanvas.toBlob(
             (blob) => {
-                const file = new File([blob], 'cropped_image.jpg', {
-                    type: 'image/jpeg',
+                const file = new File([blob], `cropped_image.${extension}`, {
+                    type: outputFormat,
                 });
                 if (onCropComplete) {
                     onCropComplete({
@@ -321,8 +331,8 @@ export const ImageCropperModal = ({
                 }
                 onClose();
             },
-            'image/jpeg',
-            0.92,
+            outputFormat,
+            outputQuality,
         );
     };
 

@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import {
-    Button,
-    ProductCardSkeleton,
-    EmptyState,
-    ProductImage,
-    toast,
-} from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import Button from '../../Components/Button';
+import EmptyState from '../../Components/EmptyState';
+import ProductImage from '../../Components/ProductImage';
+import { ProductCardSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import { pcBuilderService } from '../../services';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -23,16 +21,28 @@ export default function SelectComponent({ categorySlug }) {
 
     const [showIncompatible, setShowIncompatible] = useState(false);
 
-    const addPcBuilderItem = useAppStore((state) => state.addPcBuilderItem);
     const pcBuilderItems = useAppStore((state) => state.pcBuilderItems);
 
-    // The rest of the build, as { slot: productId }, excluding the slot being filled.
-    const selection = pcBuilderItems.reduce((acc, item) => {
-        if (item.componentId !== categorySlug) {
-            acc[item.componentId] = item.product.id;
-        }
-        return acc;
-    }, {});
+    /*
+     * The rest of the build, as { slot: productId }, excluding the slot being
+     * filled. Memoised so it can be a dependency of the fetch below: rebuilt
+     * inline it was a new object every render, which is why the effect could
+     * not depend on it and the candidate list kept the compatibility verdicts
+     * it was given for a build the shopper had since changed.
+     */
+    const selection = useMemo(
+        () =>
+            pcBuilderItems.reduce((acc, item) => {
+                if (item.componentId !== categorySlug) {
+                    acc[item.componentId] = item.product.id;
+                }
+                return acc;
+            }, {}),
+        [pcBuilderItems, categorySlug],
+    );
+
+    // Stable serialisation, so an unchanged build does not refire the request.
+    const selectionKey = JSON.stringify(selection);
 
     const compatibleCount = products.filter(
         (p) => p.compatibility?.status !== 'fail',
@@ -66,7 +76,9 @@ export default function SelectComponent({ categorySlug }) {
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [categorySlug, search]);
+        // selection is compared by selectionKey, its stable serialisation.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [categorySlug, search, selectionKey]);
 
     const handleSelectProduct = (product) => {
         const compat = product.compatibility || {};
@@ -111,7 +123,7 @@ export default function SelectComponent({ categorySlug }) {
     };
 
     return (
-        <MainLayout>
+        <>
             <Head title={`Select Component — ${siteConfig.name}`} />
 
             <div className="pc-builder-wrapper container">
@@ -289,6 +301,9 @@ export default function SelectComponent({ categorySlug }) {
                     </div>
                 )}
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+SelectComponent.layout = mainLayout;

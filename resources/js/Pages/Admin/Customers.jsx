@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Users } from 'lucide-react';
-import { DataTable } from '@/Components';
+import DataTable from '@/Components/DataTable';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';

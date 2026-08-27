@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, ShoppingCart } from 'lucide-react';
-import { Modal, Button } from '../../Components';
+import Button from '../../Components/Button';
+import Modal from '../../Components/Modal';
 
 /**
  * Shown when someone adds a rig that is missing parts it cannot boot without.

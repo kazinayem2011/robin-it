@@ -5,6 +5,7 @@ import AccountLayout from './AccountLayout';
 import { ProductImage } from '@/Components/ProductImage';
 import { formatBdt } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
+import { mainLayout } from '../../Layouts/MainLayout';
 
 export default function Wishlist({
     user,
@@ -94,3 +95,6 @@ export default function Wishlist({
         </AccountLayout>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Wishlist.layout = mainLayout;

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useFormik } from 'formik';
-import MainLayout from '../../Layouts/MainLayout';
-import { Button, FormInput, StatusBadge, toast } from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import Button from '../../Components/Button';
+import FormInput from '../../Components/FormInput';
+import StatusBadge from '../../Components/StatusBadge';
+import { toast } from '../../Components/Toast';
 import { orderTrackingService } from '../../services';
 import { trackingSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
@@ -15,7 +18,6 @@ import {
     Search,
     MapPin,
     CreditCard,
-    Phone,
 } from 'lucide-react';
 import './Track.css';
 
@@ -65,7 +67,7 @@ export default function TrackOrder() {
     );
 
     return (
-        <MainLayout>
+        <>
             <Head title={`Track Your Order — ${siteConfig.name}`} />
 
             <div className="tracking-page-wrapper container">
@@ -264,6 +266,9 @@ export default function TrackOrder() {
                     </div>
                 )}
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+TrackOrder.layout = mainLayout;

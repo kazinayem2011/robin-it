@@ -2,29 +2,17 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
-import {
-    Button,
-    FormInput,
-    FormSelect,
-    ImageCropperModal,
-    Modal,
-    Checkbox,
-    toast,
-} from '../../Components';
+import Button from '../../Components/Button';
+import Checkbox from '../../Components/Checkbox';
+import FormInput from '../../Components/FormInput';
+import FormSelect from '../../Components/FormSelect';
+import ImageCropperModal from '../../Components/ImageCropperModal';
+import Modal from '../../Components/Modal';
+import { toast } from '../../Components/Toast';
 import { adminService, uploadService } from '../../services';
 import { adminBannerSchema } from '../../validations';
-import { ROUTES } from '../../constants/endpoints';
-import {
-    Image as ImageIcon,
-    Plus,
-    Trash2,
-    Edit3,
-    ExternalLink,
-    Check,
-    X,
-    Crop,
-    Sliders,
-} from 'lucide-react';
+
+import { Plus, Trash2, Edit3, Crop } from 'lucide-react';
 
 export default function AdminBanners({ banners = [] }) {
     const [modalOpen, setModalOpen] = useState(false);

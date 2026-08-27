@@ -5,6 +5,7 @@ import AccountLayout from './AccountLayout';
 import { toast } from '@/Components/Toast';
 import { updateProfileSchema, updatePasswordSchema } from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
+import { mainLayout } from '../../Layouts/MainLayout';
 
 /**
  * Profile and password.
@@ -245,3 +246,6 @@ export default function Profile({ user, navCounts, techPoints }) {
         </AccountLayout>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Profile.layout = mainLayout;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Check, MessageSquare } from 'lucide-react';
+import { Check, MessageSquare } from 'lucide-react';
 import StarRating from './StarRating';
 import './ReviewList.css';
 

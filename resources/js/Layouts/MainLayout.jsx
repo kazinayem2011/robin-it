@@ -29,3 +29,16 @@ export default function MainLayout({ children }) {
         </div>
     );
 }
+
+/**
+ * Use this as a page's persistent layout:
+ *
+ *     MyPage.layout = mainLayout;
+ *
+ * Every page used to render <MainLayout> inside its own tree, which meant
+ * Inertia tore the whole shell down and built it again on every navigation —
+ * and the header refetched the mega menu, the site settings and the cart count
+ * each time. As a persistent layout it mounts once and survives page changes,
+ * so those three requests happen on the first visit and not again.
+ */
+export const mainLayout = (page) => <MainLayout>{page}</MainLayout>;

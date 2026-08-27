@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import {
-    Button,
-    EmptyState,
-    CardGridSkeleton,
-    ProductImage,
-    toast,
-} from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import Button from '../../Components/Button';
+import EmptyState from '../../Components/EmptyState';
+import ProductImage from '../../Components/ProductImage';
+import { CardGridSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import { cartService, compareService } from '../../services';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -18,7 +16,6 @@ import {
     ShoppingCart,
     Trash2,
     Plus,
-    ArrowRight,
     ShieldCheck,
     CheckCircle2,
 } from 'lucide-react';
@@ -108,7 +105,7 @@ export default function Compare() {
     const emptySlotsCount = Math.max(0, 4 - compareProducts.length);
 
     return (
-        <MainLayout>
+        <>
             <Head
                 title={`Compare Hardware (Max 4 Items) — ${siteConfig.name}`}
             />
@@ -424,6 +421,9 @@ export default function Compare() {
                     </div>
                 )}
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Compare.layout = mainLayout;

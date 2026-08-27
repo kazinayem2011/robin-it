@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { Button, Checkbox, FormInput } from '../../../Components';
+import Button from '../../../Components/Button';
+import Checkbox from '../../../Components/Checkbox';
+import FormInput from '../../../Components/FormInput';
 import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 
 const newVariant = () => ({

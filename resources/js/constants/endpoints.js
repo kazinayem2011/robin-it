@@ -34,15 +34,22 @@ export const API_ENDPOINTS = {
         TRACK: '/orders/track',
     },
 
-    // Cart API
+    /*
+     * Cart & checkout.
+     *
+     * Named `cart-api` / `checkout-api` while these were also registered at the
+     * site root, where `/cart` and `/checkout` are the page routes. Those root
+     * registrations are gone, so under the `/api` baseURL they can be named for
+     * what they are.
+     */
     CART: {
-        BASE: '/cart-api',
-        ITEM: (itemId) => `/cart-api/${itemId}`,
+        BASE: '/cart',
+        ITEM: (itemId) => `/cart/${itemId}`,
     },
 
     // Checkout & Order API
     CHECKOUT: {
-        PROCESS: '/checkout-api',
+        PROCESS: '/checkout',
     },
 
     // Wishlist API
@@ -53,8 +60,8 @@ export const API_ENDPOINTS = {
 
     // Comparison API
     COMPARE: {
-        BASE: '/compare-api',
-        ITEM: (productId) => `/compare-api/${productId}`,
+        BASE: '/compare',
+        ITEM: (productId) => `/compare/${productId}`,
     },
 
     // Customer Account / Dashboard Endpoints

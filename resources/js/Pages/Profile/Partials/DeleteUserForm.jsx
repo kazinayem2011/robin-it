@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
-import { Button, FormInput, Modal } from '@/Components';
+import Button from '@/Components/Button';
+import FormInput from '@/Components/FormInput';
+import Modal from '@/Components/Modal';
 import { ROUTES } from '@/constants/endpoints';
 import '../Profile.css';
 

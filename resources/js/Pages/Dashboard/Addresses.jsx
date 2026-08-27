@@ -7,6 +7,7 @@ import AddressFormModal from './AddressFormModal';
 import { deliveryAddressSchema } from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
 import { formatBdPhone } from '@/utils/formatters';
+import { mainLayout } from '../../Layouts/MainLayout';
 
 export default function Addresses({
     user,
@@ -171,3 +172,6 @@ export default function Addresses({
         </AccountLayout>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Addresses.layout = mainLayout;

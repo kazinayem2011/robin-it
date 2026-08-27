@@ -15,7 +15,9 @@ import { toast } from '../Components/Toast';
  * one toast.
  */
 export const useFlashToasts = () => {
-    const flash = usePage().props?.flash ?? {};
+    // Not `?? {}`: that mints a new object on every render, so this effect
+    // re-ran constantly instead of when a message actually arrived.
+    const flash = usePage().props?.flash;
     const shown = useRef({});
 
     useEffect(() => {

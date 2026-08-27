@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
-import {
-    Button,
-    DataTable,
-    FormInput,
-    FormSelect,
-    Checkbox,
-    Modal,
-    toast,
-} from '../../Components';
+import Button from '../../Components/Button';
+import Checkbox from '../../Components/Checkbox';
+import DataTable from '../../Components/DataTable';
+import FormInput from '../../Components/FormInput';
+import FormSelect from '../../Components/FormSelect';
+import Modal from '../../Components/Modal';
+import { toast } from '../../Components/Toast';
 import CouponScopePicker from './Components/CouponScopePicker';
 import { adminService } from '../../services';
 import { adminCouponSchema } from '../../validations';

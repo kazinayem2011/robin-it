@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
-import { Button, DataTable, toast } from '../../Components';
+import Button from '../../Components/Button';
+import DataTable from '../../Components/DataTable';
+import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
 import axiosInstance from '../../services/axiosInstance';
 import { Star, Eye, EyeOff, Trash2, MessageSquare } from 'lucide-react';

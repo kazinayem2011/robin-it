@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormSelect } from '../../../Components';
+import FormSelect from '../../../Components/FormSelect';
 
 const SCOPE_LABELS = {
     all: 'The whole order',

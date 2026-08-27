@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Flame, Zap } from 'lucide-react';
 import './CountdownTimer.css';
 
@@ -13,7 +13,6 @@ import './CountdownTimer.css';
  */
 export default function CountdownTimer({
     targetDate = null,
-    durationHours = 12,
     label = 'ENDING IN:',
     variant = 'default',
     showIcon = false,
@@ -21,7 +20,7 @@ export default function CountdownTimer({
     onExpire = null,
     className = '',
 }) {
-    const calculateTimeLeft = () => {
+    const calculateTimeLeft = useCallback(() => {
         if (targetDate) {
             const difference = +new Date(targetDate) - +new Date();
             if (difference <= 0) {
@@ -55,9 +54,9 @@ export default function CountdownTimer({
             seconds: Math.floor((diff / 1000) % 60),
             isExpired: false,
         };
-    };
+    }, [targetDate]);
 
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -70,7 +69,7 @@ export default function CountdownTimer({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [targetDate]);
+    }, [calculateTimeLeft, onExpire]);
 
     const formatNum = (num) => String(num).padStart(2, '0');
 

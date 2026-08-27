@@ -1,5 +1,5 @@
 import * as Yup from 'yup';
-import { BD_PHONE_REGEX, isBDPhone } from '../constants/patterns';
+import { isBDPhone } from '../constants/patterns';
 
 /**
  * Login Validation Schema (Email or BD Phone)

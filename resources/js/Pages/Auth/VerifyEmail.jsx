@@ -1,7 +1,8 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { MailCheck, ArrowRight } from 'lucide-react';
-import { BrandLogo, Button } from '../../Components';
+import { BrandLogo } from '../../Components/BrandLogo';
+import Button from '../../Components/Button';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import './Auth.css';

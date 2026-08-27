@@ -14,13 +14,13 @@ import { formatBdt, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
 import { adminService } from '@/services';
-import { ProductImage, toast } from '@/Components';
+import ProductImage from '@/Components/ProductImage';
+import { toast } from '@/Components/Toast';
 
 export default function Dashboard({
     metrics = {},
     recentOrders = [],
     lowStockProducts = [],
-    topSelling = [],
     queueHealth = null,
 }) {
     const handleStatusChange = async (orderId, newStatus) => {

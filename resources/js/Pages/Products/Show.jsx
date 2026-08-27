@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, router } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import {
     productService,
     cartService,
@@ -8,22 +8,20 @@ import {
     wishlistService,
     reviewService,
 } from '../../services';
-import {
-    Button,
-    ProductDetailSkeleton,
-    SEOHead,
-    toast,
-    CountdownTimer,
-    Tabs,
-    RatingBreakdown,
-    ReviewForm,
-    ReviewList,
-    // The gallery renders <ProductImage> but never imported it, so the whole
-    // page threw "ProductImage is not defined" and rendered nothing at all.
-    ProductImage,
-    BackInStockForm,
-    BranchAvailability,
-} from '../../Components';
+import BackInStockForm from '../../Components/BackInStockForm';
+import BranchAvailability from '../../Components/BranchAvailability';
+import Button from '../../Components/Button';
+import CountdownTimer from '../../Components/CountdownTimer';
+// The gallery renders <ProductImage> but never imported it, so the whole page
+// threw "ProductImage is not defined" and rendered nothing at all.
+import ProductImage from '../../Components/ProductImage';
+import RatingBreakdown from '../../Components/RatingBreakdown';
+import ReviewForm from '../../Components/ReviewForm';
+import ReviewList from '../../Components/ReviewList';
+import SEOHead from '../../Components/SEOHead';
+import { ProductDetailSkeleton } from '../../Components/Skeleton';
+import Tabs from '../../Components/Tabs';
+import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
@@ -35,9 +33,6 @@ import {
     Check,
     Clock,
     ShieldCheck,
-    Truck,
-    RefreshCw,
-    Star,
 } from 'lucide-react';
 import './Show.css';
 
@@ -272,24 +267,24 @@ export default function ProductDetails(props) {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="container">
                     <ProductDetailSkeleton />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     if (error || !product) {
         return (
-            <MainLayout>
+            <>
                 <div className="pdp-error-container">
                     <h2>{error || 'Something went wrong'}</h2>
                     <Link href={ROUTES.SHOP} className="btn btn-primary mt-3">
                         Back to Store
                     </Link>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
@@ -334,7 +329,7 @@ export default function ProductDetails(props) {
     };
 
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title={product.name}
                 description={product.short_description || product.name}
@@ -826,6 +821,9 @@ export default function ProductDetails(props) {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+ProductDetails.layout = mainLayout;

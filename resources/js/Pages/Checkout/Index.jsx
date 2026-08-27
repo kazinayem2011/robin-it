@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { useFormik } from 'formik';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService, checkoutService, couponService } from '../../services';
-import {
-    Button,
-    LineItemsSkeleton,
-    ProductImage,
-    toast,
-} from '../../Components';
+import Button from '../../Components/Button';
+import ProductImage from '../../Components/ProductImage';
+import { LineItemsSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
 import { checkoutSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
@@ -127,17 +125,17 @@ export default function Checkout() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="checkout-container container">
                     <LineItemsSkeleton count={3} />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     if (!cart || !cart.items || cart.items.length === 0) {
         return (
-            <MainLayout>
+            <>
                 <Head title={`Checkout — ${siteConfig.name}`} />
                 <div className="checkout-container checkout-empty-box container">
                     <ShoppingCart size={48} className="checkout-empty-icon" />
@@ -150,7 +148,7 @@ export default function Checkout() {
                         Browse Hardware
                     </Link>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
@@ -163,7 +161,7 @@ export default function Checkout() {
         serverTotals.total ?? Math.max(0, subtotal + shipping - discount);
 
     return (
-        <MainLayout>
+        <>
             <Head title={`Checkout — ${siteConfig.name}`} />
 
             <div className="checkout-container container">
@@ -476,6 +474,9 @@ export default function Checkout() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Checkout.layout = mainLayout;

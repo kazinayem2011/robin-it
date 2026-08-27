@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import { SEOHead } from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import SEOHead from '../../Components/SEOHead';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -111,7 +111,7 @@ export default function SupportIndex() {
     ];
 
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title="Customer Support & Help Centre"
                 description="Contact Robins Computer support: hotline, email, showroom visits, order tracking, warranty claims and answers to common questions."
@@ -224,6 +224,9 @@ export default function SupportIndex() {
                     </div>
                 </section>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+SupportIndex.layout = mainLayout;

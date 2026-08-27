@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+
+import { mainLayout } from '../../Layouts/MainLayout';
 import { storeService } from '../../services';
-import { SEOHead, CardGridSkeleton } from '../../Components';
+import SEOHead from '../../Components/SEOHead';
+import { CardGridSkeleton } from '../../Components/Skeleton';
 import siteConfig from '../../constants/siteConfig';
-import { ROUTES } from '../../constants/endpoints';
+
 import {
     MapPin,
     Phone,
     Clock,
     Mail,
-    ExternalLink,
     ShieldCheck,
     Navigation,
 } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function StoresIndex() {
             : stores.filter((s) => s.city === selectedCity);
 
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title="Our Showrooms & Service Centers"
                 description={`Find ${siteConfig.name} official showrooms, flagship outlets, and authorized customer warranty service centers nationwide.`}
@@ -164,6 +164,9 @@ export default function StoresIndex() {
                     )}
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+StoresIndex.layout = mainLayout;

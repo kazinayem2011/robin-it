@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import {
-    Button,
-    EmptyState,
-    CardGridSkeleton,
-    ProductImage,
-    toast,
-} from '../../Components';
+import { mainLayout } from '../../Layouts/MainLayout';
+import Button from '../../Components/Button';
+import EmptyState from '../../Components/EmptyState';
+import ProductImage from '../../Components/ProductImage';
+import { CardGridSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import { wishlistService, cartService } from '../../services';
 import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
@@ -83,7 +81,7 @@ export default function Wishlist() {
     };
 
     return (
-        <MainLayout>
+        <>
             <Head title={`My Wishlist — ${siteConfig.name}`} />
 
             <div className="wishlist-page-wrapper container">
@@ -182,6 +180,9 @@ export default function Wishlist() {
                     </div>
                 )}
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Wishlist.layout = mainLayout;

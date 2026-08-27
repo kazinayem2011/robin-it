@@ -1,6 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
-import { Modal, Button } from '@/Components';
+import Button from '@/Components/Button';
+import Modal from '@/Components/Modal';
 
 /**
  * Reusable Category Delete Confirmation Modal

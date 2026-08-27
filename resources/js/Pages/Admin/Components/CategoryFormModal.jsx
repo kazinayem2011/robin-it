@@ -1,5 +1,9 @@
 import React from 'react';
-import { Modal, Button, FormInput, FormSelect, Checkbox } from '@/Components';
+import Button from '@/Components/Button';
+import Checkbox from '@/Components/Checkbox';
+import FormInput from '@/Components/FormInput';
+import FormSelect from '@/Components/FormSelect';
+import Modal from '@/Components/Modal';
 import { NAVBAR_BADGE_OPTIONS } from '@/constants';
 
 /**

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService } from '../../services';
-import {
-    Button,
-    LineItemsSkeleton,
-    Card,
-    ProductImage,
-    toast,
-} from '../../Components';
+
+import ProductImage from '../../Components/ProductImage';
+import { LineItemsSkeleton } from '../../Components/Skeleton';
+import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -73,17 +70,17 @@ export default function Cart() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="checkout-container container">
                     <LineItemsSkeleton count={3} />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     if (!cart || !cart.items || cart.items.length === 0) {
         return (
-            <MainLayout>
+            <>
                 <Head title={`Shopping Cart — ${siteConfig.name}`} />
                 <div className="checkout-container checkout-empty-box container">
                     <ShoppingCart size={48} className="checkout-empty-icon" />
@@ -98,7 +95,7 @@ export default function Cart() {
                         Continue Shopping
                     </Link>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
@@ -107,7 +104,7 @@ export default function Cart() {
     const hasBlockingIssue = issues.length > 0;
 
     return (
-        <MainLayout>
+        <>
             <Head title={`Shopping Cart — ${siteConfig.name}`} />
 
             <div className="checkout-container container">
@@ -293,6 +290,9 @@ export default function Cart() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Cart.layout = mainLayout;

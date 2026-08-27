@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -11,7 +11,7 @@ import './Profile.css';
 
 export default function Edit({ mustVerifyEmail, status }) {
     return (
-        <MainLayout>
+        <>
             <Head title={`Account Settings — ${siteConfig.name}`} />
 
             <div className="container profile-page-wrapper">
@@ -51,6 +51,9 @@ export default function Edit({ mustVerifyEmail, status }) {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Edit.layout = mainLayout;

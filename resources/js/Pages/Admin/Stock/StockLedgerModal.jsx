@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, TableSkeleton } from '../../../Components';
+import Modal from '../../../Components/Modal';
+import { TableSkeleton } from '../../../Components/Skeleton';
 import { adminService } from '../../../services';
 
 /**

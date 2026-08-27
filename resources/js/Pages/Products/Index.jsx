@@ -5,25 +5,22 @@ import React, {
     useMemo,
     useRef,
 } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
-import { productService, cartService } from '../../services';
-import {
-    ProductCard,
-    ProductFilters,
-    SEOHead,
-    Pagination,
-    Button,
-    ProductCardSkeleton,
-    EmptyState,
-    toast,
-} from '../../Components';
-import useAppStore from '../../store/useAppStore';
+import { Head, Link } from '@inertiajs/react';
+import { mainLayout } from '../../Layouts/MainLayout';
+import { productService } from '../../services';
+
+import EmptyState from '../../Components/EmptyState';
+import Pagination from '../../Components/Pagination';
+import { ProductCard } from '../../Components/ProductCard';
+import ProductFilters from '../../Components/ProductFilters';
+import SEOHead from '../../Components/SEOHead';
+import { ProductCardSkeleton } from '../../Components/Skeleton';
+
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
 import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
-import { Filter, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
 /**
@@ -110,38 +107,61 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
 
     const filterKey = JSON.stringify(requestFilters);
 
-    const fetchProducts = async () => {
+    // Bumped by "Try Again": the request lives in the effect below, so a retry
+    // is a dependency change rather than a function the render tree calls.
+    const [reloadKey, setReloadKey] = useState(0);
+    const retry = useCallback(() => setReloadKey((n) => n + 1), []);
+
+    /*
+     * Results for the current selection.
+     *
+     * The `cancelled` latch is what stops an earlier request from landing on
+     * top of a later one. Narrowing a filter and then narrowing it again fires
+     * two requests; if the first is slower — and the broader query usually is,
+     * because it matches more rows — its results arrived last and were written
+     * over the newer ones, leaving the grid showing products the sidebar said
+     * were filtered out. The facets effect below already guarded against this;
+     * the results themselves did not.
+     */
+    useEffect(() => {
+        let cancelled = false;
+
         setLoading(true);
-        try {
-            const data = await productService.getProducts({
-                page: page,
-                sort: sort,
+
+        productService
+            .getProducts({
+                page,
+                sort,
                 category_slug: categorySlug,
                 ...requestFilters,
+            })
+            .then((data) => {
+                if (cancelled) return;
+
+                setProducts(data.items);
+                setTotalPages(data.meta.last_page || 1);
+                setTotalCount(data.meta.total ?? data.items.length);
+                setLoadError(null);
+            })
+            .catch((error) => {
+                if (cancelled) return;
+
+                setProducts([]);
+                setLoadError(
+                    error?.message ||
+                        'We could not load products right now. Please try again.',
+                );
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
             });
 
-            setProducts(data.items);
-            setTotalPages(data.meta.last_page || 1);
-            setTotalCount(data.meta.total ?? data.items.length);
-            setLoadError(null);
-        } catch (error) {
-            console.error('Failed to fetch products', error);
-            setProducts([]);
-            setLoadError(
-                error?.message ||
-                    'We could not load products right now. Please try again.',
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchProducts();
-        // fetchProducts closes over the current filters; depending on the
-        // function itself would re-fire on every render.
+        return () => {
+            cancelled = true;
+        };
+        // requestFilters is compared by filterKey, its stable serialisation.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, sort, categorySlug, filterKey]);
+    }, [page, sort, categorySlug, filterKey, reloadKey]);
 
     // The facets describe the selection, so they follow everything except
     // paging and sorting.
@@ -267,7 +287,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
           : `All Technology Products — ${siteConfig.name}`;
 
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title={
                     onSaleOnly
@@ -361,7 +381,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                             title="We couldn't load these products"
                                             description={loadError}
                                             actionLabel="Try Again"
-                                            onAction={fetchProducts}
+                                            onAction={retry}
                                         />
                                     </div>
                                 ) : products.length === 0 ? (
@@ -413,6 +433,9 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+ProductListing.layout = mainLayout;

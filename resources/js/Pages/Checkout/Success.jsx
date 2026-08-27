@@ -1,11 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import { ROUTES } from '../../constants/endpoints';
 import './Checkout.css';
 
 export default function Success({ orderNumber }) {
     return (
-        <MainLayout>
+        <>
             <Head title="Order Successful - StarTech Clone" />
 
             <div className="checkout-container order-success-container container">
@@ -51,6 +51,9 @@ export default function Success({ orderNumber }) {
                     </Link>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Success.layout = mainLayout;

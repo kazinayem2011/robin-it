@@ -22,7 +22,7 @@ import { ROUTES } from '../constants/endpoints';
 import { getCategoryIcon } from '../utils/iconMap';
 import { splitAnnouncement } from '../utils/announcement';
 import { useMarqueeDuration } from '../hooks';
-import { categoryService, settingService } from '../services';
+import { categoryService } from '../services';
 import useAppStore from '../store/useAppStore';
 
 /**
@@ -30,12 +30,18 @@ import useAppStore from '../store/useAppStore';
  * Encapsulates Top Announcement Ticker, Main Header with Search & Actions, 3-Level Mega Menu, and Mobile Category Drawer.
  */
 export const Header = () => {
-    const { auth } = usePage().props;
+    /*
+     * The settings come down as an Inertia shared prop on every page, and the
+     * header was fetching the very same map again over /api/settings on mount.
+     * Two sources for one thing, one of them a round trip the page had already
+     * paid for.
+     */
+    const { auth, site_settings: siteSettings = {} } = usePage().props;
+
     const [categories, setCategories] = useState([]);
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [hoveredSubCategory, setHoveredSubCategory] = useState('sc1');
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-    const [siteSettings, setSiteSettings] = useState({});
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
     const megaNavRef = useRef(null);
@@ -46,16 +52,11 @@ export const Header = () => {
     const wishlistCount = useAppStore((state) => state.wishlistCount);
     const compareCount = useAppStore((state) => state.compareCount);
 
-    // Fetch dynamic Mega Menu Category Tree, Site Settings & sync Cart Count
+    // Fetch the mega menu tree and sync the cart badge. The layout is
+    // persistent now, so this runs on the first page and not on every
+    // navigation after it.
     useEffect(() => {
         fetchCartCount();
-
-        settingService
-            .getSettings()
-            .then((settings) => {
-                if (settings) setSiteSettings(settings);
-            })
-            .catch(() => {});
 
         categoryService
             .getMegaMenu()

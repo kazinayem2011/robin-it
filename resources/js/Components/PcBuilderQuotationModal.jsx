@@ -2,15 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { formatBdt } from '../utils/formatters';
 import siteConfig from '../constants/siteConfig';
-import {
-    Printer,
-    X,
-    FileText,
-    CheckCircle2,
-    Zap,
-    ShieldCheck,
-    QrCode,
-} from 'lucide-react';
+import { Printer, X, FileText, Zap } from 'lucide-react';
 import './PcBuilderQuotationModal.css';
 
 export const PcBuilderQuotationModal = ({

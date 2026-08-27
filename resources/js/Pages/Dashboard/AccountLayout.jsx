@@ -1,6 +1,5 @@
 import React from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import MainLayout from '@/Layouts/MainLayout';
 import {
     User,
     Package,
@@ -79,7 +78,7 @@ export default function AccountLayout({
         active || items.find((i) => i.href === url)?.key || 'overview';
 
     return (
-        <MainLayout>
+        <>
             <Head title={`${title} — ${siteConfig.name}`} />
 
             <div className="dashboard-layout-container">
@@ -202,6 +201,6 @@ export default function AccountLayout({
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

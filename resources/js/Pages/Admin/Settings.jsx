@@ -2,14 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
-import { Button, FormInput, FormSelect, Tabs, toast } from '../../Components';
+import Button from '../../Components/Button';
+import FormInput from '../../Components/FormInput';
+import FormSelect from '../../Components/FormSelect';
+import Tabs from '../../Components/Tabs';
+import { toast } from '../../Components/Toast';
 import { adminService, uploadService } from '../../services';
 import { adminSettingsSchema } from '../../validations';
 import {
-    Sliders,
     Save,
     Bell,
-    Phone,
     Truck,
     Mail,
     Globe,
@@ -18,20 +20,26 @@ import {
     Send,
 } from 'lucide-react';
 
+const TABS = ['general', 'shipping', 'email', 'seo', 'ticker'];
+
+/**
+ * The tab lives in the URL so a refresh (or a shared link) reopens the same one
+ * instead of snapping back to General.
+ *
+ * Module scope, not the component body: the popstate effect below calls it, and
+ * a function redefined on every render is a dependency that changes on every
+ * render.
+ */
+const tabFromUrl = () => {
+    if (typeof window === 'undefined') return 'general';
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    return TABS.includes(tab) ? tab : 'general';
+};
+
 export default function AdminSettings({
     settings = [],
     mailPasswordSet = false,
 }) {
-    const TABS = ['general', 'shipping', 'email', 'seo', 'ticker'];
-
-    // The tab lives in the URL so a refresh (or a shared link) reopens the same
-    // one instead of snapping back to General.
-    const tabFromUrl = () => {
-        if (typeof window === 'undefined') return 'general';
-        const tab = new URLSearchParams(window.location.search).get('tab');
-        return TABS.includes(tab) ? tab : 'general';
-    };
-
     const [activeTab, setActiveTab] = useState(tabFromUrl);
 
     const selectTab = (key) => {

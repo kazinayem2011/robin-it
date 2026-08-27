@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
-import {
-    Button,
-    FormInput,
-    FormSelect,
-    Modal,
-    SearchableSelect,
-    toast,
-} from '../../../Components';
+import Button from '../../../Components/Button';
+import FormInput from '../../../Components/FormInput';
+import FormSelect from '../../../Components/FormSelect';
+import Modal from '../../../Components/Modal';
+import SearchableSelect from '../../../Components/SearchableSelect';
+import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
 import { adminStockReceiptSchema } from '../../../validations';
 import { formatBdt } from '../../../utils/formatters';

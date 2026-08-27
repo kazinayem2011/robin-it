@@ -8,7 +8,7 @@ import useAppStore from '../store/useAppStore';
 import { toast } from './Toast';
 import { formatBdt } from '../utils/formatters';
 import { ROUTES } from '../constants/endpoints';
-import { ShoppingCart, Eye, Plus, Minus, Check } from 'lucide-react';
+import { ShoppingCart, Plus, Minus } from 'lucide-react';
 
 export default function QuickViewModal({ show, onClose, product }) {
     // Hooks first, then the early return — see ProductCard for why. This modal

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import MainLayout from '../Layouts/MainLayout';
+import React, { useState, useEffect } from 'react';
+import { Link } from '@inertiajs/react';
+import { mainLayout } from '../Layouts/MainLayout';
 import {
     productService,
     categoryService,
@@ -24,15 +24,13 @@ import {
     RefreshCw,
     Sparkles,
 } from 'lucide-react';
-import {
-    ProductCard,
-    SEOHead,
-    CountdownTimer,
-    ProductCardSkeleton,
-    EmptyState,
-    BrandMarquee,
-    Tabs,
-} from '../Components';
+import { BrandMarquee } from '../Components/BrandLogos';
+import CountdownTimer from '../Components/CountdownTimer';
+import EmptyState from '../Components/EmptyState';
+import { ProductCard } from '../Components/ProductCard';
+import SEOHead from '../Components/SEOHead';
+import { ProductCardSkeleton } from '../Components/Skeleton';
+import Tabs from '../Components/Tabs';
 import { getCategoryIcon } from '../utils/iconMap';
 import { formatBdt } from '../utils/formatters';
 import siteConfig from '../constants/siteConfig';
@@ -176,18 +174,8 @@ export default function Welcome({ banners = [], blogs = [] }) {
 
     // Wishlist Toggle Helper
 
-    // Calculate Dynamic PC Builder Estimated Total Price
-    const builderTotal =
-        (builderSpecs?.cpu?.[builderCpu]?.price ||
-            (builderCpu === 'i9' ? 72500 : 48500)) +
-        (builderSpecs?.gpu?.[builderGpu]?.price ||
-            (builderGpu === 'rtx4090' ? 245000 : 84000)) +
-        (builderSpecs?.ram?.[builderRam]?.price ||
-            (builderRam === '64gb' ? 31000 : 15500)) +
-        32000; // Base Motherboard, PSU, Case, SSD
-
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title={`${siteConfig.name} — ${siteConfig.tagline}`}
                 description="Bangladesh's Premier Tech Marketplace for Custom Gaming PC Rigs, Laptops, Graphics Cards, Processors, and Hardware Components with Genuine Brand Warranty."
@@ -452,20 +440,24 @@ export default function Welcome({ banners = [], blogs = [] }) {
 
                         {/* High-Impact Flash Product Cards (DRY ProductCard Component) */}
                         <div className="flash-products-grid">
-                            {flashSaleProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                    variant="flash"
-                                    isWishlisted={wishlistIds.includes(
-                                        product.id,
-                                    )}
-                                    onAddToCart={addToCart}
-                                    onToggleWishlist={() =>
-                                        toggleWishlist(product.id)
-                                    }
-                                />
-                            ))}
+                            {loadingFlash
+                                ? [...Array(4)].map((_, i) => (
+                                      <ProductCardSkeleton key={i} />
+                                  ))
+                                : flashSaleProducts.map((product) => (
+                                      <ProductCard
+                                          key={product.id}
+                                          product={product}
+                                          variant="flash"
+                                          isWishlisted={wishlistIds.includes(
+                                              product.id,
+                                          )}
+                                          onAddToCart={addToCart}
+                                          onToggleWishlist={() =>
+                                              toggleWishlist(product.id)
+                                          }
+                                      />
+                                  ))}
                         </div>
                     </div>
                 </section>
@@ -980,6 +972,9 @@ export default function Welcome({ banners = [], blogs = [] }) {
                     </div>
                 </section>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Welcome.layout = mainLayout;

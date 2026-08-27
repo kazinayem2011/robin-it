@@ -6,6 +6,7 @@ import { StatusBadge } from '@/Components/StatusBadge';
 import { ProductImage } from '@/Components/ProductImage';
 import { formatBdt } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
+import { mainLayout } from '../../Layouts/MainLayout';
 
 export default function Index({
     user,
@@ -156,3 +157,6 @@ export default function Index({
         </AccountLayout>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Index.layout = mainLayout;

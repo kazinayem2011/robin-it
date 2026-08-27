@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
-import MainLayout from '../../Layouts/MainLayout';
+import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import { blogService } from '../../services';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
-import { toast } from '../../Components';
+import { toast } from '../../Components/Toast';
 import {
     Clock,
     Calendar,
-    User,
     Share2,
     Check,
     ChevronRight,
     ArrowLeft,
-    BookOpen,
-    ShieldCheck,
-    Cpu,
-    ThumbsUp,
 } from 'lucide-react';
 import './Blogs.css';
 
@@ -63,7 +58,7 @@ export default function BlogShow({ slug }) {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div
                     className="container"
                     style={{ padding: '80px 0', textAlign: 'center' }}
@@ -79,13 +74,13 @@ export default function BlogShow({ slug }) {
                         Loading Tech Journal Article...
                     </p>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     if (!blog) {
         return (
-            <MainLayout>
+            <>
                 <div
                     className="container"
                     style={{ padding: '80px 0', textAlign: 'center' }}
@@ -104,12 +99,12 @@ export default function BlogShow({ slug }) {
                         <ArrowLeft size={16} /> Back to Tech Journal
                     </Link>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     return (
-        <MainLayout>
+        <>
             <SEOHead
                 title={`${blog.title} — ${siteConfig.name} Tech Journal`}
                 description={blog.excerpt}
@@ -313,6 +308,9 @@ export default function BlogShow({ slug }) {
                     )}
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+BlogShow.layout = mainLayout;
