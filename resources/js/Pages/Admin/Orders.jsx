@@ -9,6 +9,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import { toast } from '@/Components/Toast';
 import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
+import RefundOrderModal from './Components/RefundOrderModal';
 import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
@@ -25,11 +26,14 @@ export default function Orders({
     currentStatus = 'all',
     search = '',
     couriers = [],
+    refundMethods = [],
+    refundReasons = [],
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [returningOrder, setReturningOrder] = useState(null);
     const [dispatchingOrder, setDispatchingOrder] = useState(null);
+    const [refundingOrder, setRefundingOrder] = useState(null);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -230,6 +234,19 @@ export default function Orders({
                         </button>
                     )}
 
+                    {/* Money going back, which is a different event from goods
+                        coming back: a damaged item may be refunded without
+                        being returned, and an exchange returns goods without
+                        refunding anything. */}
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        onClick={() => setRefundingOrder(order)}
+                        title="Record a refund"
+                    >
+                        <Undo2 size={14} />
+                    </button>
+
                     {/* Opens the print dialog straight away — the paperwork
                         goes out with the rider. */}
                     <a
@@ -429,6 +446,17 @@ export default function Orders({
                 onClose={() => setDispatchingOrder(null)}
                 onDone={() => {
                     setDispatchingOrder(null);
+                    router.reload({ only: ['orders'] });
+                }}
+            />
+
+            <RefundOrderModal
+                order={refundingOrder}
+                methods={refundMethods}
+                reasons={refundReasons}
+                onClose={() => setRefundingOrder(null)}
+                onDone={() => {
+                    setRefundingOrder(null);
                     router.reload({ only: ['orders'] });
                 }}
             />

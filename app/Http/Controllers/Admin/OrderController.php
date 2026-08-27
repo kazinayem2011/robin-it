@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\OrderStatusRequest;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Courier;
 use App\Models\Order;
+use App\Models\Refund;
 use App\Services\OrderService;
 use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +28,12 @@ class OrderController extends Controller
         $status = $request->input('status', 'all');
         $search = $request->input('search', '');
 
-        $query = Order::with(['user', 'items.product.images', 'courier:id,name,tracking_url_template'])->latest();
+        $query = Order::with([
+            'user', 'items.product.images',
+            'courier:id,name,tracking_url_template',
+            // So the refund form knows what is left before anything is typed.
+            'refunds:id,order_id,amount',
+        ])->latest();
 
         if ($status !== 'all') {
             $query->where('status', $status);
@@ -51,6 +57,10 @@ class OrderController extends Controller
             'currentStatus' => $status,
             'search' => $search,
             'couriers' => Courier::active()->ordered()->get(['id', 'name', 'phone']),
+            'refundMethods' => collect(Refund::METHODS)
+                ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
+            'refundReasons' => collect(Refund::REASONS)
+                ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
         ]);
     }
 

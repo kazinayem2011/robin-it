@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
@@ -182,6 +183,8 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus']);
         Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
         Route::patch(ApiEndpoints::ADMIN_ORDERS_DISPATCH, [AdminOrderController::class, 'dispatchOrder']);
+        Route::post(ApiEndpoints::ADMIN_ORDERS_REFUND, [AdminRefundController::class, 'store']);
+        Route::delete(ApiEndpoints::ADMIN_REFUNDS_ITEM, [AdminRefundController::class, 'destroy']);
 
         // Carriers
         Route::post(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'store']);

@@ -24,6 +24,7 @@ import {
     Wallet,
     LineChart,
     Tags,
+    Undo2,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -159,6 +160,16 @@ export default function AdminLayout({
                     <div className="admin-nav-section-label admin-nav-section-spacer">
                         Money
                     </div>
+
+                    <Link
+                        href={ROUTES.ADMIN_REFUNDS}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/refunds') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Undo2 size={17} />
+                            <span>Refunds</span>
+                        </div>
+                    </Link>
 
                     <Link
                         href={ROUTES.ADMIN_EXPENSES}

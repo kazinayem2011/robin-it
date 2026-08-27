@@ -333,3 +333,24 @@ export const adminCourierSchema = Yup.object().shape({
     phone: Yup.string().trim().max(40).nullable(),
     note: Yup.string().trim().max(255).nullable(),
 });
+
+/**
+ * Recording a refund.
+ *
+ * Zero is allowed: a cash-on-delivery parcel that came back before the rider
+ * collected anything is refunded on paper only, and the order still has to say
+ * the customer owes nothing.
+ */
+export const adminRefundSchema = Yup.object().shape({
+    amount: Yup.number()
+        .typeError('Enter an amount.')
+        .min(0, 'An amount cannot be negative.')
+        .required('Enter how much was given back.'),
+    method: Yup.string().required('Choose how the money went back.'),
+    reason: Yup.string().required('Choose why this was refunded.'),
+    reference: Yup.string().trim().max(120).nullable(),
+    note: Yup.string().trim().max(1000).nullable(),
+    refunded_on: Yup.date()
+        .max(new Date(), 'A refund cannot be dated in the future.')
+        .required('When did the money go back?'),
+});

@@ -1,0 +1,68 @@
+/* Money given back. */
+
+.refund-range-filter {
+    gap: 6px;
+}
+
+.refund-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.refund-range-inputs input {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+/*
+ * Recorded so the order shows nothing owed, but no money left the business —
+ * so it must not read like the payouts beside it.
+ */
+.refund-not-paid {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    color: var(--gray-600);
+}
+
+.refund-not-paid span {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* What is left to give back, before anything is typed. */
+.refund-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.refund-summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.refund-summary span {
+    font-size: 11.5px;
+    color: var(--gray-600);
+}
+
+.refund-summary strong {
+    font-size: 15px;
+    color: var(--dark-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.refund-summary .is-remaining strong {
+    color: var(--primary);
+}

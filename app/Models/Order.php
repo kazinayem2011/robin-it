@@ -97,6 +97,36 @@ class Order extends Model
         return $this->belongsTo(Courier::class);
     }
 
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class)->latest('refunded_on');
+    }
+
+    /** Everything given back on this order so far. */
+    public function getRefundedTotalAttribute(): float
+    {
+        $refunds = $this->relationLoaded('refunds') ? $this->refunds : $this->refunds()->get();
+
+        return round((float) $refunds->sum('amount'), 2);
+    }
+
+    /**
+     * What is still left to give back.
+     *
+     * Never negative: over-refunding is refused when it is attempted, and a
+     * historic overshoot should read as nothing left rather than as a debt the
+     * customer owes.
+     */
+    public function getRefundableAmountAttribute(): float
+    {
+        return round(max(0, (float) $this->total - $this->refunded_total), 2);
+    }
+
+    public function isFullyRefunded(): bool
+    {
+        return (float) $this->total > 0 && $this->refundable_amount <= 0;
+    }
+
     /**
      * Where the customer can watch this parcel, when the carrier offers a
      * public lookup. Null is a real answer: some carriers have none, and the

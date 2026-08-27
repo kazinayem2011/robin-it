@@ -31,6 +31,7 @@ class ProfitAndLoss
      *     from:string|null, to:string|null,
      *     income:array{goods:float, delivery:float, total:float},
      *     vat_collected:float,
+     *     refunded:float,
      *     cost_of_goods:float,
      *     gross_profit:float,
      *     gross_margin_percent:float|null,
@@ -70,6 +71,10 @@ class ProfitAndLoss
              * against what is being remitted.
              */
             'vat_collected' => $sales['vat_collected'],
+
+            // Shown on its own line rather than quietly deducted, so a month
+            // with heavy returns explains itself.
+            'refunded' => $sales['refunded'],
 
             'cost_of_goods' => $sales['cost'],
             'gross_profit' => $sales['gross_profit'],

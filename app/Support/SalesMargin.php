@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Order;
+use App\Models\Refund;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +29,8 @@ class SalesMargin
      * @param  string|null  $from  inclusive date, or null for "since the start"
      * @param  string|null  $to  inclusive date, or null for "up to now"
      * @return array{
-     *     goods_revenue:float, vat_collected:float, delivery_collected:float, cost:float,
+     *     goods_revenue:float, refunded:float, vat_collected:float,
+     *     delivery_collected:float, cost:float,
      *     gross_profit:float, margin_percent:float|null,
      *     orders_counted:int, orders_uncosted:int, uncosted_revenue:float
      * }
@@ -58,12 +60,30 @@ class SalesMargin
         $vat = round($costed->sum(fn ($row) => (float) $row->vat_amount), 2);
         $delivery = round($costed->sum(fn ($row) => (float) $row->shipping_fee), 2);
         $cost = round($costed->sum(fn ($row) => (float) $row->cost_of_goods), 2);
-        $profit = round($goods - $cost, 2);
+
+        /*
+         * Refunds are revenue handed back, so they come off it.
+         *
+         * Counted by the date the money moved rather than by the order's date:
+         * a refund in September on an August sale belongs to September, which
+         * is the month the shop was actually out of pocket.
+         *
+         * `settled` leaves out cash that was never collected — on a
+         * cash-on-delivery order that came back, nothing was ever taken, and
+         * the sale it relates to is already excluded by its status.
+         */
+        $refunded = round((float) Refund::query()
+            ->settled()
+            ->between($from, $to)
+            ->sum('amount'), 2);
+
+        $profit = round($goods - $cost - $refunded, 2);
 
         $uncosted = self::uncostedOrders($from, $to);
 
         return [
             'goods_revenue' => $goods,
+            'refunded' => $refunded,
             'vat_collected' => $vat,
             'delivery_collected' => $delivery,
             'cost' => $cost,

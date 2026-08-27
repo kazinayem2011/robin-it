@@ -98,6 +98,22 @@ export const adminService = {
         return response.data;
     },
 
+    /** Record money given back on an order. */
+    async refundOrder(orderId, payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.ORDER_REFUND(orderId),
+            payload,
+        );
+        return response.data;
+    },
+
+    async deleteRefund(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.REFUND_ITEM(id),
+        );
+        return response.data;
+    },
+
     async createCourier(payload) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.COURIERS,

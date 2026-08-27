@@ -195,6 +195,13 @@ class ApiEndpoints
     /** Handing a parcel to a carrier, with the number to chase it by. */
     public const ADMIN_ORDERS_DISPATCH = 'orders/{id}/dispatch';
 
+    /** Money given back, recorded against the order it left. */
+    public const ADMIN_REFUNDS = 'refunds';
+
+    public const ADMIN_REFUNDS_ITEM = 'refunds/{id}';
+
+    public const ADMIN_ORDERS_REFUND = 'orders/{id}/refund';
+
     public const ADMIN_COURIERS = 'couriers';
 
     public const ADMIN_COURIERS_ITEM = 'couriers/{id}';
