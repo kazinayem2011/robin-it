@@ -55,6 +55,15 @@ export default function TrackOrder() {
         },
     });
 
+    // The form has done its job once an order is on screen; keeping it there
+    // pushes the answer down the page and invites re-typing what was just
+    // asked for.
+    const trackAnother = () => {
+        setTrackingResult(null);
+        formik.resetForm();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const STEPS = [
         { id: 1, label: 'Order Placed', icon: Clock },
         { id: 2, label: 'Packaging', icon: Package },
@@ -73,60 +82,83 @@ export default function TrackOrder() {
             <Head title={`Track Your Order — ${siteConfig.name}`} />
 
             <div className="tracking-page-wrapper container">
-                {/* Search / Track Form Hero */}
-                <div className="tracking-hero-card">
-                    <div className="tracking-hero-icon">
-                        <Truck size={30} />
-                    </div>
-                    <h1 className="tracking-hero-title">Live Order Tracker</h1>
-                    <p className="tracking-hero-desc">
-                        Enter your Order Number and Bangladeshi Mobile Number to
-                        track delivery progress.
-                    </p>
-
-                    <form onSubmit={formik.handleSubmit}>
-                        <div className="tracking-form-grid">
-                            <FormInput
-                                id="order_number"
-                                name="order_number"
-                                label="Order Number"
-                                placeholder="e.g. ORD-ABC123XYZ"
-                                value={formik.values.order_number}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={
-                                    formik.touched.order_number &&
-                                    formik.errors.order_number
-                                }
-                            />
-
-                            <FormInput
-                                id="phone"
-                                name="phone"
-                                label="Mobile Number"
-                                placeholder="e.g. 01711223344"
-                                isBdPhone={true}
-                                value={formik.values.phone}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={
-                                    formik.touched.phone && formik.errors.phone
-                                }
-                            />
+                {/* Search / Track Form Hero — stands aside once it has an answer. */}
+                {trackingResult ? (
+                    <div className="tracking-found-bar">
+                        <div className="tracking-found-text">
+                            <CheckCircle2 size={18} />
+                            <span>
+                                Showing order{' '}
+                                <strong>{trackingResult.order_number}</strong>
+                            </span>
                         </div>
-
                         <Button
-                            type="submit"
-                            variant="primary"
-                            size="lg"
-                            fullWidth
-                            loading={formik.isSubmitting}
+                            variant="secondary"
+                            size="sm"
                             icon={Search}
+                            onClick={trackAnother}
                         >
-                            TRACK ORDER STATUS
+                            Track another order
                         </Button>
-                    </form>
-                </div>
+                    </div>
+                ) : (
+                    <div className="tracking-hero-card">
+                        <div className="tracking-hero-icon">
+                            <Truck size={30} />
+                        </div>
+                        <h1 className="tracking-hero-title">
+                            Live Order Tracker
+                        </h1>
+                        <p className="tracking-hero-desc">
+                            Enter your Order Number and Bangladeshi Mobile
+                            Number to track delivery progress.
+                        </p>
+
+                        <form onSubmit={formik.handleSubmit}>
+                            <div className="tracking-form-grid">
+                                <FormInput
+                                    id="order_number"
+                                    name="order_number"
+                                    label="Order Number"
+                                    placeholder="e.g. ORD-ABC123XYZ"
+                                    value={formik.values.order_number}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.order_number &&
+                                        formik.errors.order_number
+                                    }
+                                />
+
+                                <FormInput
+                                    id="phone"
+                                    name="phone"
+                                    label="Mobile Number"
+                                    placeholder="e.g. 01711223344"
+                                    isBdPhone={true}
+                                    value={formik.values.phone}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.phone &&
+                                        formik.errors.phone
+                                    }
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                loading={formik.isSubmitting}
+                                icon={Search}
+                            >
+                                TRACK ORDER STATUS
+                            </Button>
+                        </form>
+                    </div>
+                )}
 
                 {/* Result Card */}
                 {trackingResult && (
@@ -278,7 +310,11 @@ export default function TrackOrder() {
                                     Subtotal:{' '}
                                     {formatBdt(trackingResult.subtotal)} +
                                     Delivery:{' '}
-                                    {formatBdt(trackingResult.shipping_fee)}
+                                    {Number(trackingResult.shipping_fee) === 0
+                                        ? 'Free'
+                                        : formatBdt(
+                                              trackingResult.shipping_fee,
+                                          )}
                                 </div>
                             </div>
                         </div>

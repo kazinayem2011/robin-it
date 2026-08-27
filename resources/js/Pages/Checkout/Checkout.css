@@ -429,8 +429,13 @@
     color: var(--danger);
 }
 
-.discount-line .text-success {
-    color: #10b981 !important;
+/*
+ * Was scoped to .discount-line, so it did nothing on any other row. The
+ * summary now has two things worth marking as money saved: the promo discount
+ * and free delivery.
+ */
+.summary-line .text-success {
+    color: var(--success) !important;
     font-weight: 700;
 }
 

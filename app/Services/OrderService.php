@@ -13,6 +13,7 @@ use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductStock;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
@@ -311,7 +312,7 @@ class OrderService
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
                     'total' => (float) $item->total,
-                    'image' => $item->product?->images?->first()?->image_path ?? '/images/product_cpu_i9.jpg',
+                    'image' => $item->product?->images?->first()?->image_url ?? ProductImage::PLACEHOLDER,
                 ];
             }),
         ];

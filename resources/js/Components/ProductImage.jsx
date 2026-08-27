@@ -13,13 +13,19 @@ export const getProductImageUrl = (product, customFallback = null) => {
 
     if (typeof product === 'string') return product || fallback;
 
+    // image_url is the server's resolved path — already swapped for the
+    // placeholder when the file is not there, so the browser is never sent a
+    // URL that 404s. image_path is the raw stored value and is the fallback
+    // for anything serialised before that existed.
     const img =
+        product.primary_image?.image_url ||
         product.primary_image?.image_path ||
         (Array.isArray(product.images) && product.images.length > 0
             ? typeof product.images[0] === 'string'
                 ? product.images[0]
-                : product.images[0]?.image_path
+                : product.images[0]?.image_url || product.images[0]?.image_path
             : null) ||
+        product.image_url ||
         product.image ||
         product.image_path ||
         product.thumbnail ||

@@ -366,3 +366,40 @@
     align-items: center;
     gap: 6px;
 }
+
+/* ==========================================================================
+   FOUND BAR
+   Replaces the form once an order is on screen: keeping the form there pushes
+   the answer down the page and invites re-typing what was just asked for.
+   ========================================================================== */
+.tracking-found-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-md);
+    background: var(--success-light);
+}
+
+.tracking-found-text {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    font-size: 0.9rem;
+    color: var(--dark-800);
+}
+
+.tracking-found-text svg {
+    flex-shrink: 0;
+    color: var(--success);
+}
+
+.tracking-found-text strong {
+    font-family: var(--font-heading);
+    letter-spacing: 0.02em;
+}

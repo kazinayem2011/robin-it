@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Support\SearchTerm;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -365,7 +366,7 @@ class ProductService
             'save' => $saving > 0 ? 'SAVE ৳'.number_format($saving) : null,
             'discount' => $hasDiscount ? '-'.$discountPct.'%' : null,
             'isFlashSale' => $isFlashSale,
-            'image' => $product->images->first()?->image_path ?: '/images/product_cpu_i9.jpg',
+            'image' => $product->images->first()?->image_url ?: ProductImage::PLACEHOLDER,
             'rating' => $rating,
             'reviews' => $reviewCount,
             'sold' => $sold,

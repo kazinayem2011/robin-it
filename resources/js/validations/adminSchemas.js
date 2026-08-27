@@ -374,7 +374,15 @@ export const adminStaffSchema = (isEditing = false) =>
             .test(
                 'bd-phone',
                 'Enter a valid 11-digit Bangladeshi mobile number.',
-                (v) => !v || /^(?:\+?88|88)?01[3-9]\d{8}$/.test(v),
+                // Punctuation stripped first, and a dropped leading zero
+                // allowed, matching the storefront's schemas and what the
+                // server accepts. This was the one place still refusing
+                // "+880 1712-345678" — which is how the app writes it.
+                (v) =>
+                    !v ||
+                    /^(?:\+8801|8801|01|1)[3-9]\d{8}$/.test(
+                        v.trim().replace(/[\s-]/g, ''),
+                    ),
             ),
         role: Yup.string().required('Choose what their job covers.'),
         store_id: Yup.mixed().nullable(),

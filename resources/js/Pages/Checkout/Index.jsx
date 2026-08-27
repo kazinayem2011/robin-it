@@ -534,8 +534,18 @@ export default function Checkout({ addresses = [], contact = null }) {
                                 </div>
                                 <div className="summary-line">
                                     <span>Express Delivery</span>
-                                    <span className="summary-line-val">
-                                        {formatBdt(shipping)}
+                                    {/*
+                                     * "৳0" reads as a number that failed to
+                                     * load. Free delivery is something the
+                                     * shop is giving the customer, so it says
+                                     * so.
+                                     */}
+                                    <span
+                                        className={`summary-line-val ${shipping === 0 ? 'text-success' : ''}`}
+                                    >
+                                        {shipping === 0
+                                            ? 'Free'
+                                            : formatBdt(shipping)}
                                     </span>
                                 </div>
                                 {appliedCoupon && (
