@@ -10,6 +10,7 @@ use App\Support\MailSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,11 +31,29 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
+        $this->constrainRouteKeys();
         $this->configureRateLimiting();
         $this->invalidateCatalogueCacheOnWrite();
 
         // SMTP credentials saved in the admin override the .env defaults.
         MailSettings::apply();
+    }
+
+    /**
+     * Database keys in a URL are numeric, so say so.
+     *
+     * Controllers type these parameters as `int`. Laravel hands a route segment
+     * over as a string, so /orders/abc/invoice reached InvoiceController::show()
+     * and PHP raised a TypeError — a 500, and with APP_DEBUG on, one that
+     * printed the absolute path of the file it happened in. Nothing ever
+     * reached the database, but "not found" is the honest answer and 404 is the
+     * honest status.
+     */
+    protected function constrainRouteKeys(): void
+    {
+        foreach (['id', 'productId', 'orderId', 'itemId'] as $key) {
+            Route::pattern($key, '[0-9]+');
+        }
     }
 
     /**

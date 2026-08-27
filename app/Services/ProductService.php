@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\SearchTerm;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -127,7 +128,7 @@ class ProductService
 
         // Keyword Search
         if (! empty($filters['search'])) {
-            $search = $this->escapeLike(trim($filters['search']));
+            $search = SearchTerm::escape(trim($filters['search']));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('short_description', 'LIKE', "%{$search}%");
@@ -620,7 +621,7 @@ class ProductService
             $query->whereIn('category_id', $categoryIds);
         } else {
             // Fallback search if category slug has no direct match
-            $needle = $this->escapeLike($componentSlug);
+            $needle = SearchTerm::escape($componentSlug);
             $query->where(function ($q) use ($needle) {
                 $q->where('name', 'LIKE', "%{$needle}%")
                     ->orWhere('short_description', 'LIKE', "%{$needle}%");
@@ -628,7 +629,7 @@ class ProductService
         }
 
         if (! empty($search)) {
-            $needle = $this->escapeLike(trim($search));
+            $needle = SearchTerm::escape(trim($search));
             $query->where('name', 'LIKE', "%{$needle}%");
         }
 
@@ -661,7 +662,7 @@ class ProductService
             ];
         }
 
-        $needle = $this->escapeLike($term);
+        $needle = SearchTerm::escape($term);
 
         $products = Product::active()
             ->where(function ($q) use ($needle) {
@@ -689,14 +690,6 @@ class ProductService
             'categories' => $categories,
             'brands' => $brands,
         ];
-    }
-
-    /**
-     * Escape LIKE wildcards so a search for "100%" doesn't match the entire catalogue.
-     */
-    private function escapeLike(string $value): string
-    {
-        return str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $value);
     }
 
     private function clampLimit(int $limit): int
