@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Banner;
 use App\Models\BlogPost;
 use App\Models\Brand;
+use App\Models\ContentPage;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
@@ -127,6 +128,10 @@ class StorefrontPageController extends Controller
     public function about(): Response
     {
         return Inertia::render('About/Index', [
+            // The words are the shop's, kept in the database; the figures and
+            // the showrooms are counted, so they cannot go stale.
+            'page' => ContentPage::published()->where('slug', 'about')->first()
+                ?->only(['title', 'subtitle', 'body', 'meta_description']),
             'stats' => [
                 'products' => Product::where('is_active', true)->count(),
                 'brands' => Brand::count(),
@@ -139,6 +144,24 @@ class StorefrontPageController extends Controller
         ]);
     }
 
+    /**
+     * One page for anything the shop writes itself.
+     *
+     * privacy, terms and the return policy were links in the footer with
+     * nothing behind them.
+     */
+    public function page(string $slug): Response
+    {
+        $page = ContentPage::published()->where('slug', $slug)->firstOrFail();
+
+        return Inertia::render('Page/Index', [
+            'page' => $page->only([
+                'slug', 'title', 'subtitle', 'body', 'meta_title', 'meta_description',
+            ]),
+            'updatedAt' => $page->updated_at?->format('j F Y'),
+        ]);
+    }
+
     public function contact(): Response
     {
         return Inertia::render('Contact/Index', [
@@ -146,6 +169,8 @@ class StorefrontPageController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'address', 'city', 'phone']),
             // Signed in, there is no reason to ask for what we already know.
+            'page' => ContentPage::published()->where('slug', 'contact')->first()
+                ?->only(['title', 'subtitle', 'body']),
             'contact' => Auth::user() ? [
                 'name' => Auth::user()->name,
                 'email' => Auth::user()->email,

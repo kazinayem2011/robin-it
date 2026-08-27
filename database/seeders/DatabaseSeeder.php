@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             CatalogSeeder::class,
+
+            ContentPageSeeder::class,
         ]);
 
         // 1. Seed Official Admin User

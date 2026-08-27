@@ -561,6 +561,31 @@ export const adminService = {
         );
         return response?.data || response;
     },
+
+    // --- Content pages -------------------------------------------------
+
+    async createPage(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.PAGES,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async updatePage(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.PAGE_ITEM(id),
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async deletePage(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.PAGE_ITEM(id),
+        );
+        return response?.data || response;
+    },
 };
 
 export default adminService;

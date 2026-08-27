@@ -28,6 +28,7 @@ import {
     UserCog,
     Inbox,
     AtSign,
+    FileText,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -331,6 +332,18 @@ export default function AdminLayout({
                             <div className="admin-nav-left">
                                 <Inbox size={17} />
                                 <span>Messages</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('marketing') && (
+                        <Link
+                            href={ROUTES.ADMIN_PAGES}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/pages') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <FileText size={17} />
+                                <span>Pages</span>
                             </div>
                         </Link>
                     )}

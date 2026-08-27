@@ -1,14 +1,7 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
-import {
-    ShieldCheck,
-    Cpu,
-    Truck,
-    Headphones,
-    MapPin,
-    ArrowRight,
-} from 'lucide-react';
+import { MapPin, ArrowRight } from 'lucide-react';
 import Button from '../../Components/Button';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -19,7 +12,7 @@ import './About.css';
  *              into the page — a number typed into markup is out of date the
  *              week after it is written.
  */
-export default function About({ stats = {}, showrooms = [] }) {
+export default function About({ page = null, stats = {}, showrooms = [] }) {
     const figures = [
         { value: stats.products, label: 'Products in stock' },
         { value: stats.brands, label: 'Brands carried' },
@@ -27,44 +20,26 @@ export default function About({ stats = {}, showrooms = [] }) {
         { value: stats.customers, label: 'Customers served' },
     ].filter((f) => Number(f.value) > 0);
 
-    const promises = [
-        {
-            icon: ShieldCheck,
-            title: 'Genuine, with the warranty to prove it',
-            body: 'Every part is sourced through the authorised channel and carries the manufacturer’s warranty. Claims are handled here, not sent abroad.',
-        },
-        {
-            icon: Cpu,
-            title: 'Built and tested before it ships',
-            body: 'Complete machines are assembled, stress-tested and updated in our workshop. You get a PC that has already been switched on.',
-        },
-        {
-            icon: Truck,
-            title: 'Delivered across all 64 districts',
-            body: 'Cash on delivery nationwide, with a tracking link from the courier the moment your parcel is handed over.',
-        },
-        {
-            icon: Headphones,
-            title: 'Advice from people who use this kit',
-            body: 'Ask what will fit, what is worth the money, and what is not. The answer comes from someone who builds these every day.',
-        },
-    ];
-
     return (
         <>
-            <Head title={`About Us — ${siteConfig.name}`} />
+            <Head title={`${page?.title || 'About Us'} — ${siteConfig.name}`}>
+                {page?.meta_description && (
+                    <meta
+                        head-key="description"
+                        name="description"
+                        content={page.meta_description}
+                    />
+                )}
+            </Head>
 
             <div className="about-page">
                 <section className="about-hero">
                     <div className="container">
-                        <span className="about-eyebrow">About us</span>
+                        <span className="about-eyebrow">
+                            {page?.title || 'About us'}
+                        </span>
                         <h1>{siteConfig.name}</h1>
-                        <p>
-                            {siteConfig.tagline}. We sell the components,
-                            laptops and complete machines that people in
-                            Bangladesh actually build with — and we stand behind
-                            every one of them after the sale.
-                        </p>
+                        <p>{page?.subtitle || siteConfig.tagline}</p>
                     </div>
                 </section>
 
@@ -81,20 +56,19 @@ export default function About({ stats = {}, showrooms = [] }) {
                     </section>
                 )}
 
-                <section className="container about-block">
-                    <h2>What we promise</h2>
-                    <div className="about-promises">
-                        {promises.map(({ icon: Icon, title, body }) => (
-                            <article key={title} className="about-promise">
-                                <span className="about-promise-icon">
-                                    <Icon size={19} />
-                                </span>
-                                <h3>{title}</h3>
-                                <p>{body}</p>
-                            </article>
-                        ))}
-                    </div>
-                </section>
+                {/*
+                 * The shop's own words, edited from the admin. The figures and
+                 * the showrooms below are counted rather than written, so they
+                 * cannot go stale the way the footer's "15+ showrooms" did.
+                 */}
+                {page?.body && (
+                    <section className="container about-block">
+                        <div
+                            className="about-prose"
+                            dangerouslySetInnerHTML={{ __html: page.body }}
+                        />
+                    </section>
+                )}
 
                 {showrooms.length > 0 && (
                     <section className="container about-block">

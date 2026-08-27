@@ -396,3 +396,29 @@ export const adminStaffSchema = (isEditing = false) =>
             'The passwords do not match.',
         ),
     });
+
+/**
+ * A page the shop writes itself.
+ *
+ * A system page keeps its address — the footer links to /privacy and /terms by
+ * name — so the slug field is disabled for those and the server ignores it.
+ */
+export const adminPageSchema = Yup.object().shape({
+    slug: Yup.string()
+        .trim()
+        .required('Give the page an address')
+        .matches(
+            /^[a-z0-9-]+$/,
+            'Lowercase letters, numbers and hyphens only — "return-policy", not "Return Policy"',
+        )
+        .max(64),
+    title: Yup.string().trim().required('Give the page a title').max(160),
+    subtitle: Yup.string().nullable().max(200),
+    body: Yup.string()
+        .trim()
+        .required('A page with nothing on it is not worth publishing')
+        .max(120000),
+    meta_title: Yup.string().nullable().max(160),
+    meta_description: Yup.string().nullable().max(500),
+    is_published: Yup.boolean(),
+});

@@ -179,3 +179,36 @@
         font-size: 1.9rem;
     }
 }
+
+/* The shop's own words, written in the admin. */
+.about-prose {
+    max-width: 78ch;
+    font-size: 0.97rem;
+    line-height: 1.8;
+    color: var(--dark-800);
+}
+
+.about-prose h2 {
+    margin: 30px 0 10px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--dark-900);
+}
+
+.about-prose h2:first-child {
+    margin-top: 0;
+}
+
+.about-prose p {
+    margin-bottom: 13px;
+}
+
+.about-prose strong {
+    color: var(--dark-900);
+}
+
+.about-prose ul {
+    margin: 0 0 16px;
+    padding-left: 22px;
+}

@@ -99,6 +99,30 @@ class AppServiceProvider extends ServiceProvider
                 ));
         });
 
+        /*
+         * Writing in, and joining the mailing list.
+         *
+         * Tighter than the other anonymous writes, and two limits rather than
+         * one: a person with a question sends it once, so three a minute is
+         * already generous, while the hourly cap is what stops a script that
+         * paces itself under a per-minute limit and posts all night. Keyed by
+         * IP, since these need no account.
+         */
+        RateLimiter::for('contact', function (Request $request) {
+            $key = $request->user()?->id ?: $request->ip();
+
+            return [
+                Limit::perMinute(3)->by('contact-burst:'.$key)
+                    ->response(fn () => $this->throttledResponse(
+                        'That is a lot of messages at once. Please wait a minute before sending another.'
+                    )),
+                Limit::perHour(10)->by('contact-hour:'.$key)
+                    ->response(fn () => $this->throttledResponse(
+                        'You have sent us several messages already. Please give us a chance to reply, or call the hotline.'
+                    )),
+            ];
+        });
+
         // Anonymous writes (RMA claims, saved PC builds).
         RateLimiter::for('submissions', function (Request $request) {
             return Limit::perMinute(15)

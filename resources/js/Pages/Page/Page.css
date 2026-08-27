@@ -1,0 +1,107 @@
+/* Vertical only: .container is on the same element and supplies the gutter. */
+.doc-page {
+    max-width: 820px;
+    padding-top: 34px;
+    padding-bottom: 70px;
+}
+
+.doc-head {
+    padding-bottom: 20px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.doc-head h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    color: var(--dark-900);
+    margin-bottom: 6px;
+}
+
+.doc-head p {
+    font-size: 0.98rem;
+    color: var(--gray-500);
+}
+
+.doc-updated {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+/* Long-form prose: wider line height, room between blocks. */
+.doc-body {
+    font-size: 0.97rem;
+    line-height: 1.8;
+    color: var(--dark-800);
+}
+
+.doc-body h2 {
+    margin: 32px 0 10px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--dark-900);
+}
+
+.doc-body h3 {
+    margin: 24px 0 8px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.doc-body p {
+    margin-bottom: 14px;
+}
+
+.doc-body ul,
+.doc-body ol {
+    margin: 0 0 16px;
+    padding-left: 22px;
+}
+
+.doc-body li {
+    margin-bottom: 6px;
+}
+
+.doc-body a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.doc-body strong {
+    color: var(--dark-900);
+}
+
+.doc-body em {
+    color: var(--gray-500);
+}
+
+.doc-body table {
+    width: 100%;
+    margin-bottom: 18px;
+    border-collapse: collapse;
+}
+
+.doc-body th,
+.doc-body td {
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.doc-body th {
+    background: var(--bg-surface-subtle);
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .doc-head h1 {
+        font-size: 1.6rem;
+    }
+}

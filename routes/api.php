@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
+use App\Http\Controllers\Admin\ContentPageController as AdminContentPageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
@@ -126,9 +127,12 @@ Route::middleware('throttle:lookup')->group(function () {
 */
 Route::middleware('throttle:submissions')->group(function () {
     Route::post(ApiEndpoints::WARRANTY_CLAIM, [WarrantyController::class, 'store']);
-    // The Contact page, and the footer's newsletter box.
-    Route::post(ApiEndpoints::CONTACT, [ContactController::class, 'store']);
-    Route::post(ApiEndpoints::SUBSCRIBE, [ContactController::class, 'subscribe']);
+    // The Contact page, and the footer's newsletter box. Held to their own,
+    // tighter limit: a person writes in once, a script does not.
+    Route::middleware('throttle:contact')->group(function () {
+        Route::post(ApiEndpoints::CONTACT, [ContactController::class, 'store']);
+        Route::post(ApiEndpoints::SUBSCRIBE, [ContactController::class, 'subscribe']);
+    });
     Route::post(ApiEndpoints::PC_BUILDER_SAVE, [PcBuilderController::class, 'save']);
     // Anonymous, and it sends mail, so it is rate-limited like the rest.
     Route::post(ApiEndpoints::STOCK_NOTIFY, [StockNotificationController::class, 'store']);
@@ -267,6 +271,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // The contact inbox: answer, and mark done.
         Route::post(ApiEndpoints::ADMIN_MESSAGE_REPLY, [AdminContactMessageController::class, 'reply'])->middleware('can:support');
         Route::patch(ApiEndpoints::ADMIN_MESSAGE_STATUS, [AdminContactMessageController::class, 'updateStatus'])->middleware('can:support');
+
+        Route::post(ApiEndpoints::ADMIN_PAGES, [AdminContentPageController::class, 'store'])->middleware('can:marketing');
+        Route::patch(ApiEndpoints::ADMIN_PAGE_ITEM, [AdminContentPageController::class, 'update'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_PAGE_ITEM, [AdminContentPageController::class, 'destroy'])->middleware('can:marketing');
 
         // Turned off and on, never deleted.
         Route::patch(ApiEndpoints::ADMIN_SUBSCRIBER_ITEM, [AdminSubscriberController::class, 'toggle'])->middleware('can:marketing');

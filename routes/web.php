@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\ContentPageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
@@ -40,6 +41,16 @@ use Illuminate\Support\Facades\Route;
 | a wall of closures doing the same thing with a different component name; the
 | controller keeps that in one place and gives them somewhere to grow.
 */
+/*
+ * The footer's legal links, at the URLs people expect rather than under /p/.
+ * They render the same controller action; only the address is nicer.
+ */
+foreach (['privacy', 'terms', 'return-policy'] as $legalPage) {
+    Route::get('/'.$legalPage, [StorefrontPageController::class, 'page'])
+        ->defaults('slug', $legalPage)
+        ->name('page.'.$legalPage);
+}
+
 // Leaving the mailing list, from a link in an email: no account, no form.
 Route::get(ApiEndpoints::WEB_UNSUBSCRIBE, UnsubscribeController::class)
     ->where('token', '[A-Za-z0-9]{16,64}')
@@ -82,6 +93,8 @@ Route::controller(StorefrontPageController::class)->group(function () {
     // Linked from the footer since the site was built, and both were 404s.
     Route::get(ApiEndpoints::WEB_ABOUT, 'about')->name('about');
     Route::get(ApiEndpoints::WEB_CONTACT, 'contact')->name('contact');
+    // privacy, terms, return-policy — anything the shop writes itself.
+    Route::get('/p/{slug}', 'page')->where('slug', '[a-z0-9-]{2,64}')->name('page');
     Route::get(ApiEndpoints::WEB_WARRANTY, 'warranty')->name('warranty');
 
     Route::get(ApiEndpoints::WEB_BLOGS, 'blogs')->name('blogs.index');
@@ -156,6 +169,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_MESSAGES, [ContactMessageController::class, 'index'])->name('messages')->middleware('can:support');
+        Route::get(ApiEndpoints::ADMIN_PAGES, [ContentPageController::class, 'index'])->name('pages')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_SUBSCRIBERS, [SubscriberController::class, 'index'])->name('subscribers')->middleware('can:marketing');
         Route::get('subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export')->middleware('can:marketing');
 

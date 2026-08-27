@@ -127,23 +127,27 @@ export const Footer = () => {
                                 Warranty Policy & Claims
                             </Link>
                         </li>
+                        {/*
+                         * These four all pointed at /support whatever they
+                         * said, so "7 Days Return & Refund" landed on a
+                         * general help page. They go where their labels
+                         * promise now. The EMI link is gone rather than
+                         * pointed somewhere near enough — there is no page
+                         * about it yet, and one can be written under Pages.
+                         */}
                         <li>
-                            <Link href={ROUTES.SUPPORT}>
+                            <Link href={ROUTES.RETURN_POLICY}>
                                 7 Days Return & Refund
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SUPPORT}>
-                                0% EMI Available Banks
-                            </Link>
+                            <Link href={ROUTES.CONTACT}>Contact Us</Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SUPPORT}>
-                                Customer Support Ticket
-                            </Link>
+                            <Link href={ROUTES.SUPPORT}>Help & Support</Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SUPPORT}>
+                            <Link href={ROUTES.CONTACT}>
                                 Submit Feedback / Complaint
                             </Link>
                         </li>
@@ -199,7 +203,7 @@ export const Footer = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.ABOUT}>Careers & Join Us</Link>
+                            <Link href={ROUTES.CONTACT}>Careers & Join Us</Link>
                         </li>
                         <li>
                             <Link href={ROUTES.SHOP}>
@@ -211,6 +215,11 @@ export const Footer = () => {
                         </li>
                         <li>
                             <Link href={ROUTES.TERMS}>Terms & Conditions</Link>
+                        </li>
+                        <li>
+                            <Link href={ROUTES.RETURN_POLICY}>
+                                Returns & Refunds
+                            </Link>
                         </li>
                     </ul>
                 </div>
