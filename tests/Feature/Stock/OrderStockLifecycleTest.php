@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Stock;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -133,10 +134,20 @@ class OrderStockLifecycleTest extends TestCase
     }
 
     /**
-     * The bug this replaced: cancelled -> pending -> cancelled restocked twice,
-     * so a shelf of 10 became 13 and the shop sold units it did not own.
+     * Cancelled is an end state.
+     *
+     * It used to be reopenable, and the stock side of that was careful — units
+     * came back off the shelf, and the move failed if they had been sold. What
+     * it could not undo is everything outside this table: the customer has
+     * been told the order was cancelled, and any refund raised against it
+     * still stands. So the shelf keeps the units and a change of mind is a new
+     * order, which those units can cover straight away.
+     *
+     * The bug that made reopening dangerous in the first place:
+     * cancelled -> pending -> cancelled restocked twice, so a shelf of 10
+     * became 13 and the shop sold units it did not own.
      */
-    public function test_re_cancelling_an_order_cannot_restock_it_twice(): void
+    public function test_a_cancelled_order_cannot_be_reopened(): void
     {
         $product = $this->product(10);
         $order = $this->placeOrder(User::factory()->create(), $product, 3);
@@ -144,14 +155,18 @@ class OrderStockLifecycleTest extends TestCase
         $this->orders()->updateOrderStatus($order->fresh(), 'cancelled');
         $this->assertSame(10, $product->fresh()->stock_quantity);
 
-        // Reopening takes them back off the shelf...
-        $this->orders()->updateOrderStatus($order->fresh(), 'pending');
-        $this->assertSame(7, $product->fresh()->stock_quantity, 'reopening did not re-reserve');
+        foreach (['pending', 'processing', 'shipped', 'delivered'] as $status) {
+            try {
+                $this->orders()->updateOrderStatus($order->fresh(), $status);
+                $this->fail("A cancelled order was moved to '{$status}'.");
+            } catch (StorefrontException $e) {
+                $this->assertStringContainsString('cannot be reopened', $e->getMessage());
+            }
+        }
 
-        // ...so cancelling again returns them once, not a second time.
-        $this->orders()->updateOrderStatus($order->fresh(), 'cancelled');
-        $this->assertSame(10, $product->fresh()->stock_quantity, 'double restock');
-
+        $this->assertSame('cancelled', $order->fresh()->status);
+        // And the shelf is untouched by the attempts — no unit moved either way.
+        $this->assertSame(10, $product->fresh()->stock_quantity);
         $this->assertFalse($this->stockService()->verify($product->fresh())['drifted']);
     }
 
@@ -167,10 +182,14 @@ class OrderStockLifecycleTest extends TestCase
     }
 
     /**
-     * The units may have been sold to someone else while the order was cancelled.
-     * Reopening must fail rather than promise stock the shop does not have.
+     * The units released by a cancellation are genuinely free.
+     *
+     * This used to be the awkward case — reopening had to check whether the
+     * stock was still there and refuse if someone else had bought it. With
+     * cancelled as an end state the question does not arise: the units went
+     * back on the shelf and the next customer may have them.
      */
-    public function test_reopening_fails_when_the_stock_is_gone(): void
+    public function test_units_freed_by_a_cancellation_can_be_sold_to_someone_else(): void
     {
         $product = $this->product(3);
         $order = $this->placeOrder(User::factory()->create(), $product, 3);
@@ -178,12 +197,11 @@ class OrderStockLifecycleTest extends TestCase
         $this->orders()->updateOrderStatus($order->fresh(), 'cancelled');
         $this->assertSame(3, $product->fresh()->stock_quantity);
 
-        // Someone else buys the lot.
+        // Someone else buys the lot, which is the point of releasing them.
         $this->placeOrder(User::factory()->create(), $product, 3);
         $this->assertSame(0, $product->fresh()->stock_quantity);
 
-        $this->expectExceptionMessage('Cannot reopen this order');
-        $this->orders()->updateOrderStatus($order->fresh(), 'pending');
+        $this->assertFalse($this->stockService()->verify($product->fresh())['drifted']);
     }
 
     public function test_a_customer_cancellation_returns_the_units_once(): void

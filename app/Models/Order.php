@@ -27,10 +27,21 @@ class Order extends Model
     public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
     /**
-     * States where the order no longer holds reserved stock and cannot move on.
-     * A returned order has already had its units accounted for, item by item.
+     * States an order cannot move out of.
+     *
+     * A returned order has had its units accounted for, item by item. A
+     * cancelled one has already handed its units back, and un-cancelling it
+     * would rewrite a decision the customer was told about — the replacement
+     * for "I changed my mind again" is a new order, which the returned stock
+     * can immediately cover.
      */
-    public const TERMINAL_STATUSES = ['returned'];
+    public const TERMINAL_STATUSES = ['cancelled', 'returned'];
+
+    /** Whether this order has reached a state it cannot leave. */
+    public function isTerminal(): bool
+    {
+        return in_array($this->status, self::TERMINAL_STATUSES, true);
+    }
 
     /** Only a delivered order can be returned — nothing else has reached the customer. */
     public const RETURNABLE_FROM = ['delivered'];

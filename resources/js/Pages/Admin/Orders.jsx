@@ -12,6 +12,7 @@ import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
+import { TERMINAL_ORDER_STATUSES, orderStatusOptionsFor } from '@/constants';
 
 export default function Orders({
     orders = { data: [] },
@@ -138,12 +139,21 @@ export default function Orders({
                     <StatusBadge status={order.status} />
 
                     {/*
-                     * A returned order is finished: its units have already been
-                     * accounted for item by item, so moving it on again would
-                     * double-count them.
+                     * Cancelled and returned are end states. A returned order
+                     * has had its units accounted for item by item; a cancelled
+                     * one has handed them back. Either way there is nothing to
+                     * move it to, so the select is a label.
+                     *
+                     * A delivered order keeps its select but loses "Cancelled":
+                     * the goods are with the customer, so anything coming back
+                     * is a return, which records what condition it arrived in.
                      */}
-                    {order.status === 'returned' ? (
-                        <span className="admin-field-hint">Returned</span>
+                    {TERMINAL_ORDER_STATUSES.includes(order.status) ? (
+                        <span className="admin-field-hint">
+                            {order.status === 'returned'
+                                ? 'Returned'
+                                : 'Cancelled'}
+                        </span>
                     ) : (
                         <select
                             value={order.status}
@@ -152,11 +162,16 @@ export default function Orders({
                             }
                             className="admin-status-dropdown"
                         >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
+                            {orderStatusOptionsFor(order.status).map(
+                                (option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ),
+                            )}
                         </select>
                     )}
                 </div>

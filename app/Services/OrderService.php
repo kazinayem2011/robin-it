@@ -302,14 +302,17 @@ class OrderService
      *                                             already taken at checkout, so
      *                                             approving an order must not
      *                                             take them a second time
-     *   anything -> cancelled                     reserved units go back, once
-     *   cancelled -> anything                     units are taken off the shelf
-     *                                             again, and the move fails if
-     *                                             they are no longer there
+     *   pending/processing/shipped -> cancelled   reserved units go back, once
+     *   delivered -> cancelled                    refused; the goods are with
+     *                                             the customer, so this is a
+     *                                             return, not a cancellation
+     *   cancelled -> anything                     refused; cancelled is an end
+     *                                             state, and the units are
+     *                                             already back on the shelf
      *   delivered -> returned                     handled by returnOrder(), which
      *                                             needs the condition of each item
      *
-     * @throws StorefrontException when reopening an order the stock can no longer cover
+     * @throws StorefrontException when the order has reached an end state
      */
     public function updateOrderStatus(Order $order, string $status): Order
     {
@@ -317,9 +320,27 @@ class OrderService
             throw new \InvalidArgumentException("Invalid order status: {$status}");
         }
 
-        if ($order->isReturned()) {
+        if ($order->status === $status) {
+            return $order;
+        }
+
+        /*
+         * Cancelled and returned are both end states.
+         *
+         * Reopening a cancelled order used to be allowed, and the stock side of
+         * it was careful — units came back off the shelf and the move failed if
+         * they were gone. What it could not undo is everything outside this
+         * table: the customer has been told the order was cancelled, and any
+         * refund or credit raised against it still stands. A shop that changes
+         * its mind wants a new order, which the returned units can cover
+         * straight away, not a rewritten one.
+         */
+        if ($order->isTerminal()) {
             throw new StorefrontException(
-                'This order has been returned and can no longer change status.',
+                $order->isReturned()
+                    ? 'This order has been returned and can no longer change status.'
+                    : 'This order was cancelled and cannot be reopened. Place a new order instead — '
+                        .'its stock is already back on the shelf.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );
@@ -353,10 +374,6 @@ class OrderService
             );
         }
 
-        if ($order->status === $status) {
-            return $order;
-        }
-
         DB::transaction(function () use ($order, $status) {
             // Lock the order so two admins clicking at once cannot both decide
             // they are the one releasing the stock.
@@ -364,8 +381,6 @@ class OrderService
 
             if ($status === 'cancelled') {
                 $this->releaseStock($fresh);
-            } elseif ($fresh->status === 'cancelled') {
-                $this->reReserveStock($fresh);
             }
 
             $fresh->update(['status' => $status]);
@@ -401,53 +416,6 @@ class OrderService
         }
 
         $order->forceFill(['stock_released_at' => now()])->save();
-    }
-
-    /**
-     * Reopening a cancelled order takes the units off the shelf again.
-     *
-     * They may have been sold to someone else in the meantime, so this can fail —
-     * and it must, rather than quietly letting the shop promise stock it lacks.
-     *
-     * @throws StorefrontException
-     */
-    protected function reReserveStock(Order $order): void
-    {
-        if ($order->stock_released_at === null) {
-            return;
-        }
-
-        $order->loadMissing('items');
-
-        foreach ($order->items as $item) {
-            [$product, $variant] = $this->stockUnitFor($item);
-
-            if (! $product) {
-                continue;
-            }
-
-            $available = $this->onlineAvailability($product, $variant);
-
-            // Reopening re-reserves the units. A pre-order product may go back
-            // below zero to do that, exactly as it did on the original sale;
-            // anything else has to have the stock on hand.
-            if ($available < $item->quantity
-                && ! $product->allowsBalance($available - $item->quantity)) {
-                throw new StorefrontException(
-                    "Cannot reopen this order: only {$available} x {$item->display_name} left in stock, "
-                        ."but the order needs {$item->quantity}.",
-                    422,
-                    ApiCode::OUT_OF_STOCK
-                );
-            }
-
-            $this->stock->record($product, $variant, -$item->quantity, StockMovement::SALE, [
-                'reference' => $order,
-                'note' => 'Order reopened after cancellation',
-            ]);
-        }
-
-        $order->forceFill(['stock_released_at' => null])->save();
     }
 
     /**
