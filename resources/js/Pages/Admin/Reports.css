@@ -193,3 +193,11 @@
     line-height: 1.6;
     color: var(--color-text-muted, #8a8f98);
 }
+
+/*
+ * Money passing through rather than earned. Set apart from the income lines
+ * above it so it cannot be read as part of the total it sits under.
+ */
+.pl-passthrough td {
+    color: var(--color-text-muted, #8a8f98);
+}

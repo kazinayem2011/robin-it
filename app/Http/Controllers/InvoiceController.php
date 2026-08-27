@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Support\BrandDetails;
+use App\Support\VatRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -39,6 +40,9 @@ class InvoiceController extends Controller
             'order' => $order,
             'brand' => BrandDetails::all(),
             'logo' => BrandDetails::logoWebPath(),
+            // Read now rather than frozen: it identifies the business, not the
+            // sale, and a shop that registers later wants it on reprints.
+            'vatNumber' => VatRules::registrationNumber(),
             // Printed straight away when arrived at with ?print=1, so the
             // button on the order screen is one click rather than two.
             'autoPrint' => $request->boolean('print'),

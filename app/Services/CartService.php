@@ -9,6 +9,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Support\ShippingRates;
+use App\Support\VatRules;
 use Illuminate\Support\Facades\DB;
 
 class CartService
@@ -241,6 +242,16 @@ class CartService
 
         $subtotal = round($subtotal, 2);
         $discount = round(min(max($discount, 0.0), $subtotal), 2);
+
+        /*
+         * VAT on the goods after the discount, and not on delivery — that fee
+         * is collected on the courier's behalf. With inclusive pricing the
+         * amount is already inside the subtotal and is shown so the customer
+         * can see it; with exclusive pricing it is added below.
+         */
+        $goods = round($subtotal - $discount, 2);
+        $vat = VatRules::on($goods);
+        $vatAddedOnTop = $vat > 0 && ! VatRules::pricesIncludeVat();
         // Measured against the goods total before the coupon: a promo code
         // should not cost the customer their free delivery.
         $shipping = ShippingRates::feeFor($city, $subtotal);
@@ -249,7 +260,15 @@ class CartService
             'subtotal' => $subtotal,
             'shipping_fee' => $shipping,
             'discount' => $discount,
-            'total' => round(max(0.0, $subtotal - $discount + $shipping), 2),
+            'vat' => $vat,
+            // So the storefront can word it: "includes VAT" reads very
+            // differently from a line that was added to the bill.
+            'vat_inclusive' => VatRules::pricesIncludeVat(),
+            'vat_rate' => $vat > 0 ? VatRules::rate() : null,
+            'total' => round(
+                max(0.0, $goods + ($vatAddedOnTop ? $vat : 0.0) + $shipping),
+                2
+            ),
             'total_items' => $totalItems,
         ];
     }

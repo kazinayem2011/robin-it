@@ -8,7 +8,7 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id', 'session_id', 'order_number', 'subtotal',
-        'shipping_fee', 'discount', 'coupon_code',
+        'shipping_fee', 'discount', 'vat_amount', 'vat_rate', 'vat_inclusive', 'coupon_code',
         'coupon_discount_type', 'coupon_discount_value', 'total', 'status',
         'payment_method', 'payment_status', 'shipping_address',
         'stock_released_at', 'stock_returned_at',
@@ -19,6 +19,9 @@ class Order extends Model
         'subtotal' => 'float',
         'shipping_fee' => 'float',
         'discount' => 'float',
+        'vat_amount' => 'float',
+        'vat_rate' => 'float',
+        'vat_inclusive' => 'boolean',
         'coupon_discount_value' => 'float',
         'total' => 'float',
         'stock_released_at' => 'datetime',
@@ -181,6 +184,24 @@ class Order extends Model
         return $this->coupon_discount_type === 'percent'
             ? rtrim(rtrim(number_format((float) $this->coupon_discount_value, 2), '0'), '.').'% off'
             : '৳'.number_format((float) $this->coupon_discount_value).' off';
+    }
+
+    /**
+     * How the VAT on this order should be worded.
+     *
+     * "Includes VAT" and "VAT added" are different statements about the same
+     * number, and which one is true was decided when the order was placed.
+     */
+    public function getVatLabelAttribute(): ?string
+    {
+        if ((float) $this->vat_amount <= 0) {
+            return null;
+        }
+
+        $rate = $this->vat_rate ? rtrim(rtrim(number_format((float) $this->vat_rate, 2), '0'), '.') : null;
+        $suffix = $rate ? " @ {$rate}%" : '';
+
+        return $this->vat_inclusive ? "Includes VAT{$suffix}" : "VAT{$suffix}";
     }
 
     /** Orders that still consume reserved stock. */

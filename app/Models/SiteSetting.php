@@ -57,6 +57,21 @@ class SiteSetting extends Model
             'shipping_outside_dhaka',
             'free_shipping_threshold',
         ],
+        /*
+         * VAT. Off until a shop turns it on, because switching it on changes
+         * what customers are charged and what the accounts report.
+         *
+         * `vat_inclusive` is the one that changes arithmetic rather than
+         * paperwork: it says whether the prices on the shelf already contain
+         * the tax. Reading one as the other misstates both the customer's
+         * total and the shop's revenue.
+         */
+        'tax' => [
+            'vat_enabled',
+            'vat_rate',
+            'vat_number',
+            'vat_inclusive',
+        ],
         'seo' => [
             'meta_title',
             'meta_description',
@@ -84,7 +99,7 @@ class SiteSetting extends Model
     ];
 
     /** Groups whose values are safe in a browser. */
-    private const PUBLIC_GROUPS = ['general', 'contact', 'shipping', 'seo', 'announcement'];
+    private const PUBLIC_GROUPS = ['general', 'contact', 'shipping', 'tax', 'seo', 'announcement'];
 
     /**
      * Keys the admin Settings form may write.

@@ -18,9 +18,10 @@ import {
     Upload,
     Search,
     Send,
+    Percent,
 } from 'lucide-react';
 
-const TABS = ['general', 'shipping', 'email', 'seo', 'ticker'];
+const TABS = ['general', 'shipping', 'tax', 'email', 'seo', 'ticker'];
 
 /**
  * The tab lives in the URL so a refresh (or a shared link) reopens the same one
@@ -93,6 +94,20 @@ export default function AdminSettings({
     const formik = useFormik({
         initialValues: {
             site_name: initialMap.site_name || 'Robins Computer',
+
+            /*
+             * VAT. Off unless the shop turns it on, because switching it on
+             * changes what customers are charged.
+             *
+             * vat_inclusive decides the arithmetic rather than the wording:
+             * whether the prices already contain the tax, or it is added at
+             * checkout. It defaults to inclusive, which is the usual
+             * arrangement in Bangladeshi retail.
+             */
+            vat_enabled: initialMap.vat_enabled === '1',
+            vat_rate: initialMap.vat_rate || '15',
+            vat_number: initialMap.vat_number || '',
+            vat_inclusive: initialMap.vat_inclusive !== '0',
             site_tagline: initialMap.site_tagline || 'The Store of Technology',
             site_logo: initialMap.site_logo || '/images/logo.png',
             meta_title: initialMap.meta_title || '',
@@ -468,6 +483,113 @@ export default function AdminSettings({
                     )}
 
                     {/* TAB 3: Email / SMTP Configuration */}
+                    {activeTab === 'tax' && (
+                        <div className="admin-card admin-card-no-margin">
+                            <div className="admin-card-header">
+                                <div className="admin-card-title-inline">
+                                    <Percent
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">VAT</h3>
+                                </div>
+                            </div>
+                            <div className="admin-card-body">
+                                <div className="admin-checkbox-row">
+                                    <input
+                                        type="checkbox"
+                                        name="vat_enabled"
+                                        id="vat_enabled"
+                                        checked={formik.values.vat_enabled}
+                                        onChange={formik.handleChange}
+                                    />
+                                    <label htmlFor="vat_enabled">
+                                        Charge VAT on orders
+                                    </label>
+                                </div>
+                                <span className="admin-field-hint">
+                                    Off by default. Turning it on changes what
+                                    customers are charged, so existing orders
+                                    keep the rules they were placed under.
+                                </span>
+
+                                {formik.values.vat_enabled && (
+                                    <>
+                                        <div className="form-row-2col">
+                                            <FormInput
+                                                label="Rate (%)"
+                                                name="vat_rate"
+                                                type="number"
+                                                required
+                                                formik={formik}
+                                                placeholder="15"
+                                            />
+                                            <FormInput
+                                                label="VAT registration (BIN)"
+                                                name="vat_number"
+                                                formik={formik}
+                                                placeholder="004123456-0101"
+                                            />
+                                        </div>
+
+                                        <div className="admin-checkbox-row">
+                                            <input
+                                                type="checkbox"
+                                                name="vat_inclusive"
+                                                id="vat_inclusive"
+                                                checked={
+                                                    formik.values.vat_inclusive
+                                                }
+                                                onChange={formik.handleChange}
+                                            />
+                                            <label htmlFor="vat_inclusive">
+                                                Product prices already include
+                                                VAT
+                                            </label>
+                                        </div>
+                                        {/*
+                                         * The setting that changes arithmetic
+                                         * rather than wording, so it says what
+                                         * each choice does to a real number.
+                                         */}
+                                        <span className="admin-field-hint">
+                                            {formik.values.vat_inclusive
+                                                ? `Inclusive — a ৳1,000 product stays ৳1,000 at checkout, of which ৳${(
+                                                      1000 -
+                                                      1000 /
+                                                          (1 +
+                                                              (Number(
+                                                                  formik.values
+                                                                      .vat_rate,
+                                                              ) || 0) /
+                                                                  100)
+                                                  ).toFixed(
+                                                      2,
+                                                  )} is VAT the shop owes.`
+                                                : `Exclusive — a ৳1,000 product becomes ৳${(
+                                                      1000 *
+                                                      (1 +
+                                                          (Number(
+                                                              formik.values
+                                                                  .vat_rate,
+                                                          ) || 0) /
+                                                              100)
+                                                  ).toFixed(
+                                                      2,
+                                                  )} at checkout, with the VAT added on top.`}
+                                        </span>
+
+                                        <span className="admin-field-hint">
+                                            VAT is charged on goods after any
+                                            discount, and not on delivery — that
+                                            fee is collected for the courier.
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'email' && (
                         <div className="admin-card">
                             <div className="admin-card-header">

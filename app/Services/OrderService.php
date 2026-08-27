@@ -82,6 +82,13 @@ class OrderService
                 'subtotal' => $totals['subtotal'],
                 'shipping_fee' => $totals['shipping_fee'],
                 'discount' => $totals['discount'],
+                // Frozen with the order: rates change and shops switch between
+                // inclusive and exclusive pricing, and an old invoice still has
+                // to reconcile. `vat_inclusive` records what the amount means —
+                // taken out of the price paid, or added on top of it.
+                'vat_amount' => $totals['vat'],
+                'vat_rate' => $totals['vat_rate'],
+                'vat_inclusive' => $totals['vat_inclusive'],
                 'coupon_code' => $coupon?->code,
                 // The terms as well as the code. The amount above was always
                 // right, but with only a code recorded nobody could say why —

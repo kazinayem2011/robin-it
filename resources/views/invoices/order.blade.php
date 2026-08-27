@@ -71,6 +71,8 @@
         .totals tr:last-child td { border-top: 2px solid var(--ink); padding-top: 10px;
                                    font-size: 17px; font-weight: 800; }
         .discount { color: #0d7a3f; }
+        .totals tr.vat-note td { border: 0; padding-top: 2px; font-size: 11px; color: #6b7280; }
+        .vat-reg { margin-top: 6px; font-size: 11px; color: #6b7280; }
 
         .payment { margin-top: 26px; padding: 14px 16px; border: 1px solid var(--line);
                    border-radius: 6px; background: #f8fafc; font-size: 13px; }
@@ -116,6 +118,10 @@
                 <div class="head-meta" style="text-align:left; margin-top:8px;">
                     {{ $brand['hotline'] }}<br>
                     {{ $brand['url'] }}
+                    {{-- A VAT invoice has to carry the registration it was issued under. --}}
+                    @if ($vatNumber)
+                        <div class="vat-reg">BIN: {{ $vatNumber }}</div>
+                    @endif
                 </div>
             </div>
 
@@ -197,6 +203,18 @@
                     <td class="num">−৳{{ number_format($order->discount, 2) }}</td>
                 </tr>
             @endif
+            {{--
+                VAT sits above Delivery because it is charged on the goods, not
+                on the courier's fee. An inclusive order shows it as a note —
+                the amount is already inside the subtotal, so adding it to the
+                column would make the invoice fail to add up.
+            --}}
+            @if ($order->vat_amount > 0 && ! $order->vat_inclusive)
+                <tr>
+                    <td>{{ $order->vat_label }}</td>
+                    <td class="num">৳{{ number_format($order->vat_amount, 2) }}</td>
+                </tr>
+            @endif
             <tr>
                 <td>Delivery</td>
                 <td class="num">
@@ -207,6 +225,13 @@
                 <td>Total</td>
                 <td class="num">৳{{ number_format($order->total, 2) }}</td>
             </tr>
+            @if ($order->vat_amount > 0 && $order->vat_inclusive)
+                <tr class="vat-note">
+                    <td colspan="2" class="num">
+                        {{ $order->vat_label }}: ৳{{ number_format($order->vat_amount, 2) }}
+                    </td>
+                </tr>
+            @endif
         </table>
 
         @if ($order->payment_method === 'COD' && $order->payment_status !== 'paid')

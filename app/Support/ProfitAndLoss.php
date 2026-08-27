@@ -30,6 +30,7 @@ class ProfitAndLoss
      * @return array{
      *     from:string|null, to:string|null,
      *     income:array{goods:float, delivery:float, total:float},
+     *     vat_collected:float,
      *     cost_of_goods:float,
      *     gross_profit:float,
      *     gross_margin_percent:float|null,
@@ -61,6 +62,14 @@ class ProfitAndLoss
                 'delivery' => $sales['delivery_collected'],
                 'total' => $income,
             ],
+
+            /*
+             * Shown, but never added in. VAT is collected for the government
+             * and owed to it, so it is neither income nor an expense — it is
+             * money passing through. It appears so the figure can be checked
+             * against what is being remitted.
+             */
+            'vat_collected' => $sales['vat_collected'],
 
             'cost_of_goods' => $sales['cost'],
             'gross_profit' => $sales['gross_profit'],

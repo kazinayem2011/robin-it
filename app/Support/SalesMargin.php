@@ -28,7 +28,7 @@ class SalesMargin
      * @param  string|null  $from  inclusive date, or null for "since the start"
      * @param  string|null  $to  inclusive date, or null for "up to now"
      * @return array{
-     *     goods_revenue:float, delivery_collected:float, cost:float,
+     *     goods_revenue:float, vat_collected:float, delivery_collected:float, cost:float,
      *     gross_profit:float, margin_percent:float|null,
      *     orders_counted:int, orders_uncosted:int, uncosted_revenue:float
      * }
@@ -40,7 +40,22 @@ class SalesMargin
         // Goods and delivery are kept apart: the delivery fee is collected on
         // the courier's behalf, and what the courier charges the shop is an
         // expense recorded separately. Netting them here would hide both.
-        $goods = round($costed->sum(fn ($row) => (float) $row->subtotal - (float) $row->discount), 2);
+        /*
+         * Revenue is net of VAT. The tax is collected for the government and
+         * owed to it — counting it as income would overstate both revenue and
+         * profit by the rate, every period.
+         *
+         * With inclusive pricing it sits inside the goods figure and is taken
+         * out; with exclusive pricing it was never in there, and the stored
+         * amount is what was added on top.
+         */
+        $goods = round($costed->sum(function ($row) {
+            $gross = (float) $row->subtotal - (float) $row->discount;
+
+            return $row->vat_inclusive ? $gross - (float) $row->vat_amount : $gross;
+        }), 2);
+
+        $vat = round($costed->sum(fn ($row) => (float) $row->vat_amount), 2);
         $delivery = round($costed->sum(fn ($row) => (float) $row->shipping_fee), 2);
         $cost = round($costed->sum(fn ($row) => (float) $row->cost_of_goods), 2);
         $profit = round($goods - $cost, 2);
@@ -49,6 +64,7 @@ class SalesMargin
 
         return [
             'goods_revenue' => $goods,
+            'vat_collected' => $vat,
             'delivery_collected' => $delivery,
             'cost' => $cost,
             'gross_profit' => $profit,
@@ -67,13 +83,18 @@ class SalesMargin
             ->whereNotIn('orders.status', self::EXCLUDED_STATUSES)
             ->when($from, fn ($q) => $q->whereDate('orders.created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('orders.created_at', '<=', $to))
-            ->groupBy('orders.id', 'orders.subtotal', 'orders.discount', 'orders.shipping_fee')
+            ->groupBy(
+                'orders.id', 'orders.subtotal', 'orders.discount',
+                'orders.shipping_fee', 'orders.vat_amount', 'orders.vat_inclusive'
+            )
             ->havingRaw('SUM(CASE WHEN order_items.unit_cost IS NULL THEN 1 ELSE 0 END) = 0')
             ->select([
                 'orders.id',
                 'orders.subtotal',
                 'orders.discount',
                 'orders.shipping_fee',
+                'orders.vat_amount',
+                'orders.vat_inclusive',
                 DB::raw('SUM(order_items.unit_cost * order_items.quantity) AS cost_of_goods'),
             ]);
     }
@@ -91,11 +112,17 @@ class SalesMargin
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
             ->whereHas('items', fn ($q) => $q->whereNull('unit_cost'))
-            ->get(['subtotal', 'discount']);
+            ->get(['subtotal', 'discount', 'vat_amount', 'vat_inclusive']);
 
         return [
             'count' => $orders->count(),
-            'revenue' => round($orders->sum(fn ($o) => (float) $o->subtotal - (float) $o->discount), 2),
+            // Net of VAT as well, so the excluded figure is comparable with
+            // the revenue it is missing from.
+            'revenue' => round($orders->sum(function ($o) {
+                $gross = (float) $o->subtotal - (float) $o->discount;
+
+                return $o->vat_inclusive ? $gross - (float) $o->vat_amount : $gross;
+            }), 2),
         ];
     }
 }

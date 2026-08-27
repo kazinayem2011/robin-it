@@ -169,7 +169,7 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                         {formatBdt(income.total)}
                     </span>
                     <span className="admin-stock-stat-label">
-                        Total income · {counted} costed order
+                        Total income, net of VAT · {counted} costed order
                         {counted === 1 ? '' : 's'}
                     </span>
                 </div>
@@ -263,6 +263,21 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                                 <td>Total income</td>
                                 <td>{formatBdt(income.total)}</td>
                             </tr>
+                            {statement.vat_collected > 0 && (
+                                <tr className="pl-passthrough">
+                                    <td>
+                                        VAT collected
+                                        <span className="admin-field-hint">
+                                            Held for the government, so it is
+                                            not income — shown here to be
+                                            checked against what is remitted
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {formatBdt(statement.vat_collected)}
+                                    </td>
+                                </tr>
+                            )}
 
                             <tr className="pl-section">
                                 <th scope="row" colSpan={2}>
