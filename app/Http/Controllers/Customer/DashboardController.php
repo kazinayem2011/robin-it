@@ -11,6 +11,7 @@ use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -18,6 +19,9 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    /** Orders shown per page in the account's history. */
+    private const ORDERS_PER_PAGE = 10;
+
     /**
      * Display the Customer Account Dashboard.
      */
@@ -29,19 +33,31 @@ class DashboardController extends Controller
      */
     private function shell($user): array
     {
-        $spend = (float) Order::where('user_id', $user->id)
-            ->where('status', '!=', 'cancelled')
-            ->sum('total');
-
         return [
             'user' => $user,
             'navCounts' => [
                 'orders' => Order::where('user_id', $user->id)->count(),
                 'wishlist' => Wishlist::where('user_id', $user->id)->count(),
             ],
-            'techPoints' => (int) floor($spend / 100),
+            'techPoints' => (int) floor($this->lifetimeSpend($user->id) / 100),
         ];
     }
+
+    /**
+     * What this customer has spent, cancellations aside.
+     *
+     * Memoised for the request: the overview asked for it once for the header's
+     * points and again for the stats panel, running the same aggregate twice on
+     * every visit.
+     */
+    private function lifetimeSpend(int $userId): float
+    {
+        return $this->spend ??= (float) Order::where('user_id', $userId)
+            ->where('status', '!=', 'cancelled')
+            ->sum('total');
+    }
+
+    private ?float $spend = null;
 
     /**
      * Account overview.
@@ -59,9 +75,7 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $spend = (float) Order::where('user_id', $user->id)
-            ->where('status', '!=', 'cancelled')
-            ->sum('total');
+        $spend = $this->lifetimeSpend($user->id);
 
         $stats = [
             'total_orders' => (int) $counts->sum(),
@@ -82,16 +96,47 @@ class DashboardController extends Controller
         ]));
     }
 
+    /**
+     * Order history.
+     *
+     * Paginated. This used to send every order the customer had ever placed,
+     * each with all of its items and every image on each item, in one payload —
+     * a regular buyer's account page grew without limit.
+     */
     public function orders(Request $request): Response
     {
         $user = Auth::user();
 
+        $orders = Order::where('user_id', $user->id)
+            ->with(['items.product.images'])
+            ->latest()
+            ->paginate(self::ORDERS_PER_PAGE)
+            ->withQueryString();
+
         return Inertia::render('Dashboard/Orders', array_merge($this->shell($user), [
-            'orders' => Order::where('user_id', $user->id)
-                ->with(['items.product.images'])
-                ->latest()
-                ->get(),
+            'orders' => $orders,
+            // The overview deep-links here with ?order=<id>. That order may sit
+            // on any page of the history, so it is resolved here rather than
+            // being looked for among the rows this page happens to hold.
+            'focusOrder' => $this->focusOrder($request, $user->id),
         ]));
+    }
+
+    /**
+     * The single order named by ?order=<id>, scoped to its owner.
+     */
+    private function focusOrder(Request $request, int $userId): ?Order
+    {
+        $wanted = $request->query('order');
+
+        if (! $wanted) {
+            return null;
+        }
+
+        return Order::where('id', $wanted)
+            ->where('user_id', $userId)
+            ->with(['items.product.images'])
+            ->first();
     }
 
     public function wishlist(Request $request): Response
@@ -181,10 +226,16 @@ class DashboardController extends Controller
             ];
 
             if (! empty($validated['id'])) {
-                // Scoped to the signed-in user — an id belonging to someone else 404s.
-                $address = Address::where('id', $validated['id'])
-                    ->where('user_id', $user->id)
-                    ->firstOrFail();
+                // Ownership comes from AddressPolicy rather than from a where
+                // clause each new endpoint would have to remember to add.
+                //
+                // Deliberately a 404 and not the policy's 403: an address that
+                // is not yours must be indistinguishable from one that does not
+                // exist, or this endpoint answers "does address 812 exist?" for
+                // anyone who asks.
+                $address = Address::find($validated['id']);
+
+                abort_if(! $address || Gate::denies('update', $address), 404);
 
                 $address->update($payload);
                 $keepId = $address->id;
@@ -209,9 +260,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $address = Address::where('id', $id)->where('user_id', $user->id)->first();
+        $address = Address::find($id);
 
-        if (! $address) {
+        if (! $address || Gate::denies('delete', $address)) {
             return back()->with('error', 'That address has already been removed.');
         }
 
@@ -235,11 +286,13 @@ class DashboardController extends Controller
      */
     public function cancelOrder(Request $request, OrderService $orderService, $id)
     {
-        $user = Auth::user();
+        $order = Order::find($id);
 
-        $order = Order::where('id', $id)->where('user_id', $user->id)->first();
-
-        if (! $order) {
+        // Ownership comes from OrderPolicy rather than being re-stated as a
+        // where clause here. The statuses below stay in the controller: they
+        // are the difference between "not yours" and "too late", and the
+        // customer needs to be told which.
+        if (! $order || Gate::denies('view', $order)) {
             return back()->with('error', 'We could not find that order on your account.');
         }
 

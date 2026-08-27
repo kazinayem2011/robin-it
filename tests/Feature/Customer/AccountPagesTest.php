@@ -130,6 +130,6 @@ class AccountPagesTest extends TestCase
         $props = $this->actingAs($mine)->get('/dashboard/orders')
             ->viewData('page')['props'];
 
-        $this->assertCount(0, $props['orders']);
+        $this->assertCount(0, $props['orders']['data']);
     }
 }

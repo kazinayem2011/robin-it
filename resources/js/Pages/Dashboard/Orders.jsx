@@ -5,27 +5,36 @@ import AccountLayout from './AccountLayout';
 import OrderInvoiceModal from './OrderInvoiceModal';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { ProductImage } from '@/Components/ProductImage';
+import { Pagination } from '@/Components/Pagination';
 import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES, API_ENDPOINTS } from '@/constants/endpoints';
+import { mainLayout } from '../../Layouts/MainLayout';
 
-export default function Orders({ user, navCounts, techPoints, orders = [] }) {
+export default function Orders({
+    user,
+    navCounts,
+    techPoints,
+    orders,
+    focusOrder = null,
+}) {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [cancellingId, setCancellingId] = useState(null);
+
+    // The history is paged now, so `orders` is a paginator rather than an array.
+    const rows = orders?.data ?? [];
 
     /*
      * The overview links here with ?order=<id> when someone asks to see one in
      * full. On the single-page version that was a tab switch carrying the order
      * in local state; across a real navigation it has to travel in the URL.
+     *
+     * The server resolves it, because the order asked for may sit on any page
+     * of the history — searching the rows this page happens to hold would open
+     * nothing for anyone past their tenth order.
      */
     useEffect(() => {
-        const wanted = new URLSearchParams(window.location.search).get('order');
-
-        if (!wanted) return;
-
-        const match = orders.find((o) => String(o.id) === String(wanted));
-
-        if (match) setSelectedOrder(match);
-    }, [orders]);
+        if (focusOrder) setSelectedOrder(focusOrder);
+    }, [focusOrder]);
 
     // Mirrors Order::isCancellableByCustomer() — cancellable until it ships.
     const isCancellable = (order) =>
@@ -70,7 +79,7 @@ export default function Orders({ user, navCounts, techPoints, orders = [] }) {
                     </div>
                 </div>
 
-                {orders.length === 0 ? (
+                {rows.length === 0 ? (
                     <div className="dash-empty-box">
                         <p className="dash-empty-text">
                             You haven't placed any orders yet.
@@ -84,7 +93,7 @@ export default function Orders({ user, navCounts, techPoints, orders = [] }) {
                     </div>
                 ) : (
                     <div className="orders-list-wrapper">
-                        {orders.map((order) => (
+                        {rows.map((order) => (
                             <div key={order.id} className="order-history-card">
                                 <div className="order-card-header">
                                     <div>
@@ -176,6 +185,15 @@ export default function Orders({ user, navCounts, techPoints, orders = [] }) {
                         ))}
                     </div>
                 )}
+
+                {orders?.links?.length > 3 && (
+                    <Pagination
+                        links={orders.links}
+                        from={orders.from}
+                        to={orders.to}
+                        total={orders.total}
+                    />
+                )}
             </div>
 
             <OrderInvoiceModal
@@ -185,3 +203,6 @@ export default function Orders({ user, navCounts, techPoints, orders = [] }) {
         </AccountLayout>
     );
 }
+
+// Persistent shell: mounts once, survives navigation.
+Orders.layout = mainLayout;
