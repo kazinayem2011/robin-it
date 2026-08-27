@@ -410,9 +410,9 @@ class ProductService
      */
     public function getBuilderQuickSpecs(): array
     {
-        $cpus = $this->componentsMatchingSlugs(['%cpu%', '%processor%']);
-        $gpus = $this->componentsMatchingSlugs(['%gpu%', '%graphics%', '%rtx%']);
-        $rams = $this->componentsMatchingSlugs(['%ram%', '%ddr%']);
+        $cpus = $this->componentsUnder('cpu');
+        $gpus = $this->componentsUnder('gpu', 'graphics-card');
+        $rams = $this->componentsUnder('ram', 'memory');
 
         return [
             'cpu' => $this->formatSpecGroup($cpus, 125),
@@ -422,20 +422,61 @@ class ProductService
     }
 
     /**
-     * @param  array<int, string>  $slugPatterns
+     * Everything filed anywhere under a section of the catalogue.
+     *
+     * This matched the product's own category slug against '%cpu%' before, so
+     * it found only products filed directly on a category whose slug happened
+     * to contain the word. Every processor in the shop sits two levels down
+     * under "intel-core-i9-14th" or "amd-ryzen-7-x3d" — none of which say
+     * "cpu" — so Step 1 of the homepage builder was empty while Steps 2 and 3
+     * worked by luck: '%rtx%' and '%ddr%' happened to match the graphics and
+     * memory sub-categories.
+     *
+     * The tree is what decides, so a section added tomorrow is included
+     * without anyone remembering to name it here.
      */
-    private function componentsMatchingSlugs(array $slugPatterns): Collection
+    private function componentsUnder(string ...$rootSlugs): Collection
     {
+        $ids = $this->categoryTreeIds($rootSlugs);
+
+        if ($ids === []) {
+            return collect();
+        }
+
         return Product::active()
-            ->whereHas('category', function ($q) use ($slugPatterns) {
-                $q->where(function ($inner) use ($slugPatterns) {
-                    foreach ($slugPatterns as $pattern) {
-                        $inner->orWhere('slug', 'like', $pattern);
-                    }
-                });
-            })
+            ->whereIn('category_id', $ids)
             ->with(['specifications'])
             ->get();
+    }
+
+    /**
+     * A category and everything beneath it, however deep.
+     *
+     * @param  array<int, string>  $rootSlugs
+     * @return array<int, int>
+     */
+    private function categoryTreeIds(array $rootSlugs): array
+    {
+        $ids = Category::whereIn('slug', $rootSlugs)->pluck('id')->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $frontier = $ids;
+
+        // Bounded rather than recursive: a cycle in parent_id would otherwise
+        // spin here forever, and no catalogue is ten levels deep.
+        for ($depth = 0; $depth < 10 && $frontier !== []; $depth++) {
+            $frontier = Category::whereIn('parent_id', $frontier)
+                ->whereNotIn('id', $ids)
+                ->pluck('id')
+                ->all();
+
+            $ids = array_merge($ids, $frontier);
+        }
+
+        return $ids;
     }
 
     /**

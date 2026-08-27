@@ -77,8 +77,55 @@ export default function PcBuilderIndex() {
                     setCategories(data);
                 }
 
-                // Check if share code is present in URL
                 const params = new URLSearchParams(window.location.search);
+
+                /*
+                 * Picks carried over from the homepage's three-step widget.
+                 *
+                 * It has always linked here as ?cpu=&gpu=&ram=, and nothing
+                 * read them — so choosing a processor, a card and memory on
+                 * the front page and pressing "Finalize this rig" landed you
+                 * on an empty builder with the work thrown away.
+                 *
+                 * The widget's names are not the builder's: it says gpu where
+                 * the catalogue says graphics-card.
+                 */
+                const carriedOver = {
+                    cpu: 'cpu',
+                    gpu: 'graphics-card',
+                    ram: 'ram',
+                };
+
+                const wanted = Object.entries(carriedOver)
+                    .map(([param, componentId]) => [
+                        componentId,
+                        params.get(param),
+                    ])
+                    .filter(([, id]) => id);
+
+                if (wanted.length) {
+                    await Promise.all(
+                        wanted.map(async ([componentId, productId]) => {
+                            try {
+                                const options =
+                                    await pcBuilderService.getComponents(
+                                        componentId,
+                                    );
+                                const match = (options || []).find(
+                                    (o) => String(o.id) === String(productId),
+                                );
+                                if (match) {
+                                    setPcBuilderItem(componentId, match);
+                                }
+                            } catch {
+                                // A part that has sold out since the front page
+                                // rendered is simply not carried; the rest are.
+                            }
+                        }),
+                    );
+                }
+
+                // Check if share code is present in URL
                 const shareCode = params.get('share');
                 if (shareCode) {
                     try {

@@ -647,10 +647,19 @@ export default function Welcome({ banners = [], blogs = [] }) {
                     const cpuPrice = selectedCpu?.price || 0;
                     const gpuPrice = selectedGpu?.price || 0;
                     const ramPrice = selectedRam?.price || 0;
-                    const baseSystemPrice =
-                        cpuPrice > 0 || gpuPrice > 0 ? 32000 : 0;
-                    const builderTotal =
-                        cpuPrice + gpuPrice + ramPrice + baseSystemPrice;
+
+                    /*
+                     * The three parts, and nothing else.
+                     *
+                     * A flat ৳32,000 for "the rest of the system" used to be
+                     * added here, unlabelled, so this panel and the builder it
+                     * hands over to quoted different totals for the same three
+                     * choices — ৳3,97,000 against ৳3,65,000. A made-up number
+                     * nobody can see is worse than no number; the builder is
+                     * where a real total lives, and the caption now says what
+                     * this one covers.
+                     */
+                    const builderTotal = cpuPrice + gpuPrice + ramPrice;
 
                     const estimatedWattage =
                         (selectedCpu?.wattage || 125) +
@@ -795,8 +804,12 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                         </div>
 
                                         <div className="summary-total-price">
-                                            <span>Estimated Total Build</span>
+                                            <span>These three parts</span>
                                             <h2>{formatBdt(builderTotal)}</h2>
+                                            <small>
+                                                Board, storage, power supply and
+                                                case still to choose
+                                            </small>
                                         </div>
 
                                         <Link

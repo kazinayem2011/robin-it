@@ -1496,3 +1496,12 @@
         padding: 24px;
     }
 }
+
+/* What the widget's total does not include, said rather than assumed. */
+.summary-total-price small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: #94a3b8;
+}
