@@ -108,7 +108,8 @@
 
 .cart-item-price {
     margin-top: 4px;
-    color: var(--primary);
+    /* Prices read in the same ink everywhere; red is for the offer. */
+    color: var(--dark-900);
     font-weight: 800;
     font-size: 0.86rem;
 }
@@ -214,7 +215,8 @@
     border-top: 2px dashed var(--border-color);
     font-size: 1.15rem;
     font-weight: 900;
-    color: var(--primary);
+    /* Size and weight already make it the last word on the page. */
+    color: var(--dark-900);
     font-family: var(--font-heading);
 }
 
@@ -559,4 +561,88 @@
     font-weight: 800;
     color: var(--dark-900);
     white-space: nowrap;
+}
+
+/* ==========================================================================
+   SAVED ADDRESSES
+   Shown only when the customer has more than one to choose between.
+   ========================================================================== */
+.saved-address-picker {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.saved-address-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.saved-address-option:hover {
+    border-color: var(--gray-300);
+    background: var(--bg-surface-subtle);
+}
+
+.saved-address-option.is-chosen {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.saved-address-option svg {
+    flex-shrink: 0;
+    color: var(--gray-500);
+}
+
+.saved-address-option.is-chosen svg {
+    color: var(--primary);
+}
+
+.saved-address-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* A flex child will not shrink below its content, and a street address is
+       one long unbreakable line. */
+    min-width: 0;
+    flex: 1;
+}
+
+.saved-address-street {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--dark-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saved-address-region {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+.saved-address-default {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: var(--gray-100);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--gray-600);
+}
+
+.saved-address-new .saved-address-street {
+    color: var(--gray-600);
+    font-weight: 600;
 }

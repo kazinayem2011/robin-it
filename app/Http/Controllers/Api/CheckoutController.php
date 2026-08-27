@@ -7,6 +7,7 @@ use App\Exceptions\StorefrontException;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Services\AddressBook;
 use App\Services\CartService;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -85,6 +86,11 @@ class CheckoutController extends Controller
                 $request->session()->getId(),
                 $coupon
             );
+
+            // After the order, not before: a checkout that fails on stock or
+            // a bad coupon should not leave an address behind for an order
+            // that never happened.
+            AddressBook::remember($request->user(), $validated);
 
             return $this->successResponse([
                 'order_id' => $order->id,

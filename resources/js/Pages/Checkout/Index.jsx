@@ -12,12 +12,31 @@ import { checkoutSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { ShoppingCart, Tag, X, AlertTriangle } from 'lucide-react';
+import {
+    ShoppingCart,
+    Tag,
+    X,
+    AlertTriangle,
+    MapPin,
+    Plus,
+} from 'lucide-react';
 import './Checkout.css';
 
-export default function Checkout() {
+/**
+ * @param addresses Where this customer has had orders delivered before. Empty
+ *                  for a guest, who has nowhere to keep them.
+ * @param contact   Their account's name and number, so even a first order does
+ *                  not ask for what they registered with.
+ */
+export default function Checkout({ addresses = [], contact = null }) {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // The default address if one is marked, else the most recent — the list
+    // arrives in that order. `null` means "typing a new one".
+    const [chosenAddressId, setChosenAddressId] = useState(
+        addresses.length ? addresses[0].id : null,
+    );
 
     const [couponInput, setCouponInput] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -26,11 +45,11 @@ export default function Checkout() {
 
     const formik = useFormik({
         initialValues: {
-            name: '',
-            phone: '',
-            city: '',
-            zone: '',
-            street_address: '',
+            name: addresses[0]?.name || contact?.name || '',
+            phone: addresses[0]?.phone || contact?.phone || '',
+            city: addresses[0]?.city || '',
+            zone: addresses[0]?.zone || '',
+            street_address: addresses[0]?.street_address || '',
             payment: 'cod',
         },
         validationSchema: checkoutSchema,
@@ -77,6 +96,30 @@ export default function Checkout() {
             }
         },
     });
+
+    const applyAddress = (addr) => {
+        setChosenAddressId(addr.id);
+        formik.setValues({
+            ...formik.values,
+            name: addr.name || contact?.name || '',
+            phone: addr.phone || contact?.phone || '',
+            city: addr.city || '',
+            zone: addr.zone || '',
+            street_address: addr.street_address || '',
+        });
+    };
+
+    // Clears the address but keeps who they are — the name and number are the
+    // same person wherever the parcel goes.
+    const startNewAddress = () => {
+        setChosenAddressId(null);
+        formik.setValues({
+            ...formik.values,
+            city: '',
+            zone: '',
+            street_address: '',
+        });
+    };
 
     useEffect(() => {
         const fetchCart = async () => {
@@ -173,6 +216,55 @@ export default function Checkout() {
                             <h3 className="checkout-section-header">
                                 1. Delivery Information
                             </h3>
+
+                            {/*
+                             * Only worth showing when there is a choice to
+                             * make. One saved address is already in the boxes
+                             * below, and a guest has none.
+                             */}
+                            {addresses.length > 1 && (
+                                <div className="saved-address-picker">
+                                    {addresses.map((addr) => (
+                                        <button
+                                            type="button"
+                                            key={addr.id}
+                                            className={`saved-address-option ${chosenAddressId === addr.id ? 'is-chosen' : ''}`}
+                                            onClick={() => applyAddress(addr)}
+                                        >
+                                            <MapPin size={15} />
+                                            <span className="saved-address-body">
+                                                <span className="saved-address-street">
+                                                    {addr.street_address}
+                                                </span>
+                                                <span className="saved-address-region">
+                                                    {[addr.zone, addr.city]
+                                                        .filter(Boolean)
+                                                        .join(', ')}
+                                                </span>
+                                            </span>
+                                            {addr.is_default && (
+                                                <span className="saved-address-default">
+                                                    Default
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+
+                                    <button
+                                        type="button"
+                                        className={`saved-address-option saved-address-new ${chosenAddressId === null ? 'is-chosen' : ''}`}
+                                        onClick={startNewAddress}
+                                    >
+                                        <Plus size={15} />
+                                        <span className="saved-address-body">
+                                            <span className="saved-address-street">
+                                                Deliver somewhere else
+                                            </span>
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+
                             <form
                                 id="checkout-form"
                                 onSubmit={formik.handleSubmit}

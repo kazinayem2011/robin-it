@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Banner;
 use App\Models\BlogPost;
+use App\Services\AddressBook;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,7 +59,9 @@ class StorefrontPageController extends Controller
 
     public function checkout(): Response
     {
-        return Inertia::render('Checkout/Index');
+        // A signed-in customer has told us where they live, sometimes several
+        // times over. Handing them five empty boxes asks them to say it again.
+        return Inertia::render('Checkout/Index', AddressBook::forCheckout(Auth::user()));
     }
 
     public function orderSuccess(Request $request): Response

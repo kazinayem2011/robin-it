@@ -138,6 +138,7 @@ export default function Addresses({
                                         {[
                                             ...new Set(
                                                 [
+                                                    addr.zone,
                                                     addr.city,
                                                     addr.district,
                                                     addr.division,
