@@ -92,6 +92,50 @@ class Order extends Model
         return $this->shipping_address['phone'] ?? $this->user?->phone ?? 'N/A';
     }
 
+    /**
+     * What the goods on this order cost the shop.
+     *
+     * Null when any line has no known cost — a partial figure presented as a
+     * total is worse than no figure, because it reads as profit that is not
+     * there. `uncostedItemCount` says how many lines are in the way.
+     */
+    public function getCostTotalAttribute(): ?float
+    {
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
+
+        if ($items->isEmpty() || $items->contains(fn ($item) => $item->unit_cost === null)) {
+            return null;
+        }
+
+        return round($items->sum(fn ($item) => $item->cost_total), 2);
+    }
+
+    /**
+     * Goods sold less what they cost, after any discount.
+     *
+     * Delivery is deliberately excluded on both sides: the fee is collected on
+     * behalf of the courier and paying them is an expense the shop does not yet
+     * record, so counting the fee as income would overstate this.
+     */
+    public function getGrossProfitAttribute(): ?float
+    {
+        $cost = $this->cost_total;
+
+        if ($cost === null) {
+            return null;
+        }
+
+        return round((float) $this->subtotal - (float) $this->discount - $cost, 2);
+    }
+
+    /** Lines whose cost is unknown, so a reader can see why a figure is missing. */
+    public function getUncostedItemCountAttribute(): int
+    {
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
+
+        return $items->filter(fn ($item) => $item->unit_cost === null)->count();
+    }
+
     /** Orders that still consume reserved stock. */
     public function isCancelled(): bool
     {

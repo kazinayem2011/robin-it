@@ -19,6 +19,7 @@ import { toast } from '@/Components/Toast';
 
 export default function Dashboard({
     metrics = {},
+    margin = null,
     recentOrders = [],
     lowStockProducts = [],
     queueHealth = null,
@@ -115,6 +116,39 @@ export default function Dashboard({
                     </div>
                     <div className="admin-kpi-trend amber">
                         <span>Awaiting courier handover</span>
+                    </div>
+                </div>
+
+                {/* Gross Margin Card */}
+                <div className="admin-kpi-card">
+                    <div className="admin-kpi-top">
+                        <span className="admin-kpi-label">GROSS MARGIN</span>
+                        <div className="admin-kpi-icon-box admin-kpi-icon-emerald">
+                            <TrendingUp size={20} />
+                        </div>
+                    </div>
+                    <div className="admin-kpi-val">
+                        {margin?.orders_counted
+                            ? formatBdt(margin.gross_profit)
+                            : '—'}
+                    </div>
+                    <div className="admin-kpi-trend emerald">
+                        {/*
+                         * Deliberately explicit about what this is not. There
+                         * are no expense records yet, so this is goods sold
+                         * less what those goods cost — not profit. Orders with
+                         * a line of unknown cost are left out rather than
+                         * counted at a partial cost, and saying how many keeps
+                         * the number from being read as the whole picture.
+                         */}
+                        <span>
+                            {margin?.orders_counted
+                                ? `${margin.margin_percent ?? 0}% on ${margin.orders_counted} costed order${margin.orders_counted === 1 ? '' : 's'}`
+                                : 'No orders with a known cost yet'}
+                            {margin?.orders_uncosted
+                                ? ` · ${margin.orders_uncosted} excluded`
+                                : ''}
+                        </span>
                     </div>
                 </div>
 

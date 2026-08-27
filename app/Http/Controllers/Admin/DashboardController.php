@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\QueueHealth;
+use App\Support\SalesMargin;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,6 +40,10 @@ class DashboardController extends Controller
 
         return Inertia::render('Admin/Dashboard', [
             'metrics' => $metrics,
+            // Goods sold less what those goods cost. Not a P&L — there are no
+            // expense records yet — and orders whose cost is not fully known
+            // are excluded rather than counted at a partial cost.
+            'margin' => SalesMargin::summary(),
             'recentOrders' => $recentOrders,
             'lowStockProducts' => $lowStockProducts,
             // A dead queue worker means customers silently stop receiving

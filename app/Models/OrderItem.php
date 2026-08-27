@@ -8,11 +8,12 @@ class OrderItem extends Model
 {
     protected $fillable = [
         'order_id', 'product_id', 'product_variant_id', 'product_name',
-        'variant_name', 'price', 'quantity', 'returned_quantity', 'total',
+        'variant_name', 'price', 'unit_cost', 'quantity', 'returned_quantity', 'total',
     ];
 
     protected $casts = [
         'price' => 'float',
+        'unit_cost' => 'float',
         'total' => 'float',
         'quantity' => 'integer',
         'returned_quantity' => 'integer',
@@ -39,6 +40,28 @@ class OrderItem extends Model
         return $this->variant_name
             ? "{$this->product_name} ({$this->variant_name})"
             : (string) $this->product_name;
+    }
+
+    /**
+     * What this line cost the shop, or null when the cost is not known.
+     *
+     * Null rather than zero: a line whose product never came in through a
+     * delivery has no cost, and treating that as free would report the whole
+     * sale as profit.
+     */
+    public function getCostTotalAttribute(): ?float
+    {
+        return $this->unit_cost === null
+            ? null
+            : round((float) $this->unit_cost * (int) $this->quantity, 2);
+    }
+
+    /** What this line earned, before delivery and any discount. */
+    public function getGrossProfitAttribute(): ?float
+    {
+        return $this->cost_total === null
+            ? null
+            : round((float) $this->total - $this->cost_total, 2);
     }
 
     /** Units of this line that have not yet come back. */

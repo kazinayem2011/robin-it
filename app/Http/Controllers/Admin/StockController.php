@@ -84,17 +84,8 @@ class StockController extends Controller
      */
     private function summary(): array
     {
-        // Latest unit cost seen for each stock unit.
-        $costs = StockMovement::query()
-            ->select('product_id', 'product_variant_id', 'unit_cost')
-            ->whereNotNull('unit_cost')
-            ->orderBy('id')
-            ->get()
-            ->reduce(function (array $carry, $movement) {
-                $carry[$movement->product_id.':'.($movement->product_variant_id ?? '')] = (float) $movement->unit_cost;
-
-                return $carry;
-            }, []);
+        // The same lookup the order lines use when they snapshot their cost.
+        $costs = $this->stock->latestUnitCosts();
 
         $valuation = 0.0;
         $units = 0;

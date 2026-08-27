@@ -432,6 +432,57 @@ class StockService
         ]);
     }
 
+    /**
+     * What the shop last paid for one unit of something.
+     *
+     * The most recent purchase price, not the retail price — this is what the
+     * stock cost. Null when the unit has never come in through a delivery, in
+     * which case the cost is genuinely unknown and must not be guessed at.
+     */
+    public function latestUnitCost(Product $product, ?ProductVariant $variant = null): ?float
+    {
+        // Newest first here: one row is wanted and it must be the last price
+        // paid, not the first.
+        $cost = $this->costQuery()
+            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant?->id)
+            ->reorder('id', 'desc')
+            ->value('unit_cost');
+
+        return $cost === null ? null : (float) $cost;
+    }
+
+    /**
+     * The same figure for every stock unit at once, keyed "productId:variantId".
+     *
+     * For the valuation on the stock screen, which would otherwise ask per row.
+     *
+     * @return array<string, float>
+     */
+    public function latestUnitCosts(): array
+    {
+        return $this->costQuery()
+            ->select('product_id', 'product_variant_id', 'unit_cost')
+            ->orderBy('id')
+            ->get()
+            ->reduce(function (array $carry, StockMovement $movement) {
+                $carry[$movement->product_id.':'.($movement->product_variant_id ?? '')] = (float) $movement->unit_cost;
+
+                return $carry;
+            }, []);
+    }
+
+    /**
+     * Costed movements, oldest first — latestUnitCosts() reduces over them so
+     * the most recent price is the one that survives.
+     */
+    private function costQuery()
+    {
+        return StockMovement::query()
+            ->whereNotNull('unit_cost')
+            ->orderBy('id');
+    }
+
     /** Current on-hand for one stock unit, read straight from the cached balance. */
     public function onHand(Product $product, ?ProductVariant $variant = null): int
     {
