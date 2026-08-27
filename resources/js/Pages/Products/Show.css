@@ -193,7 +193,9 @@
     font-size: 2.1rem;
     font-weight: 900;
     font-family: var(--font-heading);
-    color: var(--primary);
+    /* Same ink as the price on the card the shopper clicked to get here. Size
+       and weight already make it the biggest thing on the page. */
+    color: var(--dark-900);
 }
 
 .price-old {

@@ -205,9 +205,27 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                                 </div>
                                             )}
 
-                                            <h1 className="slide-title">
-                                                {slide.title}
-                                            </h1>
+                                            {/*
+                                             * Every slide is in the DOM at
+                                             * once, so six banners put six
+                                             * <h1>s in the document outline.
+                                             * Assistive tech never heard them
+                                             * — the inactive slides are
+                                             * visibility:hidden — but a
+                                             * crawler reading the markup did.
+                                             * The slide on screen is the
+                                             * page's heading; the rest are
+                                             * text until their turn comes.
+                                             */}
+                                            {activeHeroSlide === idx ? (
+                                                <h1 className="slide-title">
+                                                    {slide.title}
+                                                </h1>
+                                            ) : (
+                                                <p className="slide-title">
+                                                    {slide.title}
+                                                </p>
+                                            )}
                                             {slide.subtitle && (
                                                 <p className="slide-desc">
                                                     {slide.subtitle}

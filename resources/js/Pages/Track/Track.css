@@ -101,7 +101,7 @@
 .tracking-order-total {
     font-size: 1.15rem;
     font-weight: 900;
-    color: var(--primary);
+    color: var(--dark-900);
     margin-top: 6px;
     font-family: var(--font-heading);
 }

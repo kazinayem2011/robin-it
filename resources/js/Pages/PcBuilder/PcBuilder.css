@@ -348,7 +348,7 @@
 .component-price-col {
     font-weight: 800;
     font-size: 0.95rem;
-    color: var(--primary);
+    color: var(--dark-900);
     text-align: right;
     padding-right: 16px;
 }
@@ -415,7 +415,7 @@
 
 .component-live-price {
     font-weight: 800;
-    color: var(--primary);
+    color: var(--dark-900);
     white-space: nowrap;
 }
 
@@ -607,7 +607,7 @@
 .component-select-price {
     font-size: 1.15rem;
     font-weight: 900;
-    color: var(--primary);
+    color: var(--dark-900);
     font-family: var(--font-heading);
 }
 

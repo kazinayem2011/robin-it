@@ -1500,7 +1500,7 @@ textarea.has-error:focus,
 .quick-view-current-price {
     font-size: 1.25rem;
     font-weight: 900;
-    color: var(--primary);
+    color: var(--dark-900);
 }
 
 .quick-view-old-price {
@@ -1612,7 +1612,12 @@ textarea.has-error:focus,
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-xs);
+    /*
+     * No resting shadow. The border already separates a white card from the
+     * grey page, and a second, near-invisible treatment saying the same thing
+     * only weighed down a grid of twenty. The shadow belongs on hover, where
+     * it does something a border cannot: lift the one card you are pointing at.
+     */
     transition: all var(--transition-normal);
     overflow: hidden;
 }
@@ -1695,12 +1700,12 @@ textarea.has-error:focus,
  * for, and it carries the brand colour so it reads as the primary one of the
  * four rather than a third way to look at the product.
  */
-.card-action-cart {
-    background: var(--primary);
-    color: #ffffff;
-    border-color: var(--primary);
-}
-
+/*
+ * Sits with its three siblings rather than shouting over them. It was the only
+ * red one of the four, on every card in a grid of sixteen, next to a red badge
+ * and a red button. It takes the shared hover — red on the one you point at,
+ * which is when the colour means something.
+ */
 .card-action-cart:hover:not(:disabled) {
     background: var(--primary-dark, #b01016);
     border-color: var(--primary-dark, #b01016);
@@ -1947,11 +1952,20 @@ textarea.has-error:focus,
     min-width: 0;
 }
 
+/*
+ * Dark, not red.
+ *
+ * Red was doing every job on this page at once — the logo, the badges, the
+ * buttons, the section labels and the price on all sixteen cards — so it
+ * emphasised nothing. It marks two things now: what you can buy, and what you
+ * save. A price is neither; it is the fact the shopper reads, and it reads
+ * better in the same ink as the product name.
+ */
 .current-price {
     font-size: 1.15rem;
     font-weight: 800;
     font-family: var(--font-heading);
-    color: var(--primary);
+    color: var(--dark-900);
     line-height: 1.2;
 }
 

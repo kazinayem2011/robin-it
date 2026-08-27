@@ -39,13 +39,15 @@
     margin-top: 4px;
 }
 
+/* These name the page's sections. Structure is not an offer, so it is not
+   red — the heading under each one carries the section anyway. */
 .section-pill-tag {
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: var(--primary);
+    color: var(--gray-500);
 }
 
 .view-all-text-link {
@@ -316,6 +318,10 @@
 }
 
 .slide-title {
+    /* Explicit, because this class lands on an <h1> or a <p> depending on which
+       slide is showing, and only the heading tags inherit it. Both are on
+       screen together during the crossfade. */
+    font-family: var(--font-heading);
     font-size: 2.75rem;
     font-weight: 900;
     color: #ffffff;
