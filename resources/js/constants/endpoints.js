@@ -122,6 +122,8 @@ export const API_ENDPOINTS = {
         // until it sells, and reaches the accounts as cost of goods sold.
         EXPENSES: '/admin/expenses',
         EXPENSE_ITEM: (id) => `/admin/expenses/${id}`,
+        EXPENSE_CATEGORIES: '/admin/expense-categories',
+        EXPENSE_CATEGORY_ITEM: (id) => `/admin/expense-categories/${id}`,
         DASHBOARD: '/admin/dashboard',
         ORDERS: '/admin/orders',
         ORDER_STATUS: (id) => `/admin/orders/${id}/status`,
@@ -216,6 +218,7 @@ export const ROUTES = {
     ADMIN_BLOGS: '/admin/blogs',
     ADMIN_REVIEWS: '/admin/reviews',
     ADMIN_EXPENSES: '/admin/expenses',
+    ADMIN_EXPENSE_CATEGORIES: '/admin/expense-categories',
     ADMIN_REPORTS_PROFIT: '/admin/reports/profit-loss',
 };
 

@@ -33,3 +33,31 @@
     line-height: 1.6;
     color: var(--color-text-muted, #8a8f98);
 }
+
+/*
+ * Naming a category after stock is the one mistake this screen makes easy, so
+ * it is called out while the name is being typed — as a warning, not a block.
+ */
+.expense-category-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-md);
+    background: var(--warning-light);
+    color: var(--dark-900);
+}
+
+.expense-category-warning strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+}
+
+.expense-category-warning span {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--color-text-muted, #8a8f98);
+}

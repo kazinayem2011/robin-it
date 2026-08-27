@@ -243,6 +243,10 @@ class ApiEndpoints
 
     public const ADMIN_EXPENSES_ITEM = 'expenses/{id}';
 
+    public const ADMIN_EXPENSE_CATEGORIES = 'expense-categories';
+
+    public const ADMIN_EXPENSE_CATEGORIES_ITEM = 'expense-categories/{id}';
+
     public const ADMIN_REPORTS_PROFIT = 'reports/profit-loss';
 
     public const ADMIN_BLOGS = 'blogs';

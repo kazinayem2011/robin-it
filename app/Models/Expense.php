@@ -20,7 +20,7 @@ class Expense extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category', 'amount', 'description', 'incurred_on',
+        'expense_category_id', 'amount', 'description', 'incurred_on',
         'reference', 'note', 'supplier_id', 'user_id',
     ];
 
@@ -29,34 +29,21 @@ class Expense extends Model
         'incurred_on' => 'date',
     ];
 
-    /**
-     * What the money went on.
-     *
-     * There is deliberately no "stock" or "inventory" category — see above.
-     * `delivery` is the courier's bill to the shop, which is a different thing
-     * from the delivery fee collected from the customer.
-     */
-    public const CATEGORIES = [
-        'rent' => 'Rent & premises',
-        'salaries' => 'Salaries & wages',
-        'utilities' => 'Utilities',
-        'delivery' => 'Courier & delivery',
-        'packaging' => 'Packaging & consumables',
-        'marketing' => 'Marketing & advertising',
-        'equipment' => 'Equipment & software',
-        'fees' => 'Bank & transaction fees',
-        'maintenance' => 'Repairs & maintenance',
-        'other' => 'Other',
-    ];
-
-    public static function categoryKeys(): array
+    public function category()
     {
-        return array_keys(self::CATEGORIES);
+        return $this->belongsTo(ExpenseCategory::class, 'expense_category_id');
     }
 
+    /**
+     * The category's name, or a placeholder when the category was removed.
+     *
+     * Deleting a category nulls the reference rather than the expense: the
+     * money was still spent, and losing the record of it to tidy up a list
+     * would be the wrong trade.
+     */
     public function getCategoryLabelAttribute(): string
     {
-        return self::CATEGORIES[$this->category] ?? ucfirst((string) $this->category);
+        return $this->category?->name ?? 'Uncategorised';
     }
 
     public function supplier()

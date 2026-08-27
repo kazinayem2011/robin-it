@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -228,6 +229,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store']);
         Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'update']);
         Route::delete(ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'destroy']);
+
+        Route::post(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'destroy']);
 
         // Settings
         Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update']);

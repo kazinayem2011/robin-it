@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ExpenseRequest;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Supplier;
 use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
@@ -33,11 +34,11 @@ class ExpenseController extends Controller
         ];
 
         $query = Expense::query()
-            ->with(['supplier:id,name', 'recordedBy:id,name'])
+            ->with(['category:id,name', 'supplier:id,name', 'recordedBy:id,name'])
             ->between($filters['from'], $filters['to'])
             ->when(
                 $filters['category'] !== 'all' && $filters['category'] !== '',
-                fn ($q) => $q->where('category', $filters['category'])
+                fn ($q) => $q->where('expense_category_id', $filters['category'])
             )
             ->when($filters['search'] !== '', function ($q) use ($filters) {
                 $term = SearchTerm::contains($filters['search']);
@@ -54,8 +55,14 @@ class ExpenseController extends Controller
         return Inertia::render('Admin/Expenses', [
             'expenses' => $query->paginate(self::PER_PAGE)->withQueryString(),
             'filters' => $filters,
-            'categories' => collect(Expense::CATEGORIES)
-                ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])
+            // Retired categories are still offered when something is already
+            // filed under one, so editing that expense does not silently
+            // reassign it.
+            'categories' => ExpenseCategory::query()
+                ->where('is_active', true)
+                ->ordered()
+                ->get(['id', 'name'])
+                ->map(fn ($c) => ['value' => (string) $c->id, 'label' => $c->name])
                 ->values(),
             'suppliers' => Supplier::active()->orderBy('name')->get(['id', 'name']),
             // What the current filter adds up to, so the figure on screen

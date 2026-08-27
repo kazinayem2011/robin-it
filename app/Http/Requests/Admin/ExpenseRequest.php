@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\Expense;
-
 class ExpenseRequest extends AdminRequest
 {
     /**
@@ -12,7 +10,7 @@ class ExpenseRequest extends AdminRequest
     public function rules(): array
     {
         return [
-            'category' => 'required|string|in:'.implode(',', Expense::categoryKeys()),
+            'expense_category_id' => 'required|exists:expense_categories,id',
             'amount' => 'required|numeric|min:0.01|max:99999999',
             'description' => 'required|string|max:255',
             // Costs can be entered late, but not in advance — a bill that has
@@ -30,7 +28,8 @@ class ExpenseRequest extends AdminRequest
     public function messages(): array
     {
         return [
-            'category.in' => 'Choose one of the listed spending categories.',
+            'expense_category_id.required' => 'Choose what the money went on.',
+            'expense_category_id.exists' => 'That spending category no longer exists.',
             'amount.min' => 'Enter what this cost.',
             'description.required' => 'Say what the money went on.',
             'incurred_on.before_or_equal' => 'An expense cannot be dated in the future.',

@@ -23,6 +23,7 @@ import {
     X,
     Wallet,
     LineChart,
+    Tags,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -151,11 +152,26 @@ export default function AdminLayout({
 
                     <Link
                         href={ROUTES.ADMIN_EXPENSES}
-                        className={`admin-nav-link ${currentUrl.startsWith('/admin/expenses') ? 'active' : ''}`}
+                        className={`admin-nav-link ${
+                            currentUrl.startsWith('/admin/expenses') &&
+                            !currentUrl.startsWith('/admin/expense-categories')
+                                ? 'active'
+                                : ''
+                        }`}
                     >
                         <div className="admin-nav-left">
                             <Wallet size={17} />
                             <span>Expenses</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href={ROUTES.ADMIN_EXPENSE_CATEGORIES}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/expense-categories') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Tags size={17} />
+                            <span>Expense Categories</span>
                         </div>
                     </Link>
 

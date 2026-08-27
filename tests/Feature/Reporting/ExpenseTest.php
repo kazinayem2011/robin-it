@@ -3,6 +3,7 @@
 namespace Tests\Feature\Reporting;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,10 +17,15 @@ class ExpenseTest extends TestCase
         return User::factory()->create(['role' => 'admin']);
     }
 
+    private function categoryId(string $slug = 'rent'): int
+    {
+        return ExpenseCategory::where('slug', $slug)->value('id');
+    }
+
     private function payload(array $overrides = []): array
     {
         return array_merge([
-            'category' => 'rent',
+            'expense_category_id' => $this->categoryId(),
             'amount' => 25000,
             'description' => 'Shop rent, August',
             'incurred_on' => now()->toDateString(),
@@ -36,7 +42,7 @@ class ExpenseTest extends TestCase
 
         $expense = Expense::first();
 
-        $this->assertSame('rent', $expense->category);
+        $this->assertSame('rent', $expense->category->slug);
         $this->assertSame(25000.0, $expense->amount);
         // Who typed it in, so the entry can be asked about later.
         $this->assertSame($admin->id, $expense->user_id);
@@ -74,7 +80,7 @@ class ExpenseTest extends TestCase
     public function test_an_unknown_category_is_refused(): void
     {
         $this->actingAs($this->admin())
-            ->postJson('/api/admin/expenses', $this->payload(['category' => 'bribes']))
+            ->postJson('/api/admin/expenses', $this->payload(['expense_category_id' => 999999]))
             ->assertStatus(422);
 
         $this->assertSame(0, Expense::count());
@@ -82,17 +88,16 @@ class ExpenseTest extends TestCase
 
     /**
      * Stock is not an expense — it is inventory until it sells, and it reaches
-     * the accounts as cost of goods sold. Offering the category here would
-     * invite counting the same money twice.
+     * the accounts as cost of goods sold. None of the categories the shop
+     * starts with invites counting that money twice.
      */
-    public function test_stock_is_not_an_expense_category(): void
+    public function test_no_seeded_category_is_for_stock(): void
     {
-        foreach (['stock', 'inventory', 'purchase', 'purchases', 'goods'] as $forbidden) {
-            $this->assertArrayNotHasKey($forbidden, Expense::CATEGORIES);
-
-            $this->actingAs($this->admin())
-                ->postJson('/api/admin/expenses', $this->payload(['category' => $forbidden]))
-                ->assertStatus(422);
+        foreach (ExpenseCategory::pluck('slug') as $slug) {
+            $this->assertFalse(
+                ExpenseCategory::looksLikeInventory($slug),
+                "'{$slug}' is seeded and reads as inventory."
+            );
         }
     }
 
@@ -132,16 +137,16 @@ class ExpenseTest extends TestCase
     {
         $admin = $this->admin();
 
-        foreach ([['rent', 25000], ['salaries', 40000], ['rent', 5000]] as [$category, $amount]) {
+        foreach ([['rent', 25000], ['salaries', 40000], ['rent', 5000]] as [$slug, $amount]) {
             $this->actingAs($admin)->postJson('/api/admin/expenses',
-                $this->payload(['category' => $category, 'amount' => $amount]));
+                $this->payload(['expense_category_id' => $this->categoryId($slug), 'amount' => $amount]));
         }
 
         $all = $this->actingAs($admin)->get('/admin/expenses')
             ->assertStatus(200)->viewData('page')['props'];
         $this->assertSame(70000.0, $all['total']);
 
-        $rent = $this->actingAs($admin)->get('/admin/expenses?category=rent')
+        $rent = $this->actingAs($admin)->get('/admin/expenses?category='.$this->categoryId())
             ->viewData('page')['props'];
         $this->assertSame(30000.0, $rent['total'], 'The total must match the filter.');
         $this->assertCount(2, $rent['expenses']['data']);

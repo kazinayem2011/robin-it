@@ -4,6 +4,7 @@ namespace Tests\Feature\Reporting;
 
 use App\Models\Category;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -68,7 +69,7 @@ class ProfitAndLossTest extends TestCase
     private function spend(string $category, float $amount, ?string $on = null): void
     {
         Expense::create([
-            'category' => $category,
+            'expense_category_id' => ExpenseCategory::where('slug', $category)->value('id'),
             'amount' => $amount,
             'description' => 'test',
             'incurred_on' => $on ?? now()->toDateString(),

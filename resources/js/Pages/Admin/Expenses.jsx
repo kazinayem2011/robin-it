@@ -18,7 +18,7 @@ import './Expenses.css';
 const today = () => new Date().toISOString().slice(0, 10);
 
 const emptyExpense = () => ({
-    category: 'rent',
+    expense_category_id: '',
     amount: '',
     description: '',
     incurred_on: today(),
@@ -106,7 +106,9 @@ export default function AdminExpenses({
         setEditing(expense);
         formik.resetForm({
             values: {
-                category: expense.category || 'rent',
+                expense_category_id: expense.expense_category_id
+                    ? String(expense.expense_category_id)
+                    : '',
                 amount: expense.amount ?? '',
                 description: expense.description || '',
                 incurred_on: (expense.incurred_on || '').slice(0, 10),
@@ -177,9 +179,7 @@ export default function AdminExpenses({
         {
             key: 'category',
             header: 'Category',
-            render: (e) =>
-                categories.find((c) => c.value === e.category)?.label ||
-                e.category,
+            render: (e) => e.category?.name || 'Uncategorised',
         },
         {
             key: 'amount',
@@ -375,10 +375,13 @@ export default function AdminExpenses({
                     <div className="admin-grid-equal-2col">
                         <FormSelect
                             label="Category"
-                            name="category"
+                            name="expense_category_id"
                             formik={formik}
                             required
-                            options={categoryOptions}
+                            options={[
+                                { value: '', label: 'Choose a category…' },
+                                ...categoryOptions,
+                            ]}
                         />
                         <FormInput
                             label="Amount (৳ BDT)"

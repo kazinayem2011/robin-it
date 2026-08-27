@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -128,6 +129,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'index'])->name('settings');
         Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminCustomerController::class, 'index'])->name('customers');
         Route::get(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'index'])->name('expenses');
+        Route::get(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'index'])->name('expense-categories');
         Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit');
         Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs');
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews');

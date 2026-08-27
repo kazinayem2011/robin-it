@@ -275,7 +275,9 @@ export const adminOrderReturnSchema = Yup.object().shape({
  * refused here too rather than only at the server.
  */
 export const adminExpenseSchema = Yup.object().shape({
-    category: Yup.string().required('Choose what the money went on.'),
+    expense_category_id: Yup.string().required(
+        'Choose what the money went on.',
+    ),
     amount: Yup.number()
         .typeError('Enter an amount.')
         .moreThan(0, 'Enter what this cost.')
@@ -290,4 +292,13 @@ export const adminExpenseSchema = Yup.object().shape({
     reference: Yup.string().trim().max(100).nullable(),
     note: Yup.string().trim().max(1000).nullable(),
     supplier_id: Yup.mixed().nullable(),
+});
+
+/** Naming a spending category. */
+export const adminExpenseCategorySchema = Yup.object().shape({
+    name: Yup.string()
+        .trim()
+        .max(80, 'Keep the name under 80 characters.')
+        .required('Give the category a name.'),
+    note: Yup.string().trim().max(255).nullable(),
 });

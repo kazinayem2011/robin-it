@@ -89,6 +89,29 @@ export const adminService = {
         return response.data;
     },
 
+    async createExpenseCategory(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.EXPENSE_CATEGORIES,
+            payload,
+        );
+        return response.data;
+    },
+
+    async updateExpenseCategory(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.EXPENSE_CATEGORY_ITEM(id),
+            payload,
+        );
+        return response.data;
+    },
+
+    async deleteExpenseCategory(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.EXPENSE_CATEGORY_ITEM(id),
+        );
+        return response.data;
+    },
+
     /** Suppliers, for the delivery form's dropdown. */
     async getSuppliers() {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.SUPPLIERS);

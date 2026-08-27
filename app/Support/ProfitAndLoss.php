@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 
 /**
  * What the shop earned and what it spent, over a period.
@@ -89,29 +90,38 @@ class ProfitAndLoss
     private static function expenses(?string $from, ?string $to): array
     {
         $totals = Expense::between($from, $to)
-            ->groupBy('category')
-            ->selectRaw('category, SUM(amount) as total')
-            ->pluck('total', 'category');
+            ->groupBy('expense_category_id')
+            ->selectRaw('expense_category_id, SUM(amount) as total')
+            ->pluck('total', 'expense_category_id');
 
         $byCategory = [];
         $total = 0.0;
 
-        foreach (Expense::CATEGORIES as $key => $label) {
-            $amount = round((float) ($totals[$key] ?? 0), 2);
+        // Every category, even at zero, so "nothing was spent on marketing" is
+        // distinguishable from "marketing is not something we track".
+        foreach (ExpenseCategory::ordered()->get() as $category) {
+            $amount = round((float) ($totals[$category->id] ?? 0), 2);
             $total += $amount;
 
-            $byCategory[] = ['key' => $key, 'label' => $label, 'amount' => $amount];
+            // A retired category with no spending in the period is noise; one
+            // with spending still has to be accounted for.
+            if (! $category->is_active && $amount <= 0) {
+                continue;
+            }
+
+            $byCategory[] = ['key' => $category->slug, 'label' => $category->name, 'amount' => $amount];
         }
 
-        // A category that was retired from the list but still has history must
-        // not silently vanish from the total.
-        foreach ($totals as $key => $amount) {
-            if (! array_key_exists($key, Expense::CATEGORIES)) {
-                $amount = round((float) $amount, 2);
-                $total += $amount;
+        /*
+         * Spending whose category was deleted outright. The money left the
+         * business whatever happened to the label, so it is carried rather
+         * than quietly dropped from the total.
+         */
+        $orphaned = round((float) ($totals[null] ?? 0), 2);
 
-                $byCategory[] = ['key' => $key, 'label' => ucfirst((string) $key), 'amount' => $amount];
-            }
+        if ($orphaned > 0) {
+            $total += $orphaned;
+            $byCategory[] = ['key' => 'uncategorised', 'label' => 'Uncategorised', 'amount' => $orphaned];
         }
 
         return ['total' => round($total, 2), 'by_category' => $byCategory];
