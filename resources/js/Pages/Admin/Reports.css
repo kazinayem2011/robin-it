@@ -1,5 +1,81 @@
 /* Profit & loss statement. */
 
+/* ── Period picker ─────────────────────────────────────────────────────────── */
+
+.pl-periods {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.pl-preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pl-preset {
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted, #8a8f98);
+    background: #fff;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease,
+        background 0.15s ease;
+}
+
+.pl-preset:hover {
+    color: var(--dark-900);
+    border-color: var(--gray-400);
+}
+
+.pl-preset.is-active {
+    color: #fff;
+    background: var(--dark-900);
+    border-color: var(--dark-900);
+}
+
+.pl-custom-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted, #8a8f98);
+}
+
+.pl-custom-range input {
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid var(--color-border, #e2e5ea);
+    border-radius: var(--radius-md);
+}
+
+/* The headline stat carries the answer, so it is the one that is coloured. */
+.pl-stat-headline .admin-stock-stat-value {
+    font-size: 24px;
+}
+
+.pl-stat-headline.is-profit .admin-stock-stat-value {
+    color: var(--success);
+}
+
+.pl-stat-headline.is-loss .admin-stock-stat-value {
+    color: var(--danger);
+}
+
+/* ── The statement ─────────────────────────────────────────────────────────── */
+
 .pl-table {
     width: 100%;
     border-collapse: collapse;
@@ -7,13 +83,21 @@
 
 .pl-table td,
 .pl-table th {
-    padding: 10px 4px;
-    text-align: left;
+    padding: 9px 4px;
     vertical-align: top;
 }
 
-.pl-table td:last-child,
-.pl-table th:last-child {
+/*
+ * Only the amount column is right-aligned. A section heading spans both
+ * columns, so `th:last-child` caught it too and pushed "Income" over the
+ * numbers instead of leaving it above the labels it introduces.
+ */
+.pl-table td:first-child,
+.pl-table th {
+    text-align: left;
+}
+
+.pl-table td:last-child {
     text-align: right;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
@@ -25,22 +109,23 @@
 }
 
 .pl-section th {
-    padding-top: 22px;
+    padding-top: 20px;
     font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--gray-400);
-    border-bottom: 1px solid var(--border-color);
+    color: var(--color-text-muted, #8a8f98);
+    border-bottom: 1px solid var(--color-border, #e2e5ea);
 }
 
 .pl-subtotal td {
     font-weight: 600;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--color-border, #e2e5ea);
 }
 
 .pl-total td {
-    padding-top: 16px;
-    font-size: 18px;
+    padding-top: 14px;
+    font-size: 17px;
     font-weight: 700;
     border-top: 2px solid var(--dark-900);
 }
@@ -59,25 +144,30 @@
 }
 
 .pl-empty {
-    color: var(--gray-400);
+    color: var(--color-text-muted, #8a8f98);
     font-style: italic;
 }
 
-.pl-headline {
+/* Nothing at all to show — distinct from "everything is zero". */
+.pl-blank {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
-    font-size: 20px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--color-text-muted, #8a8f98);
 }
 
-.pl-headline.is-profit {
-    color: var(--success);
+.pl-blank strong {
+    font-size: 15px;
+    color: var(--dark-900);
 }
 
-.pl-headline.is-loss {
-    color: var(--danger);
+.pl-blank span {
+    max-width: 380px;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 /* The gap in the data, stated rather than absorbed. */
@@ -86,7 +176,7 @@
     gap: 12px;
     align-items: flex-start;
     padding: 14px 16px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     border: 1px solid var(--warning-border);
     border-radius: var(--radius-md);
     background: var(--warning-light);
@@ -100,5 +190,6 @@
 
 .pl-caveat span {
     font-size: 13px;
-    color: var(--gray-400);
+    line-height: 1.6;
+    color: var(--color-text-muted, #8a8f98);
 }

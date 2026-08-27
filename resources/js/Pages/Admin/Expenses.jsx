@@ -13,6 +13,7 @@ import { adminService } from '@/services';
 import { adminExpenseSchema } from '@/validations';
 import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
+import './Expenses.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -43,6 +44,13 @@ export default function AdminExpenses({
 }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
+
+    const isFiltered = Boolean(
+        filters.from ||
+        filters.to ||
+        filters.search ||
+        (filters.category && filters.category !== 'all'),
+    );
 
     const categoryOptions = useMemo(
         () => categories.map((c) => ({ value: c.value, label: c.label })),
@@ -213,71 +221,100 @@ export default function AdminExpenses({
         >
             <Head title="Expenses" />
 
-            <div className="admin-kpi-grid">
-                <div className="admin-kpi-card">
-                    <div className="admin-kpi-top">
-                        <span className="admin-kpi-label">
-                            {filters.from || filters.to || filters.search
-                                ? 'MATCHING THIS FILTER'
-                                : 'RECORDED IN TOTAL'}
-                        </span>
-                        <div className="admin-kpi-icon-box admin-kpi-icon-amber">
-                            <Wallet size={20} />
-                        </div>
-                    </div>
-                    <div className="admin-kpi-val">{formatBdt(total)}</div>
-                    <div className="admin-kpi-trend amber">
-                        {/*
-                         * Said out loud because it is the thing most likely to
-                         * be got wrong: a delivery of stock is not spending. It
-                         * turns cash into inventory, and only becomes a cost
-                         * when the units sell.
-                         */}
-                        <span>
-                            Stock purchases are not here — they count as cost of
-                            goods when sold
-                        </span>
+            {/*
+             * The same summary strip the stock screen uses, so the two money
+             * pages read alike. The filters live in it rather than floating
+             * above the table: they change what the total counts, so they
+             * belong beside it.
+             */}
+            <div className="admin-stock-summary">
+                <div className="admin-stock-stat">
+                    <span className="admin-stock-stat-value">
+                        {formatBdt(total)}
+                    </span>
+                    <span className="admin-stock-stat-label">
+                        {isFiltered
+                            ? 'Matching this filter'
+                            : 'Recorded in total'}
+                    </span>
+                </div>
+
+                <div className="admin-stock-stat">
+                    <span className="admin-stock-stat-value">
+                        {(expenses.total ?? 0).toLocaleString()}
+                    </span>
+                    <span className="admin-stock-stat-label">
+                        {expenses.total === 1 ? 'Entry' : 'Entries'}
+                    </span>
+                </div>
+
+                <div className="admin-stock-stat admin-stock-branch-filter">
+                    <label
+                        className="admin-stock-stat-label"
+                        htmlFor="category-filter"
+                    >
+                        Category
+                    </label>
+                    <select
+                        id="category-filter"
+                        value={filters.category || 'all'}
+                        onChange={(e) =>
+                            applyFilter({
+                                category:
+                                    e.target.value === 'all'
+                                        ? undefined
+                                        : e.target.value,
+                            })
+                        }
+                    >
+                        <option value="all">All categories</option>
+                        {categoryOptions.map((c) => (
+                            <option key={c.value} value={c.value}>
+                                {c.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="admin-stock-stat expense-range-filter">
+                    <span className="admin-stock-stat-label">Period</span>
+                    <div className="expense-range-inputs">
+                        <input
+                            type="date"
+                            aria-label="From"
+                            value={filters.from || ''}
+                            max={filters.to || undefined}
+                            onChange={(e) =>
+                                applyFilter({
+                                    from: e.target.value || undefined,
+                                })
+                            }
+                        />
+                        <span>–</span>
+                        <input
+                            type="date"
+                            aria-label="To"
+                            value={filters.to || ''}
+                            min={filters.from || undefined}
+                            onChange={(e) =>
+                                applyFilter({ to: e.target.value || undefined })
+                            }
+                        />
                     </div>
                 </div>
             </div>
 
-            <div className="admin-input-row-flex admin-order-actions">
-                <FormSelect
-                    label="Category"
-                    name="category-filter"
-                    value={filters.category || 'all'}
-                    onChange={(e) =>
-                        applyFilter({
-                            category:
-                                e.target.value === 'all'
-                                    ? undefined
-                                    : e.target.value,
-                        })
-                    }
-                    options={[
-                        { value: 'all', label: 'All categories' },
-                        ...categoryOptions,
-                    ]}
-                />
-                <FormInput
-                    label="From"
-                    name="from-filter"
-                    type="date"
-                    value={filters.from || ''}
-                    onChange={(e) =>
-                        applyFilter({ from: e.target.value || undefined })
-                    }
-                />
-                <FormInput
-                    label="To"
-                    name="to-filter"
-                    type="date"
-                    value={filters.to || ''}
-                    onChange={(e) =>
-                        applyFilter({ to: e.target.value || undefined })
-                    }
-                />
-            </div>
+            {/*
+             * The thing most likely to be got wrong, said once and plainly
+             * rather than crammed into a stat card: buying stock is not
+             * spending. It turns cash into inventory, and only becomes a cost
+             * when the units sell.
+             */}
+            <p className="expense-scope-note">
+                Stock purchases do not belong here — they are recorded as
+                deliveries and reach the accounts as cost of goods sold when the
+                units sell.
+            </p>
 
             <DataTable
                 columns={columns}

@@ -13,7 +13,14 @@ export const formatBdt = (amount) => {
             ? amount
             : parseFloat(String(amount).replace(/[^0-9.-]+/g, ''));
     if (isNaN(num)) return '৳0';
-    return `৳${Math.round(num).toLocaleString('en-IN')}`;
+
+    // The minus goes before the symbol, not between it and the digits:
+    // "৳-1,16,600" reads as a typo. Negatives are ordinary on a profit and
+    // loss statement, so this is not a rare path.
+    const rounded = Math.round(num);
+    const sign = rounded < 0 ? '-' : '';
+
+    return `${sign}৳${Math.abs(rounded).toLocaleString('en-IN')}`;
 };
 
 /**
