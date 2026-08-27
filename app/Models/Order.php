@@ -8,7 +8,8 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id', 'session_id', 'order_number', 'subtotal',
-        'shipping_fee', 'discount', 'coupon_code', 'total', 'status',
+        'shipping_fee', 'discount', 'coupon_code',
+        'coupon_discount_type', 'coupon_discount_value', 'total', 'status',
         'payment_method', 'payment_status', 'shipping_address',
         'stock_released_at', 'stock_returned_at',
     ];
@@ -18,6 +19,7 @@ class Order extends Model
         'subtotal' => 'float',
         'shipping_fee' => 'float',
         'discount' => 'float',
+        'coupon_discount_value' => 'float',
         'total' => 'float',
         'stock_released_at' => 'datetime',
         'stock_returned_at' => 'datetime',
@@ -161,6 +163,24 @@ class Order extends Model
         $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
 
         return $items->filter(fn ($item) => $item->unit_cost === null)->count();
+    }
+
+    /**
+     * The promo code's terms as they stood when this order used them, written
+     * for a human.
+     *
+     * The coupon itself may have been edited or deleted since, so this reads
+     * from what was frozen onto the order rather than looking the code up.
+     */
+    public function getCouponTermsAttribute(): ?string
+    {
+        if (! $this->coupon_code || $this->coupon_discount_type === null) {
+            return null;
+        }
+
+        return $this->coupon_discount_type === 'percent'
+            ? rtrim(rtrim(number_format((float) $this->coupon_discount_value, 2), '0'), '.').'% off'
+            : '৳'.number_format((float) $this->coupon_discount_value).' off';
     }
 
     /** Orders that still consume reserved stock. */

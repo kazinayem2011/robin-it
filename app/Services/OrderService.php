@@ -83,6 +83,11 @@ class OrderService
                 'shipping_fee' => $totals['shipping_fee'],
                 'discount' => $totals['discount'],
                 'coupon_code' => $coupon?->code,
+                // The terms as well as the code. The amount above was always
+                // right, but with only a code recorded nobody could say why —
+                // edit the coupon later and the order became unexplainable.
+                'coupon_discount_type' => $coupon?->discount_type,
+                'coupon_discount_value' => $coupon?->discount_value,
                 'total' => $totals['total'],
                 'status' => 'pending',
                 'payment_method' => $this->normalisePaymentMethod($addressData['payment_method'] ?? null),
