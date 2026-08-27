@@ -47,6 +47,13 @@ class ContentPageSeeder extends Seeder
 HTML,
             ],
             [
+                'slug' => 'contact',
+                'title' => 'Contact us',
+                'subtitle' => 'A question about an order, a part, or a warranty — write to us and a person will answer.',
+                'meta_description' => 'Get in touch with Robins Computer by phone, email or from any showroom.',
+                'body' => '',
+            ],
+            [
                 'slug' => 'privacy',
                 'title' => 'Privacy policy',
                 'subtitle' => 'What we collect, and what we do with it',

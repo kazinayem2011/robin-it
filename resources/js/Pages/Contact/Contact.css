@@ -158,3 +158,16 @@ a.contact-line:hover strong {
         font-size: 1.6rem;
     }
 }
+
+/* Anything extra the shop wants to say above the form. */
+.contact-intro {
+    max-width: 70ch;
+    margin-top: 12px;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--gray-600);
+}
+
+.contact-intro p {
+    margin-bottom: 10px;
+}

@@ -67,6 +67,16 @@ class ContentPageTest extends TestCase
         $this->assertArrayHasKey('stats', $props);
     }
 
+    public function test_contact_takes_its_heading_from_the_database(): void
+    {
+        $this->seedPages();
+        ContentPage::where('slug', 'contact')->update(['title' => 'Talk to us']);
+
+        $props = $this->get('/contact')->assertStatus(200)->viewData('page')['props'];
+
+        $this->assertSame('Talk to us', $props['page']['title']);
+    }
+
     public function test_an_unpublished_page_is_not_served(): void
     {
         $this->seedPages();
@@ -195,6 +205,6 @@ class ContentPageTest extends TestCase
             'Our own terms.',
             ContentPage::where('slug', 'terms')->value('body')
         );
-        $this->assertSame(4, ContentPage::count());
+        $this->assertSame(count(ContentPage::SYSTEM_SLUGS), ContentPage::count());
     }
 }

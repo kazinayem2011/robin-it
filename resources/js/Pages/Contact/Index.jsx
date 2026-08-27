@@ -16,7 +16,11 @@ import './Contact.css';
  *                  walk in than write does not have to go looking.
  * @param contact   The signed-in customer's details; no reason to ask again.
  */
-export default function Contact({ showrooms = [], contact = null }) {
+export default function Contact({
+    page = null,
+    showrooms = [],
+    contact = null,
+}) {
     const [sent, setSent] = useState(null);
 
     const formik = useFormik({
@@ -62,12 +66,20 @@ export default function Contact({ showrooms = [], contact = null }) {
             <Head title={`Contact Us — ${siteConfig.name}`} />
 
             <div className="contact-page container">
+                {/* The heading and the blurb are the shop's, edited under
+                    Pages; the form and the showrooms below are not text. */}
                 <header className="contact-head">
-                    <h1>Contact us</h1>
+                    <h1>{page?.title || 'Contact us'}</h1>
                     <p>
-                        A question about an order, a part, or a warranty — write
-                        to us and a person will answer.
+                        {page?.subtitle ||
+                            'A question about an order, a part, or a warranty — write to us and a person will answer.'}
                     </p>
+                    {page?.body && (
+                        <div
+                            className="contact-intro"
+                            dangerouslySetInnerHTML={{ __html: page.body }}
+                        />
+                    )}
                 </header>
 
                 <div className="contact-grid">

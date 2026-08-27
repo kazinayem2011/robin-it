@@ -31,9 +31,9 @@ class ContentPageController extends Controller
                         'id', 'slug', 'title', 'subtitle', 'body',
                         'meta_title', 'meta_description', 'is_published', 'is_system',
                     ]),
-                    'url' => $p->is_system && $p->slug !== 'about'
-                        ? '/'.$p->slug
-                        : ($p->slug === 'about' ? '/about' : '/p/'.$p->slug),
+                    // Built-in pages have their own short URLs; anything the
+                    // shop adds lives under /p/.
+                    'url' => $p->is_system ? '/'.$p->slug : '/p/'.$p->slug,
                     'updated_by_name' => $p->editor?->name,
                     'updated_at' => $p->updated_at?->diffForHumans(),
                 ]),

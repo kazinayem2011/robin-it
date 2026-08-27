@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class ContentPage extends Model
 {
     /** The ones the footer links to; these may be edited but not deleted. */
-    public const SYSTEM_SLUGS = ['about', 'privacy', 'terms', 'return-policy'];
+    public const SYSTEM_SLUGS = ['about', 'contact', 'privacy', 'terms', 'return-policy'];
 
     protected $fillable = [
         'slug', 'title', 'subtitle', 'body',
