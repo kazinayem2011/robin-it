@@ -25,7 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * `role` is deliberately NOT mass-assignable — it is the only thing standing
      * between a customer and the admin dashboard. Set it explicitly via
-     * promoteTo() / demoteToCustomer(), never from request input.
+     * assignRole(), never from request input.
      */
     protected $fillable = [
         'name',

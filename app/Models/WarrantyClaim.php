@@ -31,6 +31,21 @@ class WarrantyClaim extends Model
         'purchase_date' => 'date',
     ];
 
+    /**
+     * RMA lifecycle states, in the order a claim moves through them.
+     *
+     * The list lived as a magic string inside the admin controller's validation
+     * rule, so nothing else could check a status against it.
+     */
+    public const STATUSES = [
+        'received',
+        'diagnosing',
+        'repairing',
+        'ready_for_pickup',
+        'completed',
+        'rejected',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
