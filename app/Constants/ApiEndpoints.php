@@ -126,6 +126,14 @@ class ApiEndpoints
 
     public const WEB_TRACK = '/track';
 
+    /**
+     * The order number is in the URL so the page can be returned to and the
+     * address bar says which order is on screen. It is not a key: the phone
+     * number is still what proves the order is yours, and this only fills in
+     * the first box.
+     */
+    public const WEB_TRACK_ONE = '/track/{orderNumber}';
+
     public const WEB_PC_BUILDER = '/pc-builder';
 
     public const WEB_PC_BUILDER_CHOOSE = '/pc-builder/choose/{categorySlug}';

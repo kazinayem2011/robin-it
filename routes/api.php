@@ -35,7 +35,9 @@ use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\WarrantyController;
 use App\Http\Controllers\ComparisonController;
 use App\Http\Controllers\WishlistController;
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -95,7 +97,22 @@ Route::middleware('throttle:api')->group(function () {
 | so these are throttled tightly.
 */
 Route::middleware('throttle:lookup')->group(function () {
-    Route::post(ApiEndpoints::ORDERS_TRACK, [CheckoutController::class, 'track']);
+    /*
+     * Session-aware, so a signed-in customer's own orders open without them
+     * retyping the mobile number — an account is not obliged to carry one, and
+     * this endpoint had no session at all, so $request->user() was always null
+     * here however the customer was signed in.
+     *
+     * Cookies and session only, not the whole web group: this reads and
+     * changes nothing, and CSRF on it would break the plain POST that is the
+     * obvious way to check an order from a script or a REST client without
+     * protecting anything — a cross-origin caller cannot read the reply.
+     */
+    Route::post(ApiEndpoints::ORDERS_TRACK, [CheckoutController::class, 'track'])
+        ->middleware([
+            EncryptCookies::class,
+            StartSession::class,
+        ]);
     Route::get(ApiEndpoints::WARRANTY_CHECK, [WarrantyController::class, 'check']);
 });
 

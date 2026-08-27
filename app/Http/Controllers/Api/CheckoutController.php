@@ -120,13 +120,26 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'order_number' => 'required|string|max:64',
-            // A full mobile number is the proof of ownership for this order.
-            'phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
+            /*
+             * A full mobile number is how a guest proves the order is theirs.
+             * Someone signed in has already proved it by signing in, so the
+             * number is optional for them — and an account is not required to
+             * have one: registering with an email and leaving the phone blank
+             * is allowed. The service still refuses anyone else's order.
+             */
+            'phone' => [
+                $request->user() ? 'nullable' : 'required',
+                'string', 'max:20', PhoneHelper::RULE,
+            ],
         ], [
             'phone.regex' => 'Please enter the full 11-digit mobile number used when placing the order.',
         ]);
 
-        $trackingData = $this->orderService->trackOrder($validated['order_number'], $validated['phone']);
+        $trackingData = $this->orderService->trackOrder(
+            $validated['order_number'],
+            $validated['phone'] ?? null,
+            $request->user()
+        );
 
         if (! $trackingData) {
             // Deliberately identical for "no such order" and "wrong phone" so the

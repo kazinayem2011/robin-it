@@ -18,6 +18,7 @@ use App\Models\ProductStock;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\User;
 use App\Services\Courier\CourierDriverRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -240,17 +241,26 @@ class OrderService
     }
 
     /**
-     * Track order status by order number and phone number.
+     * Track an order, for whoever can show it is theirs.
      *
-     * Both numbers are normalised to the canonical 11-digit BD format and compared
-     * in full — a partial or suffix match is not proof of ownership.
+     * The phone number is how a guest proves that. Someone signed in has
+     * already proved it by signing in, and their own orders open without it —
+     * which matters because an account is not required to have a phone at all:
+     * registering with an email and leaving the number blank is allowed, and
+     * that customer could otherwise never track an order they had placed.
+     *
+     * Signing in is not a skeleton key. It opens the orders on that account
+     * and nothing else; anyone else's still wants the number on the order.
+     *
+     * @param  string|null  $phone  required of a guest; ignored when the order
+     *                              belongs to the signed-in customer
+     * @param  User|null  $viewer  whoever is asking, if they are signed in
      */
-    public function trackOrder(string $orderNumber, string $phone): ?array
+    public function trackOrder(string $orderNumber, ?string $phone = null, ?User $viewer = null): ?array
     {
-        $orderNumber = strtoupper(trim($orderNumber));
-        $cleanPhone = PhoneHelper::normalizeBdPhone($phone);
+        $orderNumber = Order::normalizeNumber($orderNumber);
 
-        if (! $orderNumber || ! $cleanPhone) {
+        if (! $orderNumber) {
             return null;
         }
 
@@ -262,10 +272,7 @@ class OrderService
             return null;
         }
 
-        $orderPhone = PhoneHelper::normalizeBdPhone((string) ($order->shipping_address['phone'] ?? ''));
-
-        // Constant-time exact comparison — no suffix matching.
-        if (! $orderPhone || ! hash_equals($orderPhone, $cleanPhone)) {
+        if (! $this->mayTrack($order, $phone, $viewer)) {
             return null;
         }
 
@@ -338,6 +345,30 @@ class OrderService
      *
      * @throws StorefrontException when the order has reached an end state
      */
+    /**
+     * Whether this asker may see this order.
+     *
+     * A wrong number and a number that is not there are the same answer, as is
+     * an order that does not exist — the endpoint must not become a way to
+     * find out which order numbers are real.
+     */
+    private function mayTrack(Order $order, ?string $phone, ?User $viewer): bool
+    {
+        if ($viewer && $order->user_id && $order->user_id === $viewer->id) {
+            return true;
+        }
+
+        $given = PhoneHelper::normalizeBdPhone((string) $phone);
+        $onOrder = PhoneHelper::normalizeBdPhone((string) ($order->shipping_address['phone'] ?? ''));
+
+        if (! $given || ! $onOrder) {
+            return false;
+        }
+
+        // Constant-time exact comparison — no suffix matching.
+        return hash_equals($onOrder, $given);
+    }
+
     public function updateOrderStatus(Order $order, string $status): Order
     {
         if (! in_array($status, Order::STATUSES, true)) {

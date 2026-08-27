@@ -37,6 +37,20 @@ class Order extends Model
     protected $appends = ['tracking_url'];
 
     /** Order lifecycle states, in the order the customer sees them. */
+    /**
+     * An order number as the customer is likely to give it back.
+     *
+     * Six screens print it as "#ORD-ABC123" — the confirmation page they land
+     * on after paying among them — so that hash is what gets copied, and it is
+     * decoration: it reads "number", it is not part of the value. Stored
+     * numbers are uppercase, and a pasted one tends to bring whitespace with
+     * it.
+     */
+    public static function normalizeNumber(?string $number): string
+    {
+        return strtoupper(trim(ltrim(trim((string) $number), '#')));
+    }
+
     public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
     /**

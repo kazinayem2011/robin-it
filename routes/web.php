@@ -61,6 +61,10 @@ Route::controller(StorefrontPageController::class)->group(function () {
     Route::get(ApiEndpoints::WEB_PC_BUILDER_CHOOSE, 'pcBuilderChoose')->name('pc-builder.choose');
 
     Route::get(ApiEndpoints::WEB_TRACK, 'track')->name('track');
+    // Anything that could be an order number; a wrong one simply finds nothing.
+    Route::get(ApiEndpoints::WEB_TRACK_ONE, 'track')
+        ->where('orderNumber', '#?[A-Za-z0-9\-]{1,64}')
+        ->name('track.order');
     Route::get(ApiEndpoints::WEB_TRACK_ORDER, 'track');
 
     Route::get(ApiEndpoints::WEB_WISHLIST, 'wishlist')->name('wishlist');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Banner;
 use App\Models\BlogPost;
+use App\Models\Order;
 use App\Services\AddressBook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -79,9 +80,17 @@ class StorefrontPageController extends Controller
         return Inertia::render('PcBuilder/SelectComponent', ['categorySlug' => $categorySlug]);
     }
 
-    public function track(): Response
+    /**
+     * @param  string|null  $orderNumber  from /track/{orderNumber}, which fills
+     *                                    in the first box and nothing more —
+     *                                    the phone number is still what proves
+     *                                    the order is yours
+     */
+    public function track(?string $orderNumber = null): Response
     {
-        return Inertia::render('Track/Index');
+        return Inertia::render('Track/Index', [
+            'orderNumber' => $orderNumber ? (Order::normalizeNumber($orderNumber) ?: null) : null,
+        ]);
     }
 
     public function wishlist(): Response

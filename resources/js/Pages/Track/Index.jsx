@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useEffect, useState } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import { mainLayout } from '../../Layouts/MainLayout';
 import Button from '../../Components/Button';
@@ -23,15 +23,37 @@ import {
 } from 'lucide-react';
 import './Track.css';
 
-export default function TrackOrder() {
+/**
+ * @param orderNumber From /track/{orderNumber}. It fills in the first box and
+ *                    nothing more — the phone number is still what proves the
+ *                    order is yours, so arriving with a link shows the form,
+ *                    not somebody's address.
+ */
+export default function TrackOrder({ orderNumber = null }) {
     const [trackingResult, setTrackingResult] = useState(null);
+
+    // Signed in, the mobile number is a courtesy rather than a requirement:
+    // the account already says who this is, and it need not carry a number —
+    // registering with an email and no phone is allowed.
+    const authUser = usePage().props?.auth?.user ?? null;
+
+    /*
+     * The address bar follows what is on screen, without a round trip: the
+     * order was fetched from the API, so re-visiting the page through Inertia
+     * would only fetch it again. Inertia keeps its own state on the history
+     * entry, so it is carried over rather than replaced.
+     */
+    const showInUrl = (path) => {
+        if (typeof window === 'undefined') return;
+        window.history.replaceState({ ...window.history.state }, '', path);
+    };
 
     const formik = useFormik({
         initialValues: {
-            order_number: '',
-            phone: '',
+            order_number: orderNumber || '',
+            phone: authUser?.phone || '',
         },
-        validationSchema: trackingSchema,
+        validationSchema: trackingSchema(Boolean(authUser)),
         onSubmit: async (values, { setSubmitting }) => {
             try {
                 const data = await orderTrackingService.trackOrder(
@@ -40,6 +62,9 @@ export default function TrackOrder() {
                 );
                 if (data) {
                     setTrackingResult(data);
+                    showInUrl(
+                        `/track/${encodeURIComponent(data.order_number)}`,
+                    );
                     toast.success('Live order details loaded!', 'Order Found');
                 }
             } catch (error) {
@@ -60,9 +85,30 @@ export default function TrackOrder() {
     // asked for.
     const trackAnother = () => {
         setTrackingResult(null);
-        formik.resetForm();
+        formik.resetForm({
+            values: { order_number: '', phone: authUser?.phone || '' },
+        });
+        showInUrl('/track');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    /*
+     * Order numbers are printed as "#ORD-ABC123", so a pasted link can arrive
+     * as /track/#ORD-ABC123 — where the hash starts a fragment and the server
+     * is only ever asked for /track/. The fragment does reach the browser, so
+     * the number is picked up here instead of being silently dropped.
+     */
+    useEffect(() => {
+        if (orderNumber || typeof window === 'undefined') return;
+
+        const fromHash = window.location.hash.replace(/^#/, '').trim();
+
+        if (/^[A-Za-z0-9-]{4,64}$/.test(fromHash)) {
+            formik.setFieldValue('order_number', fromHash.toUpperCase());
+        }
+        // Only on arrival: after that the field belongs to whoever is typing.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [orderNumber]);
 
     const STEPS = [
         { id: 1, label: 'Order Placed', icon: Clock },
@@ -109,9 +155,34 @@ export default function TrackOrder() {
                         <h1 className="tracking-hero-title">
                             Live Order Tracker
                         </h1>
+                        {/*
+                         * Arriving from a /track/ORD-... link, the order is
+                         * already in the box; saying what is still needed
+                         * beats repeating the general instruction.
+                         */}
                         <p className="tracking-hero-desc">
-                            Enter your Order Number and Bangladeshi Mobile
-                            Number to track delivery progress.
+                            {authUser ? (
+                                <>
+                                    {orderNumber ? (
+                                        <>
+                                            Checking order{' '}
+                                            <strong>{orderNumber}</strong>.{' '}
+                                        </>
+                                    ) : (
+                                        'Enter your Order Number. '
+                                    )}
+                                    The mobile number is only needed for orders
+                                    placed without signing in.
+                                </>
+                            ) : orderNumber ? (
+                                <>
+                                    Enter the mobile number on order{' '}
+                                    <strong>{orderNumber}</strong> to see its
+                                    delivery progress.
+                                </>
+                            ) : (
+                                'Enter your Order Number and Bangladeshi Mobile Number to track delivery progress.'
+                            )}
                         </p>
 
                         <form onSubmit={formik.handleSubmit}>
@@ -133,7 +204,11 @@ export default function TrackOrder() {
                                 <FormInput
                                     id="phone"
                                     name="phone"
-                                    label="Mobile Number"
+                                    label={
+                                        authUser
+                                            ? 'Mobile Number (optional)'
+                                            : 'Mobile Number'
+                                    }
                                     placeholder="e.g. 01711223344"
                                     isBdPhone={true}
                                     value={formik.values.phone}

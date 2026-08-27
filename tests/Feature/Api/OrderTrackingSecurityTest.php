@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -45,12 +46,26 @@ class OrderTrackingSecurityTest extends TestCase
             'product_id' => $product->id, 'quantity' => 1,
         ])->assertStatus(200);
 
-        return $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CHECKOUT, [
+        $orderNumber = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CHECKOUT, [
             'name' => 'Rahim Chowdhury',
             'phone' => self::REAL_PHONE,
             'street_address' => 'House 45, Road 7, Gulshan 2',
             'city' => 'Dhaka',
         ])->json('data.order_number');
+
+        /*
+         * Signed out again before anything is tracked.
+         *
+         * actingAs lasts the rest of the test, so every lookup below was
+         * arriving as the customer who placed the order — who is the one
+         * person entitled to see it. This file is about everybody else, and a
+         * guest is who it means. Without this, a wrong phone number opened the
+         * order and the test that says otherwise passed only because
+         * validation had already turned the guess away.
+         */
+        Auth::logout();
+
+        return $orderNumber;
     }
 
     public static function partialPhoneProvider(): array
