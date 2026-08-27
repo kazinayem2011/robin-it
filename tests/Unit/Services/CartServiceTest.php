@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CartService;
+use App\Support\ShippingRates;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -74,11 +75,13 @@ class CartServiceTest extends TestCase
         $cart = $this->cartService->getOrCreateCart(null, 'session-xyz');
         $this->cartService->addItem($cart, $product->id, 2);
 
-        $totals = $this->cartService->calculateTotals($cart, shippingFee: 60);
+        // No rate configured, so the shop's default applies. The fee used to
+        // be a constant passed in by the caller; it comes from the settings now.
+        $totals = $this->cartService->calculateTotals($cart);
 
         // 2 * 20000 = 40000 subtotal + 60 shipping = 40060
         $this->assertEquals(40000, $totals['subtotal']);
-        $this->assertEquals(60, $totals['shipping_fee']);
+        $this->assertEquals(ShippingRates::DEFAULT_FEE, $totals['shipping_fee']);
         $this->assertEquals(40060, $totals['total']);
         $this->assertEquals(2, $totals['total_items']);
     }

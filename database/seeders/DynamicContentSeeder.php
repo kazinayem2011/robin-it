@@ -198,9 +198,9 @@ class DynamicContentSeeder extends Seeder
         SiteSetting::set('service_center_address', 'Multiplan Center, Dhaka-1205', 'contact', 'Service Centre Address');
         SiteSetting::set('hotline_number', '16789', 'contact', 'Customer Hotline');
         SiteSetting::set('hotline_hours', '9:00 AM – 9:00 PM (Everyday)', 'contact', 'Hotline Operating Hours');
-        SiteSetting::set('free_shipping_threshold', '50000', 'general', 'Free Shipping Threshold (BDT)');
-        SiteSetting::set('delivery_charge_dhaka', '70', 'general', 'Inside Dhaka Delivery Charge');
-        SiteSetting::set('delivery_charge_outside', '130', 'general', 'Outside Dhaka Delivery Charge');
+        SiteSetting::set('free_shipping_threshold', '50000', 'shipping', 'Free Shipping Threshold (BDT)');
+        SiteSetting::set('shipping_inside_dhaka', '70', 'shipping', 'Delivery Inside Dhaka');
+        SiteSetting::set('shipping_outside_dhaka', '130', 'shipping', 'Delivery Outside Dhaka');
 
         // 5. SEED SPOTLIGHT BANNERS ON TOP CATEGORIES
         $laptopCat = Category::where('slug', 'laptops')->first();

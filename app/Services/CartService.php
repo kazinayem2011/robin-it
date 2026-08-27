@@ -8,13 +8,11 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\ShippingRates;
 use Illuminate\Support\Facades\DB;
 
 class CartService
 {
-    /** Flat delivery fee, in BDT. */
-    public const SHIPPING_FEE = 60.0;
-
     /** Sanity cap so a single line item can't be used to inflate an order. */
     public const MAX_QUANTITY_PER_ITEM = 20;
 
@@ -217,12 +215,14 @@ class CartService
      * Calculate subtotal, shipping, discount, and grand total for a cart.
      *
      * @param  float  $discount  coupon discount already validated server-side
+     * @param  string|null  $city  where it is going, when that is known yet.
+     *                             The cart page has no address, so it quotes
+     *                             the inside-Dhaka rate; checkout knows and
+     *                             charges accordingly.
      */
-    public function calculateTotals(Cart $cart, float $discount = 0.0, ?float $shippingFee = null): array
+    public function calculateTotals(Cart $cart, float $discount = 0.0, ?string $city = null): array
     {
         $cart->loadMissing('items.product', 'items.variant');
-
-        $shippingFee ??= self::SHIPPING_FEE;
 
         $subtotal = 0.0;
         $totalItems = 0;
@@ -241,7 +241,9 @@ class CartService
 
         $subtotal = round($subtotal, 2);
         $discount = round(min(max($discount, 0.0), $subtotal), 2);
-        $shipping = $subtotal > 0 ? $shippingFee : 0.0;
+        // Measured against the goods total before the coupon: a promo code
+        // should not cost the customer their free delivery.
+        $shipping = ShippingRates::feeFor($city, $subtotal);
 
         return [
             'subtotal' => $subtotal,

@@ -71,7 +71,9 @@ class OrderService
                 }
             }
 
-            $totals = $this->cartService->calculateTotals($cart, $discount);
+            // The delivery city decides the rate; the cart page quoted the
+            // inside-Dhaka one because it had no address to go on yet.
+            $totals = $this->cartService->calculateTotals($cart, $discount, $addressData['city'] ?? null);
 
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
@@ -112,6 +114,11 @@ class OrderService
                     // retired later and the invoice must still read correctly.
                     'variant_name' => $variant?->name,
                     'price' => $effectivePrice,
+                    // Frozen for the same reason, and a stronger one: purchase
+                    // prices move, so what the shop paid for these units is
+                    // only knowable now. Null when the product has never come
+                    // in through a delivery and the cost is genuinely unknown.
+                    'unit_cost' => $this->stock->latestUnitCost($product, $variant),
                     'quantity' => $item->quantity,
                     'total' => round($effectivePrice * $item->quantity, 2),
                 ]);

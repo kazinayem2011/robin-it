@@ -56,8 +56,6 @@ class SiteSetting extends Model
             'shipping_inside_dhaka',
             'shipping_outside_dhaka',
             'free_shipping_threshold',
-            'delivery_charge_dhaka',
-            'delivery_charge_outside',
         ],
         'seo' => [
             'meta_title',
