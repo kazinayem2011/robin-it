@@ -86,9 +86,7 @@ export default function Login({
                                     )
                                 }
                             >
-                                {formik.isSubmitting
-                                    ? 'Signing in…'
-                                    : 'Super Admin'}
+                                {formik.isSubmitting ? 'Signing in…' : 'Owner'}
                             </button>
                             <button
                                 type="button"

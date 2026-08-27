@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
+use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
@@ -122,26 +123,27 @@ Route::middleware(['auth', 'admin'])
         Route::redirect('/', ApiEndpoints::ADMIN_PREFIX.'/'.ApiEndpoints::ADMIN_DASHBOARD);
 
         Route::get(ApiEndpoints::ADMIN_DASHBOARD, [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::get(ApiEndpoints::ADMIN_ORDERS, [AdminOrderController::class, 'index'])->name('orders');
-        Route::get(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'index'])->name('products');
-        Route::get(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'index'])->name('categories');
-        Route::get(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'index'])->name('banners');
-        Route::get(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'index'])->name('coupons');
-        Route::get(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'index'])->name('stores');
-        Route::get(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'index'])->name('couriers');
-        Route::get(ApiEndpoints::ADMIN_REFUNDS, [AdminRefundController::class, 'index'])->name('refunds');
-        Route::get(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'index'])->name('settings');
-        Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminCustomerController::class, 'index'])->name('customers');
-        Route::get(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'index'])->name('expenses');
-        Route::get(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'index'])->name('expense-categories');
-        Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit');
-        Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs');
-        Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews');
-        Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty');
+        Route::get(ApiEndpoints::ADMIN_ORDERS, [AdminOrderController::class, 'index'])->name('orders')->middleware('can:orders');
+        Route::get(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'index'])->name('products')->middleware('can:catalogue');
+        Route::get(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'index'])->name('categories')->middleware('can:catalogue');
+        Route::get(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'index'])->name('banners')->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'index'])->name('coupons')->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'index'])->name('stores')->middleware('can:settings');
+        Route::get(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'index'])->name('couriers')->middleware('can:couriers');
+        Route::get(ApiEndpoints::ADMIN_REFUNDS, [AdminRefundController::class, 'index'])->name('refunds')->middleware('can:refunds');
+        Route::get(ApiEndpoints::ADMIN_STAFF, [AdminStaffController::class, 'index'])->name('staff')->middleware('can:staff');
+        Route::get(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'index'])->name('settings')->middleware('can:settings');
+        Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminCustomerController::class, 'index'])->name('customers')->middleware('can:customers');
+        Route::get(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'index'])->name('expenses')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'index'])->name('expense-categories')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs')->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
+        Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty')->middleware('can:support');
 
         // Inventory & suppliers, each in their own section.
-        Route::get('stock', [StockController::class, 'index'])->name('stock');
-        Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers');
+        Route::get('stock', [StockController::class, 'index'])->name('stock')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers')->middleware('can:stock');
     });
 
 /*

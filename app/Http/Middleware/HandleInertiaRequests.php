@@ -6,6 +6,7 @@ use App\Models\SiteSetting;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\BrandDetails;
+use App\Support\Roles;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -94,6 +95,10 @@ class HandleInertiaRequests extends Middleware
             'phone' => $user->phone,
             'avatar' => $user->avatar,
             'role' => $user->role,
+            'role_label' => Roles::label($user->role),
+            // The nav is drawn from these, so a role never sees a link to a
+            // section it would be refused from.
+            'abilities' => $user->abilities(),
             'email_verified_at' => $user->email_verified_at,
         ];
     }

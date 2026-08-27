@@ -66,24 +66,31 @@ export default function Dashboard({
 
             {/* KPI Stat Cards */}
             <div className="admin-kpi-grid">
-                {/* Revenue Card */}
-                <div className="admin-kpi-card">
-                    <div className="admin-kpi-top">
-                        <span className="admin-kpi-label">
-                            TOTAL GROSS SALES
-                        </span>
-                        <div className="admin-kpi-icon-box admin-kpi-icon-emerald">
-                            <DollarSign size={20} />
+                {/*
+                 * The shop's takings and its margin belong to whoever keeps
+                 * the accounts. The server withholds both for everyone else,
+                 * so these are absent rather than zero.
+                 */}
+                {metrics.total_revenue !== null &&
+                    metrics.total_revenue !== undefined && (
+                        <div className="admin-kpi-card">
+                            <div className="admin-kpi-top">
+                                <span className="admin-kpi-label">
+                                    TOTAL GROSS SALES
+                                </span>
+                                <div className="admin-kpi-icon-box admin-kpi-icon-emerald">
+                                    <DollarSign size={20} />
+                                </div>
+                            </div>
+                            <div className="admin-kpi-val">
+                                {formatBdt(metrics.total_revenue)}
+                            </div>
+                            <div className="admin-kpi-trend emerald">
+                                <TrendingUp size={14} />
+                                <span>All completed & active orders</span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="admin-kpi-val">
-                        {formatBdt(metrics.total_revenue)}
-                    </div>
-                    <div className="admin-kpi-trend emerald">
-                        <TrendingUp size={14} />
-                        <span>All completed & active orders</span>
-                    </div>
-                </div>
+                    )}
 
                 {/* Total Orders Card */}
                 <div className="admin-kpi-card">
@@ -120,37 +127,41 @@ export default function Dashboard({
                 </div>
 
                 {/* Gross Margin Card */}
-                <div className="admin-kpi-card">
-                    <div className="admin-kpi-top">
-                        <span className="admin-kpi-label">GROSS MARGIN</span>
-                        <div className="admin-kpi-icon-box admin-kpi-icon-emerald">
-                            <TrendingUp size={20} />
+                {margin && (
+                    <div className="admin-kpi-card">
+                        <div className="admin-kpi-top">
+                            <span className="admin-kpi-label">
+                                GROSS MARGIN
+                            </span>
+                            <div className="admin-kpi-icon-box admin-kpi-icon-emerald">
+                                <TrendingUp size={20} />
+                            </div>
+                        </div>
+                        <div className="admin-kpi-val">
+                            {margin?.orders_counted
+                                ? formatBdt(margin.gross_profit)
+                                : '—'}
+                        </div>
+                        <div className="admin-kpi-trend emerald">
+                            {/*
+                             * Deliberately explicit about what this is not. There
+                             * are no expense records yet, so this is goods sold
+                             * less what those goods cost — not profit. Orders with
+                             * a line of unknown cost are left out rather than
+                             * counted at a partial cost, and saying how many keeps
+                             * the number from being read as the whole picture.
+                             */}
+                            <span>
+                                {margin?.orders_counted
+                                    ? `${margin.margin_percent ?? 0}% on ${margin.orders_counted} costed order${margin.orders_counted === 1 ? '' : 's'}`
+                                    : 'No orders with a known cost yet'}
+                                {margin?.orders_uncosted
+                                    ? ` · ${margin.orders_uncosted} excluded`
+                                    : ''}
+                            </span>
                         </div>
                     </div>
-                    <div className="admin-kpi-val">
-                        {margin?.orders_counted
-                            ? formatBdt(margin.gross_profit)
-                            : '—'}
-                    </div>
-                    <div className="admin-kpi-trend emerald">
-                        {/*
-                         * Deliberately explicit about what this is not. There
-                         * are no expense records yet, so this is goods sold
-                         * less what those goods cost — not profit. Orders with
-                         * a line of unknown cost are left out rather than
-                         * counted at a partial cost, and saying how many keeps
-                         * the number from being read as the whole picture.
-                         */}
-                        <span>
-                            {margin?.orders_counted
-                                ? `${margin.margin_percent ?? 0}% on ${margin.orders_counted} costed order${margin.orders_counted === 1 ? '' : 's'}`
-                                : 'No orders with a known cost yet'}
-                            {margin?.orders_uncosted
-                                ? ` · ${margin.orders_uncosted} excluded`
-                                : ''}
-                        </span>
-                    </div>
-                </div>
+                )}
 
                 {/* Low Stock Alerts Card */}
                 <div className="admin-kpi-card">

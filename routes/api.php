@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
+use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
@@ -173,82 +174,87 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
     ->name('api.admin.')
     ->group(function () {
         // Catalogue
-        Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store']);
-        Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy']);
-        Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'store']);
-        Route::patch(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminProductController::class, 'update']);
+        Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store'])->middleware('can:catalogue');
+        Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update'])->middleware('can:catalogue');
+        Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy'])->middleware('can:catalogue');
+        Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'store'])->middleware('can:catalogue');
+        Route::patch(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminProductController::class, 'update'])->middleware('can:catalogue');
 
         // Orders
-        Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus']);
-        Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
-        Route::patch(ApiEndpoints::ADMIN_ORDERS_DISPATCH, [AdminOrderController::class, 'dispatchOrder']);
-        Route::post(ApiEndpoints::ADMIN_ORDERS_REFUND, [AdminRefundController::class, 'store']);
-        Route::delete(ApiEndpoints::ADMIN_REFUNDS_ITEM, [AdminRefundController::class, 'destroy']);
+        Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus'])->middleware('can:orders');
+        Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->middleware('can:orders');
+        Route::patch(ApiEndpoints::ADMIN_ORDERS_DISPATCH, [AdminOrderController::class, 'dispatchOrder'])->middleware('can:orders');
+        Route::post(ApiEndpoints::ADMIN_ORDERS_REFUND, [AdminRefundController::class, 'store'])->middleware('can:refunds');
+        Route::delete(ApiEndpoints::ADMIN_REFUNDS_ITEM, [AdminRefundController::class, 'destroy'])->middleware('can:refunds');
+
+        // Staff accounts
+        Route::post(ApiEndpoints::ADMIN_STAFF, [AdminStaffController::class, 'store'])->middleware('can:staff');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STAFF_ITEM, [AdminStaffController::class, 'update'])->middleware('can:staff');
+        Route::delete(ApiEndpoints::ADMIN_STAFF_ITEM, [AdminStaffController::class, 'destroy'])->middleware('can:staff');
 
         // Carriers
-        Route::post(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'store'])->middleware('can:couriers');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'update'])->middleware('can:couriers');
+        Route::delete(ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'destroy'])->middleware('can:couriers');
 
         // Stock
-        Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive']);
-        Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts']);
-        Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust']);
-        Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements']);
-        Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units']);
-        Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer']);
-        Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches']);
+        Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches'])->middleware('can:stock');
 
         // Suppliers. `options` is declared before the {id} route or it is
         // matched as an id.
-        Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options']);
-        Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index']);
-        Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy']);
+        Route::get(ApiEndpoints::ADMIN_SUPPLIER_OPTIONS, [SupplierController::class, 'options'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'store'])->middleware('can:stock');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'update'])->middleware('can:stock');
+        Route::delete(ApiEndpoints::ADMIN_SUPPLIERS_ITEM, [SupplierController::class, 'destroy'])->middleware('can:stock');
 
         // Banners
-        Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'store']);
-        Route::patch(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'store'])->middleware('can:marketing');
+        Route::patch(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'update'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_BANNERS_ITEM, [AdminBannerController::class, 'destroy'])->middleware('can:marketing');
 
         // Coupons
-        Route::post(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'store'])->middleware('can:marketing');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'update'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_COUPONS_ITEM, [AdminCouponController::class, 'destroy'])->middleware('can:marketing');
 
         // Showrooms
-        Route::post(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'store'])->middleware('can:settings');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'update'])->middleware('can:settings');
+        Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'destroy'])->middleware('can:settings');
 
         // Tech journal
-        Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'store']);
-        Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'store'])->middleware('can:marketing');
+        Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'update'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'destroy'])->middleware('can:marketing');
 
         // Reviews
-        Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminReviewController::class, 'updateStatus']);
-        Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminReviewController::class, 'destroy']);
+        Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminReviewController::class, 'updateStatus'])->middleware('can:support');
+        Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminReviewController::class, 'destroy'])->middleware('can:support');
 
         // Warranty
-        Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus']);
+        Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus'])->middleware('can:support');
 
         // Running costs
-        Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store'])->middleware('can:finance');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'update'])->middleware('can:finance');
+        Route::delete(ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'destroy'])->middleware('can:finance');
 
-        Route::post(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'store']);
-        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'update']);
-        Route::delete(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'store'])->middleware('can:finance');
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'update'])->middleware('can:finance');
+        Route::delete(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES_ITEM, [AdminExpenseCategoryController::class, 'destroy'])->middleware('can:finance');
 
         // Settings
-        Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update']);
-        Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminSettingController::class, 'sendTestEmail']);
+        Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update'])->middleware('can:settings');
+        Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminSettingController::class, 'sendTestEmail'])->middleware('can:settings');
 
         // Media uploads
-        Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store']);
-        Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy']);
+        Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy'])->middleware('can:marketing');
     });

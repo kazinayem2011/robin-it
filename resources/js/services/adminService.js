@@ -114,6 +114,29 @@ export const adminService = {
         return response.data;
     },
 
+    async createStaff(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STAFF,
+            payload,
+        );
+        return response.data;
+    },
+
+    async updateStaff(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.STAFF_ITEM(id),
+            payload,
+        );
+        return response.data;
+    },
+
+    async suspendStaff(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.STAFF_ITEM(id),
+        );
+        return response.data;
+    },
+
     async createCourier(payload) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.COURIERS,

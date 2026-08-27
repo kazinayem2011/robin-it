@@ -3,6 +3,7 @@
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnsureAbility;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\ApiEnvelope;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -32,6 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => AdminMiddleware::class,
+            // `admin` says someone is staff; `can` says whether this member of
+            // staff does this job.
+            'can' => EnsureAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

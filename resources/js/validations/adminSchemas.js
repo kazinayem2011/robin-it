@@ -354,3 +354,37 @@ export const adminRefundSchema = Yup.object().shape({
         .max(new Date(), 'A refund cannot be dated in the future.')
         .required('When did the money go back?'),
 });
+
+/**
+ * A staff account.
+ *
+ * The password is required when creating and optional when editing — a blank
+ * box on an existing account means "leave it as it is".
+ */
+export const adminStaffSchema = (isEditing = false) =>
+    Yup.object().shape({
+        name: Yup.string().trim().max(255).required('Enter their name.'),
+        email: Yup.string()
+            .trim()
+            .email('Enter a valid email address.')
+            .required('Enter their email — it is what they sign in with.'),
+        phone: Yup.string()
+            .trim()
+            .nullable()
+            .test(
+                'bd-phone',
+                'Enter a valid 11-digit Bangladeshi mobile number.',
+                (v) => !v || /^(?:\+?88|88)?01[3-9]\d{8}$/.test(v),
+            ),
+        role: Yup.string().required('Choose what their job covers.'),
+        store_id: Yup.mixed().nullable(),
+        password: isEditing
+            ? Yup.string().nullable().min(8, 'Use at least 8 characters.')
+            : Yup.string()
+                  .min(8, 'Use at least 8 characters.')
+                  .required('Set a password for them.'),
+        password_confirmation: Yup.string().oneOf(
+            [Yup.ref('password')],
+            'The passwords do not match.',
+        ),
+    });

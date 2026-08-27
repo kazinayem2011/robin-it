@@ -1,0 +1,55 @@
+/* Staff accounts. */
+
+.staff-you {
+    margin-left: 8px;
+    padding: 1px 7px;
+    border-radius: var(--radius-full);
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* A role is a word until you say what it covers. */
+.staff-role-summary {
+    margin: 4px 0 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.staff-role-summary strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--dark-900);
+}
+
+/* Nine bullets made the box taller than the form it explains. */
+.staff-role-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.staff-role-abilities span {
+    padding: 3px 9px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: var(--white);
+    font-size: 11.5px;
+    color: var(--gray-600);
+    white-space: nowrap;
+}
+
+/* Both of these sat flush against the label of the field below them. */
+.staff-email-hint {
+    margin: -10px 0 16px;
+}
+
+.staff-active-toggle {
+    margin-bottom: 16px;
+}

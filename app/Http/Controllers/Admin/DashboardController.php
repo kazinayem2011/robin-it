@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Support\QueueHealth;
 use App\Support\SalesMargin;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,8 +17,13 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        // A storekeeper's job is deliveries and stock. Hiding the cards would
+        // not be enough — Inertia ships its props in the page source — so the
+        // shop's takings are never computed for someone who cannot see them.
+        $seesMoney = $request->user()->can_('finance');
+
         $totalRevenue = (float) Order::where('status', '!=', 'cancelled')->sum('total');
         $totalOrders = Order::count();
         $pendingOrders = Order::whereIn('status', ['pending', 'processing', 'shipped'])->count();
@@ -30,10 +36,10 @@ class DashboardController extends Controller
             ->get();
 
         $metrics = [
-            'total_revenue' => $totalRevenue,
+            'total_revenue' => $seesMoney ? $totalRevenue : null,
             'total_orders' => $totalOrders,
             'pending_orders' => $pendingOrders,
-            'total_customers' => $totalCustomers,
+            'total_customers' => $request->user()->can_('customers') ? $totalCustomers : null,
             'total_products' => Product::count(),
             'low_stock_count' => $lowStockProducts->count(),
         ];
@@ -43,7 +49,7 @@ class DashboardController extends Controller
             // Goods sold less what those goods cost. Not a P&L — there are no
             // expense records yet — and orders whose cost is not fully known
             // are excluded rather than counted at a partial cost.
-            'margin' => SalesMargin::summary(),
+            'margin' => $seesMoney ? SalesMargin::summary() : null,
             'recentOrders' => $recentOrders,
             'lowStockProducts' => $lowStockProducts,
             // A dead queue worker means customers silently stop receiving

@@ -202,6 +202,11 @@ class ApiEndpoints
 
     public const ADMIN_ORDERS_REFUND = 'orders/{id}/refund';
 
+    /** Staff accounts and their roles. */
+    public const ADMIN_STAFF = 'staff';
+
+    public const ADMIN_STAFF_ITEM = 'staff/{id}';
+
     public const ADMIN_COURIERS = 'couriers';
 
     public const ADMIN_COURIERS_ITEM = 'couriers/{id}';

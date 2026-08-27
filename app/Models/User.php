@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Roles;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -53,16 +54,56 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'is_active' => 'boolean',
             'password' => 'hashed',
         ];
     }
 
     /**
-     * Check if user is an Administrator.
+     * Whether this account may reach the admin at all.
+     *
+     * Kept as isAdmin() because that is the question the middleware and every
+     * policy already asks. It means "is staff" now — what they may do once
+     * inside is decided by their abilities.
      */
     public function isAdmin(): bool
     {
+        return Roles::isStaff($this->role) && $this->is_active !== false;
+    }
+
+    /** The owner, who may do everything including managing staff. */
+    public function isOwner(): bool
+    {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Whether this account may work in a section of the admin.
+     *
+     * Sections rather than routes: route lists drift the moment someone adds
+     * an endpoint and forgets to update them.
+     */
+    public function can_(string $ability): bool
+    {
+        return $this->isAdmin() && Roles::allows($this->role, $ability);
+    }
+
+    /** @return array<int, string> */
+    public function abilities(): array
+    {
+        return $this->isAdmin() ? Roles::abilitiesFor($this->role) : [];
+    }
+
+    /** The branch this member of staff works, if they are tied to one. */
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+    public function scopeStaff($query)
+    {
+        return $query->whereIn('role', Roles::staffRoles());
     }
 
     /**
@@ -70,7 +111,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function assignRole(string $role): self
     {
-        if (! in_array($role, [self::ROLE_ADMIN, self::ROLE_CUSTOMER], true)) {
+        if (! in_array($role, [...Roles::staffRoles(), self::ROLE_CUSTOMER], true)) {
             throw new \InvalidArgumentException("Unknown role: {$role}");
         }
 
