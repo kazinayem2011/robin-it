@@ -530,6 +530,31 @@ export const adminService = {
         );
         return response.data;
     },
+
+    // --- Contact inbox -------------------------------------------------
+
+    async replyToMessage(id, body, close = false) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.MESSAGE_REPLY(id),
+            { body, close },
+        );
+        return response?.data || response;
+    },
+
+    async setMessageStatus(id, status) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.MESSAGE_STATUS(id),
+            { status },
+        );
+        return response?.data || response;
+    },
+
+    async removeSubscriber(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.SUBSCRIBER_ITEM(id),
+        );
+        return response?.data || response;
+    },
 };
 
 export default adminService;

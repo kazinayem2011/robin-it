@@ -124,6 +124,27 @@ class ApiEndpoints
 
     public const WEB_ORDER_SUCCESS = '/order/success';
 
+    public const WEB_ABOUT = '/about';
+
+    public const WEB_CONTACT = '/contact';
+
+    /** How someone leaves the mailing list without signing in. */
+    public const WEB_UNSUBSCRIBE = '/unsubscribe/{token}';
+
+    public const CONTACT = 'contact';
+
+    public const SUBSCRIBE = 'subscribe';
+
+    public const ADMIN_MESSAGES = 'messages';
+
+    public const ADMIN_MESSAGE_REPLY = 'messages/{id}/reply';
+
+    public const ADMIN_MESSAGE_STATUS = 'messages/{id}/status';
+
+    public const ADMIN_SUBSCRIBERS = 'subscribers';
+
+    public const ADMIN_SUBSCRIBER_ITEM = 'subscribers/{id}';
+
     public const WEB_TRACK = '/track';
 
     /**

@@ -26,6 +26,8 @@ import {
     Tags,
     Undo2,
     UserCog,
+    Inbox,
+    AtSign,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -317,6 +319,30 @@ export default function AdminLayout({
                             <div className="admin-nav-left">
                                 <ShieldCheck size={17} />
                                 <span>Warranty &amp; RMA</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('support') && (
+                        <Link
+                            href={ROUTES.ADMIN_MESSAGES}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/messages') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <Inbox size={17} />
+                                <span>Messages</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('marketing') && (
+                        <Link
+                            href={ROUTES.ADMIN_SUBSCRIBERS}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/subscribers') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <AtSign size={17} />
+                                <span>Subscribers</span>
                             </div>
                         </Link>
                     )}

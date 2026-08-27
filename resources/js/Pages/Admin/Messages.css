@@ -1,0 +1,198 @@
+/* The contact inbox. */
+
+.msg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.msg-row {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+/* The pile nobody has looked at yet. */
+.msg-row.is-new {
+    border-left: 3px solid var(--primary);
+}
+
+.msg-row.is-open {
+    border-color: var(--gray-300);
+}
+
+.msg-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.msg-summary:hover {
+    background: var(--bg-surface-subtle);
+}
+
+.msg-summary-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.msg-subject {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.msg-from {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.msg-summary-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.msg-reply-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.76rem;
+    color: var(--gray-500);
+}
+
+.msg-status {
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.msg-status-new {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.msg-status-open {
+    background: var(--warning-light);
+    color: var(--warning-hover);
+}
+
+.msg-status-closed {
+    background: var(--gray-100);
+    color: var(--gray-500);
+}
+
+.msg-body {
+    padding: 4px 16px 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.msg-contact-lines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 12px 0;
+}
+
+.msg-contact-lines span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.79rem;
+    color: var(--gray-500);
+}
+
+.msg-text {
+    white-space: pre-wrap;
+    font-size: 0.89rem;
+    line-height: 1.7;
+    color: var(--dark-800);
+    margin-bottom: 16px;
+}
+
+.msg-reply {
+    margin: 0 0 10px 20px;
+    padding: 12px 14px;
+    border-left: 2px solid var(--border-color);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--bg-surface-subtle);
+}
+
+.msg-reply-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    font-size: 0.78rem;
+    color: var(--gray-600);
+}
+
+/* A reply that was saved but never reached the customer. */
+.msg-not-emailed {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 7px;
+    border-radius: var(--radius-full);
+    background: var(--warning-light);
+    color: var(--warning-hover);
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.msg-reply p {
+    white-space: pre-wrap;
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: var(--dark-800);
+}
+
+.msg-draft {
+    width: 100%;
+    margin: 8px 0 12px;
+    padding: 11px 13px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--dark-900);
+    resize: vertical;
+}
+
+.msg-draft:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.msg-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.msg-actions-spacer {
+    flex: 1;
+}

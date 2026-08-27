@@ -1,0 +1,42 @@
+/* Vertical only: .container is on the same element and supplies the gutter. */
+.unsub-page {
+    display: flex;
+    justify-content: center;
+    padding-top: 60px;
+    padding-bottom: 90px;
+}
+
+.unsub-card {
+    max-width: 520px;
+    padding: 34px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+.unsub-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 18px;
+    border-radius: 50%;
+    background: var(--bg-surface-subtle);
+    color: var(--gray-500);
+}
+
+.unsub-card h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    margin-bottom: 10px;
+}
+
+.unsub-card p {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--gray-600);
+    margin-bottom: 24px;
+}

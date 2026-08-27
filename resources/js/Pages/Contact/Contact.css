@@ -1,0 +1,160 @@
+/* Vertical only: the shorthand would wipe .container's 16px gutter, which
+   this element also carries. */
+.contact-page {
+    padding-top: 28px;
+    padding-bottom: 60px;
+}
+
+.contact-head {
+    margin-bottom: 26px;
+}
+
+.contact-head h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    letter-spacing: -0.6px;
+    margin-bottom: 6px;
+}
+
+.contact-head p {
+    font-size: 0.95rem;
+    color: var(--gray-500);
+    max-width: 56ch;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+}
+
+.contact-form-card,
+.contact-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 22px;
+}
+
+.contact-card + .contact-card {
+    margin-top: 16px;
+}
+
+.contact-card h2 {
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    margin-bottom: 14px;
+}
+
+.contact-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+.contact-field {
+    margin-bottom: 18px;
+}
+
+.contact-field textarea {
+    resize: vertical;
+    min-height: 150px;
+}
+
+.contact-field-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.contact-count {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    color: var(--gray-400);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Confirmation that stays put, because people often have a second question. */
+.contact-sent-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-md);
+    background: var(--success-light);
+    font-size: 0.88rem;
+    color: var(--dark-800);
+}
+
+.contact-sent-note svg {
+    flex-shrink: 0;
+    color: var(--success);
+}
+
+.contact-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 11px 0;
+    border-top: 1px solid var(--border-light);
+    color: var(--dark-800);
+    text-decoration: none;
+}
+
+.contact-card .contact-line:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.contact-line svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--gray-400);
+}
+
+a.contact-line:hover svg,
+a.contact-line:hover strong {
+    color: var(--primary);
+}
+
+.contact-line span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.contact-line strong {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.contact-line small {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+}
+
+@media (max-width: 900px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .contact-form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-head h1 {
+        font-size: 1.6rem;
+    }
+}

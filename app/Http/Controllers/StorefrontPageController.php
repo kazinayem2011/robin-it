@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Banner;
 use App\Models\BlogPost;
+use App\Models\Brand;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\Store;
+use App\Models\User;
 use App\Services\AddressBook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,6 +115,43 @@ class StorefrontPageController extends Controller
     public function support(): Response
     {
         return Inertia::render('Support/Index');
+    }
+
+    /**
+     * Who the shop is.
+     *
+     * The footer has linked here since the site was built and it was a 404.
+     * The numbers come from what the shop actually has rather than being
+     * written into the page, so they stay true as it grows.
+     */
+    public function about(): Response
+    {
+        return Inertia::render('About/Index', [
+            'stats' => [
+                'products' => Product::where('is_active', true)->count(),
+                'brands' => Brand::count(),
+                'showrooms' => Store::where('is_active', true)->count(),
+                'customers' => User::where('role', User::ROLE_CUSTOMER)->count(),
+            ],
+            'showrooms' => Store::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'address', 'city', 'phone']),
+        ]);
+    }
+
+    public function contact(): Response
+    {
+        return Inertia::render('Contact/Index', [
+            'showrooms' => Store::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'address', 'city', 'phone']),
+            // Signed in, there is no reason to ask for what we already know.
+            'contact' => Auth::user() ? [
+                'name' => Auth::user()->name,
+                'email' => Auth::user()->email,
+                'phone' => Auth::user()->phone,
+            ] : null,
+        ]);
     }
 
     public function warranty(): Response

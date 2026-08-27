@@ -2237,3 +2237,22 @@
         flex-direction: column;
     }
 }
+
+/* Confirmation in place of the newsletter box, once someone has joined. */
+.footer-newsletter-done {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-md);
+    background: rgba(16, 185, 129, 0.12);
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--success-border);
+}
+
+.footer-newsletter-done svg {
+    flex-shrink: 0;
+    color: var(--success);
+}

@@ -4,6 +4,7 @@ use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
 use App\Http\Controllers\Customer\AvatarController;
@@ -27,6 +29,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StorefrontPageController;
+use App\Http\Controllers\UnsubscribeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +40,11 @@ use Illuminate\Support\Facades\Route;
 | a wall of closures doing the same thing with a different component name; the
 | controller keeps that in one place and gives them somewhere to grow.
 */
+// Leaving the mailing list, from a link in an email: no account, no form.
+Route::get(ApiEndpoints::WEB_UNSUBSCRIBE, UnsubscribeController::class)
+    ->where('token', '[A-Za-z0-9]{16,64}')
+    ->name('unsubscribe');
+
 Route::controller(StorefrontPageController::class)->group(function () {
     Route::get(ApiEndpoints::WEB_HOME, 'home')->name('home');
 
@@ -71,6 +79,9 @@ Route::controller(StorefrontPageController::class)->group(function () {
     Route::get(ApiEndpoints::WEB_COMPARE, 'compare')->name('compare');
     Route::get(ApiEndpoints::WEB_STORES, 'stores')->name('stores');
     Route::get(ApiEndpoints::WEB_SUPPORT, 'support')->name('support');
+    // Linked from the footer since the site was built, and both were 404s.
+    Route::get(ApiEndpoints::WEB_ABOUT, 'about')->name('about');
+    Route::get(ApiEndpoints::WEB_CONTACT, 'contact')->name('contact');
     Route::get(ApiEndpoints::WEB_WARRANTY, 'warranty')->name('warranty');
 
     Route::get(ApiEndpoints::WEB_BLOGS, 'blogs')->name('blogs.index');
@@ -144,6 +155,9 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty')->middleware('can:support');
+        Route::get(ApiEndpoints::ADMIN_MESSAGES, [ContactMessageController::class, 'index'])->name('messages')->middleware('can:support');
+        Route::get(ApiEndpoints::ADMIN_SUBSCRIBERS, [SubscriberController::class, 'index'])->name('subscribers')->middleware('can:marketing');
+        Route::get('subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export')->middleware('can:marketing');
 
         // Inventory & suppliers, each in their own section.
         Route::get('stock', [StockController::class, 'index'])->name('stock')->middleware('can:stock');

@@ -4,6 +4,7 @@ use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SubscriberController as AdminSubscriberController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
 use App\Http\Controllers\Api\BannerController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\PcBuilderController;
 use App\Http\Controllers\Api\ProductController;
@@ -123,6 +126,9 @@ Route::middleware('throttle:lookup')->group(function () {
 */
 Route::middleware('throttle:submissions')->group(function () {
     Route::post(ApiEndpoints::WARRANTY_CLAIM, [WarrantyController::class, 'store']);
+    // The Contact page, and the footer's newsletter box.
+    Route::post(ApiEndpoints::CONTACT, [ContactController::class, 'store']);
+    Route::post(ApiEndpoints::SUBSCRIBE, [ContactController::class, 'subscribe']);
     Route::post(ApiEndpoints::PC_BUILDER_SAVE, [PcBuilderController::class, 'save']);
     // Anonymous, and it sends mail, so it is rate-limited like the rest.
     Route::post(ApiEndpoints::STOCK_NOTIFY, [StockNotificationController::class, 'store']);
@@ -257,6 +263,12 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
 
         // Warranty
         Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus'])->middleware('can:support');
+
+        // The contact inbox: answer, and mark done.
+        Route::post(ApiEndpoints::ADMIN_MESSAGE_REPLY, [AdminContactMessageController::class, 'reply'])->middleware('can:support');
+        Route::patch(ApiEndpoints::ADMIN_MESSAGE_STATUS, [AdminContactMessageController::class, 'updateStatus'])->middleware('can:support');
+
+        Route::delete(ApiEndpoints::ADMIN_SUBSCRIBER_ITEM, [AdminSubscriberController::class, 'destroy'])->middleware('can:marketing');
 
         // Running costs
         Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store'])->middleware('can:finance');

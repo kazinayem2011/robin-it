@@ -101,6 +101,10 @@ export const API_ENDPOINTS = {
         CLAIM: '/warranty/claim',
     },
 
+    // Contact form and the footer's newsletter box
+    CONTACT: '/contact',
+    SUBSCRIBE: '/subscribe',
+
     // Coupons API
     COUPONS: {
         APPLY: '/coupons/apply',
@@ -132,6 +136,9 @@ export const API_ENDPOINTS = {
         REFUND_ITEM: (id) => `/admin/refunds/${id}`,
         STAFF: '/admin/staff',
         STAFF_ITEM: (id) => `/admin/staff/${id}`,
+        MESSAGE_REPLY: (id) => `/admin/messages/${id}/reply`,
+        MESSAGE_STATUS: (id) => `/admin/messages/${id}/status`,
+        SUBSCRIBER_ITEM: (id) => `/admin/subscribers/${id}`,
         COURIERS: '/admin/couriers',
         COURIER_ITEM: (id) => `/admin/couriers/${id}`,
         PRODUCTS: '/admin/products',
@@ -223,6 +230,8 @@ export const ROUTES = {
     ADMIN_COURIERS: '/admin/couriers',
     ADMIN_REFUNDS: '/admin/refunds',
     ADMIN_STAFF: '/admin/staff',
+    ADMIN_MESSAGES: '/admin/messages',
+    ADMIN_SUBSCRIBERS: '/admin/subscribers',
     ADMIN_SETTINGS: '/admin/settings',
     ADMIN_CUSTOMERS: '/admin/customers',
     ADMIN_BLOGS: '/admin/blogs',

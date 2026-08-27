@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Truck, ShieldCheck, PhoneCall, Cpu } from 'lucide-react';
+import { Truck, ShieldCheck, PhoneCall, Cpu, Check } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
+import { contactService } from '../services';
+import { toast } from './Toast';
 
 /**
  * Reusable Site Footer Component (SSOT).
@@ -13,6 +15,35 @@ export const Footer = () => {
     // Counted from the branches that exist rather than a number written into
     // the markup, which had drifted to claiming "15+" against four.
     const showroomCount = usePage().props?.showroom_count ?? 0;
+
+    /*
+     * This box was a form whose only handler was preventDefault, so an address
+     * typed into it went nowhere and the visitor got no sign either way.
+     */
+    const [email, setEmail] = useState('');
+    const [joining, setJoining] = useState(false);
+    const [joined, setJoined] = useState(false);
+
+    const subscribe = async (e) => {
+        e.preventDefault();
+
+        if (!email.trim()) return;
+
+        setJoining(true);
+        try {
+            const data = await contactService.subscribe(email.trim(), 'footer');
+            setJoined(true);
+            setEmail('');
+            toast.success(data?.message || "You're on the list.", 'Subscribed');
+        } catch (error) {
+            toast.error(
+                error?.message || 'That did not go through. Please try again.',
+                'Not subscribed',
+            );
+        } finally {
+            setJoining(false);
+        }
+    };
 
     return (
         <footer className="site-master-footer">
@@ -190,18 +221,32 @@ export const Footer = () => {
                         Subscribe for exclusive flash drops, price reductions,
                         and weekly tech giveaways.
                     </p>
-                    <form
-                        className="footer-newsletter-form"
-                        onSubmit={(e) => e.preventDefault()}
-                    >
-                        <input
-                            type="email"
-                            placeholder="Your email address..."
-                        />
-                        <button type="submit" className="btn btn-primary">
-                            Subscribe
-                        </button>
-                    </form>
+                    {joined ? (
+                        <p className="footer-newsletter-done">
+                            <Check size={15} /> You're on the list.
+                        </p>
+                    ) : (
+                        <form
+                            className="footer-newsletter-form"
+                            onSubmit={subscribe}
+                        >
+                            <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Your email address..."
+                                aria-label="Your email address"
+                            />
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={joining}
+                            >
+                                {joining ? 'Joining…' : 'Subscribe'}
+                            </button>
+                        </form>
+                    )}
                     <div className="security-verified-box">
                         <span className="verified-badge">
                             <ShieldCheck size={14} /> 256-Bit SSL Encrypted &
