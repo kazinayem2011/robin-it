@@ -12,6 +12,7 @@ import {
     Truck,
     ArrowRight,
     Menu,
+    LayoutDashboard,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { ProductImage } from './ProductImage';
@@ -37,6 +38,13 @@ export const Header = () => {
      * paid for.
      */
     const { auth, site_settings: siteSettings = {} } = usePage().props;
+
+    /*
+     * Staff is "has any admin ability", not "role is admin" — the shop has
+     * managers, storekeepers, support and accountants now, and abilities is
+     * already shared for the admin nav.
+     */
+    const isStaff = (auth?.user?.abilities ?? []).length > 0;
 
     const [categories, setCategories] = useState([]);
     const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -322,19 +330,40 @@ export const Header = () => {
                             <span className="tool-label">Cart</span>
                         </Link>
 
+                        {/*
+                         * Account goes to the customer dashboard for everyone,
+                         * staff included: they buy things too, and this was
+                         * the only way in — the button sent them to the admin
+                         * panel instead, so an owner could not reach their own
+                         * orders, wishlist or addresses. Staff get a separate
+                         * button for the admin, beside it.
+                         *
+                         * It also tested role === 'admin', which stopped being
+                         * the whole story when the shop gained managers,
+                         * storekeepers, support and accountants.
+                         */}
+                        {auth?.user && isStaff && (
+                            <Link
+                                href={ROUTES.ADMIN_DASHBOARD}
+                                className="header-tool-btn"
+                                title="Admin panel"
+                            >
+                                <div className="tool-icon-box">
+                                    <LayoutDashboard size={20} />
+                                </div>
+                                <span className="tool-label">Admin</span>
+                            </Link>
+                        )}
+
                         {/* User Account / Sign In */}
                         {auth?.user ? (
                             <Link
-                                href={
-                                    auth.user.role === 'admin'
-                                        ? ROUTES.ADMIN_DASHBOARD
-                                        : ROUTES.DASHBOARD
-                                }
+                                href={ROUTES.DASHBOARD}
                                 className="header-tool-btn user-profile-btn"
                                 title="My Account"
                             >
                                 <div
-                                    className={`tool-icon-box user-avatar-box ${auth.user.role === 'admin' ? 'user-avatar-admin' : 'user-avatar-customer'}`}
+                                    className={`tool-icon-box user-avatar-box ${isStaff ? 'user-avatar-admin' : 'user-avatar-customer'}`}
                                 >
                                     {/* The picture where there is one; the
                                         initial is the fallback, not the rule. */}

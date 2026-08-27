@@ -3265,3 +3265,119 @@
     opacity: 1;
     color: var(--primary);
 }
+
+/* This month's profit and loss, on the overview. */
+.admin-pl-card {
+    margin-bottom: 22px;
+    padding: 20px 22px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+.admin-pl-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.admin-pl-head h2 {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--dark-900);
+}
+
+.admin-pl-head span {
+    font-size: 0.79rem;
+    color: var(--gray-500);
+}
+
+.admin-pl-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gray-600);
+}
+
+.admin-pl-link:hover {
+    color: var(--primary);
+}
+
+.admin-pl-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+}
+
+.admin-pl-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.admin-pl-figure span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+}
+
+.admin-pl-figure strong {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    line-height: 1.2;
+}
+
+.admin-pl-figure small {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* The one number the card exists for. */
+.admin-pl-net.is-profit {
+    background: var(--success-light);
+}
+
+.admin-pl-net.is-profit strong {
+    color: var(--success-hover);
+}
+
+.admin-pl-net.is-loss {
+    background: var(--danger-light);
+}
+
+.admin-pl-net.is-loss strong {
+    color: var(--danger);
+}
+
+/* Orders the statement cannot account for, said plainly. */
+.admin-pl-excluded {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 11px 13px;
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-md);
+    background: var(--warning-light);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--dark-800);
+}
+
+.admin-pl-excluded svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: var(--warning-hover);
+}

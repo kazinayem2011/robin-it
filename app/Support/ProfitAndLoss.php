@@ -131,7 +131,10 @@ class ProfitAndLoss
          * business whatever happened to the label, so it is carried rather
          * than quietly dropped from the total.
          */
-        $orphaned = round((float) ($totals[null] ?? 0), 2);
+        // Looked up by '' rather than by null: a null group key becomes an
+        // empty string once it is an array key, and PHP 8 deprecates using
+        // null as an offset — which this did, on every view of the report.
+        $orphaned = round((float) ($totals->get('') ?? 0), 2);
 
         if ($orphaned > 0) {
             $total += $orphaned;

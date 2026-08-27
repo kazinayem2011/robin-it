@@ -20,6 +20,7 @@ import { toast } from '@/Components/Toast';
 export default function Dashboard({
     metrics = {},
     margin = null,
+    profitAndLoss = null,
     recentOrders = [],
     lowStockProducts = [],
     queueHealth = null,
@@ -179,6 +180,86 @@ export default function Dashboard({
                     </div>
                 </div>
             </div>
+
+            {/*
+             * This month so far, so the overview answers "are we making money"
+             * without a trip to the report. Absent, not zero, for anyone
+             * without the finance ability — the server does not compute it.
+             */}
+            {profitAndLoss && (
+                <section className="admin-pl-card">
+                    <header className="admin-pl-head">
+                        <div>
+                            <h2>Profit &amp; loss</h2>
+                            <span>
+                                This month so far ·{' '}
+                                {profitAndLoss.orders_counted} costed order
+                                {profitAndLoss.orders_counted === 1 ? '' : 's'}
+                            </span>
+                        </div>
+                        <Link
+                            href={ROUTES.ADMIN_REPORTS_PROFIT}
+                            className="admin-pl-link"
+                        >
+                            Full report <ArrowRight size={14} />
+                        </Link>
+                    </header>
+
+                    <div className="admin-pl-figures">
+                        <div className="admin-pl-figure">
+                            <span>Revenue</span>
+                            <strong>{formatBdt(profitAndLoss.revenue)}</strong>
+                        </div>
+                        <div className="admin-pl-figure">
+                            <span>Cost of goods</span>
+                            <strong>
+                                {formatBdt(profitAndLoss.cost_of_goods)}
+                            </strong>
+                        </div>
+                        <div className="admin-pl-figure">
+                            <span>Expenses</span>
+                            <strong>{formatBdt(profitAndLoss.expenses)}</strong>
+                        </div>
+                        <div
+                            className={`admin-pl-figure admin-pl-net ${profitAndLoss.net_profit < 0 ? 'is-loss' : 'is-profit'}`}
+                        >
+                            <span>
+                                {profitAndLoss.net_profit < 0
+                                    ? 'Net loss'
+                                    : 'Net profit'}
+                            </span>
+                            <strong>
+                                {formatBdt(profitAndLoss.net_profit)}
+                            </strong>
+                            {profitAndLoss.net_margin_percent !== null && (
+                                <small>
+                                    {profitAndLoss.net_margin_percent}% margin
+                                </small>
+                            )}
+                        </div>
+                    </div>
+
+                    {/*
+                     * An order whose cost is not known cannot be turned into
+                     * profit, so it is left out — but saying nothing would let
+                     * "৳0" read as "we sold nothing" at a shop that sold most
+                     * of a million taka this month.
+                     */}
+                    {profitAndLoss.excluded?.orders > 0 && (
+                        <p className="admin-pl-excluded">
+                            <AlertTriangle size={13} />
+                            {profitAndLoss.excluded.orders} order
+                            {profitAndLoss.excluded.orders === 1
+                                ? ''
+                                : 's'}{' '}
+                            worth {formatBdt(profitAndLoss.excluded.revenue)}{' '}
+                            are not counted above, because what those goods cost
+                            is not recorded. Receive stock with a unit cost and
+                            they will appear here.
+                        </p>
+                    )}
+                </section>
+            )}
 
             {/* 2-Column Middle Grid: Recent Orders & Stock Alert */}
             <div className="admin-grid-2col">
