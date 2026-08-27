@@ -5,6 +5,7 @@ import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
 import FormSelect from '../../Components/FormSelect';
+import Checkbox from '../../Components/Checkbox';
 import Tabs from '../../Components/Tabs';
 import { toast } from '../../Components/Toast';
 import { adminService, uploadService } from '../../services';
@@ -500,18 +501,12 @@ export default function AdminSettings({
                                 </div>
                             </div>
                             <div className="admin-card-body">
-                                <div className="form-checkbox-row">
-                                    <input
-                                        type="checkbox"
-                                        name="vat_enabled"
-                                        id="vat_enabled"
-                                        checked={formik.values.vat_enabled}
-                                        onChange={formik.handleChange}
-                                    />
-                                    <label htmlFor="vat_enabled">
-                                        Charge VAT on orders
-                                    </label>
-                                </div>
+                                <Checkbox
+                                    name="vat_enabled"
+                                    label="Charge VAT on orders"
+                                    checked={formik.values.vat_enabled}
+                                    onChange={formik.handleChange}
+                                />
                                 <span className="admin-field-hint">
                                     Off by default. Turning it on changes what
                                     customers are charged, so existing orders
@@ -537,21 +532,14 @@ export default function AdminSettings({
                                             />
                                         </div>
 
-                                        <div className="form-checkbox-row">
-                                            <input
-                                                type="checkbox"
-                                                name="vat_inclusive"
-                                                id="vat_inclusive"
-                                                checked={
-                                                    formik.values.vat_inclusive
-                                                }
-                                                onChange={formik.handleChange}
-                                            />
-                                            <label htmlFor="vat_inclusive">
-                                                Product prices already include
-                                                VAT
-                                            </label>
-                                        </div>
+                                        <Checkbox
+                                            name="vat_inclusive"
+                                            label="Product prices already include VAT"
+                                            checked={
+                                                formik.values.vat_inclusive
+                                            }
+                                            onChange={formik.handleChange}
+                                        />
                                         {/*
                                          * The setting that changes arithmetic
                                          * rather than wording, so it says what
@@ -896,21 +884,12 @@ export default function AdminSettings({
                                         beside the pulsing dot.
                                     </small>
                                 </div>
-                                <div className="form-checkbox-row">
-                                    <input
-                                        type="checkbox"
-                                        name="announcement_active"
-                                        id="announcement_active"
-                                        checked={
-                                            formik.values.announcement_active
-                                        }
-                                        onChange={formik.handleChange}
-                                    />
-                                    <label htmlFor="announcement_active">
-                                        Display Announcement Bar on Storefront
-                                        Top Header
-                                    </label>
-                                </div>
+                                <Checkbox
+                                    name="announcement_active"
+                                    label="Display Announcement Bar on Storefront Top Header"
+                                    checked={formik.values.announcement_active}
+                                    onChange={formik.handleChange}
+                                />
                             </div>
                         </div>
                     )}

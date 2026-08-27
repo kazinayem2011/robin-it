@@ -95,6 +95,15 @@
     align-items: center;
     gap: 8px;
     transition: all var(--transition-fast);
+    /*
+     * The other two variants already said this; enclosed did not, and it was
+     * the only one that could wrap. Adding a sixth tab to Settings took the
+     * strip past the width where every label fits, so five of them broke onto
+     * two lines and the row went ragged. The nav scrolls (overflow-x: auto
+     * above), which is what should happen when the tabs outgrow the space.
+     */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .reusable-tabs-container.variant-enclosed .reusable-tab-btn.active {
