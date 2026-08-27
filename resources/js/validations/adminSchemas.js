@@ -422,3 +422,18 @@ export const adminPageSchema = Yup.object().shape({
     meta_description: Yup.string().nullable().max(500),
     is_published: Yup.boolean(),
 });
+
+/** A job in the shop, and what it covers. */
+export const adminRoleSchema = Yup.object().shape({
+    key: Yup.string()
+        .trim()
+        .required('Give the role a key')
+        .matches(
+            /^[a-z][a-z0-9_]*$/,
+            'Lowercase letters, numbers and underscores, starting with a letter — "shift_lead"',
+        )
+        .max(40),
+    label: Yup.string().trim().required('Give the role a name').max(80),
+    description: Yup.string().nullable().max(300),
+    abilities: Yup.array().of(Yup.string()),
+});

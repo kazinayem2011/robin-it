@@ -2,6 +2,10 @@
 
 namespace App\Support;
 
+use App\Models\Role;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
+
 /**
  * Who in the shop may do what.
  *
@@ -50,7 +54,7 @@ class Roles
      * cased, so adding a section means deciding who gets it rather than
      * quietly granting it to one role and nobody else.
      */
-    public const ROLES = [
+    public const DEFAULT_ROLES = [
         self::OWNER => [
             'label' => 'Owner',
             'description' => 'Everything, including staff and settings.',
@@ -80,15 +84,69 @@ class Roles
         ],
     ];
 
+    private const CACHE_KEY = 'roles.map';
+
+    /**
+     * Every role, as the shop has defined them.
+     *
+     * Read on nearly every request — the admin nav is drawn from a user's
+     * abilities — so it is cached, and the cache holds a plain array. Objects
+     * must never go in: config/cache.php sets serializable_classes to false,
+     * and a cached model comes back as __PHP_Incomplete_Class on the first hit
+     * in production while passing every test on the array driver.
+     *
+     * Deliberately no static memo on top. One would survive a queue worker's
+     * whole lifetime, so a role changed in the admin would not reach the
+     * worker until it restarted — and in the test suite it leaked one test's
+     * roles into the next. The cache is shared and already fast enough.
+     *
+     * Falls back to the constant when the table is not there yet, so the app
+     * boots during a fresh migration and the defaults are still the defaults.
+     *
+     * @return array<string, array{label:string, description:string, abilities:array}>
+     */
+    public static function all(): array
+    {
+        return Cache::remember(self::CACHE_KEY, 3600, function () {
+            try {
+                $rows = Role::ordered()->get(['key', 'label', 'description', 'abilities']);
+            } catch (QueryException) {
+                return self::DEFAULT_ROLES;
+            }
+
+            if ($rows->isEmpty()) {
+                return self::DEFAULT_ROLES;
+            }
+
+            return $rows->mapWithKeys(fn (Role $r) => [$r->key => [
+                'label' => $r->label,
+                'description' => (string) $r->description,
+                'abilities' => array_values((array) $r->abilities),
+            ]])->all();
+        });
+    }
+
+    /** Called whenever a role is saved or removed. */
+    public static function forget(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
+
     /** Roles that may sign into the admin at all. */
     public static function staffRoles(): array
     {
-        return array_keys(self::ROLES);
+        return array_keys(array_filter(
+            self::all(),
+            fn ($role, $key) => $key !== self::CUSTOMER,
+            ARRAY_FILTER_USE_BOTH
+        ));
     }
 
     public static function isStaff(?string $role): bool
     {
-        return $role !== null && array_key_exists($role, self::ROLES);
+        return $role !== null
+            && $role !== self::CUSTOMER
+            && array_key_exists($role, self::all());
     }
 
     /**
@@ -96,7 +154,11 @@ class Roles
      */
     public static function abilitiesFor(?string $role): array
     {
-        return self::ROLES[$role]['abilities'] ?? [];
+        if ($role === null || $role === self::CUSTOMER) {
+            return [];
+        }
+
+        return self::all()[$role]['abilities'] ?? [];
     }
 
     public static function allows(?string $role, string $ability): bool
@@ -106,7 +168,7 @@ class Roles
 
     public static function label(?string $role): string
     {
-        return self::ROLES[$role]['label'] ?? ucfirst((string) $role);
+        return self::all()[$role]['label'] ?? ucfirst((string) $role);
     }
 
     /**
@@ -116,7 +178,8 @@ class Roles
      */
     public static function options(): array
     {
-        return collect(self::ROLES)
+        return collect(self::all())
+            ->reject(fn ($role, $key) => $key === self::CUSTOMER)
             ->map(fn ($role, $key) => [
                 'value' => $key,
                 'label' => $role['label'],

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
@@ -169,6 +170,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_MESSAGES, [ContactMessageController::class, 'index'])->name('messages')->middleware('can:support');
+        Route::get(ApiEndpoints::ADMIN_ROLES, [RoleController::class, 'index'])->name('roles')->middleware('can:staff');
         Route::get(ApiEndpoints::ADMIN_PAGES, [ContentPageController::class, 'index'])->name('pages')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_SUBSCRIBERS, [SubscriberController::class, 'index'])->name('subscribers')->middleware('can:marketing');
         Route::get('subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export')->middleware('can:marketing');

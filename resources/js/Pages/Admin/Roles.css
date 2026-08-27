@@ -1,0 +1,90 @@
+/* What each job covers. */
+
+.roles-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
+}
+
+.role-card {
+    padding: 18px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+.role-card.is-locked {
+    background: var(--bg-surface-subtle);
+}
+
+.role-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.role-card-head h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--dark-900);
+}
+
+.role-lock {
+    display: inline-flex;
+    color: var(--gray-400);
+}
+
+.role-people {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.76rem;
+    color: var(--gray-500);
+}
+
+.role-desc {
+    margin-bottom: 14px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--gray-600);
+}
+
+/* Why a card cannot be changed, rather than a disabled box with no reason. */
+.role-note {
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    font-size: 0.79rem;
+    line-height: 1.6;
+    color: var(--gray-600);
+}
+
+.role-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.role-modal-abilities {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+}

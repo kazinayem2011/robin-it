@@ -362,6 +362,18 @@ export default function AdminLayout({
 
                     {can('staff') && (
                         <Link
+                            href={ROUTES.ADMIN_ROLES}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/roles') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <ShieldCheck size={17} />
+                                <span>Roles</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('staff') && (
+                        <Link
                             href={ROUTES.ADMIN_STAFF}
                             className={`admin-nav-link ${currentUrl.startsWith('/admin/staff') ? 'active' : ''}`}
                         >

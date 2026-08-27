@@ -586,6 +586,31 @@ export const adminService = {
         );
         return response?.data || response;
     },
+
+    // --- Roles ---------------------------------------------------------
+
+    async createRole(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.ROLES,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async updateRole(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.ROLE_ITEM(id),
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async deleteRole(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.ROLE_ITEM(id),
+        );
+        return response?.data || response;
+    },
 };
 
 export default adminService;

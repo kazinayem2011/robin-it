@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
@@ -271,6 +272,11 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // The contact inbox: answer, and mark done.
         Route::post(ApiEndpoints::ADMIN_MESSAGE_REPLY, [AdminContactMessageController::class, 'reply'])->middleware('can:support');
         Route::patch(ApiEndpoints::ADMIN_MESSAGE_STATUS, [AdminContactMessageController::class, 'updateStatus'])->middleware('can:support');
+
+        // What each job covers. Only an owner may redraw the lines.
+        Route::post(ApiEndpoints::ADMIN_ROLES, [AdminRoleController::class, 'store'])->middleware('can:staff');
+        Route::patch(ApiEndpoints::ADMIN_ROLE_ITEM, [AdminRoleController::class, 'update'])->middleware('can:staff');
+        Route::delete(ApiEndpoints::ADMIN_ROLE_ITEM, [AdminRoleController::class, 'destroy'])->middleware('can:staff');
 
         Route::post(ApiEndpoints::ADMIN_PAGES, [AdminContentPageController::class, 'store'])->middleware('can:marketing');
         Route::patch(ApiEndpoints::ADMIN_PAGE_ITEM, [AdminContentPageController::class, 'update'])->middleware('can:marketing');

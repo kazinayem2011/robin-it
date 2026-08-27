@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CatalogSeeder::class,
 
+            RoleSeeder::class,
             ContentPageSeeder::class,
         ]);
 
