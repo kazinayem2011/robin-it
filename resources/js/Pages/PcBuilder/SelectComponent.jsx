@@ -184,6 +184,7 @@ export default function SelectComponent({ categorySlug }) {
                             <label className="component-compat-toggle">
                                 <input
                                     type="checkbox"
+                                    className="custom-checkbox-input"
                                     checked={showIncompatible}
                                     onChange={(e) =>
                                         setShowIncompatible(e.target.checked)

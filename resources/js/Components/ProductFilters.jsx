@@ -420,6 +420,7 @@ export default function ProductFilters({
                                         >
                                             <input
                                                 type="checkbox"
+                                                className="custom-checkbox-input"
                                                 checked={selectedBrands.includes(
                                                     brand.id,
                                                 )}
@@ -455,6 +456,7 @@ export default function ProductFilters({
                     <label className="plp-filter-check">
                         <input
                             type="checkbox"
+                            className="custom-checkbox-input"
                             checked={Boolean(value.in_stock)}
                             onChange={(e) =>
                                 onChange?.({
@@ -468,6 +470,7 @@ export default function ProductFilters({
                         <label className="plp-filter-check">
                             <input
                                 type="checkbox"
+                                className="custom-checkbox-input"
                                 checked={Boolean(value.on_sale)}
                                 onChange={(e) =>
                                     onChange?.({

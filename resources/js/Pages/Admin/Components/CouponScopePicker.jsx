@@ -82,6 +82,7 @@ export default function CouponScopePicker({
                                 >
                                     <input
                                         type="checkbox"
+                                        className="custom-checkbox-input"
                                         checked={chosen.includes(entry.id)}
                                         onChange={() => toggle(field, entry.id)}
                                     />
