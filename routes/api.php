@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -222,6 +223,11 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
 
         // Warranty
         Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus']);
+
+        // Running costs
+        Route::post(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_EXPENSES_ITEM, [AdminExpenseController::class, 'destroy']);
 
         // Settings
         Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update']);

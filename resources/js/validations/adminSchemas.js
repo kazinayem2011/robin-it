@@ -266,3 +266,28 @@ export const adminOrderReturnSchema = Yup.object().shape({
             ),
     ),
 });
+
+/**
+ * Recording a running cost.
+ *
+ * Mirrors App\Http\Requests\Admin\ExpenseRequest — a bill that has not
+ * happened yet does not belong in a period's accounts, so future dates are
+ * refused here too rather than only at the server.
+ */
+export const adminExpenseSchema = Yup.object().shape({
+    category: Yup.string().required('Choose what the money went on.'),
+    amount: Yup.number()
+        .typeError('Enter an amount.')
+        .moreThan(0, 'Enter what this cost.')
+        .required('Enter what this cost.'),
+    description: Yup.string()
+        .trim()
+        .max(255, 'Keep the description under 255 characters.')
+        .required('Say what the money went on.'),
+    incurred_on: Yup.date()
+        .max(new Date(), 'An expense cannot be dated in the future.')
+        .required('When was this incurred?'),
+    reference: Yup.string().trim().max(100).nullable(),
+    note: Yup.string().trim().max(1000).nullable(),
+    supplier_id: Yup.mixed().nullable(),
+});

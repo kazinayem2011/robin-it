@@ -21,6 +21,8 @@ import {
     MessageSquare,
     Menu,
     X,
+    Wallet,
+    LineChart,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -140,6 +142,30 @@ export default function AdminLayout({
                         <div className="admin-nav-left">
                             <Users size={17} />
                             <span>Customers Directory</span>
+                        </div>
+                    </Link>
+
+                    <div className="admin-nav-section-label admin-nav-section-spacer">
+                        Money
+                    </div>
+
+                    <Link
+                        href={ROUTES.ADMIN_EXPENSES}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/expenses') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Wallet size={17} />
+                            <span>Expenses</span>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href={ROUTES.ADMIN_REPORTS_PROFIT}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/reports') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <LineChart size={17} />
+                            <span>Profit &amp; Loss</span>
                         </div>
                     </Link>
 

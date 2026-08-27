@@ -118,6 +118,10 @@ export const API_ENDPOINTS = {
 
     // Admin Dashboard Endpoints
     ADMIN: {
+        // Running costs. Buying stock is not one of these — it is inventory
+        // until it sells, and reaches the accounts as cost of goods sold.
+        EXPENSES: '/admin/expenses',
+        EXPENSE_ITEM: (id) => `/admin/expenses/${id}`,
         DASHBOARD: '/admin/dashboard',
         ORDERS: '/admin/orders',
         ORDER_STATUS: (id) => `/admin/orders/${id}/status`,
@@ -211,6 +215,8 @@ export const ROUTES = {
     ADMIN_CUSTOMERS: '/admin/customers',
     ADMIN_BLOGS: '/admin/blogs',
     ADMIN_REVIEWS: '/admin/reviews',
+    ADMIN_EXPENSES: '/admin/expenses',
+    ADMIN_REPORTS_PROFIT: '/admin/reports/profit-loss',
 };
 
 export default {

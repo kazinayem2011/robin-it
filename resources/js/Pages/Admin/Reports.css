@@ -1,0 +1,104 @@
+/* Profit & loss statement. */
+
+.pl-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pl-table td,
+.pl-table th {
+    padding: 10px 4px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.pl-table td:last-child,
+.pl-table th:last-child {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.pl-table .admin-field-hint {
+    display: block;
+    margin-top: 2px;
+}
+
+.pl-section th {
+    padding-top: 22px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pl-subtotal td {
+    font-weight: 600;
+    border-top: 1px solid var(--border-color);
+}
+
+.pl-total td {
+    padding-top: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    border-top: 2px solid var(--dark-900);
+}
+
+.pl-total.is-profit td:last-child {
+    color: var(--success);
+}
+
+.pl-total.is-loss td:last-child {
+    color: var(--danger);
+}
+
+/* Costs read as costs at a glance, without needing the label. */
+.pl-table .is-negative {
+    color: var(--danger);
+}
+
+.pl-empty {
+    color: var(--gray-400);
+    font-style: italic;
+}
+
+.pl-headline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pl-headline.is-profit {
+    color: var(--success);
+}
+
+.pl-headline.is-loss {
+    color: var(--danger);
+}
+
+/* The gap in the data, stated rather than absorbed. */
+.pl-caveat {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-md);
+    background: var(--warning-light);
+    color: var(--dark-900);
+}
+
+.pl-caveat strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.pl-caveat span {
+    font-size: 13px;
+    color: var(--gray-400);
+}

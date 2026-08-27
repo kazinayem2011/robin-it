@@ -238,6 +238,13 @@ class ApiEndpoints
 
     public const ADMIN_CUSTOMERS = 'customers';
 
+    // Running costs, and the statement built from them.
+    public const ADMIN_EXPENSES = 'expenses';
+
+    public const ADMIN_EXPENSES_ITEM = 'expenses/{id}';
+
+    public const ADMIN_REPORTS_PROFIT = 'reports/profit-loss';
+
     public const ADMIN_BLOGS = 'blogs';
 
     public const ADMIN_BLOGS_ITEM = 'blogs/{id}';

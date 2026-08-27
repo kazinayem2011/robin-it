@@ -89,7 +89,7 @@ class SalesMarginTest extends TestCase
 
         $summary = SalesMargin::summary();
 
-        $this->assertSame(40000.0, $summary['revenue']);
+        $this->assertSame(40000.0, $summary['goods_revenue']);
         $this->assertSame(28000.0, $summary['cost']);
         $this->assertSame(12000.0, $summary['gross_profit']);
         $this->assertSame(30.0, $summary['margin_percent']);
@@ -146,7 +146,7 @@ class SalesMarginTest extends TestCase
 
         $summary = SalesMargin::summary();
 
-        $this->assertSame(18000.0, $summary['revenue']);   // 20000 less the 2000 code
+        $this->assertSame(18000.0, $summary['goods_revenue']);   // 20000 less the 2000 code
         $this->assertSame(4000.0, $summary['gross_profit']);
     }
 

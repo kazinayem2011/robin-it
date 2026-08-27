@@ -61,6 +61,34 @@ export const adminService = {
         return response.data;
     },
 
+    // ── Running costs ────────────────────────────────────────────────────────
+    // Rent, wages, the courier's bill. Buying stock is deliberately not one of
+    // these: units are inventory until they sell, and reach the accounts as
+    // cost of goods sold on the order that sells them.
+
+    async createExpense(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.EXPENSES,
+            payload,
+        );
+        return response.data;
+    },
+
+    async updateExpense(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.EXPENSE_ITEM(id),
+            payload,
+        );
+        return response.data;
+    },
+
+    async deleteExpense(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.EXPENSE_ITEM(id),
+        );
+        return response.data;
+    },
+
     /** Suppliers, for the delivery form's dropdown. */
     async getSuppliers() {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.SUPPLIERS);
