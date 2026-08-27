@@ -12,7 +12,11 @@ import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
-import { TERMINAL_ORDER_STATUSES, orderStatusOptionsFor } from '@/constants';
+import {
+    TERMINAL_ORDER_STATUSES,
+    RETURNABLE_ORDER_STATUSES,
+    orderStatusOptionsFor,
+} from '@/constants';
 
 export default function Orders({
     orders = { data: [] },
@@ -192,9 +196,12 @@ export default function Orders({
                         <Eye size={14} />
                     </button>
 
-                    {/* Only a delivered order has goods with the customer to
-                        take back. */}
-                    {order.status === 'delivered' && (
+                    {/* Once an order is dispatched its goods are outside the
+                        building, so anything coming back — refused at the
+                        door, recalled from the courier, or returned after
+                        delivery — arrives through here, where what actually
+                        turned up and its condition are recorded. */}
+                    {RETURNABLE_ORDER_STATUSES.includes(order.status) && (
                         <button
                             type="button"
                             className="admin-table-icon-btn"

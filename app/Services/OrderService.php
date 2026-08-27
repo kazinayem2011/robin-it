@@ -302,14 +302,14 @@ class OrderService
      *                                             already taken at checkout, so
      *                                             approving an order must not
      *                                             take them a second time
-     *   pending/processing/shipped -> cancelled   reserved units go back, once
-     *   delivered -> cancelled                    refused; the goods are with
-     *                                             the customer, so this is a
-     *                                             return, not a cancellation
+     *   pending/processing -> cancelled           reserved units go back, once
+     *   shipped/delivered -> cancelled            refused; the goods have left,
+     *                                             so this is a return, which
+     *                                             records what came back
      *   cancelled -> anything                     refused; cancelled is an end
      *                                             state, and the units are
      *                                             already back on the shelf
-     *   delivered -> returned                     handled by returnOrder(), which
+     *   shipped/delivered -> returned             handled by returnOrder(), which
      *                                             needs the condition of each item
      *
      * @throws StorefrontException when the order has reached an end state
@@ -357,18 +357,24 @@ class OrderService
         }
 
         /*
-         * Cancelling a delivered order used to put its units back on the shelf.
-         * The goods are with the customer at that point, so the shop was left
-         * believing it held stock it does not have — and would sell it again.
+         * Cancelling restores stock as though the goods never left, so it stops
+         * at the point they do.
          *
-         * There is already a correct path for goods coming back after delivery:
-         * a return, which records how many came back and in what condition, so
-         * damaged units are written off instead of being resold.
+         * It used to be allowed from any status. Cancelling a delivered order
+         * credited the shelf with units the customer is holding; cancelling a
+         * shipped one credited it with a parcel the courier still has, and
+         * assumed every item would come back intact. Either way the shop
+         * believed it held stock it does not have, and would sell it again.
+         *
+         * Goods that have left come back through a return, which asks how many
+         * actually arrived and in what condition, so damaged units are written
+         * off rather than resold.
          */
-        if ($status === 'cancelled' && $order->status === 'delivered') {
+        if ($status === 'cancelled' && ! $order->isCancellable()) {
             throw new StorefrontException(
-                'This order has already been delivered, so cancelling it would put stock back '
-                    .'that the customer still has. Process it as a return instead.',
+                'This order has already been dispatched, so cancelling it would put stock back that '
+                    .'has left the building. Process it as a return instead, so what actually comes '
+                    .'back is recorded.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );
@@ -435,7 +441,8 @@ class OrderService
             throw new StorefrontException(
                 $order->isReturned()
                     ? 'This order has already been returned.'
-                    : 'Only a delivered order can be returned.',
+                    : 'Only a dispatched order can be returned — nothing has left the building yet, '
+                        .'so cancel it instead.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );

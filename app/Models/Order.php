@@ -43,8 +43,24 @@ class Order extends Model
         return in_array($this->status, self::TERMINAL_STATUSES, true);
     }
 
-    /** Only a delivered order can be returned — nothing else has reached the customer. */
-    public const RETURNABLE_FROM = ['delivered'];
+    /**
+     * States a return can be raised from — anything that has left the building.
+     *
+     * `shipped` is here as well as `delivered` because a parcel that comes back
+     * from the courier is goods returning, not an order that never happened.
+     * Cancelling one used to credit the shelf with every unit, intact, which is
+     * a guess: the return flow asks how many actually came back and in what
+     * condition, so damaged units are written off instead of resold.
+     */
+    public const RETURNABLE_FROM = ['shipped', 'delivered'];
+
+    /**
+     * States an order can still be cancelled from.
+     *
+     * Cancellation restores stock on the assumption that the goods never left,
+     * so it stops at the point they do. After dispatch it is a return.
+     */
+    public const CANCELLABLE_FROM = ['pending', 'processing'];
 
     public const PAYMENT_STATUSES = ['unpaid', 'paid', 'pending', 'refunded'];
 
@@ -154,12 +170,23 @@ class Order extends Model
     }
 
     /**
+     * Whether this order can still be cancelled rather than returned.
+     *
+     * The same answer for the customer and the admin: cancellation restores
+     * stock as though the goods never left, so it stops at the point they do.
+     */
+    public function isCancellable(): bool
+    {
+        return in_array($this->status, self::CANCELLABLE_FROM, true);
+    }
+
+    /**
      * A customer may call off an order until it has left the building.
      * Once it is shipped, cancellation is a support/returns conversation.
      */
     public function isCancellableByCustomer(): bool
     {
-        return in_array($this->status, ['pending', 'processing'], true);
+        return $this->isCancellable();
     }
 
     public function isReturned(): bool

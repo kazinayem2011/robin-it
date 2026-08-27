@@ -33,20 +33,38 @@ export const ORDER_STATUS_OPTIONS = [
 export const TERMINAL_ORDER_STATUSES = ['cancelled', 'returned'];
 
 /**
+ * States an order can still be cancelled from — App\Models\Order::CANCELLABLE_FROM.
+ *
+ * Cancelling restores stock as though the goods never left, so it stops at the
+ * point they do. After dispatch it is a return.
+ */
+export const CANCELLABLE_ORDER_STATUSES = ['pending', 'processing'];
+
+/**
+ * States a return can be raised from — App\Models\Order::RETURNABLE_FROM.
+ *
+ * A parcel coming back from the courier is goods returning, not an order that
+ * never happened, so `shipped` counts as well as `delivered`.
+ */
+export const RETURNABLE_ORDER_STATUSES = ['shipped', 'delivered'];
+
+/**
  * The statuses an order in `current` may actually be moved to.
  *
  * Offering one the backend will refuse just turns a dropdown into an error
  * toast, so the rules are mirrored here:
  *
- *   terminal            nothing; the select is replaced by a label
- *   delivered           no cancelling — the goods are with the customer, so
- *                       goods coming back are a return, which records their
- *                       condition
+ *   terminal              nothing; the select is replaced by a label
+ *   shipped / delivered   no cancelling — the goods have left, so anything
+ *                         coming back is a return, which records what
+ *                         actually arrived and in what condition
  */
 export const orderStatusOptionsFor = (current) => {
     if (TERMINAL_ORDER_STATUSES.includes(current)) return [];
 
+    const canCancel = CANCELLABLE_ORDER_STATUSES.includes(current);
+
     return ORDER_STATUS_OPTIONS.filter(
-        (option) => !(current === 'delivered' && option.value === 'cancelled'),
+        (option) => option.value !== 'cancelled' || canCancel,
     );
 };

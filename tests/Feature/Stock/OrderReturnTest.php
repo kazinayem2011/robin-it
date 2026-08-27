@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Stock;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -108,7 +109,13 @@ class OrderReturnTest extends TestCase
         ]);
     }
 
-    public function test_only_a_delivered_order_can_be_returned(): void
+    /**
+     * A return is for goods that have left the building.
+     *
+     * Before dispatch there is nothing to come back, so cancelling is the
+     * right move and the units simply go back on the shelf.
+     */
+    public function test_an_order_that_has_not_been_dispatched_cannot_be_returned(): void
     {
         $product = $this->product(10);
         $user = User::factory()->create();
@@ -119,10 +126,71 @@ class OrderReturnTest extends TestCase
         ]);
         $order = Order::where('user_id', $user->id)->latest()->first()->load('items');
 
-        $this->expectExceptionMessage('Only a delivered order can be returned');
+        $this->expectExceptionMessage('Only a dispatched order can be returned');
         app(OrderService::class)->returnOrder($order, [
             ['order_item_id' => $order->items->first()->id, 'resellable' => 1],
         ]);
+    }
+
+    /**
+     * A parcel refused at the door, or recalled from the courier, is goods
+     * coming back — not an order that never happened. Cancelling one used to
+     * credit the shelf with every unit intact; the return asks what actually
+     * arrived.
+     */
+    public function test_a_shipped_order_can_be_returned_before_it_is_delivered(): void
+    {
+        $product = $this->product(10);
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 3]);
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
+            'street_address' => 'House 45', 'city' => 'Dhaka',
+        ]);
+        $order = Order::where('user_id', $user->id)->latest()->first()->load('items');
+
+        $orders = app(OrderService::class);
+        $orders->updateOrderStatus($order, 'shipped');
+        $this->assertSame(7, (int) $product->fresh()->stock_quantity);
+
+        // Two come back saleable, one was damaged in transit.
+        $orders->returnOrder($order->fresh(), [[
+            'order_item_id' => $order->items->first()->id,
+            'resellable' => 2,
+            'damaged' => 1,
+        ]]);
+
+        $this->assertSame('returned', $order->fresh()->status);
+        $this->assertSame(9, (int) $product->fresh()->stock_quantity, 'Only the saleable units go back.');
+    }
+
+    /** Cancelling after dispatch would credit the shelf with goods that are out. */
+    public function test_a_dispatched_order_cannot_be_cancelled(): void
+    {
+        foreach (['shipped', 'delivered'] as $status) {
+            $product = $this->product(10);
+            $user = User::factory()->create();
+            $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 2]);
+            $this->actingAs($user)->postJson('/api/checkout', [
+                'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
+                'street_address' => 'House 45', 'city' => 'Dhaka',
+            ]);
+            $order = Order::where('user_id', $user->id)->latest()->first();
+
+            $orders = app(OrderService::class);
+            $orders->updateOrderStatus($order, $status);
+            $before = (int) $product->fresh()->stock_quantity;
+
+            try {
+                $orders->updateOrderStatus($order->fresh(), 'cancelled');
+                $this->fail("A {$status} order was cancelled.");
+            } catch (StorefrontException $e) {
+                $this->assertStringContainsString('dispatched', $e->getMessage());
+            }
+
+            $this->assertSame($before, (int) $product->fresh()->stock_quantity, "Stock moved on a {$status} order.");
+            $this->assertSame($status, $order->fresh()->status);
+        }
     }
 
     public function test_an_order_cannot_be_returned_twice(): void

@@ -5,5 +5,7 @@ export {
     NAVBAR_BADGE_OPTIONS,
     ORDER_STATUS_OPTIONS,
     TERMINAL_ORDER_STATUSES,
+    CANCELLABLE_ORDER_STATUSES,
+    RETURNABLE_ORDER_STATUSES,
     orderStatusOptionsFor,
 } from './adminConstants';
