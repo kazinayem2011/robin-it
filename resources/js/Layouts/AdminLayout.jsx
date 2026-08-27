@@ -146,6 +146,16 @@ export default function AdminLayout({
                         </div>
                     </Link>
 
+                    <Link
+                        href={ROUTES.ADMIN_COURIERS}
+                        className={`admin-nav-link ${currentUrl.startsWith('/admin/couriers') ? 'active' : ''}`}
+                    >
+                        <div className="admin-nav-left">
+                            <Truck size={17} />
+                            <span>Couriers</span>
+                        </div>
+                    </Link>
+
                     <div className="admin-nav-section-label admin-nav-section-spacer">
                         Money
                     </div>

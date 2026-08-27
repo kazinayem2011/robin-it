@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\DispatchOrderRequest;
 use App\Http\Requests\Admin\OrderStatusRequest;
 use App\Mail\OrderStatusUpdatedMail;
+use App\Models\Courier;
 use App\Models\Order;
 use App\Services\OrderService;
 use App\Support\SearchTerm;
@@ -25,7 +27,7 @@ class OrderController extends Controller
         $status = $request->input('status', 'all');
         $search = $request->input('search', '');
 
-        $query = Order::with(['user', 'items.product.images'])->latest();
+        $query = Order::with(['user', 'items.product.images', 'courier:id,name,tracking_url_template'])->latest();
 
         if ($status !== 'all') {
             $query->where('status', $status);
@@ -48,6 +50,7 @@ class OrderController extends Controller
             'orders' => $query->paginate(15)->withQueryString(),
             'currentStatus' => $status,
             'search' => $search,
+            'couriers' => Courier::active()->ordered()->get(['id', 'name', 'phone']),
         ]);
     }
 
@@ -72,6 +75,30 @@ class OrderController extends Controller
         return $this->successResponse(
             $order,
             "Order #{$order->order_number} status updated to ".ucfirst($order->status).'.'
+        );
+    }
+
+    /**
+     * Hand a parcel to a carrier.
+     *
+     * Its own action rather than a status change, because shipping an order
+     * without recording who took it is what left customers ringing up with a
+     * question nobody could answer.
+     */
+    public function dispatchOrder(DispatchOrderRequest $request, OrderService $orders, int $id): JsonResponse
+    {
+        $order = Order::findOrFail($id);
+        $validated = $request->validated();
+
+        $orders->dispatchOrder(
+            $order,
+            Courier::findOrFail($validated['courier_id']),
+            $validated['tracking_number'] ?? null
+        );
+
+        return $this->successResponse(
+            $order->load('courier:id,name,tracking_url_template'),
+            "Order #{$order->order_number} is on its way with {$order->courier->name}."
         );
     }
 

@@ -108,7 +108,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         $orders = Order::where('user_id', $user->id)
-            ->with(['items.product.images'])
+            ->with(['items.product.images', 'courier:id,name,phone,tracking_url_template'])
             ->latest()
             ->paginate(self::ORDERS_PER_PAGE)
             ->withQueryString();
@@ -135,7 +135,7 @@ class DashboardController extends Controller
 
         return Order::where('id', $wanted)
             ->where('user_id', $userId)
-            ->with(['items.product.images'])
+            ->with(['items.product.images', 'courier:id,name,phone,tracking_url_template'])
             ->first();
     }
 

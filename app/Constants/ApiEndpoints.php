@@ -192,6 +192,13 @@ class ApiEndpoints
 
     public const ADMIN_ORDERS_RETURN = 'orders/{id}/return';
 
+    /** Handing a parcel to a carrier, with the number to chase it by. */
+    public const ADMIN_ORDERS_DISPATCH = 'orders/{id}/dispatch';
+
+    public const ADMIN_COURIERS = 'couriers';
+
+    public const ADMIN_COURIERS_ITEM = 'couriers/{id}';
+
     // Stock: units enter through a receipt, are corrected by an audited
     // adjustment, and are never typed in as an absolute number.
     public const ADMIN_STOCK_RECEIPTS = 'stock/receipts';

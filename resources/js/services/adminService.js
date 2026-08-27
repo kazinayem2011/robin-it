@@ -89,6 +89,38 @@ export const adminService = {
         return response.data;
     },
 
+    /** Hand a parcel to a carrier, with the number to chase it by. */
+    async dispatchOrder(orderId, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.ORDER_DISPATCH(orderId),
+            payload,
+        );
+        return response.data;
+    },
+
+    async createCourier(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.COURIERS,
+            payload,
+        );
+        return response.data;
+    },
+
+    async updateCourier(id, payload) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.COURIER_ITEM(id),
+            payload,
+        );
+        return response.data;
+    },
+
+    async deleteCourier(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.COURIER_ITEM(id),
+        );
+        return response.data;
+    },
+
     async createExpenseCategory(payload) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.EXPENSE_CATEGORIES,

@@ -10,6 +10,7 @@ class Order extends Model
         'user_id', 'session_id', 'order_number', 'subtotal',
         'shipping_fee', 'discount', 'vat_amount', 'vat_rate', 'vat_inclusive', 'coupon_code',
         'coupon_discount_type', 'coupon_discount_value', 'total', 'status',
+        'courier_id', 'tracking_number', 'dispatched_at',
         'payment_method', 'payment_status', 'shipping_address',
         'stock_released_at', 'stock_returned_at',
     ];
@@ -24,9 +25,16 @@ class Order extends Model
         'vat_inclusive' => 'boolean',
         'coupon_discount_value' => 'float',
         'total' => 'float',
+        'dispatched_at' => 'datetime',
         'stock_released_at' => 'datetime',
         'stock_returned_at' => 'datetime',
     ];
+
+    /**
+     * Derived from the courier and the consignment number, so it travels with
+     * the order rather than every screen having to build it.
+     */
+    protected $appends = ['tracking_url'];
 
     /** Order lifecycle states, in the order the customer sees them. */
     public const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
@@ -82,6 +90,27 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function courier()
+    {
+        return $this->belongsTo(Courier::class);
+    }
+
+    /**
+     * Where the customer can watch this parcel, when the carrier offers a
+     * public lookup. Null is a real answer: some carriers have none, and the
+     * consignment number is still worth quoting down the phone.
+     */
+    public function getTrackingUrlAttribute(): ?string
+    {
+        return $this->courier?->trackingUrlFor($this->tracking_number);
+    }
+
+    /** Whether this order has left with a carrier and a number to chase. */
+    public function isDispatched(): bool
+    {
+        return $this->dispatched_at !== null;
     }
 
     public function items()

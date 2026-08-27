@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\CourierController as AdminCourierController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
@@ -180,6 +181,12 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Orders
         Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus']);
         Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder']);
+        Route::patch(ApiEndpoints::ADMIN_ORDERS_DISPATCH, [AdminOrderController::class, 'dispatchOrder']);
+
+        // Carriers
+        Route::post(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'store']);
+        Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'update']);
+        Route::delete(ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'destroy']);
 
         // Stock
         Route::post(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receive']);

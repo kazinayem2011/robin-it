@@ -302,3 +302,34 @@ export const adminExpenseCategorySchema = Yup.object().shape({
         .required('Give the category a name.'),
     note: Yup.string().trim().max(255).nullable(),
 });
+
+/** Handing a parcel to a carrier. */
+export const adminDispatchSchema = Yup.object().shape({
+    courier_id: Yup.string().required('Choose who is carrying this parcel.'),
+    // Optional: a shop's own rider issues no consignment number.
+    tracking_number: Yup.string().trim().max(100).nullable(),
+});
+
+/** A delivery company. */
+export const adminCourierSchema = Yup.object().shape({
+    name: Yup.string()
+        .trim()
+        .max(100, 'Keep the name under 100 characters.')
+        .required('Give the courier a name.'),
+    tracking_url_template: Yup.string()
+        .trim()
+        .max(500)
+        .nullable()
+        .test(
+            'is-url',
+            'The tracking link must start with http:// or https://.',
+            (v) => !v || /^https?:\/\//i.test(v),
+        )
+        .test(
+            'has-placeholder',
+            'Put {tracking} where the consignment number goes, or leave this blank.',
+            (v) => !v || v.includes('{tracking}'),
+        ),
+    phone: Yup.string().trim().max(40).nullable(),
+    note: Yup.string().trim().max(255).nullable(),
+});

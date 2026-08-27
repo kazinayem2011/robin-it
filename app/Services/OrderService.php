@@ -6,8 +6,10 @@ use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Helpers\PhoneHelper;
 use App\Mail\OrderConfirmationMail;
+use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Cart;
 use App\Models\Coupon;
+use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -250,7 +252,7 @@ class OrderService
         }
 
         $order = Order::where('order_number', $orderNumber)
-            ->with(['items.product.images'])
+            ->with(['items.product.images', 'courier'])
             ->first();
 
         if (! $order) {
@@ -288,6 +290,13 @@ class OrderService
             'total' => (float) $order->total,
             'payment_method' => $order->payment_method,
             'payment_status' => $order->payment_status,
+            // Who has the parcel and how to chase it — the question this page
+            // exists to answer, and one it could not answer before.
+            'courier' => $order->courier?->name,
+            'courier_phone' => $order->courier?->phone,
+            'tracking_number' => $order->tracking_number,
+            'tracking_url' => $order->tracking_url,
+            'dispatched_at' => $order->dispatched_at?->format('d M, Y h:i A'),
             'shipping_address' => $order->shipping_address,
             'items' => $order->items->map(function ($item) {
                 return [
@@ -406,6 +415,62 @@ class OrderService
         });
 
         return $order;
+    }
+
+    /**
+     * Hand a parcel to a carrier.
+     *
+     * Marking an order shipped used to be a bare status change, which left a
+     * customer ringing up to ask where their delivery was and nobody able to
+     * say. Dispatching records who took it and the number to chase it with,
+     * and moves the order on in the same step so the two cannot disagree.
+     *
+     * @throws StorefrontException
+     */
+    public function dispatchOrder(Order $order, Courier $courier, ?string $trackingNumber = null): Order
+    {
+        if ($order->isTerminal()) {
+            throw new StorefrontException(
+                'This order has been '.$order->status.' and can no longer be dispatched.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        DB::transaction(function () use ($order, $courier, $trackingNumber) {
+            $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            $fresh->forceFill([
+                'courier_id' => $courier->id,
+                'tracking_number' => filled($trackingNumber) ? trim($trackingNumber) : null,
+                // The moment it left, which is not the same as the moment the
+                // row was last touched.
+                'dispatched_at' => $fresh->dispatched_at ?? now(),
+                'status' => 'shipped',
+            ])->save();
+
+            $order->setRawAttributes($fresh->getAttributes(), true);
+        });
+
+        $this->notifyStatusChange($order);
+
+        return $order;
+    }
+
+    /**
+     * Tell the customer their order moved, without letting mail hold it up.
+     */
+    protected function notifyStatusChange(Order $order): void
+    {
+        try {
+            $email = $order->user?->email ?? ($order->shipping_address['email'] ?? null);
+
+            if ($email) {
+                Mail::to($email)->send(new OrderStatusUpdatedMail($order));
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Could not dispatch OrderStatusUpdatedMail: {$e->getMessage()}");
+        }
     }
 
     /**

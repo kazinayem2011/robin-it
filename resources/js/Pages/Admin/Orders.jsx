@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, ShoppingCart, Undo2, Printer } from 'lucide-react';
+import { Eye, ShoppingCart, Undo2, Printer, Truck } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
 import StatusBadge from '@/Components/StatusBadge';
 import { toast } from '@/Components/Toast';
+import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
 import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
@@ -15,6 +16,7 @@ import { ROUTES } from '@/constants/endpoints';
 import {
     TERMINAL_ORDER_STATUSES,
     RETURNABLE_ORDER_STATUSES,
+    CANCELLABLE_ORDER_STATUSES,
     orderStatusOptionsFor,
 } from '@/constants';
 
@@ -22,10 +24,12 @@ export default function Orders({
     orders = { data: [] },
     currentStatus = 'all',
     search = '',
+    couriers = [],
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [returningOrder, setReturningOrder] = useState(null);
+    const [dispatchingOrder, setDispatchingOrder] = useState(null);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -195,6 +199,20 @@ export default function Orders({
                     >
                         <Eye size={14} />
                     </button>
+
+                    {/* Before dispatch, handing the parcel over is its own
+                        step: it records who took it and the number to chase
+                        it by, which a bare status change never did. */}
+                    {CANCELLABLE_ORDER_STATUSES.includes(order.status) && (
+                        <button
+                            type="button"
+                            className="admin-table-icon-btn"
+                            onClick={() => setDispatchingOrder(order)}
+                            title="Dispatch with a courier"
+                        >
+                            <Truck size={14} />
+                        </button>
+                    )}
 
                     {/* Once an order is dispatched its goods are outside the
                         building, so anything coming back — refused at the
@@ -405,6 +423,16 @@ export default function Orders({
                     </div>
                 )}
             </Modal>
+            <DispatchOrderModal
+                order={dispatchingOrder}
+                couriers={couriers}
+                onClose={() => setDispatchingOrder(null)}
+                onDone={() => {
+                    setDispatchingOrder(null);
+                    router.reload({ only: ['orders'] });
+                }}
+            />
+
             <OrderReturnModal
                 order={returningOrder}
                 onClose={() => setReturningOrder(null)}

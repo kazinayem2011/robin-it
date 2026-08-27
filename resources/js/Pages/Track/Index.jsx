@@ -18,6 +18,8 @@ import {
     Search,
     MapPin,
     CreditCard,
+    ExternalLink,
+    PhoneCall,
 } from 'lucide-react';
 import './Track.css';
 
@@ -194,6 +196,59 @@ export default function TrackOrder() {
                                 {trackingResult.status_desc}
                             </p>
                         </div>
+
+                        {/*
+                         * Who has the parcel and how to chase it — the
+                         * question this page exists to answer, and one it
+                         * could not answer at all before couriers were
+                         * recorded.
+                         */}
+                        {trackingResult.courier && (
+                            <div className="tracking-courier-card">
+                                <div className="tracking-courier-head">
+                                    <Truck size={16} />
+                                    <strong>{trackingResult.courier}</strong>
+                                    {trackingResult.dispatched_at && (
+                                        <span>
+                                            Handed over{' '}
+                                            {trackingResult.dispatched_at}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {trackingResult.tracking_number && (
+                                    <div className="tracking-courier-number">
+                                        Consignment
+                                        <code>
+                                            {trackingResult.tracking_number}
+                                        </code>
+                                    </div>
+                                )}
+
+                                <div className="tracking-courier-actions">
+                                    {trackingResult.tracking_url && (
+                                        <a
+                                            href={trackingResult.tracking_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn btn-outline btn-sm"
+                                        >
+                                            Track with {trackingResult.courier}
+                                            <ExternalLink size={13} />
+                                        </a>
+                                    )}
+                                    {trackingResult.courier_phone && (
+                                        <a
+                                            href={`tel:${trackingResult.courier_phone}`}
+                                            className="btn btn-outline btn-sm"
+                                        >
+                                            <PhoneCall size={13} />
+                                            {trackingResult.courier_phone}
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Info Grid: Address & Payment */}
                         <div className="tracking-info-grid">
