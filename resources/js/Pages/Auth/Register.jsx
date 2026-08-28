@@ -1,16 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
-import { User, Mail, Lock, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Smartphone } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
+import OtpCodeField from '../../Components/OtpCodeField';
 import { registerSchema } from '../../validations';
+import { otpService } from '../../services';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import './Auth.css';
 
-export default function Register({ errors: serverErrors }) {
+/**
+ * Creating an account.
+ *
+ * In two steps when the shop can send a text: the details, then the code that
+ * proves the mobile number belongs to whoever typed it. That number is where
+ * every order message goes and what the delivery rider calls, so taking it on
+ * trust means a stranger eventually receives somebody's parcel.
+ *
+ * With no SMS gateway configured the server cannot send a code, says so through
+ * `verifyPhone`, and this stays the single-step form it has always been —
+ * an unverified number is much better than a shop nobody can register with.
+ */
+export default function Register({
+    errors: serverErrors,
+    verifyPhone = false,
+    resendSeconds = 60,
+}) {
+    // The account is not created until the code is checked, so this is a step
+    // in one form rather than a separate page with the details in a session.
+    const [awaitingCode, setAwaitingCode] = useState(false);
+
     const formik = useFormik({
         initialValues: {
             name: '',
@@ -18,24 +40,98 @@ export default function Register({ errors: serverErrors }) {
             phone: '',
             password: '',
             password_confirmation: '',
+            code: '',
         },
         validationSchema: registerSchema,
         onSubmit: (values, { setSubmitting, setErrors, resetForm }) => {
+            /*
+             * Checked here rather than in the schema: whether a code is needed
+             * depends on whether one was sent, which yup has no way of knowing.
+             * A round trip to be told the field is empty is a wasted second.
+             */
+            if (verifyPhone && !/^\d{6}$/.test(values.code)) {
+                setErrors({ code: 'Enter the six-digit code we sent you.' });
+                setSubmitting(false);
+                return;
+            }
+
             router.post(ROUTES.REGISTER, values, {
                 onFinish: () => setSubmitting(false),
                 onError: (errs) => {
                     setErrors(errs);
+
+                    /*
+                     * The passwords are cleared only when a password was the
+                     * problem.
+                     *
+                     * Clearing them on every failure means mistyping six digits
+                     * costs you the password you typed correctly — and because
+                     * the fields empty quietly while the visible complaint is
+                     * about the code, the next attempt fails on something the
+                     * customer was never told about.
+                     */
+                    const aboutThePassword =
+                        errs?.password || errs?.password_confirmation;
+
                     resetForm({
-                        values: {
-                            ...values,
-                            password: '',
-                            password_confirmation: '',
-                        },
+                        values: aboutThePassword
+                            ? {
+                                  ...values,
+                                  password: '',
+                                  password_confirmation: '',
+                              }
+                            : values,
                     });
                 },
             });
         },
     });
+
+    /**
+     * Ask for a code, and only then show the field for it.
+     *
+     * Everything except the code is checked first, here and again on the
+     * server. A code is spent when it is used, so letting somebody reach it
+     * with a password that will be refused costs them the code and a minute of
+     * waiting for another.
+     */
+    const requestCode = async () => {
+        const problems = await formik.validateForm();
+        const stopping = Object.keys(problems).filter((key) => key !== 'code');
+
+        if (stopping.length) {
+            formik.setTouched(
+                stopping.reduce((all, key) => ({ ...all, [key]: true }), {}),
+            );
+            return;
+        }
+
+        formik.setSubmitting(true);
+
+        try {
+            await otpService.forRegistration(formik.values.phone);
+            setAwaitingCode(true);
+        } catch (err) {
+            /*
+             * Touched first and without revalidating, then the message.
+             *
+             * setTouched revalidates by default, and revalidation replaces the
+             * errors with whatever the schema says — which about a number the
+             * schema is happy with is nothing. Done the other way round the
+             * message was set and immediately wiped, so a failed send looked
+             * like a button that did nothing at all.
+             */
+            formik.setTouched({ phone: true }, false);
+            formik.setFieldError(
+                'phone',
+                err?.fieldError?.('phone') ||
+                    err?.message ||
+                    'Could not send a code to that number.',
+            );
+        } finally {
+            formik.setSubmitting(false);
+        }
+    };
 
     return (
         <div className="auth-page-wrapper">
@@ -93,21 +189,28 @@ export default function Register({ errors: serverErrors }) {
                             autoComplete="username"
                         />
 
-                        {/* Bangladeshi Mobile Number */}
+                        {/*
+                         * Never was optional — the server has always required
+                         * it, so the old label sent people into a rejection.
+                         * It is also now the thing the code confirms.
+                         */}
                         <FormInput
                             id="phone"
                             name="phone"
-                            label="Bangladeshi Mobile (Optional)"
+                            required
+                            label="Bangladeshi Mobile"
                             type="tel"
                             value={formik.values.phone}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             placeholder="017xxxxxxxx"
+                            icon={Smartphone}
                             error={
                                 (formik.touched.phone && formik.errors.phone) ||
                                 serverErrors?.phone
                             }
                             autoComplete="tel"
+                            disabled={awaitingCode}
                         />
 
                         {/* Password */}
@@ -150,18 +253,61 @@ export default function Register({ errors: serverErrors }) {
                             autoComplete="new-password"
                         />
 
-                        {/* Reusable Primary Button */}
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            size="lg"
-                            fullWidth
-                            loading={formik.isSubmitting}
-                            icon={ArrowRight}
-                            iconPosition="right"
-                        >
-                            CREATE MY ACCOUNT
-                        </Button>
+                        {awaitingCode && (
+                            <OtpCodeField
+                                phone={formik.values.phone}
+                                value={formik.values.code}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={
+                                    (formik.touched.code &&
+                                        formik.errors.code) ||
+                                    serverErrors?.code
+                                }
+                                resendSeconds={resendSeconds}
+                                onResend={() =>
+                                    otpService.forRegistration(
+                                        formik.values.phone,
+                                    )
+                                }
+                                onEditNumber={() => {
+                                    setAwaitingCode(false);
+                                    formik.setFieldValue('code', '');
+                                }}
+                            />
+                        )}
+
+                        {/*
+                         * One button doing one of two things, rather than two
+                         * buttons: at any moment there is exactly one thing to
+                         * press, and it says what it does.
+                         */}
+                        {verifyPhone && !awaitingCode ? (
+                            <Button
+                                type="button"
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                loading={formik.isSubmitting}
+                                icon={ArrowRight}
+                                iconPosition="right"
+                                onClick={requestCode}
+                            >
+                                SEND ME A CODE
+                            </Button>
+                        ) : (
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                loading={formik.isSubmitting}
+                                icon={ArrowRight}
+                                iconPosition="right"
+                            >
+                                CREATE MY ACCOUNT
+                            </Button>
+                        )}
                     </form>
 
                     {/* Footer Login Link */}

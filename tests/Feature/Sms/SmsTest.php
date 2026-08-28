@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sms;
 
 use App\Models\Order;
+use App\Models\OtpCode;
 use App\Models\SiteSetting;
 use App\Services\SmsService;
 use App\Support\SmsTemplates;
@@ -197,6 +198,10 @@ class SmsTest extends TestCase
         $messages['refund'] = SmsTemplates::refundIssued($order, 5000, 'Robins Computer');
         $messages['due'] = SmsTemplates::paymentDue($order, 5000, 'Robins Computer');
 
+        foreach (OtpCode::PURPOSES as $purpose) {
+            $messages["code:{$purpose}"] = SmsTemplates::verificationCode('048213', $purpose, 'Robins Computer');
+        }
+
         foreach ($messages as $name => $message) {
             $offenders = array_unique(array_filter(
                 preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY),
@@ -247,10 +252,26 @@ class SmsTest extends TestCase
 
         $source = implode("\n", $wired);
 
-        foreach (['orderPlaced', 'statusChanged', 'refundIssued', 'paymentDue'] as $template) {
-            $this->assertStringContainsString(
-                "SmsTemplates::{$template}",
-                $source,
+        /*
+         * Read off the class rather than listed here.
+         *
+         * A list has to be remembered, and the two that were already dead code
+         * are proof that it will not be: they were written, never called, and
+         * only noticed when somebody asked what messages the shop sends.
+         */
+        $templates = collect((new \ReflectionClass(SmsTemplates::class))->getMethods())
+            // getMethods()'s filter argument ORs its flags rather than ANDs
+            // them, so the bitmask would drag in the private helpers too.
+            ->filter(fn ($method) => $method->isPublic() && $method->isStatic())
+            ->pluck('name');
+
+        $this->assertGreaterThanOrEqual(5, $templates->count());
+
+        foreach ($templates as $template) {
+            // assertTrue rather than assertStringContainsString: a failure
+            // there prints every PHP file in app/ as the diff.
+            $this->assertTrue(
+                str_contains($source, "SmsTemplates::{$template}"),
                 "SmsTemplates::{$template}() is never called, so that message is never sent."
             );
         }

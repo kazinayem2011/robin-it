@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Order;
+use App\Services\OtpService;
 
 /**
  * What the shop actually says in a text message.
@@ -70,6 +71,31 @@ class SmsTemplates
         return "{$shop}: Tk ".number_format($amount, 0)
             ." refunded against order {$order->order_number}. "
             .'It can take a few days to reach your account.';
+    }
+
+    /**
+     * A one-time code.
+     *
+     * Says what the code is for, because a code arriving with no context is
+     * exactly what a phishing message looks like — and a customer who has been
+     * taught to read those carefully should be able to tell the difference.
+     *
+     * The warning at the end is the only part that stops the common attack
+     * here, which is not technical: somebody rings the customer, claims to be
+     * the shop, and asks them to read the code out.
+     */
+    public static function verificationCode(string $code, string $purpose, string $shop): string
+    {
+        $what = $purpose === 'password_reset'
+            ? 'reset your password'
+            : 'confirm your number';
+
+        // Read from the service rather than passed in, so the message cannot
+        // promise five minutes while the code is good for two.
+        $minutes = (int) round(OtpService::TTL_SECONDS / 60);
+
+        return "{$code} is your {$shop} code to {$what}. "
+            ."It expires in {$minutes} minutes. We will never ask you for it.";
     }
 
     /** What the shop is owed, when a delivery is going out unpaid. */

@@ -76,7 +76,18 @@ export default function ForgotPassword({ status, errors: serverErrors }) {
                         </Button>
                     </form>
 
+                    {/*
+                     * The way back for everyone who signed up with an address
+                     * they never open, which here is a great many people.
+                     */}
                     <div className="auth-footer-note mt-20">
+                        No longer use that email?{' '}
+                        <Link href={ROUTES.FORGOT_PASSWORD_PHONE}>
+                            Reset by mobile instead
+                        </Link>
+                    </div>
+
+                    <div className="auth-footer-note">
                         <Link href={ROUTES.LOGIN} className="auth-back-link">
                             <ArrowLeft size={14} /> Back to Sign In
                         </Link>

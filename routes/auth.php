@@ -7,6 +7,8 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\PhoneOtpController;
+use App\Http\Controllers\Auth\PhonePasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +43,29 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('password.store');
+
+    /*
+     * Codes sent to a mobile.
+     *
+     * Throttled harder than the forms they serve, and on the IP as well as the
+     * number: OtpService caps how many codes one number can be sent, but
+     * nothing there stops one machine walking through a range of numbers, and
+     * every one of those attempts would be a text the shop paid for.
+     */
+    Route::post('otp/register', [PhoneOtpController::class, 'forRegistration'])
+        ->middleware('throttle:8,10')
+        ->name('otp.register');
+
+    Route::post('otp/password', [PhoneOtpController::class, 'forPasswordReset'])
+        ->middleware('throttle:8,10')
+        ->name('otp.password');
+
+    Route::get('forgot-password/mobile', [PhonePasswordResetController::class, 'create'])
+        ->name('password.phone');
+
+    Route::post('forgot-password/mobile', [PhonePasswordResetController::class, 'store'])
+        ->middleware('throttle:10,10')
+        ->name('password.phone.store');
 });
 
 Route::middleware('auth')->group(function () {

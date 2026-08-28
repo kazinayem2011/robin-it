@@ -35,16 +35,17 @@ export const registerSchema = Yup.object().shape({
     email: Yup.string()
         .required('Email address is required')
         .email('Please enter a valid email address'),
+    /*
+     * Required, and it always was on the server. This said optional, so
+     * anybody who left it blank passed here and was rejected by the back end —
+     * and it is the number every order message and the delivery rider use.
+     */
     phone: Yup.string()
-        .nullable()
-        .transform((value) => value || null)
+        .required('Mobile number is required')
         .test(
-            'bd-phone-optional',
+            'bd-phone',
             'Please enter a valid BD mobile number (e.g. 01711223344)',
-            (value) => {
-                if (!value) return true; // optional — skip validation if empty
-                return isBDPhone(value);
-            },
+            (value) => isBDPhone(value),
         ),
     password: Yup.string()
         .required('Password is required')
@@ -76,5 +77,34 @@ export const resetPasswordSchema = Yup.object().shape({
         .min(8, 'Password must be at least 8 characters'),
     password_confirmation: Yup.string()
         .required('Please confirm your new password')
+        .oneOf([Yup.ref('password'), null], 'Passwords must match exactly'),
+});
+
+/**
+ * The six digits from a text message.
+ *
+ * Trimmed and stripped before it is judged: people paste the code with the
+ * space their phone put in, and refusing that teaches them nothing.
+ */
+export const otpCodeSchema = Yup.string()
+    .transform((value) => (value || '').replace(/\s+/g, ''))
+    .required('Enter the code we sent to your mobile')
+    .matches(/^\d{6}$/, 'The code is six digits');
+
+/** Resetting a password with a code rather than an emailed link. */
+export const forgotPasswordPhoneSchema = Yup.object().shape({
+    phone: Yup.string()
+        .required('Mobile number is required')
+        .test(
+            'bd-phone',
+            'Please enter a valid BD mobile number (e.g. 01711223344)',
+            (value) => isBDPhone(value),
+        ),
+    code: otpCodeSchema,
+    password: Yup.string()
+        .required('Password is required')
+        .min(8, 'Password must be at least 8 characters'),
+    password_confirmation: Yup.string()
+        .required('Please confirm your password')
         .oneOf([Yup.ref('password'), null], 'Passwords must match exactly'),
 });

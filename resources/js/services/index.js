@@ -15,6 +15,7 @@ export { default as settingService } from './settingService';
 export { default as blogService } from './blogService';
 export { default as contactService } from './contactService';
 export { default as warrantyService } from './warrantyService';
+export { default as otpService } from './otpService';
 export { uploadService } from './uploadService';
 export {
     stockNotificationService,

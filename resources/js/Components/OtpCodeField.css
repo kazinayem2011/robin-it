@@ -1,0 +1,101 @@
+/*
+ * The code step, in both sign-up and password reset.
+ *
+ * Deliberately plain. This screen exists for about fifteen seconds and the
+ * only thing on it that matters is the field, so everything else is quiet.
+ */
+/*
+ * Set apart from the field above it. Without the rule the "we sent a code"
+ * line reads as help text belonging to whatever came before, rather than as
+ * the next thing to do.
+ */
+.otp-step {
+    margin-bottom: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color, #e2e5ea);
+}
+
+.otp-step-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.otp-step-sent {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--gray-500, #6b7280);
+}
+
+.otp-step-sent strong {
+    color: var(--dark-800);
+    white-space: nowrap;
+}
+
+.otp-step-edit,
+.otp-step-resend-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+}
+
+.otp-step-edit:hover,
+.otp-step-resend-button:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.otp-step-resend-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.otp-step-resend-button:disabled {
+    color: var(--gray-400);
+    cursor: default;
+}
+
+/*
+ * Six digits, spaced out and centred. Wide tracking is what makes a code read
+ * as a code rather than as a number, and it makes a mistyped digit easy to spot.
+ */
+.otp-step-input input {
+    font-family: var(
+        --font-mono,
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        monospace
+    );
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: 0.5em;
+    /* The tracking after the last digit would otherwise push it off centre. */
+    text-indent: 0.5em;
+    text-align: center;
+}
+
+.otp-step-resend {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.otp-step-countdown {
+    font-size: 0.8rem;
+    color: var(--gray-400);
+}
+
+.otp-step-note {
+    margin: 8px 0 0;
+    font-size: 0.8rem;
+    text-align: center;
+    color: var(--gray-500, #6b7280);
+}
