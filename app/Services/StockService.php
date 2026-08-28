@@ -399,6 +399,12 @@ class StockService
      * Deliberately not an absolute number — the admin states the change and why,
      * so the ledger keeps explaining the balance.
      */
+    /**
+     * @param  Model|null  $reference  what this correction belongs to — a stock
+     *                                 take, so a hundred lines counted in one
+     *                                 morning read as one count rather than a
+     *                                 hundred unexplained corrections
+     */
     public function adjust(
         Product $product,
         ?ProductVariant $variant,
@@ -406,7 +412,8 @@ class StockService
         string $reason,
         ?string $note = null,
         ?int $userId = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        ?Model $reference = null
     ): StockMovement {
         if (! array_key_exists($reason, self::ADJUSTMENT_REASONS)) {
             throw new StorefrontException(
@@ -429,6 +436,7 @@ class StockService
             'note' => $note,
             'user_id' => $userId ?? Auth::id(),
             'store_id' => $storeId,
+            'reference' => $reference,
         ]);
     }
 

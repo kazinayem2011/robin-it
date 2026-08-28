@@ -611,6 +611,20 @@ export const adminService = {
         );
         return response?.data || response;
     },
+
+    // --- Counting the shelves -------------------------------------------
+
+    /**
+     * Apply a count. All or nothing: a count half-applied is worse than one
+     * not applied at all, because nobody can tell which half is real.
+     */
+    async applyStockCount(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STOCK_COUNT,
+            payload,
+        );
+        return response?.data || response;
+    },
 };
 
 export default adminService;

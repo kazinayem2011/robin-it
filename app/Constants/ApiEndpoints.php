@@ -141,6 +141,10 @@ class ApiEndpoints
 
     public const ADMIN_MESSAGE_STATUS = 'messages/{id}/status';
 
+    public const ADMIN_STOCK_COUNT = 'stock/count';
+
+    public const ADMIN_STOCK_ADJUSTMENTS = 'stock/adjustments';
+
     public const ADMIN_ROLES = 'roles';
 
     public const ADMIN_ROLE_ITEM = 'roles/{id}';

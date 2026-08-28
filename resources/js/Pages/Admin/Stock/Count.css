@@ -1,0 +1,197 @@
+/* Counting a branch's shelves. */
+
+.count-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.count-toolbar-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.count-branch-fixed {
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.count-branch-select {
+    padding: 9px 13px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--dark-900);
+    cursor: pointer;
+}
+
+.count-sheet {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+.count-table .count-num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.count-system {
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-500);
+}
+
+/* The field is the point of the screen, so it is the biggest thing in the row. */
+.count-input {
+    width: 90px;
+    padding: 7px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: right;
+    color: var(--dark-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.count-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+/* A row only stands out once it disagrees with the books. */
+.count-row-differs {
+    background: var(--warning-light);
+}
+
+.count-match {
+    font-size: 0.8rem;
+    color: var(--success);
+}
+
+.count-diff {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.count-diff.is-up {
+    color: var(--success-hover);
+}
+
+.count-diff.is-down {
+    color: var(--danger);
+}
+
+.count-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+.count-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 0.86rem;
+    color: var(--gray-600);
+}
+
+.count-summary strong {
+    font-family: var(--font-heading);
+    color: var(--dark-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.count-value-loss strong {
+    color: var(--danger);
+}
+
+.count-value-gain strong {
+    color: var(--success-hover);
+}
+
+.count-note {
+    flex: 1;
+    min-width: 220px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: var(--dark-900);
+}
+
+.count-note:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.count-recent {
+    margin-top: 28px;
+}
+
+.count-recent h2 {
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+}
+
+.count-recent ul {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.count-recent li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    font-size: 0.84rem;
+    color: var(--gray-600);
+}
+
+.count-recent svg {
+    flex-shrink: 0;
+    color: var(--gray-400);
+}
+
+.count-recent strong {
+    font-family: var(--font-heading);
+    color: var(--dark-900);
+}

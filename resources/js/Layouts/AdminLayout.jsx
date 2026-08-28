@@ -29,6 +29,8 @@ import {
     Inbox,
     AtSign,
     FileText,
+    ClipboardList,
+    SlidersHorizontal,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -131,6 +133,30 @@ export default function AdminLayout({
                             <div className="admin-nav-left">
                                 <Boxes size={17} />
                                 <span>Stock & Inventory</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('stock') && (
+                        <Link
+                            href={ROUTES.ADMIN_STOCK_COUNT}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stock/count') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <ClipboardList size={17} />
+                                <span>Stock Take</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('stock') && (
+                        <Link
+                            href={ROUTES.ADMIN_STOCK_ADJUSTMENTS}
+                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stock/adjustments') ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <SlidersHorizontal size={17} />
+                                <span>Adjustments</span>
                             </div>
                         </Link>
                     )}

@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StockTakeController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
@@ -178,6 +179,8 @@ Route::middleware(['auth', 'admin'])
         // Inventory & suppliers, each in their own section.
         Route::get('stock', [StockController::class, 'index'])->name('stock')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_COUNT, [StockTakeController::class, 'create'])->name('stock.count')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_ADJUSTMENTS, [StockTakeController::class, 'adjustments'])->name('stock.adjustments')->middleware('can:stock');
     });
 
 /*

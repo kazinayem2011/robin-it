@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StockTakeController as AdminStockTakeController;
 use App\Http\Controllers\Admin\SubscriberController as AdminSubscriberController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
@@ -232,6 +233,8 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->middleware('can:stock');
+        // Counting the shelves: many corrections, applied as one count.
+        Route::post(ApiEndpoints::ADMIN_STOCK_COUNT, [AdminStockTakeController::class, 'store'])->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches'])->middleware('can:stock');
 
         // Suppliers. `options` is declared before the {id} route or it is
