@@ -32,6 +32,42 @@ class SmsService
         'sms_url',
         'sms_api_key',
         'sms_sender_id',
+        'sms_on_order_placed',
+        'sms_on_shipped',
+        'sms_on_delivered',
+        'sms_on_cancelled',
+        'sms_on_returned',
+        'sms_on_refund',
+        'sms_on_payment_due',
+    ];
+
+    /**
+     * Which messages a shop sends, and what it sends by default.
+     *
+     * Every message costs. The couriers here — Pathao, Steadfast, RedX — text
+     * the customer themselves when a parcel is picked up and when it lands, so
+     * a shop paying to say the same thing twice is paying for noise. Those
+     * default off.
+     *
+     * What stays on is what nobody else will say: that the order was received
+     * at all, that money is owed on delivery, that a refund is on its way, and
+     * that an order was cancelled. A courier does not know about any of those.
+     */
+    public const EVENTS = [
+        'order_placed' => ['label' => 'Order received', 'default' => true,
+            'hint' => 'The confirmation, with a tracking link. Nobody else sends this.'],
+        'payment_due' => ['label' => 'Amount due on delivery', 'default' => true,
+            'hint' => 'Sent with the dispatch note when money is still owed, so the cash is ready when the rider knocks.'],
+        'refund' => ['label' => 'Refund issued', 'default' => true,
+            'hint' => 'A bank transfer takes days to appear; without this the customer chases it.'],
+        'cancelled' => ['label' => 'Order cancelled', 'default' => true,
+            'hint' => 'The courier never knows about a cancellation.'],
+        'shipped' => ['label' => 'Dispatched', 'default' => false,
+            'hint' => 'Your courier already texts this, with their own tracking link.'],
+        'delivered' => ['label' => 'Delivered', 'default' => false,
+            'hint' => 'Your courier already texts this too.'],
+        'returned' => ['label' => 'Return received', 'default' => false,
+            'hint' => 'Rarely worth the cost; the refund message covers what the customer cares about.'],
     ];
 
     /**
@@ -94,6 +130,38 @@ class SmsService
         Log::warning("SMS skipped for {$phone}: no gateway is configured.");
 
         return false;
+    }
+
+    /**
+     * Send one message, if the shop has that one switched on.
+     *
+     * The event name is the point: a shop turns off the two its courier
+     * already sends without losing the four nobody else does.
+     */
+    public function sendEvent(string $event, ?string $to, ?string $message): bool
+    {
+        if (blank($message) || ! $this->sends($event)) {
+            return false;
+        }
+
+        return $this->send($to, $message);
+    }
+
+    /** Whether this particular message is switched on. */
+    public function sends(string $event): bool
+    {
+        if (! $this->enabled()) {
+            return false;
+        }
+
+        $stored = $this->setting('sms_on_'.$event);
+
+        // Never configured: fall back to what this message is worth by default.
+        if ($stored === null || $stored === '') {
+            return (bool) (self::EVENTS[$event]['default'] ?? false);
+        }
+
+        return (bool) $stored && $stored !== '0';
     }
 
     public function enabled(): bool

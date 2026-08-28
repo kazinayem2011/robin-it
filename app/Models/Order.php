@@ -257,7 +257,22 @@ class Order extends Model
     /** Contact number captured at checkout; guest orders have no user record. */
     public function getRecipientPhoneAttribute(): string
     {
-        return $this->shipping_address['phone'] ?? $this->user?->phone ?? 'N/A';
+        return $this->notifiablePhone() ?? 'N/A';
+    }
+
+    /**
+     * A number worth texting, or null.
+     *
+     * recipient_phone answers "N/A" so an invoice reads properly, and that is
+     * the right answer for a printed page and a terrible one for a gateway:
+     * the shop would spend an attempt, and a log line, dialling the letters
+     * N and A. Anything sending a message asks for this instead.
+     */
+    public function notifiablePhone(): ?string
+    {
+        $phone = $this->shipping_address['phone'] ?? $this->user?->phone ?? null;
+
+        return filled($phone) ? (string) $phone : null;
     }
 
     /**

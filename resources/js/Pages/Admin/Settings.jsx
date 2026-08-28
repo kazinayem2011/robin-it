@@ -42,6 +42,7 @@ const tabFromUrl = () => {
 export default function AdminSettings({
     settings = [],
     mailPasswordSet = false,
+    smsEvents = [],
 }) {
     const [activeTab, setActiveTab] = useState(tabFromUrl);
 
@@ -93,8 +94,22 @@ export default function AdminSettings({
         initialMap[s.key] = s.value;
     });
 
+    /*
+     * A message the shop has never touched takes the default the server sent,
+     * not "off" — otherwise opening this tab once and saving would silently
+     * switch off the order confirmation nobody had asked to change.
+     */
+    const smsToggleValues = {};
+    smsEvents.forEach((event) => {
+        smsToggleValues[event.key] =
+            initialMap[event.key] === undefined || initialMap[event.key] === ''
+                ? Boolean(event.default)
+                : initialMap[event.key] === '1';
+    });
+
     const formik = useFormik({
         initialValues: {
+            ...smsToggleValues,
             site_name: initialMap.site_name || 'Robins Computer',
 
             /*
@@ -744,10 +759,9 @@ export default function AdminSettings({
                         <div className="admin-settings-panel">
                             <p className="admin-field-hint admin-settings-intro">
                                 Most customers here read a text and never open
-                                the email. With this on, an order sends a
-                                confirmation, a dispatch note with the courier's
-                                tracking link, and a delivery note. Nothing is
-                                sent for statuses a customer cannot act on.
+                                the email. Every message costs, so choose which
+                                ones are worth sending — your courier already
+                                texts the customer on dispatch and delivery.
                             </p>
 
                             <Checkbox
@@ -793,6 +807,55 @@ export default function AdminSettings({
                                 machine, messages are written to the log so the
                                 flow can be followed without a provider account.
                             </p>
+
+                            {smsEvents.length > 0 && (
+                                <div
+                                    className={`admin-sms-events${formik.values.sms_enabled ? '' : ' is-muted'}`}
+                                >
+                                    <h4 className="admin-settings-subhead">
+                                        Which messages to send
+                                    </h4>
+
+                                    {smsEvents.map((event) => (
+                                        <label
+                                            key={event.key}
+                                            className="admin-sms-event"
+                                        >
+                                            {/*
+                                             * The row is the affordance, so
+                                             * this is the design system's
+                                             * checkbox class on a plain input
+                                             * rather than the Checkbox
+                                             * component, whose own wrapper
+                                             * would shrink the hit area to
+                                             * the tick.
+                                             */}
+                                            <input
+                                                type="checkbox"
+                                                className="custom-checkbox-input"
+                                                name={event.key}
+                                                checked={Boolean(
+                                                    formik.values[event.key],
+                                                )}
+                                                onChange={formik.handleChange}
+                                                disabled={
+                                                    !formik.values.sms_enabled
+                                                }
+                                            />
+                                            <span>
+                                                <strong>{event.label}</strong>
+                                                <small>{event.hint}</small>
+                                            </span>
+                                        </label>
+                                    ))}
+
+                                    {!formik.values.sms_enabled && (
+                                        <p className="admin-field-hint">
+                                            Turn SMS on above to change these.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 

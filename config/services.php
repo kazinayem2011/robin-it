@@ -48,6 +48,19 @@ return [
         'api_key' => env('SMS_API_KEY'),
         'sender_id' => env('SMS_SENDER_ID'),
         'log_fallback' => env('SMS_LOG_FALLBACK', env('APP_ENV') === 'local'),
+
+        /*
+         * Per-message switches, normally set from Settings -> SMS. Left null
+         * here so an unset key falls through to the default in
+         * SmsService::EVENTS rather than reading as "off".
+         */
+        'on_order_placed' => env('SMS_ON_ORDER_PLACED'),
+        'on_shipped' => env('SMS_ON_SHIPPED'),
+        'on_delivered' => env('SMS_ON_DELIVERED'),
+        'on_cancelled' => env('SMS_ON_CANCELLED'),
+        'on_returned' => env('SMS_ON_RETURNED'),
+        'on_refund' => env('SMS_ON_REFUND'),
+        'on_payment_due' => env('SMS_ON_PAYMENT_DUE'),
     ],
 
 ];

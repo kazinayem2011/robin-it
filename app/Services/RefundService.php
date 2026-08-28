@@ -82,9 +82,16 @@ class RefundService
      */
     private function tellTheCustomer(Order $order, float $amount): void
     {
+        $phone = $order->notifiablePhone();
+
+        if (! $phone) {
+            return;
+        }
+
         try {
-            app(SmsService::class)->send(
-                $order->recipient_phone,
+            app(SmsService::class)->sendEvent(
+                'refund',
+                $phone,
                 SmsTemplates::refundIssued($order, $amount, BrandDetails::name())
             );
         } catch (\Throwable $e) {

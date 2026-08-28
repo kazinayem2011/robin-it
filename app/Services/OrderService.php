@@ -553,20 +553,28 @@ class OrderService
      * Only for the statuses a customer can act on. SmsTemplates returns null
      * for the rest, because a message that says nothing still costs the shop
      * money and still interrupts somebody's evening.
+     *
+     * Each status is its own switch in Settings. Dispatch and delivery are off
+     * by default because the courier texts those itself, and a shop paying to
+     * repeat them is paying twice for one piece of news.
      */
     protected function notifyBySms(Order $order): void
     {
+        $phone = $order->notifiablePhone();
+
+        if (! $phone) {
+            return;
+        }
+
         try {
             $order->loadMissing('courier');
             $sms = app(SmsService::class);
 
-            $message = SmsTemplates::statusChanged($order, BrandDetails::name());
-
-            if (! $message) {
-                return;
-            }
-
-            $sms->send($order->recipient_phone, $message);
+            $sms->sendEvent(
+                $order->status,
+                $phone,
+                SmsTemplates::statusChanged($order, BrandDetails::name())
+            );
 
             /*
              * A parcel going out with money still owed on it gets a second
@@ -574,12 +582,17 @@ class OrderService
              * when the rider knocks, and a customer who has to go and find it
              * is a customer who refuses the delivery.
              *
+             * Its own switch, and on by default even though dispatch is off:
+             * the courier tells the customer a parcel is coming, but it has no
+             * idea how much of it is still to pay.
+             *
              * Only on dispatch, and only when something is actually owed — a
              * fully-paid order or a deposit that covered it says nothing.
              */
             if ($order->status === 'shipped' && $order->amount_due > 0) {
-                $sms->send(
-                    $order->recipient_phone,
+                $sms->sendEvent(
+                    'payment_due',
+                    $phone,
                     SmsTemplates::paymentDue($order, $order->amount_due, BrandDetails::name())
                 );
             }
@@ -809,14 +822,22 @@ class OrderService
          * And by text, which for most customers here is the one that gets
          * read. Separately from the mail: a gateway being down must not stop
          * the email, and neither must stop an order that is already committed.
+         *
+         * Skipped outright with no number to send to. An order can be placed
+         * with an email and nothing else, and recipient_phone answers "N/A"
+         * for the benefit of a printed invoice — sending that to a gateway
+         * spends an attempt dialling two letters.
          */
-        try {
-            app(SmsService::class)->send(
-                $order->recipient_phone,
-                SmsTemplates::orderPlaced($order, BrandDetails::name())
-            );
-        } catch (\Throwable $e) {
-            Log::warning("Could not send the order SMS for {$order->order_number}: {$e->getMessage()}");
+        if ($phone = $order->notifiablePhone()) {
+            try {
+                app(SmsService::class)->sendEvent(
+                    'order_placed',
+                    $phone,
+                    SmsTemplates::orderPlaced($order, BrandDetails::name())
+                );
+            } catch (\Throwable $e) {
+                Log::warning("Could not send the order SMS for {$order->order_number}: {$e->getMessage()}");
+            }
         }
     }
 }

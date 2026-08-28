@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\SettingsUpdateRequest;
 use App\Http\Requests\Admin\TestEmailRequest;
 use App\Mail\TestConfigurationMail;
 use App\Models\SiteSetting;
+use App\Services\SmsService;
 use App\Support\MailSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +31,16 @@ class SettingController extends Controller
         return Inertia::render('Admin/Settings', [
             'settings' => $settings,
             'mailPasswordSet' => MailSettings::isPasswordSet(),
+            // Shipped rather than repeated in the page, so which messages
+            // exist and which are on out of the box is decided in one place.
+            'smsEvents' => collect(SmsService::EVENTS)
+                ->map(fn ($event, $key) => [
+                    'key' => 'sms_on_'.$key,
+                    'label' => $event['label'],
+                    'hint' => $event['hint'],
+                    'default' => $event['default'],
+                ])
+                ->values(),
         ]);
     }
 

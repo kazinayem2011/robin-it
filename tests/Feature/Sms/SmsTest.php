@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sms;
 
 use App\Models\Order;
+use App\Models\SiteSetting;
 use App\Services\SmsService;
 use App\Support\SmsTemplates;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -253,6 +254,169 @@ class SmsTest extends TestCase
                 "SmsTemplates::{$template}() is never called, so that message is never sent."
             );
         }
+    }
+
+    // --- which messages a shop pays for ----------------------------------
+
+    /**
+     * The defaults are a spending decision, not a shrug.
+     *
+     * Pathao, Steadfast and RedX all text the customer themselves when a
+     * parcel is picked up and when it lands. A shop repeating that pays twice
+     * for one piece of news, so those two start off. What stays on is what no
+     * courier knows: the order exists, money is owed, a refund is coming, the
+     * order is off.
+     */
+    public function test_the_messages_a_courier_already_sends_are_off_by_default(): void
+    {
+        foreach (['shipped', 'delivered'] as $event) {
+            $this->assertFalse(
+                $this->sms->sends($event),
+                "The {$event} message should be off by default; the courier sends it."
+            );
+        }
+
+        foreach (['order_placed', 'payment_due', 'refund', 'cancelled'] as $event) {
+            $this->assertTrue(
+                $this->sms->sends($event),
+                "The {$event} message should be on by default; nobody else sends it."
+            );
+        }
+    }
+
+    public function test_a_shop_can_switch_any_message_either_way(): void
+    {
+        config(['services.sms.on_shipped' => '1', 'services.sms.on_order_placed' => '0']);
+
+        $this->assertTrue($this->sms->sends('shipped'));
+        $this->assertFalse($this->sms->sends('order_placed'));
+    }
+
+    public function test_switching_sms_off_switches_every_message_off(): void
+    {
+        config(['services.sms.enabled' => false, 'services.sms.on_order_placed' => '1']);
+
+        $this->assertFalse($this->sms->sends('order_placed'));
+    }
+
+    public function test_a_message_that_is_switched_off_is_never_sent(): void
+    {
+        Http::fake();
+        config(['services.sms.on_delivered' => '0']);
+
+        $this->assertFalse(
+            $this->sms->sendEvent('delivered', '01712345678', 'Your order has arrived.')
+        );
+
+        Http::assertNothingSent();
+    }
+
+    /**
+     * A new message must reach the Settings screen, or it can never be
+     * switched off — which is the whole point of having switches.
+     */
+    public function test_every_message_has_a_switch_on_the_settings_screen(): void
+    {
+        foreach (array_keys(SmsService::EVENTS) as $event) {
+            $key = 'sms_on_'.$event;
+
+            $this->assertContains($key, SmsService::KEYS);
+            $this->assertContains(
+                $key,
+                SiteSetting::GROUPS['sms'],
+                "{$key} is missing from the SMS settings group, so the form cannot save it."
+            );
+            $this->assertContains(
+                $key,
+                SiteSetting::editableKeys(),
+                "{$key} would be rejected as an unknown setting when saved."
+            );
+        }
+    }
+
+    /**
+     * A switch nothing checks is a switch that does nothing.
+     *
+     * sendEvent() takes the order status straight through for the status
+     * messages, so a status without a matching event would send unconditionally
+     * — or, once the default is consulted, never send at all.
+     */
+    public function test_every_event_name_used_in_the_app_is_a_real_switch(): void
+    {
+        foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
+            $this->assertArrayHasKey(
+                $status,
+                SmsService::EVENTS,
+                "Orders reach the {$status} status and send a message, but there is no switch for it."
+            );
+        }
+
+        $source = file_get_contents(base_path('app/Services/RefundService.php'))
+            .file_get_contents(base_path('app/Services/OrderService.php'));
+
+        preg_match_all("/sendEvent\(\s*'([a-z_]+)'/", $source, $matches);
+
+        $this->assertNotEmpty($matches[1]);
+
+        foreach (array_unique($matches[1]) as $event) {
+            $this->assertArrayHasKey($event, SmsService::EVENTS, "sendEvent('{$event}') has no switch.");
+        }
+    }
+
+    // --- a customer with no phone ----------------------------------------
+
+    /**
+     * An order can be placed with an email and nothing else.
+     *
+     * recipient_phone answers "N/A" so a printed invoice reads properly, which
+     * is right for a page and wrong for a gateway: the shop would spend an
+     * attempt, and a log line on every such order, dialling two letters.
+     */
+    public function test_an_order_with_no_phone_has_nothing_to_text(): void
+    {
+        $order = $this->order([
+            'order_number' => 'ORD-NOPHONE',
+            'shipping_address' => ['name' => 'Rahim', 'city' => 'Dhaka'],
+        ]);
+
+        $this->assertSame('N/A', $order->recipient_phone);
+        $this->assertNull($order->notifiablePhone());
+    }
+
+    public function test_a_blank_phone_counts_as_no_phone(): void
+    {
+        $order = $this->order([
+            'order_number' => 'ORD-BLANK',
+            'shipping_address' => ['name' => 'Rahim', 'phone' => '', 'city' => 'Dhaka'],
+        ]);
+
+        $this->assertNull($order->notifiablePhone());
+    }
+
+    /**
+     * The guard has to sit before the gateway, not inside it.
+     *
+     * Sending to "N/A" is refused either way; the difference is a warning
+     * logged on every order from every customer who never gave a number.
+     */
+    public function test_nothing_is_dialled_for_an_order_with_no_phone(): void
+    {
+        Http::fake();
+
+        $order = $this->order([
+            'order_number' => 'ORD-NOPHONE2',
+            'shipping_address' => ['name' => 'Rahim', 'city' => 'Dhaka'],
+        ]);
+
+        $this->assertFalse(
+            $this->sms->sendEvent(
+                'order_placed',
+                $order->notifiablePhone(),
+                SmsTemplates::orderPlaced($order, 'Robins Computer')
+            )
+        );
+
+        Http::assertNothingSent();
     }
 
     /** The tracking link is the whole reason the dispatch message is worth sending. */

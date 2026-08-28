@@ -104,6 +104,14 @@ class SiteSetting extends Model
             'sms_url',
             'sms_api_key',
             'sms_sender_id',
+            // Which messages the shop pays to send; see SmsService::EVENTS.
+            'sms_on_order_placed',
+            'sms_on_shipped',
+            'sms_on_delivered',
+            'sms_on_cancelled',
+            'sms_on_returned',
+            'sms_on_refund',
+            'sms_on_payment_due',
         ],
     ];
 
