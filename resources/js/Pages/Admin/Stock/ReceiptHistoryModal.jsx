@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import Modal from '../../../Components/Modal';
 import { TableSkeleton } from '../../../Components/Skeleton';
@@ -93,6 +94,12 @@ export default function ReceiptHistoryModal({ isOpen, onClose }) {
                                         }
                                     >
                                         <td>
+                                            {/* A row that opens should look
+                                                like one. */}
+                                            <ChevronDown
+                                                size={14}
+                                                className={`admin-receipt-chevron ${expanded === receipt.id ? 'is-open' : ''}`}
+                                            />
                                             <strong>{receipt.reference}</strong>
                                             {receipt.invoice_number && (
                                                 <div className="admin-field-hint">

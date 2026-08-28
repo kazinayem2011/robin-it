@@ -47,6 +47,7 @@ export default function ForgotPassword({ status, errors: serverErrors }) {
                         <FormInput
                             id="email"
                             name="email"
+                            required
                             label="Registered Email Address"
                             type="email"
                             value={formik.values.email}

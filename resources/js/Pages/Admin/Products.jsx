@@ -510,6 +510,7 @@ export default function Products({
                     <FormInput
                         id="name"
                         name="name"
+                        required
                         label="Product Title *"
                         value={formik.values.name}
                         onChange={formik.handleChange}
@@ -545,6 +546,7 @@ export default function Products({
                         <FormInput
                             id="price"
                             name="price"
+                            required
                             label="Regular Price (BDT) *"
                             type="number"
                             value={formik.values.price}
@@ -667,6 +669,7 @@ export default function Products({
                             <FormInput
                                 id="stock_quantity"
                                 name="stock_quantity"
+                                required
                                 label="Opening stock"
                                 type="number"
                                 value={formik.values.stock_quantity}

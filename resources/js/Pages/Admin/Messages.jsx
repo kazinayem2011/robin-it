@@ -199,6 +199,11 @@ export default function AdminMessages({
                                     </span>
                                 </span>
                                 <span className="msg-summary-meta">
+                                    {/* A row that opens should look like one. */}
+                                    <ChevronDown
+                                        size={15}
+                                        className={`msg-chevron ${openId === m.id ? 'is-open' : ''}`}
+                                    />
                                     {m.replies?.length > 0 && (
                                         <span className="msg-reply-count">
                                             <CornerDownRight size={12} />

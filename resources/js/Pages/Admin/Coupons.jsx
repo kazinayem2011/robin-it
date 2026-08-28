@@ -267,6 +267,7 @@ export default function AdminCoupons({
                                 <FormSelect
                                     label="Discount Type"
                                     name="discount_type"
+                                    required
                                     formik={formik}
                                     options={[
                                         {

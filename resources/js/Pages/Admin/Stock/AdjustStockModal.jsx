@@ -122,6 +122,7 @@ export default function AdjustStockModal({
                 <FormInput
                     label="Change"
                     name="quantity"
+                    required
                     type="number"
                     formik={formik}
                     placeholder="e.g. -2 to remove two, 3 to add three"
@@ -130,6 +131,7 @@ export default function AdjustStockModal({
                 <FormSelect
                     label="Reason"
                     name="reason"
+                    required
                     formik={formik}
                     options={Object.entries(reasons).map(([value, label]) => ({
                         value,

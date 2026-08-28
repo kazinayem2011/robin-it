@@ -55,6 +55,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                         <FormInput
                             id="email"
                             name="email"
+                            required
                             label="Email Address"
                             type="email"
                             value={formik.values.email}
@@ -73,6 +74,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                         <FormInput
                             id="password"
                             name="password"
+                            required
                             label="New Password (Min. 8 Characters)"
                             type="password"
                             value={formik.values.password}
@@ -93,6 +95,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                         <FormInput
                             id="password_confirmation"
                             name="password_confirmation"
+                            required
                             label="Confirm New Password"
                             type="password"
                             value={formik.values.password_confirmation}

@@ -254,6 +254,7 @@ export default function AdminStores({ stores = [] }) {
                                 <FormSelect
                                     label="Branch Type"
                                     name="branch_type"
+                                    required
                                     formik={formik}
                                     options={[
                                         {

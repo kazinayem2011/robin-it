@@ -115,6 +115,7 @@ export default function Login({
                         <FormInput
                             id="login"
                             name="login"
+                            required
                             label="Email Address or Mobile Number"
                             type="text"
                             value={formik.values.login}
@@ -135,6 +136,7 @@ export default function Login({
                         <FormInput
                             id="password"
                             name="password"
+                            required
                             label="Password"
                             type="password"
                             value={formik.values.password}

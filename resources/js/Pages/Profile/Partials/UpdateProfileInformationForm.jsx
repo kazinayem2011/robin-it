@@ -59,6 +59,7 @@ export default function UpdateProfileInformation({
                 <FormInput
                     id="name"
                     name="name"
+                    required
                     label="Full Name"
                     value={formik.values.name}
                     onChange={formik.handleChange}
@@ -70,6 +71,7 @@ export default function UpdateProfileInformation({
                 <FormInput
                     id="email"
                     name="email"
+                    required
                     label="Email Address"
                     type="email"
                     value={formik.values.email}

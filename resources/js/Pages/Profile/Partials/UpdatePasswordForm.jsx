@@ -56,6 +56,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <FormInput
                     id="current_password"
                     name="current_password"
+                    required
                     label="Current Password"
                     type="password"
                     value={formik.values.current_password}
@@ -71,6 +72,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <FormInput
                     id="password"
                     name="password"
+                    required
                     label="New Password (Min. 8 Characters)"
                     type="password"
                     value={formik.values.password}
@@ -83,6 +85,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                 <FormInput
                     id="password_confirmation"
                     name="password_confirmation"
+                    required
                     label="Confirm New Password"
                     type="password"
                     value={formik.values.password_confirmation}

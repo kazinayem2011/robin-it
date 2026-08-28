@@ -211,6 +211,7 @@ export default function ReceiveStockModal({
                     <FormInput
                         label="Received on"
                         name="received_on"
+                        required
                         type="date"
                         formik={formik}
                     />

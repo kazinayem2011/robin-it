@@ -238,3 +238,15 @@
     background: var(--primary-light);
     color: var(--primary);
 }
+
+/* The row opens; the arrow says so, and turns when it has. */
+.msg-chevron {
+    flex-shrink: 0;
+    color: var(--gray-400);
+    transition: transform var(--transition-fast);
+}
+
+.msg-chevron.is-open {
+    transform: rotate(180deg);
+    color: var(--primary);
+}

@@ -59,6 +59,7 @@ export default function Register({ errors: serverErrors }) {
                         <FormInput
                             id="name"
                             name="name"
+                            required
                             label="Full Name"
                             value={formik.values.name}
                             onChange={formik.handleChange}
@@ -77,6 +78,7 @@ export default function Register({ errors: serverErrors }) {
                         <FormInput
                             id="email"
                             name="email"
+                            required
                             label="Email Address"
                             type="email"
                             value={formik.values.email}
@@ -112,6 +114,7 @@ export default function Register({ errors: serverErrors }) {
                         <FormInput
                             id="password"
                             name="password"
+                            required
                             label="Password (Min. 8 Characters)"
                             type="password"
                             value={formik.values.password}
@@ -131,6 +134,7 @@ export default function Register({ errors: serverErrors }) {
                         <FormInput
                             id="password_confirmation"
                             name="password_confirmation"
+                            required
                             label="Confirm Password"
                             type="password"
                             value={formik.values.password_confirmation}

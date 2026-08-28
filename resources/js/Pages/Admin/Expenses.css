@@ -8,13 +8,23 @@
 .expense-range-inputs {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
     color: var(--color-text-muted, #8a8f98);
 }
 
+/*
+ * Wide enough for the date it holds.
+ *
+ * min-width: 0 let these shrink below what "mm/dd/yyyy" and the picker icon
+ * need, so both boxes clipped their own placeholder — 109px for a field that
+ * wants about 118. They keep a floor now and the row wraps if the card is ever
+ * narrower than two of them, because a date on the next line still reads,
+ * where a cut-off one does not.
+ */
 .expense-range-inputs input {
-    min-width: 0;
-    flex: 1 1 0;
+    min-width: 118px;
+    flex: 1 1 118px;
     padding: 5px 8px;
     font: inherit;
     font-size: 12px;
