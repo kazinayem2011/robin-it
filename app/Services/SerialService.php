@@ -129,17 +129,95 @@ class SerialService
     }
 
     /**
-     * Put units back on the shelf when an order comes back.
+     * Put units back when an order comes back.
+     *
+     * A return splits: some units are resellable and some are damaged, and the
+     * stock ledger already records that difference. The serials have to follow
+     * it, or the two disagree.
+     *
+     * The first version marked every serial on the order as "returned" and left
+     * it there. Nothing ever moved it on, so a unit that came back in perfect
+     * condition and went straight back on the shelf had a serial no sale could
+     * ever pick up again: the stock count said one available, the serial list
+     * said none, and the next customer to buy it got no serial recorded.
+     *
+     * @param  array<int, array{order_item_id?: int, resellable?: int, damaged?: int}>  $lines
+     * @return array{restocked: int, written_off: int}
      */
-    public function returnFromOrder(Order $order): int
+    public function returnFromOrder(Order $order, array $lines = []): array
     {
-        return ProductSerial::where('order_id', $order->id)
+        return DB::transaction(function () use ($order, $lines) {
+            $restocked = 0;
+            $writtenOff = 0;
+
+            /*
+             * With no breakdown — a caller that does not know, or an older one
+             * — everything is treated as resellable. Putting a working unit
+             * back is the recoverable mistake; writing off a good one is not.
+             */
+            if ($lines === []) {
+                $restocked = $this->releaseSerials($order, null, PHP_INT_MAX, ProductSerial::IN_STOCK);
+
+                return ['restocked' => $restocked, 'written_off' => 0];
+            }
+
+            foreach ($lines as $line) {
+                $itemId = $line['order_item_id'] ?? null;
+
+                $restocked += $this->releaseSerials(
+                    $order,
+                    $itemId,
+                    max(0, (int) ($line['resellable'] ?? 0)),
+                    ProductSerial::IN_STOCK
+                );
+
+                $writtenOff += $this->releaseSerials(
+                    $order,
+                    $itemId,
+                    max(0, (int) ($line['damaged'] ?? 0)),
+                    ProductSerial::FAULTY
+                );
+            }
+
+            return ['restocked' => $restocked, 'written_off' => $writtenOff];
+        });
+    }
+
+    /**
+     * Move some of an order's sold units to a resting state.
+     *
+     * The note keeps the fact that a unit came back once, which the status no
+     * longer says: a resellable return goes straight to "on the shelf",
+     * because that is where it is.
+     */
+    private function releaseSerials(Order $order, ?int $itemId, int $howMany, string $status): int
+    {
+        if ($howMany <= 0) {
+            return 0;
+        }
+
+        $units = ProductSerial::where('order_id', $order->id)
             ->where('status', ProductSerial::SOLD)
-            ->update([
-                'status' => ProductSerial::RETURNED,
+            ->when($itemId, fn ($q) => $q->where('order_item_id', $itemId))
+            ->orderBy('id')
+            ->limit($howMany)
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($units as $unit) {
+            $unit->forceFill([
+                'status' => $status,
+                'order_id' => null,
+                'order_item_id' => null,
                 'sold_at' => null,
+                // The cover ended with the sale it was attached to.
                 'warranty_until' => null,
-            ]);
+                'note' => trim(($unit->note ? $unit->note.' ' : '')
+                    .'Came back on '.$order->order_number.'.'),
+            ])->save();
+        }
+
+        return $units->count();
     }
 
     /**

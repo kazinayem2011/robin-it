@@ -14,14 +14,19 @@ class ProductSerial extends Model
 
     public const SOLD = 'sold';
 
-    public const RETURNED = 'returned';
-
     public const FAULTY = 'faulty';
 
+    /*
+     * Three states, because a physical unit is only ever in three places: on a
+     * shelf, with a customer, or written off. "Returned" was a fourth that
+     * nothing moved a unit out of — a working unit that came back was stranded
+     * there, invisible to the next sale, while the stock count said it was
+     * available. A resellable return goes back to the shelf, because that is
+     * where it is; a damaged one is written off.
+     */
     public const STATUSES = [
         self::IN_STOCK => 'On the shelf',
         self::SOLD => 'Sold',
-        self::RETURNED => 'Returned',
         self::FAULTY => 'Faulty / written off',
     ];
 

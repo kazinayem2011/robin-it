@@ -667,9 +667,13 @@ class OrderService
                 'stock_returned_at' => now(),
             ])->save();
 
-            // The units are the shop's again, so their serials stop belonging
-            // to the customer and stop carrying a warranty that has ended.
-            app(SerialService::class)->returnFromOrder($order);
+            /*
+             * The units are the shop's again. The serials follow the same
+             * resellable/damaged split the stock ledger just recorded — a
+             * working unit goes back on the shelf where the next sale can pick
+             * it up, a damaged one is written off.
+             */
+            app(SerialService::class)->returnFromOrder($order, $lines);
         });
 
         return $order->fresh('items');

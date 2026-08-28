@@ -194,7 +194,78 @@ class ProductSerialTest extends TestCase
 
     // --- taking them back -------------------------------------------------
 
-    public function test_a_returned_order_gives_the_units_back(): void
+    /**
+     * A working unit that comes back goes back on the shelf — and can be sold
+     * again.
+     *
+     * The first version parked it in a "returned" state nothing moved it out
+     * of, so the stock count said one available while the serial list said
+     * none, and the next customer to buy it got no serial recorded.
+     */
+    public function test_a_resellable_return_can_be_sold_again(): void
+    {
+        $this->serials->receive($this->product, null, ['SN-1'], $this->store->id);
+        $first = $this->order();
+        $this->serials->assignToOrder($first, $this->store->id);
+
+        $item = $first->items->first();
+        $result = $this->serials->returnFromOrder($first, [
+            ['order_item_id' => $item->id, 'resellable' => 1, 'damaged' => 0],
+        ]);
+
+        $this->assertSame(['restocked' => 1, 'written_off' => 0], $result);
+
+        $unit = ProductSerial::sole();
+        $this->assertSame(ProductSerial::IN_STOCK, $unit->status);
+        $this->assertNull($unit->order_id);
+        // The cover ended with the sale it was attached to.
+        $this->assertNull($unit->warranty_until);
+        // But the fact it came back is kept.
+        $this->assertStringContainsString('Came back on', $unit->note);
+
+        // The point of all of it: the next sale can pick it up.
+        $this->assertSame(1, $this->serials->assignToOrder($this->order(), $this->store->id));
+    }
+
+    /** A damaged return is written off, and never reaches another customer. */
+    public function test_a_damaged_return_is_written_off(): void
+    {
+        $this->serials->receive($this->product, null, ['SN-1'], $this->store->id);
+        $order = $this->order();
+        $this->serials->assignToOrder($order, $this->store->id);
+
+        $result = $this->serials->returnFromOrder($order, [
+            ['order_item_id' => $order->items->first()->id, 'resellable' => 0, 'damaged' => 1],
+        ]);
+
+        $this->assertSame(['restocked' => 0, 'written_off' => 1], $result);
+        $this->assertSame(ProductSerial::FAULTY, ProductSerial::sole()->status);
+        $this->assertSame(0, ProductSerial::available()->count());
+    }
+
+    /** Some back on the shelf, some written off, from one return. */
+    public function test_a_split_return_sends_each_unit_the_right_way(): void
+    {
+        $this->serials->receive($this->product, null, ['SN-1', 'SN-2', 'SN-3'], $this->store->id);
+        $order = $this->order(3);
+        $this->serials->assignToOrder($order, $this->store->id);
+
+        $result = $this->serials->returnFromOrder($order, [
+            ['order_item_id' => $order->items->first()->id, 'resellable' => 2, 'damaged' => 1],
+        ]);
+
+        $this->assertSame(['restocked' => 2, 'written_off' => 1], $result);
+        $this->assertSame(2, ProductSerial::available()->count());
+        $this->assertSame(1, ProductSerial::where('status', ProductSerial::FAULTY)->count());
+    }
+
+    /**
+     * Told nothing, put it back.
+     *
+     * Restocking a working unit is the recoverable mistake; writing off a good
+     * one is not.
+     */
+    public function test_a_return_with_no_breakdown_restocks_everything(): void
     {
         $this->serials->receive($this->product, null, ['SN-1'], $this->store->id);
         $order = $this->order();
@@ -202,11 +273,7 @@ class ProductSerialTest extends TestCase
 
         $this->serials->returnFromOrder($order);
 
-        $unit = ProductSerial::sole();
-        $this->assertSame(ProductSerial::RETURNED, $unit->status);
-        // The cover ended with the sale it was attached to.
-        $this->assertNull($unit->warranty_until);
-        $this->assertNull($unit->under_warranty);
+        $this->assertSame(ProductSerial::IN_STOCK, ProductSerial::sole()->status);
     }
 
     public function test_a_unit_with_a_customer_cannot_be_written_off(): void

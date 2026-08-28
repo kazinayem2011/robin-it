@@ -188,9 +188,13 @@ class WarrantyController extends Controller
                 : $unit->product?->name,
             'warranty_known' => (bool) $expires,
             'is_under_warranty' => $covered,
-            'warranty_period' => $months
-                ? "{$months} months from the date of sale"
-                : 'No warranty period recorded for this product',
+            'warranty_period' => $unit->status === ProductSerial::IN_STOCK
+                ? ($months
+                    ? "{$months} months, starting from the day it is sold"
+                    : 'No warranty period recorded for this product')
+                : ($months
+                    ? "{$months} months from the date of sale"
+                    : 'No warranty period recorded for this product'),
             'purchase_date' => $sold?->format('d M Y'),
             'warranty_expiry' => $expires?->format('d M Y'),
             'days_remaining' => $covered ? (int) now()->diffInDays($expires->endOfDay(), false) : 0,

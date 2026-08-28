@@ -21,6 +21,7 @@ import {
     CheckCircle2,
     AlertCircle,
     Printer,
+    PackageOpen,
 } from 'lucide-react';
 import './Warranty.css';
 
@@ -319,7 +320,19 @@ export default function WarrantyIndex() {
                                         </h3>
                                     </div>
                                     <div>
-                                        {warrantyData.is_under_warranty ? (
+                                        {/*
+                                         * Three answers, not two. A unit still
+                                         * on the shelf has no cover to be
+                                         * inside or outside of, and calling it
+                                         * "expired" sent people arguing about
+                                         * a warranty that had not started.
+                                         */}
+                                        {warrantyData.not_yet_sold ? (
+                                            <span className="warranty-badge-unsold">
+                                                <PackageOpen size={15} /> Not
+                                                sold yet
+                                            </span>
+                                        ) : warrantyData.is_under_warranty ? (
                                             <span className="warranty-badge-active">
                                                 <CheckCircle2 size={15} />{' '}
                                                 Official Warranty Active
