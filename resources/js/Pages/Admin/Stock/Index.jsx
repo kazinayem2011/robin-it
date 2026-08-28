@@ -33,6 +33,7 @@ export default function AdminStock({
     summary = null,
     suppliers = [],
     stores = [],
+    branch = null,
 }) {
     const [receiveOpen, setReceiveOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
@@ -321,7 +322,24 @@ export default function AdminStock({
                             {/* The count doubles as the filter, so noticing
                                 something needs buying and seeing what are the
                                 same click. */}
-                            {stores.length > 1 && (
+                            {/*
+                             * Confined to one branch, this is not a choice to
+                             * offer — but it has to be said, or a storekeeper
+                             * is shown a third of the shop's stock with no
+                             * sign that is what they are looking at.
+                             */}
+                            {branch && (
+                                <div className="admin-stock-stat admin-stock-branch-filter">
+                                    <span className="admin-stock-stat-label">
+                                        Showing
+                                    </span>
+                                    <strong className="admin-stock-branch-fixed">
+                                        {branch}
+                                    </strong>
+                                </div>
+                            )}
+
+                            {!branch && stores.length > 1 && (
                                 <div className="admin-stock-stat admin-stock-branch-filter">
                                     <label
                                         className="admin-stock-stat-label"

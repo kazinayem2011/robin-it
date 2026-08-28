@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
-use App\Models\Store;
 use App\Models\Supplier;
 use App\Services\OrderService;
 use App\Services\StockService;
+use App\Support\BranchScope;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,7 +37,13 @@ class StockController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $onlyReorder = $request->boolean('reorder');
-        $storeId = $request->integer('store') ?: null;
+        /*
+         * A storekeeper assigned to a branch sees that branch, whatever the
+         * query string asks for. Narrowed rather than refused: a branch is a
+         * filter here, and being shown your own shelves is the right answer to
+         * asking for somebody else's.
+         */
+        $storeId = BranchScope::narrow($request->user(), $request->integer('store') ?: null);
 
         $products = Product::query()
             ->with([
@@ -58,11 +66,13 @@ class StockController extends Controller
         return Inertia::render('Admin/Stock/Index', [
             'products' => $products,
             'filters' => ['search' => $search, 'reorder' => $onlyReorder, 'store' => $storeId],
-            'stores' => Store::holdsStock()->orderBy('sort_order')->orderBy('name')
-                ->get(['id', 'name', 'city', 'fulfils_online']),
+            'stores' => BranchScope::storesFor($request->user()),
+            // So the screen can say which branch it is confined to rather than
+            // silently showing a third of the shop.
+            'branch' => BranchScope::name($request->user()),
             'defaultReorderLevel' => (int) config('inventory.default_reorder_level', 10),
             'adjustmentReasons' => StockService::ADJUSTMENT_REASONS,
-            'summary' => $this->summary(),
+            'summary' => $this->summary($storeId),
             // The delivery form fetches the supplier list from its own
             // endpoint; suppliers are managed in their own section.
             'suppliers' => Supplier::active()->orderBy('name')->get(['id', 'name']),
@@ -82,7 +92,39 @@ class StockController extends Controller
      *     units:int, needs_reorder:int, valuation:float, uncosted_units:int
      * }
      */
-    private function summary(): array
+    /**
+     * Refuse an instruction aimed at a branch this person does not work in.
+     *
+     * Refused rather than quietly redirected, because these are instructions
+     * rather than filters: silently moving somebody's delivery or write-off to
+     * a different branch than the one they named would be worse than telling
+     * them no.
+     */
+    private function refuseOtherBranch(Request $request, ?int $storeId): ?JsonResponse
+    {
+        /*
+         * Naming no branch is not naming someone else's. A delivery or a
+         * write-off submitted without one lands wherever the person doing it
+         * works, which BranchScope::narrow decides; only an explicit branch
+         * that is not theirs is refused.
+         */
+        if ($storeId === null || BranchScope::allows($request->user(), $storeId)) {
+            return null;
+        }
+
+        $branch = BranchScope::name($request->user());
+
+        return $this->errorResponse(
+            "You can only do this at {$branch}.",
+            403,
+            ApiCode::FORBIDDEN
+        );
+    }
+
+    /**
+     * @param  int|null  $storeId  the branch to value, or null for the whole shop
+     */
+    private function summary(?int $storeId = null): array
     {
         // The same lookup the order lines use when they snapshot their cost.
         $costs = $this->stock->latestUnitCosts();
@@ -93,12 +135,27 @@ class StockController extends Controller
 
         Product::query()
             ->where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)])
-            ->chunk(200, function ($products) use (&$valuation, &$units, &$uncosted, $costs) {
+            ->with([
+                'variants' => fn ($q) => $q->where('is_active', true),
+                'stockLevels',
+            ])
+            ->chunk(200, function ($products) use (&$valuation, &$units, &$uncosted, $costs, $storeId) {
                 foreach ($products as $product) {
-                    $holdings = $product->has_variants
-                        ? $product->variants->map(fn ($v) => [$v->stock_quantity, $product->id.':'.$v->id])
-                        : collect([[$product->stock_quantity, $product->id.':']]);
+                    /*
+                     * Held at this branch, not across the shop. A storekeeper
+                     * shown the whole company's stock valuation has been told
+                     * something that is not about the shelves in front of them.
+                     */
+                    $holdings = $storeId
+                        ? $product->stockLevels
+                            ->where('store_id', $storeId)
+                            ->map(fn ($level) => [
+                                (int) $level->quantity,
+                                $product->id.':'.($level->product_variant_id ?: ''),
+                            ])
+                        : ($product->has_variants
+                            ? $product->variants->map(fn ($v) => [$v->stock_quantity, $product->id.':'.$v->id])
+                            : collect([[$product->stock_quantity, $product->id.':']]));
 
                     foreach ($holdings as [$quantity, $key]) {
                         $units += $quantity;
@@ -115,6 +172,7 @@ class StockController extends Controller
         return [
             'units' => $units,
             'needs_reorder' => Product::needingReorder()->count(),
+            'branch_scoped' => $storeId !== null,
             'valuation' => round($valuation, 2),
             'uncosted_units' => $uncosted,
         ];
@@ -125,8 +183,13 @@ class StockController extends Controller
     {
         $product = Product::with('variants')->findOrFail($productId);
 
+        $branch = BranchScope::for($request->user());
+
         $movements = StockMovement::where('product_id', $productId)
             ->when($request->query('variant_id'), fn ($q, $id) => $q->where('product_variant_id', $id))
+            // Somebody else's branch receiving a pallet is not this branch's
+            // history, and the running balance shown beside it is not theirs.
+            ->when($branch, fn ($q) => $q->where('store_id', $branch))
             ->with(['user:id,name', 'variant:id,name'])
             ->latest('id')
             ->paginate(50);
@@ -159,6 +222,10 @@ class StockController extends Controller
             'lines.required' => 'Add at least one product to this delivery.',
         ]);
 
+        if ($refusal = $this->refuseOtherBranch($request, $validated['store_id'] ?? null)) {
+            return $refusal;
+        }
+
         $receipt = $this->stock->receive(
             [
                 'supplier_id' => $validated['supplier_id'] ?? null,
@@ -166,7 +233,7 @@ class StockController extends Controller
                 'invoice_number' => $validated['invoice_number'] ?? null,
                 'received_on' => $validated['received_on'] ?? now()->toDateString(),
                 'note' => $validated['note'] ?? null,
-                'store_id' => $validated['store_id'] ?? null,
+                'store_id' => BranchScope::narrow($request->user(), $validated['store_id'] ?? null),
             ],
             $validated['lines'],
             $request->user()?->id
@@ -182,7 +249,10 @@ class StockController extends Controller
     /** Past deliveries, for reference and reconciliation. */
     public function receipts(Request $request)
     {
+        $branch = BranchScope::for($request->user());
+
         $receipts = StockReceipt::with(['items.product:id,name', 'items.variant:id,name', 'user:id,name', 'supplier:id,name'])
+            ->when($branch, fn ($q) => $q->where('store_id', $branch))
             ->latest('received_on')
             ->latest('id')
             ->paginate(25);
@@ -210,6 +280,10 @@ class StockController extends Controller
             'reason.in' => 'Choose a reason for this adjustment.',
         ]);
 
+        if ($refusal = $this->refuseOtherBranch($request, $validated['store_id'] ?? null)) {
+            return $refusal;
+        }
+
         [$product, $variant] = $this->stock->resolveUnit(
             (int) $validated['product_id'],
             $validated['product_variant_id'] ?? null
@@ -222,7 +296,7 @@ class StockController extends Controller
             $validated['reason'],
             $validated['note'] ?? null,
             $request->user()?->id,
-            $validated['store_id'] ?? null
+            BranchScope::narrow($request->user(), $validated['store_id'] ?? null)
         );
 
         $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
@@ -275,6 +349,12 @@ class StockController extends Controller
             'to_store_id.different' => 'Choose two different branches.',
         ]);
 
+        // Sending stock away is the one move that empties a shelf somebody
+        // else is answerable for, so it may only start from your own.
+        if ($refusal = $this->refuseOtherBranch($request, (int) $validated['from_store_id'])) {
+            return $refusal;
+        }
+
         [$product, $variant] = $this->stock->resolveUnit(
             (int) $validated['product_id'],
             $validated['product_variant_id'] ?? null
@@ -310,7 +390,18 @@ class StockController extends Controller
             $validated['variant_id'] ?? null
         );
 
-        return $this->successResponse($this->stock->branchBreakdown($product, $variant));
+        $breakdown = $this->stock->branchBreakdown($product, $variant);
+        $branch = BranchScope::for($request->user());
+
+        // What the other branches are holding is not this person's to see.
+        if ($branch) {
+            $breakdown = collect($breakdown)
+                ->filter(fn ($row) => (int) ($row['store_id'] ?? 0) === $branch)
+                ->values()
+                ->all();
+        }
+
+        return $this->successResponse($breakdown);
     }
 
     /** Options that can hold stock, for the receive and adjust pickers. */

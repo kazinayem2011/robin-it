@@ -3459,3 +3459,10 @@
 .admin-attention-card.is-clear .admin-attention-label {
     color: var(--gray-400);
 }
+
+/* The branch a storekeeper is confined to: stated, not offered as a choice. */
+.admin-stock-branch-fixed {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
