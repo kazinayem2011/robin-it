@@ -62,6 +62,34 @@ export default function AdminLayout({
     const currentUrl =
         typeof window !== 'undefined' ? window.location.pathname : '';
 
+    /*
+     * Only the deepest link lights up.
+     *
+     * Every link tested currentUrl.startsWith(its own path), so on
+     * /admin/stock/count both "Stock & Inventory" and "Stock Take" were
+     * highlighted — the sidebar claimed to be in two places at once. Somebody
+     * had already hit this with expenses and patched that one link with a
+     * !startsWith of the other; the next nested route would have needed the
+     * same patch again.
+     *
+     * The admin paths come from ROUTES rather than a list kept here, so a link
+     * added later is covered without anyone remembering to register it.
+     */
+    const activePath = React.useMemo(() => {
+        const paths = Object.values(ROUTES)
+            .filter((v) => typeof v === 'string' && v.startsWith('/admin'))
+            .sort((a, b) => b.length - a.length);
+
+        return (
+            paths.find(
+                (path) =>
+                    currentUrl === path || currentUrl.startsWith(path + '/'),
+            ) ?? null
+        );
+    }, [currentUrl]);
+
+    const isActive = (path) => activePath === path;
+
     // Close it after navigating, or the drawer stays over the page just
     // arrived at. Declared after currentUrl: a dependency array is evaluated
     // during render, so referencing it earlier is a temporal dead zone error.
@@ -93,7 +121,7 @@ export default function AdminLayout({
 
                     <Link
                         href={ROUTES.ADMIN_DASHBOARD}
-                        className={`admin-nav-link ${currentUrl.startsWith('/admin/dashboard') ? 'active' : ''}`}
+                        className={`admin-nav-link ${isActive(ROUTES.ADMIN_DASHBOARD) ? 'active' : ''}`}
                     >
                         <div className="admin-nav-left">
                             <LayoutDashboard size={17} />
@@ -104,7 +132,7 @@ export default function AdminLayout({
                     {can('orders') && (
                         <Link
                             href={ROUTES.ADMIN_ORDERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/orders') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_ORDERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <ShoppingCart size={17} />
@@ -116,7 +144,7 @@ export default function AdminLayout({
                     {can('catalogue') && (
                         <Link
                             href={ROUTES.ADMIN_PRODUCTS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/products') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_PRODUCTS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Package size={17} />
@@ -128,7 +156,7 @@ export default function AdminLayout({
                     {can('stock') && (
                         <Link
                             href={ROUTES.ADMIN_STOCK}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stock') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Boxes size={17} />
@@ -140,7 +168,7 @@ export default function AdminLayout({
                     {can('stock') && (
                         <Link
                             href={ROUTES.ADMIN_STOCK_COUNT}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stock/count') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_COUNT) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <ClipboardList size={17} />
@@ -152,7 +180,7 @@ export default function AdminLayout({
                     {can('stock') && (
                         <Link
                             href={ROUTES.ADMIN_STOCK_ADJUSTMENTS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stock/adjustments') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_ADJUSTMENTS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <SlidersHorizontal size={17} />
@@ -164,7 +192,7 @@ export default function AdminLayout({
                     {can('stock') && (
                         <Link
                             href={ROUTES.ADMIN_SUPPLIERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/suppliers') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SUPPLIERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Truck size={17} />
@@ -176,7 +204,7 @@ export default function AdminLayout({
                     {can('catalogue') && (
                         <Link
                             href={ROUTES.ADMIN_CATEGORIES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/categories') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_CATEGORIES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <FolderTree size={17} />
@@ -188,7 +216,7 @@ export default function AdminLayout({
                     {can('customers') && (
                         <Link
                             href={ROUTES.ADMIN_CUSTOMERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/customers') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_CUSTOMERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Users size={17} />
@@ -200,7 +228,7 @@ export default function AdminLayout({
                     {can('couriers') && (
                         <Link
                             href={ROUTES.ADMIN_COURIERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/couriers') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_COURIERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Truck size={17} />
@@ -218,7 +246,7 @@ export default function AdminLayout({
                     {can('refunds') && (
                         <Link
                             href={ROUTES.ADMIN_REFUNDS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/refunds') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REFUNDS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Undo2 size={17} />
@@ -230,14 +258,7 @@ export default function AdminLayout({
                     {can('finance') && (
                         <Link
                             href={ROUTES.ADMIN_EXPENSES}
-                            className={`admin-nav-link ${
-                                currentUrl.startsWith('/admin/expenses') &&
-                                !currentUrl.startsWith(
-                                    '/admin/expense-categories',
-                                )
-                                    ? 'active'
-                                    : ''
-                            }`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_EXPENSES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Wallet size={17} />
@@ -249,7 +270,7 @@ export default function AdminLayout({
                     {can('finance') && (
                         <Link
                             href={ROUTES.ADMIN_EXPENSE_CATEGORIES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/expense-categories') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_EXPENSE_CATEGORIES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Tags size={17} />
@@ -261,7 +282,7 @@ export default function AdminLayout({
                     {can('finance') && (
                         <Link
                             href={ROUTES.ADMIN_REPORTS_PROFIT}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/reports') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REPORTS_PROFIT) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <LineChart size={17} />
@@ -281,7 +302,7 @@ export default function AdminLayout({
                     {can('marketing') && (
                         <Link
                             href={ROUTES.ADMIN_BANNERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/banners') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_BANNERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Image size={17} />
@@ -293,7 +314,7 @@ export default function AdminLayout({
                     {can('marketing') && (
                         <Link
                             href={ROUTES.ADMIN_COUPONS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/coupons') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_COUPONS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Tag size={17} />
@@ -305,7 +326,7 @@ export default function AdminLayout({
                     {can('marketing') && (
                         <Link
                             href={ROUTES.ADMIN_BLOGS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/blogs') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_BLOGS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <BookOpen size={17} />
@@ -317,7 +338,7 @@ export default function AdminLayout({
                     {can('settings') && (
                         <Link
                             href={ROUTES.ADMIN_STORES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/stores') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STORES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <MapPin size={17} />
@@ -329,7 +350,7 @@ export default function AdminLayout({
                     {can('support') && (
                         <Link
                             href={ROUTES.ADMIN_REVIEWS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/reviews') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REVIEWS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <MessageSquare size={17} />
@@ -341,7 +362,7 @@ export default function AdminLayout({
                     {can('support') && (
                         <Link
                             href={ROUTES.ADMIN_WARRANTY}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/warranty') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_WARRANTY) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <ShieldCheck size={17} />
@@ -353,7 +374,7 @@ export default function AdminLayout({
                     {can('support') && (
                         <Link
                             href={ROUTES.ADMIN_MESSAGES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/messages') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_MESSAGES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Inbox size={17} />
@@ -365,7 +386,7 @@ export default function AdminLayout({
                     {can('marketing') && (
                         <Link
                             href={ROUTES.ADMIN_PAGES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/pages') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_PAGES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <FileText size={17} />
@@ -377,7 +398,7 @@ export default function AdminLayout({
                     {can('marketing') && (
                         <Link
                             href={ROUTES.ADMIN_SUBSCRIBERS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/subscribers') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SUBSCRIBERS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <AtSign size={17} />
@@ -389,7 +410,7 @@ export default function AdminLayout({
                     {can('staff') && (
                         <Link
                             href={ROUTES.ADMIN_ROLES}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/roles') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_ROLES) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <ShieldCheck size={17} />
@@ -401,7 +422,7 @@ export default function AdminLayout({
                     {can('staff') && (
                         <Link
                             href={ROUTES.ADMIN_STAFF}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/staff') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STAFF) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <UserCog size={17} />
@@ -413,7 +434,7 @@ export default function AdminLayout({
                     {can('settings') && (
                         <Link
                             href={ROUTES.ADMIN_SETTINGS}
-                            className={`admin-nav-link ${currentUrl.startsWith('/admin/settings') ? 'active' : ''}`}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SETTINGS) ? 'active' : ''}`}
                         >
                             <div className="admin-nav-left">
                                 <Sliders size={17} />

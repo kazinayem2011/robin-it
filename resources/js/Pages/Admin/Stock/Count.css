@@ -195,3 +195,29 @@
     font-family: var(--font-heading);
     color: var(--dark-900);
 }
+
+/* Where corrections are actually made, said on the screen that records them. */
+.adj-intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.adj-intro p {
+    max-width: 62ch;
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: var(--gray-600);
+}
+
+.adj-intro strong {
+    color: var(--dark-900);
+}

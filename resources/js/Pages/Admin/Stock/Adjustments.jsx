@@ -1,11 +1,14 @@
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, ArrowRight, ClipboardList } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
 import { formatBdt } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
+import './Count.css';
 
 /**
  * Every correction made to stock, and what it cost.
@@ -101,6 +104,33 @@ export default function StockAdjustments({
         >
             <Head title="Stock adjustments" />
 
+            {/*
+             * This screen is the record, not the place corrections are made —
+             * an adjustment needs a product, and the product list is where you
+             * have one in front of you. Saying so, with the way there, beats
+             * leaving somebody to hunt for a button that is on another page.
+             */}
+            <div className="adj-intro">
+                <p>
+                    Corrections are made from the product list: find the item,
+                    press <strong>Adjust</strong>, and say how many and why.
+                    Counting a whole branch at once is a{' '}
+                    <strong>stock take</strong>.
+                </p>
+                <div className="admin-input-row-flex">
+                    <Link href={ROUTES.ADMIN_STOCK}>
+                        <Button variant="secondary" icon={ArrowRight}>
+                            Adjust a product
+                        </Button>
+                    </Link>
+                    <Link href={ROUTES.ADMIN_STOCK_COUNT}>
+                        <Button variant="secondary" icon={ClipboardList}>
+                            Start a stock take
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+
             {/* The three numbers the screen exists to answer. */}
             <div
                 className="admin-attention-grid"
@@ -189,7 +219,7 @@ export default function StockAdjustments({
                     </div>
                 }
                 emptyTitle="No adjustments in this period"
-                emptyDescription="Corrections made from the stock screen or a stock take appear here."
+                emptyDescription="Nothing has been corrected in this period. Adjustments made from the product list, and stock takes, appear here."
                 emptyIcon={SlidersHorizontal}
                 pagination={false}
             />
