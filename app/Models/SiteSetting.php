@@ -96,6 +96,15 @@ class SiteSetting extends Model
             'mail_from_address',
             'mail_from_name',
         ],
+        // Also credentials, and also never published: a gateway token in the
+        // page source would let anyone send messages on the shop's account.
+        'sms' => [
+            'sms_enabled',
+            'sms_token',
+            'sms_url',
+            'sms_api_key',
+            'sms_sender_id',
+        ],
     ];
 
     /** Groups whose values are safe in a browser. */
@@ -162,7 +171,11 @@ class SiteSetting extends Model
      * meant the SMTP host, username and password ciphertext were in the props of
      * every public page for every visitor.
      */
-    private const PRIVATE_PREFIXES = ['mail_', 'smtp_'];
+    /*
+     * sms_ joins these: a gateway token is a credential, and the storefront
+     * shares public settings with every visitor.
+     */
+    private const PRIVATE_PREFIXES = ['mail_', 'smtp_', 'sms_'];
 
     private const PRIVATE_SUFFIXES = ['_password', '_secret', '_token', '_key'];
 

@@ -20,6 +20,8 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Courier\CourierDriverRegistry;
+use App\Support\BrandDetails;
+use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -523,7 +525,12 @@ class OrderService
     }
 
     /**
-     * Tell the customer their order moved, without letting mail hold it up.
+     * Tell the customer their order moved, without letting the message hold it
+     * up.
+     *
+     * Email and SMS both, and separately: a shop here can rely on the text
+     * being read and the email not being, and a gateway that is down must not
+     * stop the mail going out or the order from having moved.
      */
     protected function notifyStatusChange(Order $order): void
     {
@@ -535,6 +542,31 @@ class OrderService
             }
         } catch (\Throwable $e) {
             Log::warning("Could not dispatch OrderStatusUpdatedMail: {$e->getMessage()}");
+        }
+
+        $this->notifyBySms($order);
+    }
+
+    /**
+     * The same news, by text.
+     *
+     * Only for the statuses a customer can act on. SmsTemplates returns null
+     * for the rest, because a message that says nothing still costs the shop
+     * money and still interrupts somebody's evening.
+     */
+    protected function notifyBySms(Order $order): void
+    {
+        try {
+            $message = SmsTemplates::statusChanged(
+                $order->loadMissing('courier'),
+                BrandDetails::name()
+            );
+
+            if ($message) {
+                app(SmsService::class)->send($order->recipient_phone, $message);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Could not send the order SMS: {$e->getMessage()}");
         }
     }
 
@@ -753,6 +785,20 @@ class OrderService
             }
         } catch (\Throwable $e) {
             Log::warning("Could not dispatch OrderConfirmationMail for {$order->order_number}: {$e->getMessage()}");
+        }
+
+        /*
+         * And by text, which for most customers here is the one that gets
+         * read. Separately from the mail: a gateway being down must not stop
+         * the email, and neither must stop an order that is already committed.
+         */
+        try {
+            app(SmsService::class)->send(
+                $order->recipient_phone,
+                SmsTemplates::orderPlaced($order, BrandDetails::name())
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Could not send the order SMS for {$order->order_number}: {$e->getMessage()}");
         }
     }
 }

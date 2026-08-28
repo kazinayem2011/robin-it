@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    /*
+     * SMS. The Settings screen is the source of truth for a live shop; these
+     * are the fallbacks, and the log_fallback is what makes the whole flow
+     * followable locally without a provider account.
+     */
+    'sms' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'token' => env('SMS_TOKEN'),
+        'greenweb_url' => env('GREENWEB_SMS_URL', 'http://api.greenweb.com.bd/api.php?json'),
+        'url' => env('SMS_API_URL'),
+        'api_key' => env('SMS_API_KEY'),
+        'sender_id' => env('SMS_SENDER_ID'),
+        'log_fallback' => env('SMS_LOG_FALLBACK', env('APP_ENV') === 'local'),
+    ],
+
 ];

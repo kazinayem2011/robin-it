@@ -20,9 +20,10 @@ import {
     Search,
     Send,
     Percent,
+    MessageSquare,
 } from 'lucide-react';
 
-const TABS = ['general', 'shipping', 'tax', 'email', 'seo', 'ticker'];
+const TABS = ['general', 'shipping', 'tax', 'email', 'sms', 'seo', 'ticker'];
 
 /**
  * The tab lives in the URL so a refresh (or a shared link) reopens the same one
@@ -162,6 +163,11 @@ export default function AdminSettings({
                 initialMap.free_shipping_threshold || 50000,
             ),
             mail_mailer: initialMap.mail_mailer || 'smtp',
+            sms_enabled: initialMap.sms_enabled === '1',
+            sms_token: initialMap.sms_token || '',
+            sms_url: initialMap.sms_url || '',
+            sms_api_key: initialMap.sms_api_key || '',
+            sms_sender_id: initialMap.sms_sender_id || '',
             mail_host: initialMap.mail_host || 'smtp.mailtrap.io',
             mail_port: Number(initialMap.mail_port || 2525),
             mail_username: initialMap.mail_username || '',
@@ -264,6 +270,11 @@ export default function AdminSettings({
                             key: 'email',
                             label: 'Email & SMTP Config',
                             icon: Mail,
+                        },
+                        {
+                            key: 'sms',
+                            label: 'SMS',
+                            icon: MessageSquare,
                         },
                         {
                             key: 'seo',
@@ -729,6 +740,62 @@ export default function AdminSettings({
 
                     {/* TAB 4: Announcement Ticker */}
                     {/* TAB: SEO & Social */}
+                    {activeTab === 'sms' && (
+                        <div className="admin-settings-panel">
+                            <p className="admin-field-hint admin-settings-intro">
+                                Most customers here read a text and never open
+                                the email. With this on, an order sends a
+                                confirmation, a dispatch note with the courier's
+                                tracking link, and a delivery note. Nothing is
+                                sent for statuses a customer cannot act on.
+                            </p>
+
+                            <Checkbox
+                                name="sms_enabled"
+                                label="Send order updates by SMS"
+                                checked={formik.values.sms_enabled}
+                                onChange={formik.handleChange}
+                            />
+
+                            <div className="form-row-2col">
+                                <FormInput
+                                    label="GreenWeb token"
+                                    name="sms_token"
+                                    formik={formik}
+                                    placeholder="Leave blank to use the gateway below"
+                                />
+                                <FormInput
+                                    label="Sender ID"
+                                    name="sms_sender_id"
+                                    formik={formik}
+                                    placeholder="The name messages arrive from"
+                                />
+                            </div>
+
+                            <div className="form-row-2col">
+                                <FormInput
+                                    label="Gateway URL"
+                                    name="sms_url"
+                                    formik={formik}
+                                    placeholder="https://your-provider/api/send"
+                                />
+                                <FormInput
+                                    label="Gateway API key"
+                                    name="sms_api_key"
+                                    formik={formik}
+                                />
+                            </div>
+
+                            <p className="admin-field-hint">
+                                A GreenWeb token is used on its own when one is
+                                set. Otherwise the URL, key and sender ID are
+                                used together. With neither, and only on a local
+                                machine, messages are written to the log so the
+                                flow can be followed without a provider account.
+                            </p>
+                        </div>
+                    )}
+
                     {activeTab === 'seo' && (
                         <div className="admin-card">
                             <div className="admin-card-header">
