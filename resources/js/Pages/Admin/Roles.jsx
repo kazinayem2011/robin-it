@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { ShieldCheck, Plus, Trash2, Lock, Users } from 'lucide-react';
+import {
+    ShieldCheck,
+    Plus,
+    Trash2,
+    Lock,
+    Users,
+    Check,
+    Pencil,
+} from 'lucide-react';
 import Button from '@/Components/Button';
 import { Checkbox } from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
@@ -14,6 +22,11 @@ import { adminRoleSchema } from '@/validations';
 import './Roles.css';
 
 const empty = { key: '', label: '', description: '', abilities: [] };
+
+/** The owner covers everything and the customer covers nothing; neither is
+ *  ours to change here. */
+const isLockedRole = (role, ownerKey, customerKey) =>
+    Boolean(role) && (role.key === ownerKey || role.key === customerKey);
 
 /**
  * What each job covers.
@@ -30,7 +43,6 @@ export default function AdminRoles({
 }) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [saving, setSaving] = useState(null);
 
     const formik = useFormik({
         initialValues: empty,
@@ -70,29 +82,6 @@ export default function AdminRoles({
             },
         });
         setModalOpen(true);
-    };
-
-    // Ticking a box on the card saves it straight away: opening a modal to
-    // change one checkbox is a step for nothing.
-    const toggleAbility = async (role, ability, on) => {
-        const next = on
-            ? [...role.abilities, ability]
-            : role.abilities.filter((a) => a !== ability);
-
-        setSaving(`${role.id}:${ability}`);
-        try {
-            await adminService.updateRole(role.id, {
-                key: role.key,
-                label: role.label,
-                description: role.description || '',
-                abilities: next,
-            });
-            router.reload({ only: ['roles'] });
-        } catch (err) {
-            toast.error(err?.message || 'Could not change that.');
-        } finally {
-            setSaving(null);
-        }
     };
 
     const remove = async (role) => {
@@ -159,14 +148,16 @@ export default function AdminRoles({
                                         </span>
                                     </div>
                                     <div className="admin-input-row-flex">
-                                        <button
-                                            type="button"
-                                            className="admin-table-icon-btn"
-                                            title="Rename or describe"
-                                            onClick={() => openEdit(role)}
-                                        >
-                                            Edit
-                                        </button>
+                                        {!isCustomer && (
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                icon={Pencil}
+                                                onClick={() => openEdit(role)}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
                                         {!role.is_system && (
                                             <button
                                                 type="button"
@@ -200,35 +191,36 @@ export default function AdminRoles({
                                     </p>
                                 )}
 
+                                {/*
+                                 * What the role covers, read only. This was a
+                                 * column of live checkboxes, so every tick was
+                                 * a request and a page reload — six clicks to
+                                 * set up a role meant six saves and six
+                                 * reloads. Changes are made in the modal and
+                                 * saved once.
+                                 */}
                                 {!isCustomer && (
-                                    <div className="role-abilities">
-                                        {abilities.map((a) => (
-                                            <Checkbox
-                                                key={a.key}
-                                                id={`r${role.id}-${a.key}`}
-                                                name={`r${role.id}-${a.key}`}
-                                                label={a.label}
-                                                checked={
-                                                    isOwner ||
-                                                    role.abilities.includes(
-                                                        a.key,
-                                                    )
-                                                }
-                                                disabled={
-                                                    locked ||
-                                                    saving ===
-                                                        `${role.id}:${a.key}`
-                                                }
-                                                onChange={(e) =>
-                                                    toggleAbility(
-                                                        role,
-                                                        a.key,
-                                                        e.target.checked,
-                                                    )
-                                                }
-                                            />
+                                    <ul className="role-abilities">
+                                        {(isOwner
+                                            ? abilities
+                                            : abilities.filter((a) =>
+                                                  role.abilities.includes(
+                                                      a.key,
+                                                  ),
+                                              )
+                                        ).map((a) => (
+                                            <li key={a.key}>
+                                                <Check size={13} />
+                                                {a.label}
+                                            </li>
                                         ))}
-                                    </div>
+                                        {!isOwner &&
+                                            role.abilities.length === 0 && (
+                                                <li className="role-none">
+                                                    Covers nothing yet
+                                                </li>
+                                            )}
+                                    </ul>
                                 )}
                             </article>
                         );
@@ -297,7 +289,7 @@ export default function AdminRoles({
                         placeholder="Runs the floor on evenings. Orders and stock, no money."
                     />
 
-                    {!editing && (
+                    {!isLockedRole(editing, ownerKey, customerKey) && (
                         <div className="role-modal-abilities">
                             <span className="admin-form-field-label">
                                 What it covers
@@ -305,7 +297,7 @@ export default function AdminRoles({
                             {abilities.map((a) => (
                                 <Checkbox
                                     key={a.key}
-                                    name={`new-${a.key}`}
+                                    name={`ability-${a.key}`}
                                     label={a.label}
                                     checked={formik.values.abilities.includes(
                                         a.key,

@@ -3381,3 +3381,81 @@
     margin-top: 3px;
     color: var(--warning-hover);
 }
+
+/* ==========================================================================
+   NEEDS ATTENTION
+   The KPI row says what the business looks like; this says what is waiting for
+   somebody. It also fills a row that held one card and three empty columns.
+   ========================================================================== */
+.admin-attention {
+    margin-bottom: 22px;
+}
+
+.admin-attention-title {
+    margin-bottom: 12px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+}
+
+.admin-attention-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.admin-attention-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    transition: all var(--transition-fast);
+}
+
+.admin-attention-card:hover {
+    border-color: var(--gray-300);
+    transform: translateY(-1px);
+}
+
+.admin-attention-count {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--dark-900);
+}
+
+.admin-attention-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dark-800);
+}
+
+.admin-attention-hint {
+    font-size: 0.76rem;
+    color: var(--gray-500);
+}
+
+/* Colour is for the ones with something in them. A pile of zeroes lit up in
+   amber is a dashboard that cries wolf. */
+.admin-attention-card.tone-warn .admin-attention-count {
+    color: var(--warning-hover);
+}
+
+.admin-attention-card.tone-info .admin-attention-count {
+    color: var(--info);
+}
+
+.admin-attention-card.is-clear {
+    background: var(--bg-surface-subtle);
+}
+
+.admin-attention-card.is-clear .admin-attention-count,
+.admin-attention-card.is-clear .admin-attention-label {
+    color: var(--gray-400);
+}

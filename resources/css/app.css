@@ -2006,6 +2006,17 @@ textarea.has-error:focus,
     box-shadow: 0 2px 8px var(--primary-glow);
 }
 
+/*
+ * A textarea is for more than one line, so it opens at a size that says so.
+ * rows= still wins where a field wants to be taller; this is the floor.
+ */
+textarea,
+textarea.form-control-input,
+textarea.admin-form-input {
+    min-height: 150px;
+    resize: vertical;
+}
+
 /* ==========================================================================
    13. CENTRALIZED FORM INPUT COMPONENT (SSOT)
    ========================================================================== */

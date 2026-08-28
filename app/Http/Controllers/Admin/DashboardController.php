@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\User;
+use App\Models\WarrantyClaim;
 use App\Support\ProfitAndLoss;
 use App\Support\QueueHealth;
 use App\Support\SalesMargin;
@@ -64,7 +67,80 @@ class DashboardController extends Controller
             // A dead queue worker means customers silently stop receiving
             // order emails. Nothing else in the app would say so.
             'queueHealth' => QueueHealth::check(),
+
+            /*
+             * Work waiting for somebody, filling a row that held one card and
+             * three gaps. Each is only counted for a viewer whose role covers
+             * it — a storekeeper has no business knowing how many customers
+             * have written in, and Inertia ships every prop in the page source.
+             */
+            'attention' => $this->needsAttention($request),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function needsAttention(Request $request): array
+    {
+        $user = $request->user();
+
+        $items = [
+            [
+                'ability' => 'stock',
+                'label' => 'Low stock',
+                'hint' => 'At or below the threshold',
+                'count' => Product::where('is_active', true)->where('stock_quantity', '<=', 10)->count(),
+                'url' => '/admin/stock',
+                'tone' => 'warn',
+            ],
+            [
+                'ability' => 'orders',
+                'label' => 'Awaiting dispatch',
+                'hint' => 'Paid for, not yet with a courier',
+                'count' => Order::whereIn('status', ['pending', 'processing'])->count(),
+                'url' => '/admin/orders',
+                'tone' => 'info',
+            ],
+            [
+                'ability' => 'support',
+                'label' => 'Unanswered messages',
+                'hint' => 'Nobody has replied yet',
+                'count' => ContactMessage::where('status', ContactMessage::STATUS_NEW)->count(),
+                'url' => '/admin/messages',
+                'tone' => 'info',
+            ],
+            [
+                'ability' => 'support',
+                'label' => 'Reviews to approve',
+                'hint' => 'Written but not yet published',
+                'count' => ProductReview::where('is_approved', false)->count(),
+                'url' => '/admin/reviews',
+                'tone' => 'info',
+            ],
+            [
+                'ability' => 'support',
+                'label' => 'Open warranty claims',
+                'hint' => 'Not yet finished',
+                'count' => WarrantyClaim::whereNotIn('status', ['completed', 'rejected'])->count(),
+                'url' => '/admin/warranty',
+                'tone' => 'info',
+            ],
+            [
+                'ability' => 'catalogue',
+                'label' => 'Out of stock',
+                'hint' => 'Listed but unbuyable',
+                'count' => Product::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
+                'url' => '/admin/products',
+                'tone' => 'warn',
+            ],
+        ];
+
+        return collect($items)
+            ->filter(fn ($item) => $user->can_($item['ability']))
+            ->map(fn ($item) => collect($item)->except('ability')->all())
+            ->values()
+            ->all();
     }
 
     /**

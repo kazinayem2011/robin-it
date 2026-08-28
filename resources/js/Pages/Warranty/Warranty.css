@@ -140,6 +140,12 @@
     gap: 6px;
 }
 
+/*
+ * Laid out like its sibling above. This was missing the three lines that make
+ * a badge a badge, so where "Official Warranty Active" put its tick neatly
+ * beside the words, "Warranty Expired" ran the icon into the text on the
+ * baseline with no gap.
+ */
 .warranty-badge-expired {
     background: var(--danger-light);
     color: var(--danger);
@@ -147,6 +153,9 @@
     border-radius: var(--radius-full);
     font-weight: 800;
     font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .warranty-metrics-grid {
@@ -361,5 +370,45 @@
 
     .rma-step-item {
         flex-direction: row;
+    }
+}
+
+/* ==========================================================================
+   PRINTING THE CLAIM RECEIPT
+   "Print Claim Receipt" calls window.print(), and nothing told the browser
+   what to leave out — so the receipt came off the printer wrapped in the
+   announcement ticker, the search bar, the mega menu and the whole footer,
+   across several pages.
+   ========================================================================== */
+@media print {
+    .site-header-wrapper,
+    .site-master-footer,
+    .warranty-hero-banner,
+    .reusable-tabs-container,
+    .claim-confirmed-box button {
+        display: none !important;
+    }
+
+    /* The receipt itself, on the page rather than inside a card. */
+    .warranty-claim-form-card,
+    .claim-confirmed-box {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        max-width: none !important;
+    }
+
+    /* Backgrounds are dropped by default when printing, which would leave the
+       status badges as text on white; these carry meaning, so they are kept. */
+    .warranty-badge-active,
+    .warranty-badge-expired {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    @page {
+        margin: 16mm;
     }
 }

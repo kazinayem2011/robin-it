@@ -115,9 +115,18 @@
     padding-top: 0;
 }
 
+/*
+ * Centred on the first line of the row, not nudged down by a fixed 2px.
+ *
+ * A single offset can only be right for one glyph: lucide's phone, envelope,
+ * clock and pin each sit differently inside their 16px box, so the same
+ * margin-top lined one row up and left the next visibly out. Giving the icon a
+ * box exactly as tall as the first line and centring it in that box makes
+ * every row agree, whatever the glyph.
+ */
 .contact-line svg {
     flex-shrink: 0;
-    margin-top: 2px;
+    height: 1.4rem;
     color: var(--gray-400);
 }
 
@@ -136,6 +145,8 @@ a.contact-line:hover strong {
 .contact-line strong {
     font-size: 0.9rem;
     font-weight: 700;
+    /* The height the icon above is matched to. */
+    line-height: 1.4rem;
 }
 
 .contact-line small {

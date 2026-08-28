@@ -106,6 +106,7 @@ export default function Contact({
                                 <FormInput
                                     id="name"
                                     name="name"
+                                    required
                                     label="Your name"
                                     placeholder="e.g. Rahim Chowdhury"
                                     value={formik.values.name}
@@ -119,6 +120,7 @@ export default function Contact({
                                 <FormInput
                                     id="email"
                                     name="email"
+                                    required
                                     type="email"
                                     label="Email"
                                     placeholder="you@example.com"
@@ -150,6 +152,7 @@ export default function Contact({
                                 <FormInput
                                     id="subject"
                                     name="subject"
+                                    required
                                     label="Subject"
                                     placeholder="e.g. Warranty on an RTX 4090"
                                     value={formik.values.subject}

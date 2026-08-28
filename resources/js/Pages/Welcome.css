@@ -981,30 +981,20 @@
 /* ==========================================================================
    6. BEST SELLING PRODUCT GRID (TABBED)
    ========================================================================== */
+/*
+ * Just a place for the pills to sit.
+ *
+ * This was the track of a segmented control, painting its own white
+ * background, border and padding around plain buttons. The buttons are the
+ * shared Tabs component's pills now, and those carry a background and a border
+ * each — so the track became a bordered box wrapping bordered pills, with its
+ * own padding showing below them as an empty white strip that read as a panel
+ * that had failed to load. The .filter-tab-btn rules it existed for went with
+ * it; no markup had referred to them since.
+ */
 .category-filter-tabs {
     display: flex;
-    gap: 8px;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    padding: 4px;
-    border-radius: var(--radius-sm);
-}
-
-.filter-tab-btn {
-    background: transparent;
-    border: none;
-    padding: 6px 14px;
-    border-radius: var(--radius-xs);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--gray-600);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.filter-tab-btn.active {
-    background: var(--dark-900);
-    color: #ffffff;
+    min-width: 0;
 }
 
 .standard-products-grid {
@@ -1038,7 +1028,11 @@
 .builder-panel-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    /* Centred against the heading block. flex-end pinned it to the baseline of
+       the last line of the paragraph, which read as slightly dropped. */
+    align-items: center;
     margin-bottom: 28px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
@@ -1054,74 +1048,94 @@
     color: var(--gray-500);
 }
 
+/* The parts on the left, the running total on the right. */
 .builder-interactive-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: 20px;
+    align-items: start;
 }
 
-.builder-step-card {
-    background: var(--bg-surface-subtle);
+.builder-parts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* One row per component: same height whether a part has two options or ten,
+   which is what left the old three-column layout ragged. */
+.builder-part-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 18px;
+    background: var(--bg-surface);
 }
 
-.step-num-badge {
-    font-size: 0.65rem;
+.builder-part-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+    color: var(--gray-500);
+}
+
+.builder-part-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+}
+
+.builder-part-label {
+    font-size: 0.74rem;
     font-weight: 800;
-    letter-spacing: 0.6px;
-    color: var(--primary);
-    background: var(--primary-light);
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-    display: inline-block;
-    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+.builder-part-select {
+    width: 100%;
+    padding: 8px 32px 8px 11px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    appearance: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark-900);
+    cursor: pointer;
+    text-overflow: ellipsis;
+}
+
+.builder-part-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.builder-part-price {
+    flex-shrink: 0;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--dark-900);
 }
 
 .builder-step-card h4 {
     font-size: 0.95rem;
     margin-bottom: 14px;
-}
-
-.builder-options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.builder-option-btn {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    text-align: left;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.builder-option-btn:hover {
-    border-color: var(--primary);
-}
-
-.builder-option-btn.active-opt {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    box-shadow: 0 0 0 1px var(--primary);
-}
-
-.opt-title {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--dark-900);
-}
-
-.opt-price {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: var(--primary);
-    font-family: var(--font-heading);
-    margin-top: 2px;
 }
 
 /* Builder Summary Box */
@@ -1445,7 +1459,7 @@
         grid-template-columns: 300px 1fr;
     }
     .builder-interactive-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
     }
     .builder-summary-card {
         grid-column: span 2;

@@ -74,17 +74,43 @@
     color: var(--gray-600);
 }
 
+/* What the role covers, as a list to read rather than a form to fill in. */
 .role-abilities {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding-top: 12px;
+    gap: 5px;
+    margin: 0;
+    padding: 12px 0 0;
+    list-style: none;
     border-top: 1px solid var(--border-light);
 }
 
-.role-modal-abilities {
+.role-abilities li {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.83rem;
+    color: var(--gray-600);
+}
+
+.role-abilities svg {
+    flex-shrink: 0;
+    color: var(--success);
+}
+
+.role-none {
+    font-style: italic;
+    color: var(--gray-400);
+}
+
+.role-modal-abilities {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 2px 16px;
     margin-top: 8px;
+}
+
+.role-modal-abilities > span {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
 }

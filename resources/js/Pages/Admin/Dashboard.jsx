@@ -21,6 +21,7 @@ export default function Dashboard({
     metrics = {},
     margin = null,
     profitAndLoss = null,
+    attention = [],
     recentOrders = [],
     lowStockProducts = [],
     queueHealth = null,
@@ -164,22 +165,36 @@ export default function Dashboard({
                     </div>
                 )}
 
-                {/* Low Stock Alerts Card */}
-                <div className="admin-kpi-card">
-                    <div className="admin-kpi-top">
-                        <span className="admin-kpi-label">LOW STOCK ITEMS</span>
-                        <div className="admin-kpi-icon-box admin-kpi-icon-red">
-                            <AlertTriangle size={20} />
-                        </div>
-                    </div>
-                    <div className="admin-kpi-val">
-                        {metrics.low_stock_count || 0}
-                    </div>
-                    <div className="admin-kpi-trend red">
-                        <span>Stock below threshold (≤10 units)</span>
-                    </div>
-                </div>
+                {/* The four above are the shape of the business; what follows is
+                    work waiting for somebody. */}
             </div>
+
+            {attention.length > 0 && (
+                <section className="admin-attention">
+                    <h2 className="admin-attention-title">Needs attention</h2>
+                    <div className="admin-attention-grid">
+                        {attention.map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.url}
+                                className={`admin-attention-card ${item.count > 0 ? `tone-${item.tone}` : 'is-clear'}`}
+                            >
+                                <span className="admin-attention-count">
+                                    {item.count}
+                                </span>
+                                <span className="admin-attention-label">
+                                    {item.label}
+                                </span>
+                                <span className="admin-attention-hint">
+                                    {item.count > 0
+                                        ? item.hint
+                                        : 'Nothing waiting'}
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/*
              * This month so far, so the overview answers "are we making money"

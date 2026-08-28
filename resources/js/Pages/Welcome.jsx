@@ -23,6 +23,9 @@ import {
     Truck,
     RefreshCw,
     Sparkles,
+    Cpu,
+    MonitorPlay,
+    MemoryStick,
 } from 'lucide-react';
 import { BrandMarquee } from '../Components/BrandLogos';
 import CountdownTimer from '../Components/CountdownTimer';
@@ -693,92 +696,120 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                     </Link>
                                 </div>
 
+                                {/*
+                                 * Three component rows, not three columns of
+                                 * buttons.
+                                 *
+                                 * The columns were labelled STEP 1/2/3 though
+                                 * all three were on screen at once and could
+                                 * be answered in any order, and each held a
+                                 * stack of full-width option buttons — so a
+                                 * part with four choices left a tall column
+                                 * beside one with two, and the panel was
+                                 * ragged whatever was in stock. A row per
+                                 * component with a select reads at a glance,
+                                 * takes the same space however many options
+                                 * there are, and is the shape the full builder
+                                 * uses.
+                                 */}
                                 <div className="builder-interactive-grid">
-                                    {/* Step 1: CPU Selection */}
-                                    <div className="builder-step-card">
-                                        <span className="step-num-badge">
-                                            STEP 1
-                                        </span>
-                                        <h4>Choose Processor</h4>
-                                        <div className="builder-options-list">
-                                            {Object.entries(
-                                                builderSpecs?.cpu || {},
-                                            ).map(([key, item]) => (
-                                                <button
+                                    <div className="builder-parts">
+                                        {[
+                                            {
+                                                key: 'cpu',
+                                                label: 'Processor',
+                                                icon: Cpu,
+                                                options: builderSpecs?.cpu,
+                                                value: builderCpu,
+                                                onPick: setBuilderCpu,
+                                                chosen: selectedCpu,
+                                            },
+                                            {
+                                                key: 'gpu',
+                                                label: 'Graphics card',
+                                                icon: MonitorPlay,
+                                                options: builderSpecs?.gpu,
+                                                value: builderGpu,
+                                                onPick: setBuilderGpu,
+                                                chosen: selectedGpu,
+                                            },
+                                            {
+                                                key: 'ram',
+                                                label: 'Memory',
+                                                icon: MemoryStick,
+                                                options: builderSpecs?.ram,
+                                                value: builderRam,
+                                                onPick: setBuilderRam,
+                                                chosen: selectedRam,
+                                            },
+                                        ].map(
+                                            ({
+                                                key,
+                                                label,
+                                                icon: Icon,
+                                                options,
+                                                value,
+                                                onPick,
+                                                chosen,
+                                            }) => (
+                                                <div
                                                     key={key}
-                                                    type="button"
-                                                    className={`builder-option-btn ${builderCpu === key ? 'active-opt' : ''}`}
-                                                    onClick={() =>
-                                                        setBuilderCpu(key)
-                                                    }
+                                                    className="builder-part-row"
                                                 >
-                                                    <div className="opt-title">
-                                                        {item.name}
-                                                    </div>
-                                                    <div className="opt-price">
-                                                        {formatBdt(item.price)}
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                                    <span className="builder-part-icon">
+                                                        <Icon size={18} />
+                                                    </span>
 
-                                    {/* Step 2: GPU Selection */}
-                                    <div className="builder-step-card">
-                                        <span className="step-num-badge">
-                                            STEP 2
-                                        </span>
-                                        <h4>Choose Graphics</h4>
-                                        <div className="builder-options-list">
-                                            {Object.entries(
-                                                builderSpecs?.gpu || {},
-                                            ).map(([key, item]) => (
-                                                <button
-                                                    key={key}
-                                                    type="button"
-                                                    className={`builder-option-btn ${builderGpu === key ? 'active-opt' : ''}`}
-                                                    onClick={() =>
-                                                        setBuilderGpu(key)
-                                                    }
-                                                >
-                                                    <div className="opt-title">
-                                                        {item.name}
+                                                    <div className="builder-part-main">
+                                                        <label
+                                                            className="builder-part-label"
+                                                            htmlFor={`pick-${key}`}
+                                                        >
+                                                            {label}
+                                                        </label>
+                                                        <select
+                                                            id={`pick-${key}`}
+                                                            className="builder-part-select"
+                                                            value={value || ''}
+                                                            onChange={(e) =>
+                                                                onPick(
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        >
+                                                            {Object.entries(
+                                                                options || {},
+                                                            ).map(
+                                                                ([
+                                                                    optKey,
+                                                                    item,
+                                                                ]) => (
+                                                                    <option
+                                                                        key={
+                                                                            optKey
+                                                                        }
+                                                                        value={
+                                                                            optKey
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </option>
+                                                                ),
+                                                            )}
+                                                        </select>
                                                     </div>
-                                                    <div className="opt-price">
-                                                        {formatBdt(item.price)}
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
 
-                                    {/* Step 3: RAM Selection */}
-                                    <div className="builder-step-card">
-                                        <span className="step-num-badge">
-                                            STEP 3
-                                        </span>
-                                        <h4>Choose Memory</h4>
-                                        <div className="builder-options-list">
-                                            {Object.entries(
-                                                builderSpecs?.ram || {},
-                                            ).map(([key, item]) => (
-                                                <button
-                                                    key={key}
-                                                    type="button"
-                                                    className={`builder-option-btn ${builderRam === key ? 'active-opt' : ''}`}
-                                                    onClick={() =>
-                                                        setBuilderRam(key)
-                                                    }
-                                                >
-                                                    <div className="opt-title">
-                                                        {item.name}
-                                                    </div>
-                                                    <div className="opt-price">
-                                                        {formatBdt(item.price)}
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
+                                                    <span className="builder-part-price">
+                                                        {formatBdt(
+                                                            chosen?.price || 0,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ),
+                                        )}
                                     </div>
 
                                     {/* Estimated Summary Column */}

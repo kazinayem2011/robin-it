@@ -289,6 +289,39 @@ class StaffRoleTest extends TestCase
         $this->assertNotNull($props['metrics']['low_stock_count']);
     }
 
+    /**
+     * The "needs attention" row is filtered the same way as everything else.
+     *
+     * A storekeeper has no business knowing how many customers have written
+     * in, and Inertia ships every prop in the page source.
+     */
+    public function test_the_attention_row_only_carries_what_the_role_covers(): void
+    {
+        $props = $this->actingAs($this->staff(Roles::STOREKEEPER))
+            ->get('/admin/dashboard')
+            ->assertStatus(200)
+            ->viewData('page')['props'];
+
+        $labels = array_column($props['attention'], 'label');
+
+        $this->assertContains('Low stock', $labels);
+        $this->assertNotContains('Unanswered messages', $labels);
+        $this->assertNotContains('Reviews to approve', $labels);
+    }
+
+    public function test_an_owner_sees_every_attention_card(): void
+    {
+        $props = $this->actingAs($this->staff(Roles::OWNER))
+            ->get('/admin/dashboard')
+            ->viewData('page')['props'];
+
+        $labels = array_column($props['attention'], 'label');
+
+        $this->assertContains('Unanswered messages', $labels);
+        $this->assertContains('Awaiting dispatch', $labels);
+        $this->assertContains('Out of stock', $labels);
+    }
+
     public function test_the_dashboard_still_shows_the_takings_to_an_owner(): void
     {
         $props = $this->actingAs($this->staff(Roles::OWNER))
