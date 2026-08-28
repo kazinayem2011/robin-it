@@ -557,13 +557,31 @@ class OrderService
     protected function notifyBySms(Order $order): void
     {
         try {
-            $message = SmsTemplates::statusChanged(
-                $order->loadMissing('courier'),
-                BrandDetails::name()
-            );
+            $order->loadMissing('courier');
+            $sms = app(SmsService::class);
 
-            if ($message) {
-                app(SmsService::class)->send($order->recipient_phone, $message);
+            $message = SmsTemplates::statusChanged($order, BrandDetails::name());
+
+            if (! $message) {
+                return;
+            }
+
+            $sms->send($order->recipient_phone, $message);
+
+            /*
+             * A parcel going out with money still owed on it gets a second
+             * line: cash on delivery only works if the cash is in the house
+             * when the rider knocks, and a customer who has to go and find it
+             * is a customer who refuses the delivery.
+             *
+             * Only on dispatch, and only when something is actually owed — a
+             * fully-paid order or a deposit that covered it says nothing.
+             */
+            if ($order->status === 'shipped' && $order->amount_due > 0) {
+                $sms->send(
+                    $order->recipient_phone,
+                    SmsTemplates::paymentDue($order, $order->amount_due, BrandDetails::name())
+                );
             }
         } catch (\Throwable $e) {
             Log::warning("Could not send the order SMS: {$e->getMessage()}");

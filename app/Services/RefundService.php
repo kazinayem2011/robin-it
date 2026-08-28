@@ -6,7 +6,10 @@ use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Models\Order;
 use App\Models\Refund;
+use App\Support\BrandDetails;
+use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Giving money back.
@@ -61,8 +64,32 @@ class RefundService
 
             $order->setRawAttributes($fresh->fresh()->getAttributes(), true);
 
+            $this->tellTheCustomer($fresh, $amount);
+
             return $refund;
         });
+    }
+
+    /**
+     * Say the money is on its way.
+     *
+     * A refund the customer is not told about is a refund they chase, and a
+     * bank transfer here can take days to appear — so the message is worth
+     * sending even though the shop has already done its part.
+     *
+     * Best-effort: the refund is recorded and must stand whether or not a
+     * gateway is reachable.
+     */
+    private function tellTheCustomer(Order $order, float $amount): void
+    {
+        try {
+            app(SmsService::class)->send(
+                $order->recipient_phone,
+                SmsTemplates::refundIssued($order, $amount, BrandDetails::name())
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Could not send the refund SMS for {$order->order_number}: {$e->getMessage()}");
+        }
     }
 
     /**

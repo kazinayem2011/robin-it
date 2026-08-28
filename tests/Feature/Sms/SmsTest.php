@@ -224,6 +224,37 @@ class SmsTest extends TestCase
         }
     }
 
+    /**
+     * A template nobody calls is a message nobody gets.
+     *
+     * Two of these were written and left unwired, which reads in the code as a
+     * feature the shop has and in practice as silence.
+     */
+    public function test_every_template_is_actually_sent_from_somewhere(): void
+    {
+        $app = base_path('app');
+        $wired = [];
+
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($app));
+
+        foreach ($files as $file) {
+            if ($file->isFile() && $file->getExtension() === 'php'
+                && ! str_ends_with($file->getPathname(), 'SmsTemplates.php')) {
+                $wired[] = file_get_contents($file->getPathname());
+            }
+        }
+
+        $source = implode("\n", $wired);
+
+        foreach (['orderPlaced', 'statusChanged', 'refundIssued', 'paymentDue'] as $template) {
+            $this->assertStringContainsString(
+                "SmsTemplates::{$template}",
+                $source,
+                "SmsTemplates::{$template}() is never called, so that message is never sent."
+            );
+        }
+    }
+
     /** The tracking link is the whole reason the dispatch message is worth sending. */
     public function test_the_dispatch_message_carries_a_way_to_track_it(): void
     {
