@@ -112,174 +112,189 @@ export default function StockCount({
         >
             <Head title="Stock take" />
 
-            <div className="count-toolbar">
-                <div className="count-toolbar-left">
-                    {branch ? (
-                        <span className="count-branch-fixed">{branch}</span>
-                    ) : (
-                        <select
-                            className="count-branch-select"
-                            value={store?.id ?? ''}
-                            onChange={(e) => goToBranch(e.target.value)}
-                        >
-                            {stores.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
-                    )}
-
-                    <SearchInput
-                        value={filters.search || ''}
-                        onSearch={(q) =>
-                            router.get(
-                                ROUTES.ADMIN_STOCK_COUNT,
-                                { store: store?.id, search: q || undefined },
-                                { preserveState: true, replace: true },
-                            )
-                        }
-                        placeholder="Find a product on the sheet…"
-                    />
-                </div>
-
-                <Button
-                    icon={Save}
-                    onClick={save}
-                    disabled={saving || totals.checked === 0}
-                >
-                    {saving ? 'Saving…' : `Save count (${totals.checked})`}
-                </Button>
-            </div>
-
-            {lines.length === 0 ? (
-                <EmptyState
-                    icon={ClipboardList}
-                    title="Nothing to count here"
-                    description="This branch is not holding any stock yet. Receive a delivery into it first."
-                />
-            ) : (
-                <>
-                    <div className="count-sheet">
-                        <table className="admin-table count-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th className="count-num">On the books</th>
-                                    <th className="count-num">Counted</th>
-                                    <th className="count-num">Difference</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {lines.map((line) => {
-                                    const entry = typed(line);
-                                    const has =
-                                        entry !== undefined && entry !== '';
-                                    const diff = has
-                                        ? Number(entry) - line.system_quantity
-                                        : null;
-
-                                    return (
-                                        <tr
-                                            key={keyOf(line)}
-                                            className={
-                                                diff ? 'count-row-differs' : ''
-                                            }
-                                        >
-                                            <td>
-                                                <div className="admin-stock-product-name">
-                                                    {line.name}
-                                                </div>
-                                                {line.sku && (
-                                                    <div className="admin-field-hint">
-                                                        {line.sku}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="count-num count-system">
-                                                {line.system_quantity}
-                                            </td>
-                                            <td className="count-num">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    inputMode="numeric"
-                                                    className="count-input"
-                                                    value={entry ?? ''}
-                                                    placeholder="—"
-                                                    onChange={(e) =>
-                                                        setCounted((c) => ({
-                                                            ...c,
-                                                            [keyOf(line)]:
-                                                                e.target.value,
-                                                        }))
-                                                    }
-                                                />
-                                            </td>
-                                            <td className="count-num">
-                                                {diff === null ? (
-                                                    <span className="admin-field-hint">
-                                                        not counted
-                                                    </span>
-                                                ) : diff === 0 ? (
-                                                    <span className="count-match">
-                                                        matches
-                                                    </span>
-                                                ) : (
-                                                    <span
-                                                        className={`count-diff ${diff > 0 ? 'is-up' : 'is-down'}`}
-                                                    >
-                                                        {diff > 0 ? '+' : ''}
-                                                        {diff}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* What pressing Save will actually do, before it does it. */}
-                    <div className="count-footer">
-                        <div className="count-summary">
-                            <span>
-                                <strong>{totals.checked}</strong> of{' '}
-                                {lines.length} counted
-                            </span>
-                            <span>
-                                <strong>{totals.differing}</strong> differ
-                            </span>
-                            <span>
-                                net{' '}
-                                <strong>
-                                    {totals.units > 0 ? '+' : ''}
-                                    {totals.units}
-                                </strong>{' '}
-                                units
-                            </span>
-                            <span
-                                className={
-                                    totals.value < 0
-                                        ? 'count-value-loss'
-                                        : 'count-value-gain'
-                                }
+            <div className="admin-card">
+                <div className="count-toolbar">
+                    <div className="count-toolbar-left">
+                        {branch ? (
+                            <span className="count-branch-fixed">{branch}</span>
+                        ) : (
+                            <select
+                                className="count-branch-select"
+                                value={store?.id ?? ''}
+                                onChange={(e) => goToBranch(e.target.value)}
                             >
-                                <strong>{formatBdt(totals.value)}</strong>
-                            </span>
-                        </div>
+                                {stores.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
 
-                        <input
-                            type="text"
-                            className="count-note"
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="A note about this count (optional)"
+                        <SearchInput
+                            value={filters.search || ''}
+                            onSearch={(q) =>
+                                router.get(
+                                    ROUTES.ADMIN_STOCK_COUNT,
+                                    {
+                                        store: store?.id,
+                                        search: q || undefined,
+                                    },
+                                    { preserveState: true, replace: true },
+                                )
+                            }
+                            placeholder="Find a product on the sheet…"
                         />
                     </div>
-                </>
-            )}
+
+                    <Button
+                        icon={Save}
+                        onClick={save}
+                        disabled={saving || totals.checked === 0}
+                    >
+                        {saving ? 'Saving…' : `Save count (${totals.checked})`}
+                    </Button>
+                </div>
+
+                {lines.length === 0 ? (
+                    <EmptyState
+                        icon={ClipboardList}
+                        title="Nothing to count here"
+                        description="This branch is not holding any stock yet. Receive a delivery into it first."
+                    />
+                ) : (
+                    <>
+                        <div className="count-sheet">
+                            <table className="admin-table count-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th className="count-num">
+                                            On the books
+                                        </th>
+                                        <th className="count-num">Counted</th>
+                                        <th className="count-num">
+                                            Difference
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {lines.map((line) => {
+                                        const entry = typed(line);
+                                        const has =
+                                            entry !== undefined && entry !== '';
+                                        const diff = has
+                                            ? Number(entry) -
+                                              line.system_quantity
+                                            : null;
+
+                                        return (
+                                            <tr
+                                                key={keyOf(line)}
+                                                className={
+                                                    diff
+                                                        ? 'count-row-differs'
+                                                        : ''
+                                                }
+                                            >
+                                                <td>
+                                                    <div className="admin-stock-product-name">
+                                                        {line.name}
+                                                    </div>
+                                                    {line.sku && (
+                                                        <div className="admin-field-hint">
+                                                            {line.sku}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="count-num count-system">
+                                                    {line.system_quantity}
+                                                </td>
+                                                <td className="count-num">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        inputMode="numeric"
+                                                        className="count-input"
+                                                        value={entry ?? ''}
+                                                        placeholder="—"
+                                                        onChange={(e) =>
+                                                            setCounted((c) => ({
+                                                                ...c,
+                                                                [keyOf(line)]:
+                                                                    e.target
+                                                                        .value,
+                                                            }))
+                                                        }
+                                                    />
+                                                </td>
+                                                <td className="count-num">
+                                                    {diff === null ? (
+                                                        <span className="admin-field-hint">
+                                                            not counted
+                                                        </span>
+                                                    ) : diff === 0 ? (
+                                                        <span className="count-match">
+                                                            matches
+                                                        </span>
+                                                    ) : (
+                                                        <span
+                                                            className={`count-diff ${diff > 0 ? 'is-up' : 'is-down'}`}
+                                                        >
+                                                            {diff > 0
+                                                                ? '+'
+                                                                : ''}
+                                                            {diff}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* What pressing Save will actually do, before it does it. */}
+                        <div className="count-footer">
+                            <div className="count-summary">
+                                <span>
+                                    <strong>{totals.checked}</strong> of{' '}
+                                    {lines.length} counted
+                                </span>
+                                <span>
+                                    <strong>{totals.differing}</strong> differ
+                                </span>
+                                <span>
+                                    net{' '}
+                                    <strong>
+                                        {totals.units > 0 ? '+' : ''}
+                                        {totals.units}
+                                    </strong>{' '}
+                                    units
+                                </span>
+                                <span
+                                    className={
+                                        totals.value < 0
+                                            ? 'count-value-loss'
+                                            : 'count-value-gain'
+                                    }
+                                >
+                                    <strong>{formatBdt(totals.value)}</strong>
+                                </span>
+                            </div>
+
+                            <input
+                                type="text"
+                                className="count-note"
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="A note about this count (optional)"
+                            />
+                        </div>
+                    </>
+                )}
+            </div>
 
             {recent.length > 0 && (
                 <section className="count-recent">

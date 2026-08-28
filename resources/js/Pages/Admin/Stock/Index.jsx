@@ -263,16 +263,26 @@ export default function AdminStock({
         },
     ];
 
+    /*
+     * title/subtitle on the layout, like every other admin page, and no second
+     * .admin-content-body inside the one the layout already provides. This
+     * page drew its own heading inside a card and nested the wrapper, so it
+     * carried the layout's 28/32 padding twice and sat further in than
+     * everything else in the sidebar.
+     */
     return (
-        <AdminLayout>
+        <AdminLayout
+            title="Stock & Inventory"
+            subtitle="What the shop is holding, and how it got there"
+        >
             <Head title="Stock & Inventory" />
 
-            <div className="admin-content-body">
+            <div>
                 <div className="admin-card">
                     <div className="admin-card-header">
                         <h2 className="admin-card-title-inline">
                             <Boxes size={18} className="admin-card-icon" />
-                            Stock &amp; Inventory
+                            On the shelves
                         </h2>
                         <div className="admin-input-row-flex">
                             <Button
