@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, ShoppingCart, Undo2, Printer, Truck } from 'lucide-react';
+import { Eye, ShoppingCart, Undo2, Printer, Truck, Wallet } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
@@ -9,6 +9,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import { toast } from '@/Components/Toast';
 import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
+import RecordPaymentModal from './Components/RecordPaymentModal';
 import RefundOrderModal from './Components/RefundOrderModal';
 import { adminService } from '@/services';
 import { formatBdt, formatDate, formatBdPhone } from '@/utils/formatters';
@@ -27,6 +28,7 @@ export default function Orders({
     search = '',
     couriers = [],
     refundMethods = [],
+    paymentMethods = [],
     refundReasons = [],
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
@@ -34,6 +36,7 @@ export default function Orders({
     const [returningOrder, setReturningOrder] = useState(null);
     const [dispatchingOrder, setDispatchingOrder] = useState(null);
     const [refundingOrder, setRefundingOrder] = useState(null);
+    const [payingOrder, setPayingOrder] = useState(null);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -137,11 +140,43 @@ export default function Orders({
         {
             key: 'total',
             header: 'Total BDT',
-            render: (order) => (
-                <strong className="admin-order-total-price">
-                    {formatBdt(order.total)}
-                </strong>
-            ),
+            render: (order) => {
+                /*
+                 * What is owed, beside what it came to. A total on its own says
+                 * nothing about whether the shop has the money: a ৳2,45,000
+                 * order with a ৳20,000 deposit against it looked exactly like
+                 * one nobody had paid a taka on.
+                 */
+                const paid = (order.payments || []).reduce(
+                    (sum, p) => sum + Number(p.amount || 0),
+                    0,
+                );
+                const refunded = (order.refunds || []).reduce(
+                    (sum, r) => sum + Number(r.amount || 0),
+                    0,
+                );
+                const due = Math.max(
+                    0,
+                    Number(order.total || 0) - (paid - refunded),
+                );
+
+                return (
+                    <div>
+                        <strong className="admin-order-total-price">
+                            {formatBdt(order.total)}
+                        </strong>
+                        {due > 0 ? (
+                            <div className="admin-order-due">
+                                {paid > 0
+                                    ? `${formatBdt(due)} still owed`
+                                    : 'Nothing paid yet'}
+                            </div>
+                        ) : (
+                            <div className="admin-order-settled">Paid</div>
+                        )}
+                    </div>
+                );
+            },
         },
         {
             key: 'status',
@@ -238,6 +273,15 @@ export default function Orders({
                         coming back: a damaged item may be refunded without
                         being returned, and an exchange returns goods without
                         refunding anything. */}
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        onClick={() => setPayingOrder(order)}
+                        title="Record a payment received"
+                    >
+                        <Wallet size={14} />
+                    </button>
+
                     <button
                         type="button"
                         className="admin-table-icon-btn"
@@ -446,6 +490,16 @@ export default function Orders({
                 onClose={() => setDispatchingOrder(null)}
                 onDone={() => {
                     setDispatchingOrder(null);
+                    router.reload({ only: ['orders'] });
+                }}
+            />
+
+            <RecordPaymentModal
+                order={payingOrder}
+                methods={paymentMethods}
+                onClose={() => setPayingOrder(null)}
+                onDone={() => {
+                    setPayingOrder(null);
                     router.reload({ only: ['orders'] });
                 }}
             />

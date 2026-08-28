@@ -3484,3 +3484,62 @@
 .admin-receipt-row {
     cursor: pointer;
 }
+
+/* What is still owed on an order, beside what it came to. */
+.admin-order-due {
+    margin-top: 2px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--warning-hover);
+}
+
+.admin-order-settled {
+    margin-top: 2px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+/* The running total in the record-payment modal. */
+.pay-summary {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.pay-summary > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.86rem;
+    color: var(--gray-600);
+}
+
+.pay-summary strong {
+    font-family: var(--font-heading);
+    color: var(--dark-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.pay-summary .pay-due {
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.pay-summary .pay-due strong {
+    color: var(--warning-hover);
+}
+
+.pay-summary .pay-settled {
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+
+.pay-summary .pay-settled strong {
+    color: var(--success);
+}

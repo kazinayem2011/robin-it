@@ -625,6 +625,15 @@ export const adminService = {
         );
         return response?.data || response;
     },
+
+    /** Record money received against an order — a deposit, or the balance. */
+    async recordOrderPayment(id, payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.ORDER_PAYMENT(id),
+            payload,
+        );
+        return response?.data || response;
+    },
 };
 
 export default adminService;

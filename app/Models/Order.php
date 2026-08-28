@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
@@ -34,7 +35,7 @@ class Order extends Model
      * Derived from the courier and the consignment number, so it travels with
      * the order rather than every screen having to build it.
      */
-    protected $appends = ['tracking_url'];
+    protected $appends = ['tracking_url', 'amount_paid', 'amount_due', 'payment_state'];
 
     /** Order lifecycle states, in the order the customer sees them. */
     /**
@@ -89,7 +90,12 @@ class Order extends Model
      */
     public const CANCELLABLE_FROM = ['pending', 'processing'];
 
-    public const PAYMENT_STATUSES = ['unpaid', 'paid', 'pending', 'refunded'];
+    /**
+     * 'partial' joined these when payments became amounts rather than a flag:
+     * a deposit on a build is neither unpaid nor paid, and calling it either
+     * loses money.
+     */
+    public const PAYMENT_STATUSES = ['unpaid', 'partial', 'paid', 'pending', 'refunded'];
 
     /**
      * Payment methods the store actually accepts.
@@ -139,6 +145,63 @@ class Order extends Model
     public function isFullyRefunded(): bool
     {
         return (float) $this->total > 0 && $this->refundable_amount <= 0;
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(OrderPayment::class)->orderBy('received_on')->orderBy('id');
+    }
+
+    /**
+     * What the shop has actually received against this order.
+     *
+     * The sum of the payment rows, corrections included — a negative row is a
+     * payment taken in error being put back, and it belongs in the total the
+     * same way the mistake did.
+     */
+    public function getAmountPaidAttribute(): float
+    {
+        return round((float) $this->payments()->sum('amount'), 2);
+    }
+
+    /**
+     * What the customer still owes.
+     *
+     * Refunds count against what was paid: money given back was not kept, so
+     * an order paid in full and then half refunded is half owing again if it
+     * has not been cancelled. Never negative — an overpayment is money to give
+     * back, which is a refund, not a debt the shop is owed.
+     */
+    public function getAmountDueAttribute(): float
+    {
+        $net = $this->amount_paid - $this->refunded_total;
+
+        return round(max(0, (float) $this->total - $net), 2);
+    }
+
+    /**
+     * unpaid, partial or paid — worked out, never stored on its own.
+     *
+     * payment_status is kept in step with this when a payment is recorded, but
+     * this is the answer: a stored flag and a column of amounts can disagree,
+     * and when they do the amounts are right.
+     */
+    public function getPaymentStateAttribute(): string
+    {
+        if ((float) $this->total <= 0) {
+            return 'paid';
+        }
+
+        if ($this->amount_due <= 0) {
+            return 'paid';
+        }
+
+        return $this->amount_paid > 0 ? 'partial' : 'unpaid';
+    }
+
+    public function isFullyPaid(): bool
+    {
+        return $this->payment_state === 'paid';
     }
 
     /**

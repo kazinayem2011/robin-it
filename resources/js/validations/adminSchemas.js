@@ -437,3 +437,25 @@ export const adminRoleSchema = Yup.object().shape({
     description: Yup.string().nullable().max(300),
     abilities: Yup.array().of(Yup.string()),
 });
+
+/**
+ * Money received against an order.
+ *
+ * @param due What is still owed. Taking more than that is not a payment, it is
+ *            an overpayment the shop would have to give back — so the form
+ *            refuses it here rather than letting the server do it.
+ */
+export const adminOrderPaymentSchema = (due = 0) =>
+    Yup.object().shape({
+        amount: Yup.number()
+            .typeError('Enter how much was received')
+            .required('Enter how much was received')
+            .moreThan(0, 'Enter an amount greater than zero')
+            .max(due, `That is more than the ${due} still owed on this order`),
+        method: Yup.string().required('Choose how the money was received'),
+        reference: Yup.string().nullable().max(100),
+        note: Yup.string().nullable().max(500),
+        received_on: Yup.date()
+            .nullable()
+            .max(new Date(), 'Money cannot be received in the future'),
+    });

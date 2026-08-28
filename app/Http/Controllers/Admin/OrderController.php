@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DispatchOrderRequest;
+use App\Http\Requests\Admin\OrderPaymentRequest;
 use App\Http\Requests\Admin\OrderStatusRequest;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Courier;
 use App\Models\Order;
+use App\Models\OrderPayment;
 use App\Models\Refund;
+use App\Services\OrderPaymentService;
 use App\Services\OrderService;
 use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +36,8 @@ class OrderController extends Controller
             'courier:id,name,tracking_url_template',
             // So the refund form knows what is left before anything is typed.
             'refunds:id,order_id,amount',
+            // And the payment form what is still owed.
+            'payments',
         ])->latest();
 
         if ($status !== 'all') {
@@ -61,7 +66,47 @@ class OrderController extends Controller
                 ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
             'refundReasons' => collect(Refund::REASONS)
                 ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
+            'paymentMethods' => collect(OrderPayment::METHODS)
+                ->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values(),
         ]);
+    }
+
+    /**
+     * Record money received against an order.
+     *
+     * Not a gateway: this writes down what somebody handed over at the
+     * counter, or sent by bKash before a delivery went out.
+     */
+    public function recordPayment(
+        OrderPaymentRequest $request,
+        OrderPaymentService $payments,
+        int $id
+    ): JsonResponse {
+        $order = Order::findOrFail($id);
+        $validated = $request->validated();
+
+        $payment = $payments->record(
+            $order,
+            $request->user(),
+            (float) $validated['amount'],
+            $validated['method'],
+            $validated['reference'] ?? null,
+            $validated['note'] ?? null,
+            $validated['received_on'] ?? null,
+        );
+
+        $order->refresh();
+
+        $message = $order->amount_due > 0
+            ? 'Recorded. '.number_format($order->amount_due, 2).' still owed on this order.'
+            : 'Recorded. This order is paid in full.';
+
+        return $this->successResponse([
+            'payment' => $payment->only(['id', 'amount', 'method', 'reference', 'received_on']),
+            'amount_paid' => $order->amount_paid,
+            'amount_due' => $order->amount_due,
+            'payment_state' => $order->payment_state,
+        ], $message, 201);
     }
 
     /**
