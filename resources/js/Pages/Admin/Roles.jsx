@@ -23,11 +23,6 @@ import './Roles.css';
 
 const empty = { key: '', label: '', description: '', abilities: [] };
 
-/** The owner covers everything and the customer covers nothing; neither is
- *  ours to change here. */
-const isLockedRole = (role, ownerKey, customerKey) =>
-    Boolean(role) && (role.key === ownerKey || role.key === customerKey);
-
 /**
  * What each job covers.
  *
@@ -83,6 +78,18 @@ export default function AdminRoles({
         });
         setModalOpen(true);
     };
+
+    /*
+     * Why this role's boxes are held still, or null when they are not. The
+     * owner covers everything because a shop that could take an ability off it
+     * could lock itself out of this screen; the customer role is not staff.
+     */
+    const lockedReason =
+        editing?.key === ownerKey
+            ? 'The owner covers everything. Taking a part away could lock the shop out of this screen, so it cannot be changed here.'
+            : editing?.key === customerKey
+              ? 'Customers shop on the site and see no part of the admin.'
+              : null;
 
     const remove = async (role) => {
         if (!confirm(`Remove the "${role.label}" role?`)) return;
@@ -289,37 +296,55 @@ export default function AdminRoles({
                         placeholder="Runs the floor on evenings. Orders and stock, no money."
                     />
 
-                    {!isLockedRole(editing, ownerKey, customerKey) && (
-                        <div className="role-modal-abilities">
-                            <span className="admin-form-field-label">
-                                What it covers
-                            </span>
-                            {abilities.map((a) => (
-                                <Checkbox
-                                    key={a.key}
-                                    name={`ability-${a.key}`}
-                                    label={a.label}
-                                    checked={formik.values.abilities.includes(
-                                        a.key,
-                                    )}
-                                    onChange={(e) =>
-                                        formik.setFieldValue(
-                                            'abilities',
-                                            e.target.checked
-                                                ? [
-                                                      ...formik.values
-                                                          .abilities,
-                                                      a.key,
-                                                  ]
-                                                : formik.values.abilities.filter(
-                                                      (x) => x !== a.key,
-                                                  ),
-                                        )
-                                    }
-                                />
-                            ))}
-                        </div>
-                    )}
+                    {/*
+                     * Always here, even for the owner and the customer.
+                     *
+                     * These two used to omit the section altogether, so opening
+                     * Edit on the owner — the first card, and the first thing
+                     * anyone tries — showed a form with no permissions on it
+                     * and no word about why. The boxes are shown and disabled
+                     * instead, with the reason above them.
+                     */}
+                    <div className="role-modal-abilities">
+                        <span className="admin-form-field-label">
+                            What it covers
+                        </span>
+
+                        {lockedReason && (
+                            <p className="role-modal-note">{lockedReason}</p>
+                        )}
+
+                        {abilities.map((a) => (
+                            <Checkbox
+                                key={a.key}
+                                name={`ability-${a.key}`}
+                                label={a.label}
+                                disabled={Boolean(lockedReason)}
+                                checked={
+                                    editing?.key === ownerKey
+                                        ? true
+                                        : editing?.key === customerKey
+                                          ? false
+                                          : formik.values.abilities.includes(
+                                                a.key,
+                                            )
+                                }
+                                onChange={(e) =>
+                                    formik.setFieldValue(
+                                        'abilities',
+                                        e.target.checked
+                                            ? [
+                                                  ...formik.values.abilities,
+                                                  a.key,
+                                              ]
+                                            : formik.values.abilities.filter(
+                                                  (x) => x !== a.key,
+                                              ),
+                                    )
+                                }
+                            />
+                        ))}
+                    </div>
                 </form>
             </Modal>
         </AdminLayout>
