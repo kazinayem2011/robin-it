@@ -504,6 +504,17 @@ class OrderService
             ])->save();
 
             $order->setRawAttributes($fresh->getAttributes(), true);
+
+            /*
+             * The units on this order are now the customer's, so the serials
+             * follow them out of the door — oldest first, which is what a shop
+             * picks and what stops stock ageing into unsellability.
+             *
+             * Inside the transaction with the dispatch: a parcel recorded as
+             * gone whose units are still shown on the shelf is the kind of
+             * disagreement nobody finds until a warranty claim.
+             */
+            app(SerialService::class)->assignToOrder($order->load('items.product'));
         });
 
         $this->notifyStatusChange($order);
@@ -655,6 +666,10 @@ class OrderService
                 'status' => 'returned',
                 'stock_returned_at' => now(),
             ])->save();
+
+            // The units are the shop's again, so their serials stop belonging
+            // to the customer and stop carrying a warranty that has ended.
+            app(SerialService::class)->returnFromOrder($order);
         });
 
         return $order->fresh('items');

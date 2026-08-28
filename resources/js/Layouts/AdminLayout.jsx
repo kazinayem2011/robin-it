@@ -31,6 +31,7 @@ import {
     FileText,
     ClipboardList,
     SlidersHorizontal,
+    Hash,
 } from 'lucide-react';
 import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
@@ -173,6 +174,18 @@ export default function AdminLayout({
                             <div className="admin-nav-left">
                                 <ClipboardList size={17} />
                                 <span>Stock Take</span>
+                            </div>
+                        </Link>
+                    )}
+
+                    {can('stock') && (
+                        <Link
+                            href={ROUTES.ADMIN_STOCK_SERIALS}
+                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_SERIALS) ? 'active' : ''}`}
+                        >
+                            <div className="admin-nav-left">
+                                <Hash size={17} />
+                                <span>Serial Numbers</span>
                             </div>
                         </Link>
                     )}

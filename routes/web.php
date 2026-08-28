@@ -181,6 +181,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_SUPPLIERS, [SupplierController::class, 'index'])->name('suppliers')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_COUNT, [StockTakeController::class, 'create'])->name('stock.count')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_ADJUSTMENTS, [StockTakeController::class, 'adjustments'])->name('stock.adjustments')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_SERIALS, [StockTakeController::class, 'serials'])->name('stock.serials')->middleware('can:stock');
     });
 
 /*

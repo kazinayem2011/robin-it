@@ -10,6 +10,7 @@ use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\Supplier;
 use App\Services\OrderService;
+use App\Services\SerialService;
 use App\Services\StockService;
 use App\Support\BranchScope;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +30,8 @@ use Inertia\Response;
 class StockController extends Controller
 {
     public function __construct(
-        protected StockService $stock
+        protected StockService $stock,
+        protected SerialService $serials
     ) {}
 
     /** Inventory overview: what is on the shelf and what has been moving. */
@@ -217,6 +219,10 @@ class StockController extends Controller
             'lines.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'lines.*.quantity' => 'required|integer|min:1|max:100000',
             'lines.*.unit_cost' => 'nullable|numeric|min:0',
+            // Optional, and one per line. Most of a computer shop's stock —
+            // cables, paste, a bag of screws — has no serial worth keeping,
+            // and demanding one would make receiving a chore nobody finishes.
+            'lines.*.serials' => 'nullable|string|max:20000',
             'store_id' => 'nullable|exists:stores,id',
         ], [
             'lines.required' => 'Add at least one product to this delivery.',
@@ -239,11 +245,61 @@ class StockController extends Controller
             $request->user()?->id
         );
 
-        return $this->successResponse(
-            $receipt,
-            "Received {$receipt->total_quantity} unit(s) into stock as {$receipt->reference}.",
-            201
-        );
+        $serials = $this->captureSerials($validated, $receipt, $request);
+
+        $message = "Received {$receipt->total_quantity} unit(s) into stock as {$receipt->reference}.";
+
+        if ($serials['added'] > 0) {
+            $message .= " {$serials['added']} serial number(s) recorded.";
+        }
+
+        // Said out loud rather than swallowed: a serial the shop already holds
+        // is a typo or a supplier duplicate, and either way somebody needs to
+        // go and look at the box.
+        if ($serials['skipped'] !== []) {
+            $message .= ' Already on the books, so not added again: '
+                .implode(', ', array_slice($serials['skipped'], 0, 5))
+                .(count($serials['skipped']) > 5 ? '…' : '').'.';
+        }
+
+        return $this->successResponse($receipt, $message, 201);
+    }
+
+    /**
+     * Take in whatever serials were typed against the delivery's lines.
+     *
+     * @return array{added: int, skipped: array<int, string>}
+     */
+    private function captureSerials(array $validated, $receipt, Request $request): array
+    {
+        $added = 0;
+        $skipped = [];
+        $storeId = BranchScope::narrow($request->user(), $validated['store_id'] ?? null);
+
+        foreach ($validated['lines'] as $line) {
+            if (blank($line['serials'] ?? null)) {
+                continue;
+            }
+
+            [$product, $variant] = $this->stock->resolveUnit(
+                (int) $line['product_id'],
+                $line['product_variant_id'] ?? null
+            );
+
+            // One per line, however the person pasted them in.
+            $result = $this->serials->receive(
+                $product,
+                $variant?->id,
+                preg_split('/[\r\n,]+/', $line['serials']) ?: [],
+                $storeId,
+                $receipt
+            );
+
+            $added += $result['added'];
+            $skipped = array_merge($skipped, $result['skipped']);
+        }
+
+        return ['added' => $added, 'skipped' => $skipped];
     }
 
     /** Past deliveries, for reference and reconciliation. */

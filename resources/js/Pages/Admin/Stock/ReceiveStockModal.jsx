@@ -9,13 +9,14 @@ import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
 import { adminStockReceiptSchema } from '../../../validations';
 import { formatBdt } from '../../../utils/formatters';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Hash } from 'lucide-react';
 
 const blankLine = () => ({
     key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     unit: '',
     quantity: '',
     unit_cost: '',
+    serials: '',
 });
 
 const emptyReceipt = () => ({
@@ -32,12 +33,23 @@ const emptyReceipt = () => ({
  * One receipt covers one invoice and can carry many lines, so a delivery stays
  * a single record rather than a scatter of unexplained quantity changes.
  */
+/** How many serials somebody has actually typed, however they pasted them. */
+const countSerials = (text) =>
+    String(text || '')
+        .split(/[\r\n,]+/)
+        .map((x) => x.trim())
+        .filter(Boolean).length;
+
 export default function ReceiveStockModal({
     isOpen,
     onClose,
     onSaved,
     suppliers = [],
 }) {
+    // Only one line's serial box is open at a time; four textareas at once
+    // is a wall, and a delivery is usually only serial-tracked on one line.
+    const [openSerials, setOpenSerials] = useState(null);
+
     const [units, setUnits] = useState([]);
 
     const formik = useFormik({
@@ -57,6 +69,7 @@ export default function ReceiveStockModal({
                         quantity: Number(l.quantity),
                         unit_cost:
                             l.unit_cost === '' ? null : Number(l.unit_cost),
+                        serials: l.serials?.trim() ? l.serials.trim() : null,
                     };
                 });
 
@@ -263,6 +276,24 @@ export default function ReceiveStockModal({
 
                             <button
                                 type="button"
+                                className={`admin-receive-line-serials ${line.serials?.trim() ? 'has-serials' : ''}`}
+                                title="Serial numbers for this line"
+                                onClick={() =>
+                                    setOpenSerials(
+                                        openSerials === line.key
+                                            ? null
+                                            : line.key,
+                                    )
+                                }
+                            >
+                                <Hash size={14} />
+                                {line.serials?.trim()
+                                    ? countSerials(line.serials)
+                                    : ''}
+                            </button>
+
+                            <button
+                                type="button"
                                 className="admin-receive-line-remove"
                                 title="Remove this line"
                                 disabled={lines.length === 1}
@@ -275,6 +306,39 @@ export default function ReceiveStockModal({
                             >
                                 <Trash2 size={15} />
                             </button>
+
+                            {/*
+                             * Optional, and only in the way when asked for.
+                             * Most of a shop's stock — cables, paste, a bag of
+                             * screws — has no serial worth keeping, and a box
+                             * on every line would make receiving a chore.
+                             */}
+                            {openSerials === line.key && (
+                                <div className="admin-receive-serials">
+                                    <label>
+                                        Serial numbers — one per line
+                                        <textarea
+                                            rows={4}
+                                            value={line.serials}
+                                            onChange={(e) =>
+                                                setLine(line.key, {
+                                                    serials: e.target.value,
+                                                })
+                                            }
+                                            placeholder={
+                                                'SN-4090-0001\nSN-4090-0002'
+                                            }
+                                        />
+                                    </label>
+                                    <span className="admin-field-hint">
+                                        {countSerials(line.serials)} entered
+                                        {Number(line.quantity) > 0 &&
+                                            ` of ${line.quantity} received`}
+                                        . Leave blank for anything you do not
+                                        track by unit.
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

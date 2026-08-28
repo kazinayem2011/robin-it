@@ -241,6 +241,7 @@ export const ROUTES = {
     ADMIN_PAGES: '/admin/pages',
     ADMIN_ROLES: '/admin/roles',
     ADMIN_STOCK_COUNT: '/admin/stock/count',
+    ADMIN_STOCK_SERIALS: '/admin/stock/serials',
     ADMIN_STOCK_ADJUSTMENTS: '/admin/stock/adjustments',
     ADMIN_SUBSCRIBERS: '/admin/subscribers',
     ADMIN_SETTINGS: '/admin/settings',

@@ -95,4 +95,10 @@ class OrderItem extends Model
 
         return $balance !== null && (int) $balance < 0;
     }
+
+    /** The physical units handed over for this line, where they are tracked. */
+    public function serials()
+    {
+        return $this->hasMany(ProductSerial::class);
+    }
 }

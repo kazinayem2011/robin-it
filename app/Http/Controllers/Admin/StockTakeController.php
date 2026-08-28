@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Models\ProductSerial;
 use App\Models\StockMovement;
 use App\Models\StockTake;
 use App\Models\Store;
@@ -89,6 +90,59 @@ class StockTakeController extends Controller
             $message,
             201
         );
+    }
+
+    /**
+     * Every unit the shop tracks by serial, and where it is.
+     *
+     * The question this answers is "is this ours, and who has it" — asked at
+     * the counter when somebody walks in with a dead card and a claim.
+     */
+    public function serials(Request $request): Response
+    {
+        $branch = BranchScope::for($request->user());
+        $status = $request->query('status');
+        $search = trim((string) $request->query('q', ''));
+
+        $serials = ProductSerial::query()
+            ->with(['product:id,name', 'variant:id,name', 'order:id,order_number', 'store:id,name'])
+            ->when($branch, fn ($q) => $q->where('store_id', $branch))
+            ->when(array_key_exists($status, ProductSerial::STATUSES), fn ($q) => $q->where('status', $status))
+            ->when($search !== '', fn ($q) => $q->where(function ($w) use ($search) {
+                $term = '%'.$search.'%';
+                $w->where('serial', 'like', $term)
+                    ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', $term))
+                    ->orWhereHas('order', fn ($oq) => $oq->where('order_number', 'like', $term));
+            }))
+            ->latest('id')
+            ->paginate(30)
+            ->withQueryString()
+            ->through(fn (ProductSerial $s) => [
+                'id' => $s->id,
+                'serial' => $s->serial,
+                'product' => $s->variant
+                    ? "{$s->product?->name} ({$s->variant->name})"
+                    : ($s->product?->name ?? 'Removed product'),
+                'status' => $s->status,
+                'status_label' => $s->status_label,
+                'store' => $s->store?->name,
+                'order_number' => $s->order?->order_number,
+                'sold_at' => $s->sold_at?->format('d M Y'),
+                'warranty_until' => $s->warranty_until?->format('d M Y'),
+                'under_warranty' => $s->under_warranty,
+            ]);
+
+        return Inertia::render('Admin/Stock/Serials', [
+            'serials' => $serials,
+            'filters' => ['status' => $status, 'q' => $search],
+            'statuses' => ProductSerial::STATUSES,
+            'branch' => BranchScope::name($request->user()),
+            'counts' => ProductSerial::query()
+                ->when($branch, fn ($q) => $q->where('store_id', $branch))
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status'),
+        ]);
     }
 
     /**

@@ -221,3 +221,28 @@
 .adj-intro strong {
     color: var(--dark-900);
 }
+
+/* A serial is a code, so it reads as one. */
+.serial-code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.serial-covered,
+.serial-expired {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.serial-covered {
+    color: var(--success);
+}
+
+.serial-expired {
+    color: var(--gray-500);
+}

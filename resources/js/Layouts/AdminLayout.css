@@ -3543,3 +3543,63 @@
 .pay-summary .pay-settled strong {
     color: var(--success);
 }
+
+/* Serial numbers on a delivery line: optional, and out of the way until asked for. */
+.admin-receive-line-serials {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 9px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--gray-500);
+    cursor: pointer;
+}
+
+.admin-receive-line-serials:hover {
+    border-color: var(--gray-300);
+    color: var(--dark-900);
+}
+
+.admin-receive-line-serials.has-serials {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.admin-receive-serials {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+}
+
+.admin-receive-serials label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gray-600);
+}
+
+.admin-receive-serials textarea {
+    width: 100%;
+    margin-top: 6px;
+    padding: 9px 11px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--dark-900);
+    resize: vertical;
+}
+
+.admin-receive-serials textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}

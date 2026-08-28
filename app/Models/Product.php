@@ -12,6 +12,7 @@ class Product extends Model
         'description', 'is_featured', 'is_active',
         'has_variants', 'variant_attributes', 'reorder_level',
         'allow_preorder', 'preorder_limit', 'preorder_release_at',
+        'warranty_months',
     ];
 
     /**
