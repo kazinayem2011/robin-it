@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductVariant extends Model
 {
     protected $fillable = [
-        'product_id', 'name', 'sku', 'options', 'price', 'discount_price',
+        'product_id', 'name', 'sku', 'barcode', 'options', 'price', 'discount_price',
         'stock_quantity', 'reorder_level', 'image_url', 'is_active', 'position',
     ];
 

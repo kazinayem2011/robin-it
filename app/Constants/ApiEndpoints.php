@@ -147,6 +147,8 @@ class ApiEndpoints
 
     public const ADMIN_STOCK_SERIAL_ITEM = 'stock/serials/{id}';
 
+    public const ADMIN_BARCODE_LOOKUP = 'stock/barcode';
+
     public const ADMIN_STOCK_COUNT = 'stock/count';
 
     public const ADMIN_STOCK_ADJUSTMENTS = 'stock/adjustments';

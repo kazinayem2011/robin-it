@@ -264,6 +264,20 @@ export const adminService = {
     },
 
     /**
+     * What was just scanned.
+     *
+     * A handheld scanner is a keyboard: it types the code and presses Enter.
+     * There is no camera to drive — the whole job is turning that string into
+     * a product, a variant, or the serial of one unit.
+     */
+    async scanBarcode(code) {
+        const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.BARCODE, {
+            params: { code },
+        });
+        return response?.data || response;
+    },
+
+    /**
      * Map a city or thana to a courier's own area ids.
      *
      * Pathao and RedX book against numbers from their own lists, not against a

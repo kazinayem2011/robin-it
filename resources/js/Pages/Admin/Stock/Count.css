@@ -277,3 +277,53 @@
     border-color: var(--danger, #d1202f);
     color: var(--danger, #d1202f);
 }
+
+/*
+ * The scan box.
+ *
+ * Autofocused, because a scanner types wherever the cursor is: if it is not
+ * here, the codes land in the search box or nowhere at all.
+ */
+.count-scan {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface, #fff);
+    color: var(--gray-400);
+}
+
+.count-scan:focus-within {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.count-scan-input {
+    width: 190px;
+    padding: 9px 0;
+    border: 0;
+    background: none;
+    font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+    font-size: 0.85rem;
+    color: var(--dark-900);
+}
+
+.count-scan-input:focus {
+    outline: none;
+}
+
+.count-scan-note {
+    margin: 10px 0 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.count-scan-note.is-ok {
+    color: var(--success, #158a4a);
+}
+
+.count-scan-note.is-bad {
+    color: var(--danger, #d1202f);
+}

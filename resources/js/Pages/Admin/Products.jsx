@@ -130,6 +130,7 @@ export default function Products({
             is_featured: false,
             is_active: true,
             reorder_level: '',
+            barcode: '',
             allow_preorder: false,
             preorder_limit: '',
             preorder_release_at: '',
@@ -250,6 +251,7 @@ export default function Products({
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
                 reorder_level: p.reorder_level ?? '',
+                barcode: p.barcode ?? '',
                 allow_preorder: Boolean(p.allow_preorder),
                 preorder_limit: p.preorder_limit ?? '',
                 preorder_release_at: p.preorder_release_at
@@ -587,6 +589,25 @@ export default function Products({
                             onBlur={formik.handleBlur}
                             placeholder="Store default"
                             helperText="Flag this for reordering once stock falls to here."
+                        />
+
+                        {/*
+                         * The number on the box. A scanner types it at a stock
+                         * take or a delivery, which is what stops counting
+                         * meaning finding each product in a list by name.
+                         */}
+                        <FormInput
+                            id="barcode"
+                            name="barcode"
+                            label="Barcode"
+                            value={formik.values.barcode}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            placeholder="Scan or type it"
+                            error={
+                                formik.touched.barcode && formik.errors.barcode
+                            }
+                            helperText="The manufacturer's number, for scanning at a count. Leave blank if there is none."
                         />
 
                         {/*

@@ -252,6 +252,13 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * way through could not write down what it already had, and a number
          * typed wrong stayed wrong for the life of the unit.
          */
+        /*
+         * A scanner is a keyboard: it types a code and presses Enter. This
+         * turns that string into a row, so counting a shelf stops meaning
+         * finding each product in a list by name.
+         */
+        Route::get(ApiEndpoints::ADMIN_BARCODE_LOOKUP, [AdminStockTakeController::class, 'scan'])->middleware('can:stock');
+
         Route::post(ApiEndpoints::ADMIN_STOCK_SERIALS, [AdminStockTakeController::class, 'storeSerials'])->middleware('can:stock');
         Route::put(ApiEndpoints::ADMIN_STOCK_SERIAL_ITEM, [AdminStockTakeController::class, 'updateSerial'])->middleware('can:stock');
         Route::delete(ApiEndpoints::ADMIN_STOCK_SERIAL_ITEM, [AdminStockTakeController::class, 'destroySerial'])->middleware('can:stock');

@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { ClipboardList, Save, RotateCcw } from 'lucide-react';
+import { ClipboardList, Save, RotateCcw, ScanLine } from 'lucide-react';
 import Button from '@/Components/Button';
 import { SearchInput } from '@/Components/SearchInput';
 import EmptyState from '@/Components/EmptyState';
@@ -32,8 +32,71 @@ export default function StockCount({
     const [counted, setCounted] = useState({});
     const [note, setNote] = useState('');
     const [saving, setSaving] = useState(false);
+    const [scanned, setScanned] = useState(null);
+    const scanBox = useRef(null);
 
     const typed = (l) => counted[keyOf(l)];
+
+    /**
+     * A scan, which is a keyboard typing a code and pressing Enter.
+     *
+     * Counting meant finding each product in a list by name, which for a shop
+     * with three near-identical sticks of RAM is where a count goes wrong — and
+     * it is slow enough that counts get put off, which is worse than counting
+     * badly.
+     *
+     * Scanning the same box twice means two of them, so a hit adds one to that
+     * line rather than jumping to it and waiting. That is the whole point:
+     * somebody walks the shelf with a scanner in one hand and never touches
+     * the keyboard.
+     */
+    const onScan = async (event) => {
+        if (event.key !== 'Enter') return;
+
+        event.preventDefault();
+
+        const code = event.target.value.trim();
+
+        if (!code) return;
+
+        // Cleared immediately so the next scan is not appended to this one.
+        event.target.value = '';
+
+        try {
+            const res = await adminService.scanBarcode(code);
+            const hit = res?.data ?? res;
+            const line = lines.find(
+                (l) =>
+                    l.product_id === hit.product_id &&
+                    (l.product_variant_id ?? null) ===
+                        (hit.product_variant_id ?? null),
+            );
+
+            if (!line) {
+                setScanned({
+                    ok: false,
+                    text: `${hit.name} is not on this branch's sheet.`,
+                });
+                return;
+            }
+
+            const key = keyOf(line);
+
+            setCounted((prev) => {
+                const next = Number(prev[key] ?? 0) + 1;
+                setScanned({
+                    ok: true,
+                    text: `${line.name} — counted ${next}`,
+                });
+                return { ...prev, [key]: String(next) };
+            });
+        } catch (err) {
+            setScanned({
+                ok: false,
+                text: err?.message || 'Nothing on the books has that barcode.',
+            });
+        }
+    };
 
     /*
      * A line is only counted once somebody types into it. Blank is not zero —
@@ -147,6 +210,23 @@ export default function StockCount({
                         />
                     </div>
 
+                    {/*
+                     * The scanner types here. Kept beside the search box rather
+                     * than in a mode of its own — somebody counting a shelf
+                     * scans most lines and types the odd one nobody labelled.
+                     */}
+                    <div className="count-scan">
+                        <ScanLine size={15} />
+                        <input
+                            ref={scanBox}
+                            type="text"
+                            className="count-scan-input"
+                            placeholder="Scan a barcode…"
+                            onKeyDown={onScan}
+                            autoFocus
+                        />
+                    </div>
+
                     <Button
                         icon={Save}
                         onClick={save}
@@ -155,6 +235,14 @@ export default function StockCount({
                         {saving ? 'Saving…' : `Save count (${totals.checked})`}
                     </Button>
                 </div>
+
+                {scanned && (
+                    <p
+                        className={`count-scan-note ${scanned.ok ? 'is-ok' : 'is-bad'}`}
+                    >
+                        {scanned.text}
+                    </p>
+                )}
 
                 {lines.length === 0 ? (
                     <EmptyState

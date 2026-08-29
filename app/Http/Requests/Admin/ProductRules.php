@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Product;
+use App\Models\ProductVariant;
+
 /**
  * Rule fragments shared by the create and edit product forms.
  *
@@ -10,6 +13,54 @@ namespace App\Http\Requests\Admin;
  */
 class ProductRules
 {
+    /**
+     * Barcodes have to be unique across both tables, and the rule builder
+     * cannot say that for a `variants.*` array: each row needs to ignore its
+     * own id, and rows within the one submission have to be checked against
+     * each other as well as against the table.
+     *
+     * Without this a repeated barcode reaches the unique index and comes back
+     * as a 500, which tells the person typing it nothing.
+     */
+    public static function checkBarcodes($validator, array $variants, ?int $productId = null): void
+    {
+        $seen = [];
+
+        foreach ($variants as $i => $variant) {
+            $code = trim((string) ($variant['barcode'] ?? ''));
+
+            if ($code === '') {
+                continue;
+            }
+
+            if (isset($seen[$code])) {
+                $validator->errors()->add(
+                    "variants.{$i}.barcode",
+                    "Barcode {$code} is on more than one option here. Each box has its own number."
+                );
+
+                continue;
+            }
+
+            $seen[$code] = true;
+
+            $takenByVariant = ProductVariant::where('barcode', $code)
+                ->when($variant['id'] ?? null, fn ($q, $id) => $q->whereKeyNot($id))
+                ->exists();
+
+            $takenByProduct = Product::where('barcode', $code)
+                ->when($productId, fn ($q, $id) => $q->whereKeyNot($id))
+                ->exists();
+
+            if ($takenByVariant || $takenByProduct) {
+                $validator->errors()->add(
+                    "variants.{$i}.barcode",
+                    "Barcode {$code} is already on something else."
+                );
+            }
+        }
+    }
+
     /**
      * Selling ahead of a delivery, decided per product. The limit is how far the
      * balance may go below zero: without one a single scripted buyer can commit
@@ -44,6 +95,9 @@ class ProductRules
             'variants.*.options' => 'nullable|array',
             'variants.*.name' => 'nullable|string|max:180',
             'variants.*.sku' => 'nullable|string|max:80',
+            // 16GB and 32GB of the same stick are different boxes with
+            // different numbers, so a variant carries its own.
+            'variants.*.barcode' => 'nullable|string|max:64',
             'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.discount_price' => 'nullable|numeric|min:0',
             'variants.*.image_url' => 'nullable|string|max:2048',

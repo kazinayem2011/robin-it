@@ -9,6 +9,7 @@ use App\Models\ProductSerial;
 use App\Models\StockMovement;
 use App\Models\StockTake;
 use App\Models\Store;
+use App\Services\BarcodeLookup;
 use App\Services\SerialService;
 use App\Services\StockService;
 use App\Services\StockTakeService;
@@ -112,6 +113,29 @@ class StockTakeController extends Controller
         $serials->remove($serial);
 
         return $this->successResponse([], "Serial {$was} removed.");
+    }
+
+    /**
+     * What was just scanned.
+     *
+     * A handheld scanner types the code and presses Enter, so this is the whole
+     * of "barcode support": somewhere to send the string and a row back.
+     */
+    public function scan(Request $request, BarcodeLookup $barcodes): JsonResponse
+    {
+        $data = $request->validate(['code' => 'required|string|max:100']);
+
+        $match = $barcodes->find($data['code']);
+
+        if (! $match['found']) {
+            return $this->errorResponse(
+                'Nothing on the books has that barcode. Add it to the product first.',
+                404,
+                ApiCode::NOT_FOUND
+            );
+        }
+
+        return $this->successResponse($match, $match['name']);
     }
 
     /** The count sheet for one branch. */

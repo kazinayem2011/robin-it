@@ -175,6 +175,7 @@ export const API_ENDPOINTS = {
         STOCK_UNITS: '/admin/stock/units',
         COURIER_ZONES: (id) => `/admin/couriers/${id}/zones`,
         COURIER_ZONE: (id, zone) => `/admin/couriers/${id}/zones/${zone}`,
+        BARCODE: '/admin/stock/barcode',
         STOCK_SERIALS: '/admin/stock/serials',
         STOCK_SERIAL: (id) => `/admin/stock/serials/${id}`,
         STOCK_TRANSFER: '/admin/stock/transfer',

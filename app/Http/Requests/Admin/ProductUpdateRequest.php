@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use Illuminate\Validation\Rule;
+
 class ProductUpdateRequest extends AdminRequest
 {
     /**
@@ -17,6 +19,12 @@ class ProductUpdateRequest extends AdminRequest
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'name' => 'nullable|string|max:255',
+            /*
+             * The number on the box, for scanning at a count or a delivery.
+             * Unique because two products sharing one makes every scan of it a
+             * coin toss; blank is fine, since plenty of stock has none.
+             */
+            'barcode' => ['nullable', 'string', 'max:64', Rule::unique('products', 'barcode')->ignore($this->route('id'))],
             'price' => 'nullable|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
             'short_description' => 'nullable|string|max:500',
@@ -50,8 +58,21 @@ class ProductUpdateRequest extends AdminRequest
 
         return array_filter(
             $scalar,
-            fn ($value, $key) => $value !== null || in_array($key, ['brand_id', 'discount_price'], true),
+            // barcode joins these: clearing one is a real instruction, and a
+            // product whose barcode is wrong has to be able to lose it.
+            fn ($value, $key) => $value !== null || in_array($key, ['brand_id', 'discount_price', 'barcode'], true),
             ARRAY_FILTER_USE_BOTH
         );
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            ProductRules::checkBarcodes(
+                $validator,
+                (array) $this->input('variants', []),
+                (int) $this->route('id')
+            );
+        });
     }
 }
