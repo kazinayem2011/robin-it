@@ -73,3 +73,276 @@
     flex: none;
     margin-top: 2px;
 }
+
+/* ── Composing one: the message on the left, what to drop in on the right ── */
+
+.cmp-composer {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 820px) {
+    .cmp-composer {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmp-picker {
+    padding: 14px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle, #f8fafc);
+    /* The message can be long; the picker stays where the writer left it. */
+    position: sticky;
+    top: 0;
+    max-height: 62vh;
+    overflow-y: auto;
+}
+
+.cmp-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 10px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface, #fff);
+    color: var(--gray-400);
+}
+
+.cmp-picker-search input {
+    width: 100%;
+    padding: 8px 0;
+    border: 0;
+    background: none;
+    font-size: 0.82rem;
+}
+
+.cmp-picker-search input:focus {
+    outline: none;
+}
+
+.cmp-picker h5 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 16px 0 8px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-400);
+}
+
+.cmp-picker ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cmp-picker li {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+}
+
+.cmp-picker li > button:first-child {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.cmp-picker li > button:first-child:hover {
+    background: var(--bg-surface, #fff);
+    color: var(--primary);
+}
+
+.cmp-picker li small {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
+
+.cmp-picker li s {
+    opacity: 0.7;
+}
+
+.cmp-none {
+    padding: 8px;
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+/* Pinning a product and a code together to build one offer. */
+.cmp-pin {
+    width: 26px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--gray-300, #cbd5e1);
+    cursor: pointer;
+}
+
+.cmp-pin:hover,
+.cmp-pin.is-on {
+    background: var(--primary);
+    color: #fff;
+}
+
+.cmp-deal {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    margin-bottom: 14px;
+    border: 1px dashed var(--primary);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface, #fff);
+}
+
+.cmp-deal p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 0 2px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary);
+}
+
+.cmp-deal span {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+.cmp-deal span.is-set {
+    font-weight: 600;
+    color: var(--dark-800);
+}
+
+/* ── The preview: what actually lands ─────────────────────────────────────── */
+
+.cmp-preview section {
+    margin-bottom: 24px;
+}
+
+.cmp-preview h5 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-400);
+}
+
+.cmp-reach {
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle, #f8fafc);
+    font-size: 0.85rem;
+    color: var(--gray-600, #4b5563);
+}
+
+.cmp-email-frame {
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.cmp-email-subject {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    background: var(--bg-surface-subtle, #f8fafc);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.cmp-email-body {
+    padding: 20px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    background: #fff;
+}
+
+/* A phone renders it as typed: no wrapping cleverness, no markup. */
+.cmp-sms-frame {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle, #f8fafc);
+    font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+    font-size: 0.8rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ── Delivery history ─────────────────────────────────────────────────────── */
+
+.cmp-history-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.cmp-history-filters button {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: 999px;
+    background: var(--bg-surface, #fff);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cmp-history-filters button.is-on {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+}
+
+.cmp-history {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.cmp-history td {
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    vertical-align: top;
+}
+
+.cmp-history td:last-child {
+    text-align: right;
+}
+
+.cmp-history small {
+    color: var(--gray-400);
+}
+
+.cmp-pending {
+    background: var(--gray-100, #f1f2f4);
+}
+
+/* Previewing: the picker is put away, so what lands gets the whole width. */
+.cmp-composer.is-previewing {
+    grid-template-columns: 1fr;
+}

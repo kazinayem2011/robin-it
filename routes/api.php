@@ -278,6 +278,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * ability that controls banners and coupons.
          */
         Route::post(ApiEndpoints::ADMIN_CAMPAIGN_PREVIEW, [CampaignController::class, 'preview'])->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_CAMPAIGN_PICKERS, [CampaignController::class, 'pickers'])->middleware('can:marketing');
         Route::post(ApiEndpoints::ADMIN_CAMPAIGNS, [CampaignController::class, 'store'])->middleware('can:marketing');
         Route::put(ApiEndpoints::ADMIN_CAMPAIGN_ITEM, [CampaignController::class, 'update'])->middleware('can:marketing');
         Route::post(ApiEndpoints::ADMIN_CAMPAIGN_SEND, [CampaignController::class, 'send'])->middleware('can:marketing');

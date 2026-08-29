@@ -180,6 +180,8 @@ export const API_ENDPOINTS = {
         CAMPAIGNS: '/admin/campaigns',
         CAMPAIGN: (id) => `/admin/campaigns/${id}`,
         CAMPAIGN_PREVIEW: '/admin/campaigns/preview',
+        CAMPAIGN_PICKERS: '/admin/campaigns/pickers',
+        CAMPAIGN_RECIPIENTS: (id) => `/admin/campaigns/${id}/recipients`,
         CAMPAIGN_SEND: (id) => `/admin/campaigns/${id}/send`,
         PURCHASE_ORDERS: '/admin/purchase-orders',
         PURCHASE_ORDER_SEND: (id) => `/admin/purchase-orders/${id}/send`,

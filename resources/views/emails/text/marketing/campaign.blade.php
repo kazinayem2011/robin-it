@@ -1,6 +1,6 @@
 {{ strtoupper($campaign->subject ?: $campaign->title) }}
 
-{{ strip_tags($body) }}
+{{ $plainBody }}
 
 --
 You are receiving this because you shop with {{ $brand['name'] }} or joined our

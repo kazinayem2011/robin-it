@@ -287,6 +287,24 @@ export const adminService = {
         return response?.data || response;
     },
 
+    /** Products and coupons to drop into a campaign. */
+    async getCampaignPickers(params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.CAMPAIGN_PICKERS,
+            { params },
+        );
+        return response?.data || response;
+    },
+
+    /** Who got a campaign, who did not, and why not. */
+    async getCampaignRecipients(id, params = {}) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.CAMPAIGN_RECIPIENTS(id),
+            { params },
+        );
+        return response?.data || response;
+    },
+
     async createCampaign(payload) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.CAMPAIGNS,

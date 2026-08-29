@@ -8,6 +8,7 @@ use App\Models\CampaignRecipient;
 use App\Models\Subscriber;
 use App\Services\CampaignService;
 use App\Services\SmsService;
+use App\Support\CampaignContent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -77,7 +78,7 @@ class SendCampaignMessage implements ShouldQueue
 
             $recipient->update($sent
                 ? ['status' => CampaignRecipient::SENT, 'sent_at' => now()]
-                : ['status' => CampaignRecipient::FAILED, 'error' => 'The gateway would not take it.']);
+                : ['status' => CampaignRecipient::FAILED, 'error' => $this->whyNot($recipient, $sms)]);
         } catch (\Throwable $e) {
             /*
              * One bad address must not stop the other four thousand. The
@@ -91,6 +92,31 @@ class SendCampaignMessage implements ShouldQueue
                 'error' => mb_substr($e->getMessage(), 0, 500),
             ]);
         }
+    }
+
+    /**
+     * Why a send came back false.
+     *
+     * "The gateway would not take it" sends somebody hunting for a gateway
+     * fault when the actual answer is that texting is switched off in Settings,
+     * which is a thirty-second fix they will not find while reading about a
+     * gateway.
+     */
+    private function whyNot(CampaignRecipient $recipient, SmsService $sms): string
+    {
+        if ($recipient->channel !== Campaign::SMS) {
+            return 'It could not be delivered.';
+        }
+
+        if (! $sms->enabled()) {
+            return 'Text messages are switched off under Settings → SMS.';
+        }
+
+        if (! $sms->gatewayNumber($recipient->contact)) {
+            return 'That is not a number we can dial.';
+        }
+
+        return 'The gateway would not take it.';
     }
 
     private function email(Campaign $campaign, CampaignRecipient $recipient, CampaignService $campaigns): bool
@@ -117,7 +143,11 @@ class SendCampaignMessage implements ShouldQueue
 
         Mail::to($recipient->contact)->send(new CampaignMail(
             $campaign,
-            $campaigns->personalise($campaign->body, $recipient->name),
+            // Tokens turned into the shop's own markup here rather than in the
+            // template, so the plain-text half of the mail gets the same
+            // content without a second set of rules.
+            $campaigns->emailBody($campaign, $recipient->name),
+            $campaigns->personalise(CampaignContent::text($campaign->body), $recipient->name),
             $subscriber->unsubscribeUrl(),
         ));
 

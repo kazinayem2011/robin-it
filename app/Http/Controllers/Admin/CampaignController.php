@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campaign;
+use App\Models\Coupon;
+use App\Models\Product;
 use App\Services\CampaignService;
+use App\Support\CampaignContent;
 use App\Support\RichText;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -74,10 +77,55 @@ class CampaignController extends Controller
     public function preview(Request $request): JsonResponse
     {
         $data = $this->validated($request);
+        $campaign = new Campaign($data);
 
-        $estimate = $this->campaigns->estimate(new Campaign($data));
+        /*
+         * The rendered message comes from the server rather than being
+         * reproduced in the browser. A preview built from a second
+         * implementation is a preview of that second implementation, and the
+         * first thing it stops matching is the thing worth checking.
+         */
+        return $this->successResponse(array_merge(
+            $this->campaigns->estimate($campaign),
+            [
+                'html' => $this->campaigns->emailBody($campaign, 'Rahim'),
+                'text' => $this->campaigns->smsBody($campaign, 'Rahim'),
+                'missing' => CampaignContent::missing($campaign->body),
+            ]
+        ), 'Estimated.');
+    }
 
-        return $this->successResponse($estimate, 'Estimated.');
+    /**
+     * Products and coupons to drop into a message.
+     *
+     * Writing "RTX 4090, Tk 2,45,000, was Tk 2,60,000" by hand is how a
+     * campaign goes out with last month's price on it. Picking the product
+     * means the price is read at send time from the same row the shop sells
+     * from.
+     */
+    public function pickers(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        return $this->successResponse([
+            'products' => Product::query()
+                ->where('is_active', true)
+                ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                ->orderByDesc('is_featured')
+                ->orderBy('name')
+                ->limit(20)
+                ->get(['id', 'name', 'slug', 'price', 'discount_price']),
+
+            // Only codes somebody could actually use: an expired one in a
+            // promotion is a complaint waiting at the counter.
+            'coupons' => Coupon::query()
+                ->where('is_active', true)
+                ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
+                ->when($search !== '', fn ($q) => $q->where('code', 'like', "%{$search}%"))
+                ->orderBy('code')
+                ->limit(20)
+                ->get(['id', 'code', 'discount_type', 'discount_value', 'max_discount', 'expires_at']),
+        ]);
     }
 
     public function send(int $id): JsonResponse

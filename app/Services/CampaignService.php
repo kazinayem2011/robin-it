@@ -10,6 +10,7 @@ use App\Models\CampaignRecipient;
 use App\Models\Subscriber;
 use App\Models\User;
 use App\Support\BrandDetails;
+use App\Support\CampaignContent;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -146,6 +147,19 @@ class CampaignService
             );
         }
 
+        /*
+         * A product delisted between writing the campaign and sending it would
+         * otherwise go out as a sentence with a hole in it, to everybody.
+         */
+        if ($missing = CampaignContent::missing($campaign->body)) {
+            throw new StorefrontException(
+                'This campaign points at something that is no longer available: '
+                    .implode(', ', $missing).'. Edit it before sending.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
         $rows = $this->recipientRows($campaign);
 
         if ($rows === []) {
@@ -244,9 +258,17 @@ class CampaignService
      */
     public function smsBody(Campaign $campaign, ?string $name = null): string
     {
-        $body = $this->personalise($campaign->body, $name);
+        // Rendered first: the box holds "[[product:rtx-4090]]" and the gateway
+        // is billed for the two lines that becomes.
+        $body = CampaignContent::text($this->personalise($campaign->body, $name));
 
-        return BrandDetails::name().': '.trim(strip_tags($body));
+        return BrandDetails::name().': '.trim($body);
+    }
+
+    /** The body as the email will actually render it. */
+    public function emailBody(Campaign $campaign, ?string $name = null): string
+    {
+        return CampaignContent::html($this->personalise($campaign->body, $name));
     }
 
     /**

@@ -157,6 +157,8 @@ class ApiEndpoints
 
     public const ADMIN_CAMPAIGN_PREVIEW = 'campaigns/preview';
 
+    public const ADMIN_CAMPAIGN_PICKERS = 'campaigns/pickers';
+
     public const ADMIN_CAMPAIGN_SEND = 'campaigns/{id}/send';
 
     public const ADMIN_CAMPAIGN_RECIPIENTS = 'campaigns/{id}/recipients';

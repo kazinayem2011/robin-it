@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Megaphone, Plus, Send, Trash2, AlertTriangle } from 'lucide-react';
+import {
+    Megaphone,
+    Plus,
+    Send,
+    Trash2,
+    Pencil,
+    Eye,
+    ListChecks,
+} from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
 import Tabs from '@/Components/Tabs';
 import Modal from '@/Components/Modal';
-import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import CampaignComposer from './Components/CampaignComposer';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import './Campaigns.css';
@@ -31,6 +38,8 @@ export default function Campaigns({
     audiences = {},
 }) {
     const [writing, setWriting] = useState(false);
+    const [editing, setEditing] = useState(null);
+    const [history, setHistory] = useState(null);
 
     const go = (params) =>
         router.get(
@@ -143,6 +152,35 @@ export default function Campaigns({
             align: 'right',
             render: (c) => (
                 <div className="admin-input-row-flex">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        title={
+                            c.status === 'draft'
+                                ? 'Edit and preview'
+                                : 'See what was sent'
+                        }
+                        onClick={() => setEditing(c)}
+                    >
+                        {c.status === 'draft' ? (
+                            <Pencil size={14} />
+                        ) : (
+                            <Eye size={14} />
+                        )}
+                    </button>
+
+                    {/* Who got it, who did not, and why not. */}
+                    {c.recipient_count > 0 && (
+                        <button
+                            type="button"
+                            className="admin-table-icon-btn"
+                            title="Delivery history"
+                            onClick={() => setHistory(c)}
+                        >
+                            <ListChecks size={14} />
+                        </button>
+                    )}
+
                     {c.status === 'draft' && (
                         <button
                             type="button"
@@ -220,217 +258,133 @@ export default function Campaigns({
                 />
             )}
 
-            <WriteCampaignModal
-                open={writing}
+            <CampaignComposer
+                open={writing || Boolean(editing)}
+                campaign={editing}
                 channels={channels}
                 audiences={audiences}
-                onClose={() => setWriting(false)}
+                onClose={() => {
+                    setWriting(false);
+                    setEditing(null);
+                }}
                 onSaved={() => {
                     setWriting(false);
+                    setEditing(null);
                     refresh();
                 }}
+            />
+
+            <DeliveryHistory
+                campaign={history}
+                onClose={() => setHistory(null)}
             />
         </AdminLayout>
     );
 }
 
 /**
- * Writing one, with the reach and the bill shown before it is saved.
+ * Who got it, who did not, and why not.
  *
- * The estimate is the point of this screen. One em dash in a sentence pushes
- * the whole text into unicode, where 70 characters fit instead of 160 — on a
- * few thousand numbers that is a doubled invoice for a character nobody saw.
+ * The reason worth keeping: "sent to 4,812 of 4,900" is only useful if
+ * somebody can find out what happened to the other 88.
  */
-function WriteCampaignModal({ open, channels, audiences, onClose, onSaved }) {
-    const [form, setForm] = useState({
-        title: '',
-        subject: '',
-        body: '',
-        channel: 'email',
-        audience: 'subscribers',
-    });
-    const [estimate, setEstimate] = useState(null);
-    const [checking, setChecking] = useState(false);
-    const [saving, setSaving] = useState(false);
+function DeliveryHistory({ campaign, onClose }) {
+    const [rows, setRows] = useState([]);
+    const [filter, setFilter] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const set = (field) => (e) => {
-        setForm((prev) => ({ ...prev, [field]: e.target.value }));
-        // Any edit invalidates the last estimate; showing a stale one beside a
-        // changed message is worse than showing none.
-        setEstimate(null);
-    };
+    useEffect(() => {
+        if (!campaign) return;
 
-    const check = async () => {
-        setChecking(true);
-
-        try {
-            const res = await adminService.previewCampaign(form);
-            setEstimate(res?.data ?? res);
-        } catch (err) {
-            toast.error(err?.message || 'Could not work that out.');
-        } finally {
-            setChecking(false);
-        }
-    };
-
-    const save = async () => {
-        setSaving(true);
-
-        try {
-            const res = await adminService.createCampaign(form);
-            toast.success(res?.message || 'Saved as a draft.');
-            setForm({
-                title: '',
-                subject: '',
-                body: '',
-                channel: 'email',
-                audience: 'subscribers',
-            });
-            setEstimate(null);
-            onSaved();
-        } catch (err) {
-            toast.error(err?.message || 'Could not save that.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const needsSubject = form.channel === 'email' || form.channel === 'both';
-    const complete =
-        form.title.trim() &&
-        form.body.trim() &&
-        (!needsSubject || form.subject.trim());
+        setLoading(true);
+        adminService
+            .getCampaignRecipients(campaign.id, { status: filter || undefined })
+            /*
+             * The service already hands back the payload — the axios
+             * interceptor unwraps the envelope once and the service unwraps it
+             * again. Reaching for .data here looked for it on the array and
+             * quietly found nothing, so the table rendered empty while the
+             * request returned 200.
+             */
+            .then((res) =>
+                setRows(Array.isArray(res) ? res : (res?.data ?? [])),
+            )
+            .catch(() => setRows([]))
+            .finally(() => setLoading(false));
+    }, [campaign, filter]);
 
     return (
         <Modal
-            isOpen={open}
+            isOpen={Boolean(campaign)}
             onClose={onClose}
-            title="Write a campaign"
-            maxWidth="620px"
+            title={`${campaign?.title ?? ''} — who got it`}
+            maxWidth="640px"
             footer={
-                <>
-                    <Button variant="secondary" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={check}
-                        loading={checking}
-                        disabled={!complete}
-                    >
-                        Who gets this?
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={save}
-                        loading={saving}
-                        disabled={!complete}
-                    >
-                        Save as draft
-                    </Button>
-                </>
+                <Button variant="secondary" onClick={onClose}>
+                    Close
+                </Button>
             }
         >
-            <FormInput
-                label="Name it"
-                name="cmp_title"
-                required
-                value={form.title}
-                onChange={set('title')}
-                placeholder="For your own list — nobody else sees this"
-            />
-
-            <div className="cmp-row">
-                <FormSelect
-                    label="Send by"
-                    name="cmp_channel"
-                    required
-                    value={form.channel}
-                    onChange={set('channel')}
-                    options={Object.entries(channels).map(([value, label]) => ({
-                        value,
-                        label,
-                    }))}
-                />
-
-                <FormSelect
-                    label="Who to"
-                    name="cmp_audience"
-                    required
-                    value={form.audience}
-                    onChange={set('audience')}
-                    options={Object.entries(audiences).map(
-                        ([value, label]) => ({
-                            value,
-                            label,
-                        }),
-                    )}
-                />
+            <div className="cmp-history-filters">
+                {[
+                    ['', 'Everyone'],
+                    ['sent', 'Delivered'],
+                    ['failed', 'Failed'],
+                    ['pending', 'Still queued'],
+                ].map(([key, label]) => (
+                    <button
+                        key={key}
+                        type="button"
+                        className={filter === key ? 'is-on' : ''}
+                        onClick={() => setFilter(key)}
+                    >
+                        {label}
+                    </button>
+                ))}
             </div>
 
-            {needsSubject && (
-                <FormInput
-                    label="Subject line"
-                    name="cmp_subject"
-                    required
-                    value={form.subject}
-                    onChange={set('subject')}
-                    placeholder="What they see before they open it"
-                />
+            {loading ? (
+                <p className="admin-field-hint">Loading…</p>
+            ) : rows.length === 0 ? (
+                <p className="admin-field-hint">Nothing here.</p>
+            ) : (
+                <table className="cmp-history">
+                    <tbody>
+                        {rows.map((r) => (
+                            <tr key={r.id}>
+                                <td>
+                                    <strong>{r.contact}</strong>
+                                    {r.name && <small> · {r.name}</small>}
+                                </td>
+                                <td>{r.channel}</td>
+                                <td>
+                                    <span
+                                        className={`cmp-badge cmp-${r.status === 'sent' ? 'sent' : r.status}`}
+                                    >
+                                        {r.status}
+                                    </span>
+                                    {r.error && (
+                                        <div className="cmp-failed">
+                                            {r.error}
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             )}
 
-            <FormInput
-                label="Message"
-                name="cmp_body"
-                type="textarea"
-                rows={7}
-                required
-                value={form.body}
-                onChange={set('body')}
-                placeholder="Write it as you would say it."
-                helperText="Put {name} anywhere you want their name. Texts are prefixed with the shop's name automatically."
-            />
-
-            {estimate && (
-                <div className="cmp-estimate">
-                    <h4>This would go to {estimate.people} people</h4>
-
-                    <ul>
-                        {estimate.emails > 0 && (
-                            <li>
-                                <strong>{estimate.emails}</strong> emails
-                            </li>
-                        )}
-                        {estimate.texts > 0 && (
-                            <li>
-                                <strong>{estimate.texts}</strong> text messages,
-                                billed as{' '}
-                                <strong>{estimate.sms_parts} parts</strong>
-                            </li>
-                        )}
-                        {estimate.emails === 0 && estimate.texts === 0 && (
-                            <li>
-                                Nobody — check that people have opted in, and
-                                that a text campaign has customers with numbers.
-                            </li>
-                        )}
-                    </ul>
-
-                    {/*
-                     * The single most expensive detail, and the easiest to
-                     * introduce by accident with one curly quote pasted in
-                     * from a word processor.
-                     */}
-                    {estimate.unicode && (
-                        <p className="cmp-warning">
-                            <AlertTriangle size={14} />
-                            This text is not plain English, so only 70
-                            characters fit per part instead of 160 — it costs
-                            about twice as much. Usually a dash, a curly quote
-                            or an emoji pasted in from somewhere else.
-                        </p>
-                    )}
-                </div>
+            {/*
+             * The endpoint pages at fifty. On a campaign to several thousand
+             * that is a small window, and a list that stops without saying so
+             * reads as the whole story.
+             */}
+            {rows.length >= 50 && (
+                <p className="admin-field-hint">
+                    Showing the most recent 50 of {campaign?.recipient_count}.
+                    Filter by outcome to narrow it down.
+                </p>
             )}
         </Modal>
     );

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderEdit;
 use App\Models\OrderItem;
@@ -287,15 +288,26 @@ class OrderEditService
 
         /*
          * A percentage coupon follows the new subtotal; a fixed one does not,
-         * because "200 off" is 200 whatever the basket is. Either is capped at
-         * the subtotal, so an edit that shrinks an order below its discount
-         * cannot make the goods free.
+         * because "200 off" is 200 whatever the basket is.
+         *
+         * Asked of the coupon where it still exists, because it owns this
+         * calculation and knows about its own ceiling — working it out here
+         * missed max_discount, so a "20% off up to Tk 2,000" code would have
+         * given away the full 20% on an edited order. The stored type and value
+         * are the fallback for a code deleted since the order was placed, and
+         * the type is 'percent', which is what the column holds.
          */
-        $discount = match ($order->coupon_discount_type) {
-            'percentage' => round($subtotal * ((float) $order->coupon_discount_value) / 100, 2),
-            'fixed' => (float) $order->coupon_discount_value,
-            default => (float) $order->discount,
-        };
+        $coupon = $order->coupon_code
+            ? Coupon::where('code', $order->coupon_code)->first()
+            : null;
+
+        $discount = $coupon
+            ? $coupon->discountFor($subtotal)
+            : match ($order->coupon_discount_type) {
+                'percent' => round($subtotal * ((float) $order->coupon_discount_value) / 100, 2),
+                'fixed' => (float) $order->coupon_discount_value,
+                default => (float) $order->discount,
+            };
 
         $discount = round(min(max($discount, 0.0), $subtotal), 2);
 

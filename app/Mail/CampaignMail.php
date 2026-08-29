@@ -23,6 +23,7 @@ class CampaignMail extends Mailable
     public function __construct(
         public Campaign $campaign,
         public string $body,
+        public string $plainBody,
         public string $unsubscribeUrl,
     ) {}
 
@@ -46,6 +47,7 @@ class CampaignMail extends Mailable
             ->with([
                 'brand' => $brand,
                 'body' => $this->body,
+                'plainBody' => $this->plainBody,
                 'unsubscribeUrl' => $this->unsubscribeUrl,
             ]);
     }
