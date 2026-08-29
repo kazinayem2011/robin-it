@@ -151,6 +151,16 @@ class ApiEndpoints
 
     public const ADMIN_BARCODE_LOOKUP = 'stock/barcode';
 
+    public const ADMIN_CAMPAIGNS = 'campaigns';
+
+    public const ADMIN_CAMPAIGN_ITEM = 'campaigns/{id}';
+
+    public const ADMIN_CAMPAIGN_PREVIEW = 'campaigns/preview';
+
+    public const ADMIN_CAMPAIGN_SEND = 'campaigns/{id}/send';
+
+    public const ADMIN_CAMPAIGN_RECIPIENTS = 'campaigns/{id}/recipients';
+
     public const ADMIN_PURCHASE_ORDERS = 'purchase-orders';
 
     public const ADMIN_PURCHASE_ORDER_ITEM = 'purchase-orders/{id}';

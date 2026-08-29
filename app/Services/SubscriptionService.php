@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Subscriber;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -79,6 +80,22 @@ class SubscriptionService
                 'unsubscribed_at' => now(),
             ])->save();
         }
+
+        /*
+         * And off the customer list, if that address has an account.
+         *
+         * Leaving once has to mean leaving everywhere. Otherwise somebody who
+         * clicks unsubscribe keeps receiving the shop's marketing because they
+         * are also a customer, which reads as the link not working — and the
+         * next thing they press is the spam button, which costs the shop its
+         * deliverability for everybody still on the list.
+         *
+         * Order confirmations and dispatch notes are untouched: those are
+         * things the customer asked for.
+         */
+        User::where('email', $subscriber->email)
+            ->where('role', User::ROLE_CUSTOMER)
+            ->update(['accepts_marketing' => false]);
 
         return $subscriber;
     }

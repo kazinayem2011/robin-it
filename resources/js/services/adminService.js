@@ -278,6 +278,38 @@ export const adminService = {
         return response?.data || response;
     },
 
+    /** Who a campaign would reach, and what the texts would cost. Sends nothing. */
+    async previewCampaign(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.CAMPAIGN_PREVIEW,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async createCampaign(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.CAMPAIGNS,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    /** Set it going. Queued: it cannot be recalled once started. */
+    async sendCampaign(id) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.CAMPAIGN_SEND(id),
+        );
+        return response?.data || response;
+    },
+
+    async deleteCampaign(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.CAMPAIGN(id),
+        );
+        return response?.data || response;
+    },
+
     /** Ask a supplier for stock. Saved as a draft until it is sent. */
     async createPurchaseOrder(payload) {
         const response = await axiosInstance.post(

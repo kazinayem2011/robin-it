@@ -1,0 +1,75 @@
+/* Campaigns: writing one, and seeing what it costs before it goes. */
+
+.cmp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+}
+
+.cmp-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--gray-100, #f1f2f4);
+    color: var(--gray-600, #4b5563);
+}
+
+.cmp-sending {
+    background: var(--info-light, #e8f1fd);
+    color: var(--accent-blue, #1d6fd0);
+}
+
+.cmp-sent {
+    background: var(--success-light, #e6f6ed);
+    color: var(--success, #158a4a);
+}
+
+.cmp-failed {
+    color: var(--danger, #d1202f);
+    font-size: 0.75rem;
+}
+
+/*
+ * The estimate. Deliberately loud: this is the last moment before a message
+ * reaches several thousand people and costs real money to do it.
+ */
+.cmp-estimate {
+    margin-top: 20px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle, #f8fafc);
+}
+
+.cmp-estimate h4 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.cmp-estimate ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: var(--gray-600, #4b5563);
+}
+
+.cmp-warning {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color, #e2e5ea);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--warning, #a35b00);
+}
+
+.cmp-warning svg {
+    flex: none;
+    margin-top: 2px;
+}

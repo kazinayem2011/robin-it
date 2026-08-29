@@ -33,6 +33,7 @@ import {
     FileText,
     ClipboardList,
     ClipboardCheck,
+    Megaphone,
     SlidersHorizontal,
     Hash,
 } from 'lucide-react';
@@ -189,6 +190,12 @@ const NAV_GROUPS = [
     {
         label: 'Marketing',
         items: [
+            {
+                label: 'Campaigns',
+                href: ROUTES.ADMIN_CAMPAIGNS,
+                icon: Megaphone,
+                ability: 'marketing',
+            },
             {
                 label: 'Banners & Sliders',
                 href: ROUTES.ADMIN_BANNERS,

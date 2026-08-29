@@ -148,6 +148,61 @@ class SmsService
         return $this->send($to, $message);
     }
 
+    /**
+     * How many messages a gateway will bill this as.
+     *
+     * A plain message fits 160 characters; anything outside the GSM-7 alphabet
+     * — a Bengali word, a curly quote, an em dash — forces the whole message
+     * into unicode, where the limit is 70. Concatenated messages lose a few
+     * characters per part to the header that stitches them together.
+     *
+     * Worth knowing before writing to one customer and worth knowing loudly
+     * before writing to five thousand: one stray character can double the bill.
+     */
+    public static function parts(string $message): int
+    {
+        $length = mb_strlen($message);
+
+        if ($length === 0) {
+            return 0;
+        }
+
+        $unicode = ! self::isGsm7($message);
+
+        $single = $unicode ? 70 : 160;
+
+        if ($length <= $single) {
+            return 1;
+        }
+
+        // Each part of a concatenated message gives up room to the header.
+        $perPart = $unicode ? 67 : 153;
+
+        return (int) ceil($length / $perPart);
+    }
+
+    /** Whether every character survives the cheap 7-bit alphabet. */
+    public static function isGsm7(string $message): bool
+    {
+        static $alphabet = null;
+
+        $alphabet ??= array_flip(preg_split(
+            '//u',
+            "@£\$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;"
+                .'<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€',
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        ));
+
+        foreach (preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY) as $character) {
+            if (! isset($alphabet[$character])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Whether this particular message is switched on. */
     public function sends(string $event): bool
     {

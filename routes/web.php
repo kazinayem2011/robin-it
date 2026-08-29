@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\ContentPageController;
@@ -184,6 +185,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_STOCK_ADJUSTMENTS, [StockTakeController::class, 'adjustments'])->name('stock.adjustments')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_SERIALS, [StockTakeController::class, 'serials'])->name('stock.serials')->middleware('can:stock');
         Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchasing')->middleware('can:stock');
+        Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns')->middleware('can:marketing');
     });
 
 /*

@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\ContentPageController as AdminContentPageController;
@@ -272,6 +273,17 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * arrived and nothing recorded what was asked for, so a short shipment
          * was invisible.
          */
+        /*
+         * One message to everybody. Marketing rather than support: the same
+         * ability that controls banners and coupons.
+         */
+        Route::post(ApiEndpoints::ADMIN_CAMPAIGN_PREVIEW, [CampaignController::class, 'preview'])->middleware('can:marketing');
+        Route::post(ApiEndpoints::ADMIN_CAMPAIGNS, [CampaignController::class, 'store'])->middleware('can:marketing');
+        Route::put(ApiEndpoints::ADMIN_CAMPAIGN_ITEM, [CampaignController::class, 'update'])->middleware('can:marketing');
+        Route::post(ApiEndpoints::ADMIN_CAMPAIGN_SEND, [CampaignController::class, 'send'])->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_CAMPAIGN_RECIPIENTS, [CampaignController::class, 'recipients'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_CAMPAIGN_ITEM, [CampaignController::class, 'destroy'])->middleware('can:marketing');
+
         Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDERS, [PurchaseOrderController::class, 'store'])->middleware('can:stock');
         Route::put(ApiEndpoints::ADMIN_PURCHASE_ORDER_ITEM, [PurchaseOrderController::class, 'update'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_SEND, [PurchaseOrderController::class, 'send'])->middleware('can:stock');
