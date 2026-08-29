@@ -271,8 +271,19 @@
     padding: 0;
 }
 
+/*
+ * No scroll-behavior: smooth here. Inertia resets the page to the top on every
+ * visit with window.scrollTo(0, 0), and this rule turned that reset into an
+ * animation: the new page painted at the old page's scroll offset and then slid
+ * up, so a click from halfway down one page opened the next one halfway down.
+ * Worse, any wheel or touch during the animation cancels it, stranding the
+ * reader mid-page on a page they have never seen the top of.
+ *
+ * The two places that genuinely want a smooth scroll — the builder jumping to
+ * a missing slot, the shop jumping back to the results — ask for it themselves
+ * with scrollIntoView({ behavior: 'smooth' }), so they are unaffected.
+ */
 html {
-    scroll-behavior: smooth;
     scrollbar-gutter: stable;
 }
 
@@ -2103,6 +2114,12 @@ textarea.has-error:focus,
     font-size: 0.72rem;
     color: var(--gray-500);
     margin-bottom: 4px;
+}
+
+/* The colour the rest of the app uses for "this is a problem". */
+.stock-none {
+    font-weight: 700;
+    color: var(--danger-text);
 }
 
 .sold-count {

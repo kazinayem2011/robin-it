@@ -281,7 +281,18 @@ export const ProductCard = ({
                         {/* Stock bar — driven by real stock and real units sold. */}
                         <div className="stock-progress-container">
                             <div className="stock-labels">
-                                <span>
+                                {/*
+                                 * Out of stock is the one thing on this card
+                                 * that stops a sale, and it was rendered in
+                                 * the same grey as the unit count beside it —
+                                 * so the card said "nothing to sell you" in
+                                 * the voice it used for everything else.
+                                 */}
+                                <span
+                                    className={
+                                        stockQuantity > 0 ? '' : 'stock-none'
+                                    }
+                                >
                                     {stockQuantity > 0
                                         ? `Available: ${stockQuantity} units`
                                         : 'Out of stock'}

@@ -51,9 +51,21 @@ export default function AdminSettings({
         setActiveTab(key);
         const url = new URL(window.location.href);
         url.searchParams.set('tab', key);
-        // replaceState keeps the back button meaning "previous page", not
-        // "previous tab", and avoids an Inertia round-trip.
-        window.history.replaceState({}, '', url);
+        /*
+         * The existing state is carried over, not replaced with an empty
+         * object.
+         *
+         * Inertia keeps `page`, `scrollRegions` and `documentScrollPosition`
+         * in history state, and passing {} threw all three away. The visible
+         * effect was that leaving this screen landed you at whatever height
+         * you had scrolled to on it — Inertia had nothing left to reset — and
+         * the next navigation sometimes failed to register at all.
+         *
+         * replaceState is still right here: the back button should mean the
+         * previous page rather than the previous tab, and this avoids a round
+         * trip. Only the state argument was wrong.
+         */
+        window.history.replaceState(window.history.state, '', url);
     };
 
     // Someone using back/forward should land on the tab that URL names.
