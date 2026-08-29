@@ -151,18 +151,53 @@
         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
     /* Elevation Shadows */
-    --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-    --shadow-sm: 0 2px 4px 0 rgba(15, 23, 42, 0.06);
+    /*
+     * Elevation.
+     *
+     * Every shadow is two: a tight ambient ring that separates a surface from
+     * the one behind it at any distance, and a softer directional shadow that
+     * says how far above it sits. One blur on its own reads as a smudge — the
+     * ring is what makes an edge look crisp without drawing a border round it.
+     *
+     * The steps are a scale of height rather than of darkness: a card at rest,
+     * a card under the cursor, something floating, and a dialog over the whole
+     * page. Anything that changes level on hover should move one step, never
+     * two, or the movement reads as a jump.
+     */
+    --shadow-xs:
+        0 0 0 1px rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+    --shadow-sm:
+        0 0 0 1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.08),
+        0 1px 2px -1px rgba(15, 23, 42, 0.04);
     --shadow-md:
-        0 4px 12px -2px rgba(15, 23, 42, 0.08),
-        0 2px 6px -1px rgba(15, 23, 42, 0.04);
+        0 0 0 1px rgba(15, 23, 42, 0.04), 0 6px 12px -4px rgba(15, 23, 42, 0.1),
+        0 2px 5px -2px rgba(15, 23, 42, 0.06);
     --shadow-lg:
-        0 12px 24px -4px rgba(15, 23, 42, 0.1),
-        0 4px 10px -2px rgba(15, 23, 42, 0.05);
+        0 0 0 1px rgba(15, 23, 42, 0.05),
+        0 14px 28px -8px rgba(15, 23, 42, 0.14),
+        0 5px 10px -4px rgba(15, 23, 42, 0.07);
     --shadow-xl:
-        0 20px 35px -5px rgba(15, 23, 42, 0.14),
-        0 8px 16px -4px rgba(15, 23, 42, 0.08);
+        0 0 0 1px rgba(15, 23, 42, 0.06),
+        0 26px 50px -12px rgba(15, 23, 42, 0.22),
+        0 10px 20px -8px rgba(15, 23, 42, 0.1);
     --shadow-glow: 0 0 25px var(--primary-glow);
+
+    /*
+     * State layers.
+     *
+     * A hover or a press is a translucent wash over whatever colour is already
+     * there, rather than a different colour swapped in. It means one rule works
+     * on a white row, a grey panel and a red button alike, and that a surface
+     * under the cursor still looks like itself.
+     */
+    --state-hover: rgba(15, 23, 42, 0.04);
+    --state-pressed: rgba(15, 23, 42, 0.08);
+    --state-selected: rgba(209, 33, 39, 0.07);
+
+    /* The ring every focusable thing gets, so keyboard use is never guesswork. */
+    --focus-ring: 0 0 0 3px rgba(209, 33, 39, 0.25);
+    --focus-ring-offset:
+        0 0 0 2px var(--bg-surface), 0 0 0 5px rgba(209, 33, 39, 0.25);
 
     /*
      * Border radii — one corner, 8px, on every box.
@@ -2633,4 +2668,115 @@ textarea.admin-form-input {
 .plp-filters-body.is-busy button,
 .plp-filters-body.is-busy input {
     pointer-events: none;
+}
+
+/* ==========================================================================
+   POLISH — focus, motion, and state
+   ==========================================================================
+   Three things that separate an interface that works from one that feels
+   built. None of them changes a layout; they change how it answers.
+   ========================================================================== */
+
+/*
+ * One focus ring, on everything.
+ *
+ * Three rules covered buttons, text inputs and icon buttons; everything else —
+ * links, selects, checkboxes, tabs, table actions, the whole admin — fell back
+ * to the browser's default outline, which on a red-accented site is a thin blue
+ * box that half the time is invisible against a border.
+ *
+ * :focus-visible rather than :focus, so a mouse click does not leave a ring
+ * behind. Somebody navigating by keyboard should never have to guess where they
+ * are; somebody using a mouse should never see the answer.
+ */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    /* Above any neighbour it might otherwise be clipped by. */
+    position: relative;
+    z-index: 1;
+}
+
+/* On a coloured surface the ring needs a gap or it disappears into the fill. */
+.btn-primary:focus-visible,
+.btn-danger:focus-visible,
+.admin-nav-link.active:focus-visible {
+    box-shadow: var(--focus-ring-offset);
+}
+
+/*
+ * A hover is a wash over what is already there, not a different colour.
+ *
+ * One rule then works on a white row, a grey panel and a coloured chip alike,
+ * and a surface under the cursor still looks like itself rather than like
+ * something else that has taken its place.
+ */
+.admin-table tbody tr,
+.rep-table tbody tr,
+.cmp-history tr,
+.po-lines tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.admin-table tbody tr:hover,
+.rep-table tbody tr:hover,
+.cmp-history tr:hover,
+.po-lines tbody tr:hover {
+    background-color: var(--state-hover);
+}
+
+/*
+ * Anything that moves, moves the same way.
+ *
+ * The curve is a decelerating one: quick to start, settling at the end, which
+ * is how a physical thing arrives somewhere. A linear transition reads as
+ * mechanical for exactly the reason that nothing in the world moves linearly.
+ */
+button,
+a,
+.btn,
+[role='button'] {
+    transition:
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        transform var(--transition-fast);
+}
+
+/*
+ * A press should be felt.
+ *
+ * Buttons lifted on hover and did nothing on click, so the moment of actually
+ * pressing one — the only moment that commits anything — was the one moment
+ * with no feedback at all.
+ */
+.btn:active:not(:disabled),
+button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+/*
+ * And for anyone who has asked their machine to stop moving things.
+ *
+ * Motion sickness and vestibular disorders are real, the preference is a
+ * standard one, and honouring it costs four lines. Transitions are shortened
+ * rather than removed outright: an instant colour change still tells somebody
+ * that something responded.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Nothing should travel; colour and shadow may still change. */
+    *:hover,
+    *:active {
+        transform: none !important;
+    }
 }

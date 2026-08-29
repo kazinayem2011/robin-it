@@ -16,7 +16,6 @@
 .admin-sidebar {
     width: 260px;
     background: var(--bg-surface);
-    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -24,7 +23,13 @@
     top: 0;
     height: 100vh;
     z-index: 100;
-    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.04);
+    /*
+     * The shadow separates the rail from the page; a border as well was two
+     * devices doing one job, and the hard line was the one that read as flat.
+     */
+    box-shadow:
+        1px 0 0 0 rgba(15, 23, 42, 0.04),
+        4px 0 16px -4px rgba(15, 23, 42, 0.06);
 }
 
 .admin-sidebar-header {
@@ -203,12 +208,20 @@
 }
 
 /* ── Main Workspace ─────────────────────────────────────────────────────────── */
+/*
+ * The content plane, deliberately deeper than the surfaces on it.
+ *
+ * This was --bg-surface-subtle, within a couple of percent of white, so a white
+ * card had nothing to float on: sidebar, topbar, page and card were all the
+ * same sheet with lines ruled across it. A recessed ground is what lets
+ * elevation mean anything.
+ */
 .admin-main-viewport {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background-color: var(--bg-surface-subtle);
+    background-color: var(--bg-page);
 }
 
 /* ── Top Bar ────────────────────────────────────────────────────────────────── */
@@ -216,7 +229,6 @@
     height: 70px;
     box-sizing: border-box;
     background: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
     padding: 0 32px;
     display: flex;
     align-items: center;
@@ -224,7 +236,13 @@
     position: sticky;
     top: 0;
     z-index: 90;
-    box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
+    /*
+     * Content scrolls underneath this, so it needs to read as being above the
+     * page rather than drawn on it — a shadow does that where a border cannot.
+     */
+    box-shadow:
+        0 1px 0 0 rgba(15, 23, 42, 0.05),
+        0 4px 16px -6px rgba(15, 23, 42, 0.08);
 }
 
 .admin-page-title-group h2 {
@@ -284,15 +302,19 @@
 
 .admin-kpi-card {
     background: var(--bg-surface);
-    border: 1px solid var(--border-light);
+    border: 0;
     border-radius: var(--radius-lg);
     padding: 20px 22px;
-    box-shadow: var(--shadow-xs);
-    transition: box-shadow var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    transition:
+        box-shadow var(--transition-normal),
+        transform var(--transition-normal);
 }
 
+/* One step up, never two: a bigger jump reads as the tile snapping. */
 .admin-kpi-card:hover {
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
 .admin-kpi-top {
@@ -377,13 +399,35 @@
 }
 
 /* ── Cards & Tables ─────────────────────────────────────────────────────────── */
+/*
+ * A card sits above the page rather than being drawn on it.
+ *
+ * This had a hairline border and almost no shadow, which put every surface at
+ * the same height: the metric cards, the panel behind them and the table below
+ * all read as one flat sheet with lines ruled across it. The elevation ring
+ * does the separating now, so the edge stays crisp without a border competing
+ * with it.
+ */
 .admin-card {
     background: var(--bg-surface);
-    border: 1px solid var(--border-light);
+    border: 0;
     border-radius: var(--radius-lg);
     padding: 22px 24px;
     margin-bottom: 22px;
-    box-shadow: var(--shadow-xs);
+    box-shadow: var(--shadow-sm);
+    transition:
+        box-shadow var(--transition-normal),
+        transform var(--transition-normal);
+}
+
+/*
+ * Only cards that go somewhere lift. A card that rises under the cursor and
+ * then does nothing when clicked is a promise the interface does not keep.
+ */
+a.admin-card:hover,
+.admin-card.is-clickable:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
 .admin-card-no-margin {
@@ -3416,10 +3460,13 @@
     flex-direction: column;
     gap: 2px;
     padding: 16px 18px;
-    border: 1px solid var(--border-color);
+    border: 0;
     border-radius: var(--radius-md);
     background: var(--bg-surface);
-    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-xs);
+    transition:
+        box-shadow var(--transition-normal),
+        transform var(--transition-normal);
 }
 
 .admin-attention-card:hover {
