@@ -271,6 +271,7 @@ export const ROUTES = {
     ADMIN_REVIEWS: '/admin/reviews',
     ADMIN_EXPENSES: '/admin/expenses',
     ADMIN_EXPENSE_CATEGORIES: '/admin/expense-categories',
+    ADMIN_REPORTS: '/admin/reports',
     ADMIN_REPORTS_PROFIT: '/admin/reports/profit-loss',
 };
 

@@ -1,0 +1,383 @@
+/*
+ * The reports.
+ *
+ * Deliberately plain. Somebody opens these to read a number and decide
+ * something, so the styling gets out of the way: the figures are large, the
+ * comparisons are coloured, and everything else is quiet.
+ */
+
+/* ── The index ──────────────────────────────────────────────────────────── */
+
+.rep-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.rep-index-card {
+    display: block;
+    padding: 22px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface, #fff);
+    transition: all var(--transition-fast);
+}
+
+.rep-index-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
+
+.rep-index-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 14px;
+    border-radius: var(--radius-md);
+    background: var(--primary-light, #fdeaea);
+    color: var(--primary);
+}
+
+.rep-index-card h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.rep-index-card p {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--gray-500, #6b7280);
+}
+
+.rep-index-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* ── The period ─────────────────────────────────────────────────────────── */
+
+.rep-period {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.rep-period-dates {
+    display: flex;
+    gap: 12px;
+}
+
+.rep-period-dates label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+}
+
+.rep-period-dates input {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface, #fff);
+    font-size: 0.85rem;
+}
+
+.rep-period-dates input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.rep-period-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rep-period-shortcuts button {
+    padding: 7px 13px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: 999px;
+    background: var(--bg-surface, #fff);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--gray-600, #4b5563);
+    cursor: pointer;
+}
+
+.rep-period-shortcuts button:hover,
+.rep-period-shortcuts button.is-on {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ── Headline figures ───────────────────────────────────────────────────── */
+
+.rep-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.rep-figures.is-compact {
+    margin-bottom: 24px;
+}
+
+.rep-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface, #fff);
+}
+
+.rep-figure-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+}
+
+.rep-figure-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--dark-900);
+}
+
+/*
+ * The change against last period. Colour carries the meaning, so the arrow
+ * carries it too — a red number means nothing to somebody who cannot see red.
+ */
+.rep-figure-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.rep-figure-change.is-up {
+    color: var(--success, #158a4a);
+}
+
+.rep-figure-change.is-down {
+    color: var(--danger, #d1202f);
+}
+
+.rep-figure-change.is-flat {
+    color: var(--gray-400);
+}
+
+.rep-figure-hint {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
+
+/* ── Bars ───────────────────────────────────────────────────────────────── */
+
+.rep-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 180px;
+    margin-bottom: 24px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle, #f8fafc);
+}
+
+.rep-bar {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+    min-width: 3px;
+}
+
+.rep-bar-fill {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    background: var(--primary);
+    opacity: 0.75;
+    transition: opacity var(--transition-fast);
+}
+
+.rep-bar:hover .rep-bar-fill {
+    opacity: 1;
+}
+
+/* ── Tables and bands ───────────────────────────────────────────────────── */
+
+.rep-table-wrap {
+    overflow-x: auto;
+}
+
+.rep-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.rep-table th {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.rep-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    vertical-align: top;
+}
+
+.rep-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.rep-table .is-right {
+    text-align: right;
+}
+
+.rep-sub {
+    margin-top: 2px;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.rep-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+}
+
+@media (max-width: 760px) {
+    .rep-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.rep-split h4,
+.admin-card > h4 {
+    margin: 0 0 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--dark-800);
+}
+
+.rep-buckets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.rep-bucket {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 13px 15px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle, #f8fafc);
+}
+
+.rep-bucket span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-400);
+}
+
+.rep-bucket strong {
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.rep-bucket small {
+    font-size: 0.72rem;
+    color: var(--gray-400);
+}
+
+/* ── Notes, tags and unknowns ───────────────────────────────────────────── */
+
+.rep-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 0 0 18px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--gray-500, #6b7280);
+}
+
+.rep-note svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.rep-empty {
+    padding: 30px 0;
+    font-size: 0.88rem;
+    text-align: center;
+    color: var(--gray-400);
+}
+
+.rep-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--gray-100, #f1f2f4);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--gray-500, #6b7280);
+}
+
+.rep-tag.is-ok {
+    background: var(--success-light, #e6f6ed);
+    color: var(--success, #158a4a);
+}
+
+.rep-tag.is-warn {
+    background: var(--warning-light, #fff4e0);
+    color: var(--warning, #a35b00);
+}
+
+/* A figure the shop genuinely cannot know, rather than a zero pretending. */
+.rep-unknown {
+    font-size: 0.78rem;
+    color: var(--gray-300, #cbd5e1);
+}
+
+.rep-alarm {
+    color: var(--danger, #d1202f);
+}

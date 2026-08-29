@@ -343,6 +343,18 @@ class ApiEndpoints
 
     public const ADMIN_EXPENSE_CATEGORIES_ITEM = 'expense-categories/{id}';
 
+    public const ADMIN_REPORTS = 'reports';
+
+    public const ADMIN_REPORTS_SALES = 'reports/sales';
+
+    public const ADMIN_REPORTS_STOCK = 'reports/stock';
+
+    public const ADMIN_REPORTS_MONEY = 'reports/money';
+
+    public const ADMIN_REPORTS_DELIVERY = 'reports/delivery';
+
+    public const ADMIN_REPORTS_SUPPLIERS = 'reports/suppliers';
+
     public const ADMIN_REPORTS_PROFIT = 'reports/profit-loss';
 
     public const ADMIN_BLOGS = 'blogs';

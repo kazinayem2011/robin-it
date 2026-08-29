@@ -180,8 +180,8 @@ const NAV_GROUPS = [
                 ability: 'finance',
             },
             {
-                label: 'Profit & Loss',
-                href: ROUTES.ADMIN_REPORTS_PROFIT,
+                label: 'Reports',
+                href: ROUTES.ADMIN_REPORTS,
                 icon: LineChart,
                 ability: 'finance',
             },

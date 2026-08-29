@@ -168,6 +168,12 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminCustomerController::class, 'index'])->name('customers')->middleware('can:customers');
         Route::get(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'index'])->name('expenses')->middleware('can:finance');
         Route::get(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'index'])->name('expense-categories')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_REPORTS, [AdminReportController::class, 'index'])->name('reports')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_SALES, [AdminReportController::class, 'sales'])->name('reports.sales')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_STOCK, [AdminReportController::class, 'stock'])->name('reports.stock')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_MONEY, [AdminReportController::class, 'money'])->name('reports.money')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_DELIVERY, [AdminReportController::class, 'delivery'])->name('reports.delivery')->middleware('can:orders');
+        Route::get(ApiEndpoints::ADMIN_REPORTS_SUPPLIERS, [AdminReportController::class, 'suppliers'])->name('reports.suppliers')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit')->middleware('can:finance');
         Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
