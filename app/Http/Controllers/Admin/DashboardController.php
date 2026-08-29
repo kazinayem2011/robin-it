@@ -21,6 +21,9 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
+    /** How many low-stock rows the overview panel shows before it stops. */
+    private const LOW_STOCK_SHOWN = 8;
+
     public function index(Request $request): Response
     {
         // A storekeeper's job is deliveries and stock. Hiding the cards would
@@ -32,7 +35,27 @@ class DashboardController extends Controller
         $totalOrders = Order::count();
         $pendingOrders = Order::whereIn('status', ['pending', 'processing', 'shipped'])->count();
         $totalCustomers = User::where('role', User::ROLE_CUSTOMER)->count();
-        $lowStockProducts = Product::where('stock_quantity', '<=', 10)->with(['brand', 'images'])->get();
+        /*
+         * The most urgent few, not all of them.
+         *
+         * This fetched every product at or below the threshold, with its brand
+         * and all its images, and the page listed the lot. A shop that has just
+         * counted its shelves down — or one whose stock ledger has been reset —
+         * has every product under the threshold, and the panel grew to the
+         * height of the catalogue: on this dataset a dashboard three and a half
+         * thousand pixels tall, which is a list nobody reads rather than an
+         * alert somebody acts on.
+         *
+         * Lowest stock first, so the cut keeps the ones that matter.
+         */
+        $lowStockCount = Product::where('stock_quantity', '<=', 10)->count();
+
+        $lowStockProducts = Product::where('stock_quantity', '<=', 10)
+            ->with(['brand', 'images'])
+            ->orderBy('stock_quantity')
+            ->orderBy('name')
+            ->take(self::LOW_STOCK_SHOWN)
+            ->get();
 
         $recentOrders = Order::with(['user', 'items.product'])
             ->latest()
@@ -45,7 +68,8 @@ class DashboardController extends Controller
             'pending_orders' => $pendingOrders,
             'total_customers' => $request->user()->can_('customers') ? $totalCustomers : null,
             'total_products' => Product::count(),
-            'low_stock_count' => $lowStockProducts->count(),
+            // The real total, not the length of the list above it.
+            'low_stock_count' => $lowStockCount,
         ];
 
         return Inertia::render('Admin/Dashboard', [
@@ -64,6 +88,8 @@ class DashboardController extends Controller
             'profitAndLoss' => $seesMoney ? $this->thisMonth() : null,
             'recentOrders' => $recentOrders,
             'lowStockProducts' => $lowStockProducts,
+            // So the panel can say how many it is not showing.
+            'lowStockTotal' => $lowStockCount,
             // A dead queue worker means customers silently stop receiving
             // order emails. Nothing else in the app would say so.
             'queueHealth' => QueueHealth::check(),

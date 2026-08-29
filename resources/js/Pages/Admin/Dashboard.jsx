@@ -8,6 +8,7 @@ import {
     AlertTriangle,
     ArrowRight,
     TrendingUp,
+    PackageCheck,
 } from 'lucide-react';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { formatBdt, formatBdPhone } from '@/utils/formatters';
@@ -15,6 +16,7 @@ import siteConfig from '@/constants/siteConfig';
 import { ROUTES } from '@/constants/endpoints';
 import { adminService } from '@/services';
 import ProductImage from '@/Components/ProductImage';
+import EmptyState from '@/Components/EmptyState';
 import { toast } from '@/Components/Toast';
 
 export default function Dashboard({
@@ -24,6 +26,8 @@ export default function Dashboard({
     attention = [],
     recentOrders = [],
     lowStockProducts = [],
+    // How many are low in total; the list above is capped at the most urgent.
+    lowStockTotal = 0,
     queueHealth = null,
 }) {
     const handleStatusChange = async (orderId, newStatus) => {
@@ -298,86 +302,100 @@ export default function Dashboard({
                         </Link>
                     </div>
 
-                    <div className="admin-table-responsive">
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Order #</th>
-                                    <th>Customer</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                    <th>Quick Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recentOrders.map((order) => (
-                                    <tr key={order.id}>
-                                        <td>
-                                            <strong className="admin-table-item-title">
-                                                #{order.order_number}
-                                            </strong>
-                                            <div className="admin-table-item-sub">
-                                                {order.payment_method}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="admin-table-item-title">
-                                                {order.user?.name ||
-                                                    order.shipping_address
-                                                        ?.name ||
-                                                    'Guest'}
-                                            </div>
-                                            <div className="admin-table-item-sub">
-                                                {formatBdPhone(
-                                                    order.user?.phone ||
-                                                        order.shipping_address
-                                                            ?.phone,
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <strong className="admin-table-price-strong">
-                                                {formatBdt(order.total)}
-                                            </strong>
-                                        </td>
-                                        <td>
-                                            <StatusBadge
-                                                status={order.status}
-                                            />
-                                        </td>
-                                        <td>
-                                            <select
-                                                value={order.status}
-                                                onChange={(e) =>
-                                                    handleStatusChange(
-                                                        order.id,
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="admin-status-dropdown"
-                                            >
-                                                <option value="pending">
-                                                    Pending
-                                                </option>
-                                                <option value="processing">
-                                                    Processing
-                                                </option>
-                                                <option value="shipped">
-                                                    Shipped
-                                                </option>
-                                                <option value="delivered">
-                                                    Delivered
-                                                </option>
-                                                <option value="cancelled">
-                                                    Cancelled
-                                                </option>
-                                            </select>
-                                        </td>
+                    {/*
+                     * A bare table header over nothing reads as a panel that
+                     * failed to load. On a new shop, and on any shop before
+                     * its first order of the day, that is the normal state.
+                     */}
+                    {recentOrders.length === 0 ? (
+                        <EmptyState
+                            icon={ShoppingCart}
+                            title="No orders yet"
+                            description="New orders appear here as they come in."
+                        />
+                    ) : (
+                        <div className="admin-table-responsive">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Quick Action</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {recentOrders.map((order) => (
+                                        <tr key={order.id}>
+                                            <td>
+                                                <strong className="admin-table-item-title">
+                                                    #{order.order_number}
+                                                </strong>
+                                                <div className="admin-table-item-sub">
+                                                    {order.payment_method}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="admin-table-item-title">
+                                                    {order.user?.name ||
+                                                        order.shipping_address
+                                                            ?.name ||
+                                                        'Guest'}
+                                                </div>
+                                                <div className="admin-table-item-sub">
+                                                    {formatBdPhone(
+                                                        order.user?.phone ||
+                                                            order
+                                                                .shipping_address
+                                                                ?.phone,
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong className="admin-table-price-strong">
+                                                    {formatBdt(order.total)}
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <StatusBadge
+                                                    status={order.status}
+                                                />
+                                            </td>
+                                            <td>
+                                                <select
+                                                    value={order.status}
+                                                    onChange={(e) =>
+                                                        handleStatusChange(
+                                                            order.id,
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="admin-status-dropdown"
+                                                >
+                                                    <option value="pending">
+                                                        Pending
+                                                    </option>
+                                                    <option value="processing">
+                                                        Processing
+                                                    </option>
+                                                    <option value="shipped">
+                                                        Shipped
+                                                    </option>
+                                                    <option value="delivered">
+                                                        Delivered
+                                                    </option>
+                                                    <option value="cancelled">
+                                                        Cancelled
+                                                    </option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* Low Stock Alerts Box */}
@@ -399,25 +417,53 @@ export default function Dashboard({
                         </Link>
                     </div>
 
-                    <div className="admin-stock-alert-list">
-                        {lowStockProducts.map((p) => (
-                            <div key={p.id} className="admin-stock-alert-item">
-                                <ProductImage
-                                    product={p}
-                                    alt={p.name}
-                                    className="admin-stock-alert-img"
-                                />
-                                <div className="admin-stock-alert-info">
-                                    <div className="admin-stock-alert-name">
-                                        {p.name}
-                                    </div>
-                                    <div className="admin-stock-alert-qty">
-                                        Only {p.stock_quantity} left in stock
+                    {lowStockProducts.length === 0 ? (
+                        <EmptyState
+                            icon={PackageCheck}
+                            title="Nothing running low"
+                            description="Every product is above its reorder threshold."
+                        />
+                    ) : (
+                        <div className="admin-stock-alert-list">
+                            {lowStockProducts.map((p) => (
+                                <div
+                                    key={p.id}
+                                    className="admin-stock-alert-item"
+                                >
+                                    <ProductImage
+                                        product={p}
+                                        alt={p.name}
+                                        className="admin-stock-alert-img"
+                                    />
+                                    <div className="admin-stock-alert-info">
+                                        <div className="admin-stock-alert-name">
+                                            {p.name}
+                                        </div>
+                                        <div className="admin-stock-alert-qty">
+                                            Only {p.stock_quantity} left in
+                                            stock
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+
+                            {/*
+                             * The panel shows the most urgent few. Saying how many
+                             * it is not showing is the difference between a short
+                             * list and a wrong one.
+                             */}
+                            {lowStockTotal > lowStockProducts.length && (
+                                <Link
+                                    href={ROUTES.ADMIN_STOCK}
+                                    className="admin-stock-alert-more"
+                                >
+                                    {lowStockTotal - lowStockProducts.length}{' '}
+                                    more need attention
+                                    <ArrowRight size={13} />
+                                </Link>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </AdminLayout>

@@ -3673,3 +3673,21 @@
     line-height: 1.5;
     color: var(--gray-400);
 }
+
+/* "N more need attention" — the tail of a capped alert list. */
+.admin-stock-alert-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border-color, #e2e5ea);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.admin-stock-alert-more:hover {
+    text-decoration: underline;
+}
