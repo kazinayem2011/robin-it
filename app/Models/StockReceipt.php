@@ -12,7 +12,7 @@ class StockReceipt extends Model
     protected $fillable = [
         'reference', 'supplier_id', 'supplier_name', 'invoice_number', 'received_on',
         'note', 'total_cost', 'total_quantity', 'user_id',
-    ];
+        'purchase_order_id', ];
 
     protected $casts = [
         'received_on' => 'date',
@@ -38,5 +38,11 @@ class StockReceipt extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** The order this delivery was against, where it was against one. */
+    public function purchaseOrder()
+    {
+        return $this->belongsTo(PurchaseOrder::class);
     }
 }

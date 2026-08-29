@@ -149,6 +149,16 @@ class ApiEndpoints
 
     public const ADMIN_BARCODE_LOOKUP = 'stock/barcode';
 
+    public const ADMIN_PURCHASE_ORDERS = 'purchase-orders';
+
+    public const ADMIN_PURCHASE_ORDER_ITEM = 'purchase-orders/{id}';
+
+    public const ADMIN_PURCHASE_ORDER_SEND = 'purchase-orders/{id}/send';
+
+    public const ADMIN_PURCHASE_ORDER_CANCEL = 'purchase-orders/{id}/cancel';
+
+    public const ADMIN_PURCHASE_ORDER_RECEIVE = 'purchase-orders/{id}/receive';
+
     public const ADMIN_STOCK_COUNT = 'stock/count';
 
     public const ADMIN_STOCK_ADJUSTMENTS = 'stock/adjustments';

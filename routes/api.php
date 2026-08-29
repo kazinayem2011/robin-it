@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\RoleController as AdminRoleController;
@@ -258,6 +259,17 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * finding each product in a list by name.
          */
         Route::get(ApiEndpoints::ADMIN_BARCODE_LOOKUP, [AdminStockTakeController::class, 'scan'])->middleware('can:stock');
+
+        /*
+         * What the shop has asked a supplier for. Receipts recorded what
+         * arrived and nothing recorded what was asked for, so a short shipment
+         * was invisible.
+         */
+        Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDERS, [PurchaseOrderController::class, 'store'])->middleware('can:stock');
+        Route::put(ApiEndpoints::ADMIN_PURCHASE_ORDER_ITEM, [PurchaseOrderController::class, 'update'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_SEND, [PurchaseOrderController::class, 'send'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_CANCEL, [PurchaseOrderController::class, 'cancel'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_RECEIVE, [PurchaseOrderController::class, 'receive'])->middleware('can:stock');
 
         Route::post(ApiEndpoints::ADMIN_STOCK_SERIALS, [AdminStockTakeController::class, 'storeSerials'])->middleware('can:stock');
         Route::put(ApiEndpoints::ADMIN_STOCK_SERIAL_ITEM, [AdminStockTakeController::class, 'updateSerial'])->middleware('can:stock');

@@ -1,0 +1,114 @@
+/* Purchase orders: writing one, and booking in what arrives. */
+
+.po-header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+}
+
+.po-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--gray-100, #f1f2f4);
+    color: var(--gray-600, #4b5563);
+}
+
+.po-sent {
+    background: var(--info-light, #e8f1fd);
+    color: var(--accent-blue, #1d6fd0);
+}
+
+.po-partial {
+    background: var(--warning-light, #fff4e0);
+    color: var(--warning, #a35b00);
+}
+
+.po-received {
+    background: var(--success-light, #e6f6ed);
+    color: var(--success, #158a4a);
+}
+
+.po-cancelled {
+    text-decoration: line-through;
+}
+
+/* What the supplier still owes — the number the screen exists for. */
+.po-outstanding {
+    color: var(--warning, #a35b00);
+}
+
+.po-results {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 180px;
+    margin-bottom: 16px;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-sm);
+}
+
+.po-results button {
+    padding: 7px 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.po-results button:hover {
+    background: var(--gray-100, #f1f2f4);
+    color: var(--primary);
+}
+
+.po-lines {
+    width: 100%;
+    margin: 18px 0;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.po-lines th {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+    text-align: left;
+}
+
+.po-lines td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-color, #e2e5ea);
+}
+
+.po-num {
+    text-align: right;
+}
+
+.po-lines input {
+    width: 96px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color, #e2e5ea);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
+.po-lines input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.po-lines tfoot td {
+    border-bottom: 0;
+    color: var(--gray-500, #6b7280);
+}

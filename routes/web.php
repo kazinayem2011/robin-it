@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategory
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
@@ -182,6 +183,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_STOCK_COUNT, [StockTakeController::class, 'create'])->name('stock.count')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_ADJUSTMENTS, [StockTakeController::class, 'adjustments'])->name('stock.adjustments')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_SERIALS, [StockTakeController::class, 'serials'])->name('stock.serials')->middleware('can:stock');
+        Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchasing')->middleware('can:stock');
     });
 
 /*

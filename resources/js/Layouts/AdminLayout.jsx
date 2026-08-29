@@ -32,6 +32,7 @@ import {
     AtSign,
     FileText,
     ClipboardList,
+    ClipboardCheck,
     SlidersHorizontal,
     Hash,
 } from 'lucide-react';
@@ -138,6 +139,12 @@ const NAV_GROUPS = [
                 label: 'Serial Numbers',
                 href: ROUTES.ADMIN_STOCK_SERIALS,
                 icon: Hash,
+                ability: 'stock',
+            },
+            {
+                label: 'Purchasing',
+                href: ROUTES.ADMIN_PURCHASING,
+                icon: ClipboardCheck,
                 ability: 'stock',
             },
             {

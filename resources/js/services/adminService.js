@@ -263,6 +263,38 @@ export const adminService = {
         return response.data;
     },
 
+    /** Ask a supplier for stock. Saved as a draft until it is sent. */
+    async createPurchaseOrder(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDERS,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async sendPurchaseOrder(id) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_SEND(id),
+        );
+        return response?.data || response;
+    },
+
+    async cancelPurchaseOrder(id) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_CANCEL(id),
+        );
+        return response?.data || response;
+    },
+
+    /** Book in what actually arrived; anything short stays outstanding. */
+    async receivePurchaseOrder(id, payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_RECEIVE(id),
+            payload,
+        );
+        return response?.data || response;
+    },
+
     /**
      * What was just scanned.
      *
