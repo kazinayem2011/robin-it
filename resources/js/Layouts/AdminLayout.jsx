@@ -7,6 +7,7 @@ import {
     Package,
     Boxes,
     Truck,
+    Factory,
     ShoppingCart,
     FolderTree,
     Users,
@@ -18,6 +19,7 @@ import {
     Sliders,
     BookOpen,
     ShieldCheck,
+    KeyRound,
     MessageSquare,
     Menu,
     X,
@@ -37,6 +39,249 @@ import { BrandLogo } from '../Components/BrandLogo';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import './AdminLayout.css';
+
+/**
+ * The sidebar, as a list rather than as markup.
+ *
+ * It was 300 lines of near-identical <Link> blocks under two headings, and the
+ * headings had stopped describing what was under them: "Management" held
+ * everything from the dashboard to couriers, and "Marketing & Media" had
+ * collected Roles, Staff and Site Settings — nobody looking for permissions
+ * would think to look under marketing.
+ *
+ * Written this way, moving a link between groups is moving one line, and a
+ * group's heading appears exactly when something inside it does. That last part
+ * used to be a hand-kept condition — `can('refunds') || can('finance')` — which
+ * a new link with a new ability would silently fail to include, leaving its
+ * heading hidden above a visible link.
+ *
+ * `ability` null means everyone who can reach the admin at all sees it.
+ */
+const NAV_GROUPS = [
+    {
+        // The dashboard needs no heading; it is the first thing and it is one
+        // thing.
+        label: null,
+        items: [
+            {
+                label: 'Overview',
+                href: ROUTES.ADMIN_DASHBOARD,
+                icon: LayoutDashboard,
+                ability: null,
+            },
+        ],
+    },
+    {
+        label: 'Orders',
+        items: [
+            {
+                label: 'Orders & Shipping',
+                href: ROUTES.ADMIN_ORDERS,
+                icon: ShoppingCart,
+                ability: 'orders',
+            },
+            {
+                label: 'Customers',
+                href: ROUTES.ADMIN_CUSTOMERS,
+                icon: Users,
+                ability: 'customers',
+            },
+            {
+                label: 'Couriers',
+                href: ROUTES.ADMIN_COURIERS,
+                icon: Truck,
+                ability: 'couriers',
+            },
+        ],
+    },
+    {
+        label: 'Catalogue',
+        items: [
+            {
+                // Was "Products & Stock", which pointed at neither clearly now
+                // that stock has five screens of its own below.
+                label: 'Products',
+                href: ROUTES.ADMIN_PRODUCTS,
+                icon: Package,
+                ability: 'catalogue',
+            },
+            {
+                label: 'Category Tree',
+                href: ROUTES.ADMIN_CATEGORIES,
+                icon: FolderTree,
+                ability: 'catalogue',
+            },
+        ],
+    },
+    {
+        label: 'Stock',
+        items: [
+            {
+                label: 'Stock & Inventory',
+                href: ROUTES.ADMIN_STOCK,
+                icon: Boxes,
+                ability: 'stock',
+            },
+            {
+                label: 'Stock Take',
+                href: ROUTES.ADMIN_STOCK_COUNT,
+                icon: ClipboardList,
+                ability: 'stock',
+            },
+            {
+                label: 'Adjustments',
+                href: ROUTES.ADMIN_STOCK_ADJUSTMENTS,
+                icon: SlidersHorizontal,
+                ability: 'stock',
+            },
+            {
+                label: 'Serial Numbers',
+                href: ROUTES.ADMIN_STOCK_SERIALS,
+                icon: Hash,
+                ability: 'stock',
+            },
+            {
+                // Factory rather than Truck: couriers already own the lorry,
+                // and two links with the same icon read as the same thing.
+                label: 'Suppliers',
+                href: ROUTES.ADMIN_SUPPLIERS,
+                icon: Factory,
+                ability: 'stock',
+            },
+        ],
+    },
+    {
+        label: 'Money',
+        items: [
+            {
+                label: 'Refunds',
+                href: ROUTES.ADMIN_REFUNDS,
+                icon: Undo2,
+                ability: 'refunds',
+            },
+            {
+                label: 'Expenses',
+                href: ROUTES.ADMIN_EXPENSES,
+                icon: Wallet,
+                ability: 'finance',
+            },
+            {
+                label: 'Expense Categories',
+                href: ROUTES.ADMIN_EXPENSE_CATEGORIES,
+                icon: Tags,
+                ability: 'finance',
+            },
+            {
+                label: 'Profit & Loss',
+                href: ROUTES.ADMIN_REPORTS_PROFIT,
+                icon: LineChart,
+                ability: 'finance',
+            },
+        ],
+    },
+    {
+        label: 'Marketing',
+        items: [
+            {
+                label: 'Banners & Sliders',
+                href: ROUTES.ADMIN_BANNERS,
+                icon: Image,
+                ability: 'marketing',
+            },
+            {
+                label: 'Promo Coupons',
+                href: ROUTES.ADMIN_COUPONS,
+                icon: Tag,
+                ability: 'marketing',
+            },
+            {
+                label: 'Tech Journal',
+                href: ROUTES.ADMIN_BLOGS,
+                icon: BookOpen,
+                ability: 'marketing',
+            },
+            {
+                label: 'Pages',
+                href: ROUTES.ADMIN_PAGES,
+                icon: FileText,
+                ability: 'marketing',
+            },
+            {
+                label: 'Subscribers',
+                href: ROUTES.ADMIN_SUBSCRIBERS,
+                icon: AtSign,
+                ability: 'marketing',
+            },
+        ],
+    },
+    {
+        label: 'Support',
+        items: [
+            {
+                label: 'Messages',
+                href: ROUTES.ADMIN_MESSAGES,
+                icon: Inbox,
+                ability: 'support',
+            },
+            {
+                label: 'Customer Reviews',
+                href: ROUTES.ADMIN_REVIEWS,
+                icon: MessageSquare,
+                ability: 'support',
+            },
+            {
+                label: 'Warranty & RMA',
+                href: ROUTES.ADMIN_WARRANTY,
+                icon: ShieldCheck,
+                ability: 'support',
+            },
+        ],
+    },
+    {
+        label: 'Setup',
+        items: [
+            {
+                label: 'Showrooms',
+                href: ROUTES.ADMIN_STORES,
+                icon: MapPin,
+                ability: 'settings',
+            },
+            {
+                // Was "Staff & Roles", directly above a separate link called
+                // "Roles" — two names for what looked like one screen.
+                label: 'Staff',
+                href: ROUTES.ADMIN_STAFF,
+                icon: UserCog,
+                ability: 'staff',
+            },
+            {
+                // A key, not a shield: warranty above already claims the shield.
+                label: 'Roles & Permissions',
+                href: ROUTES.ADMIN_ROLES,
+                icon: KeyRound,
+                ability: 'staff',
+            },
+            {
+                label: 'Site Settings',
+                href: ROUTES.ADMIN_SETTINGS,
+                icon: Sliders,
+                ability: 'settings',
+            },
+        ],
+    },
+    {
+        label: 'Storefront',
+        items: [
+            {
+                label: 'View Live Shop',
+                href: ROUTES.HOME,
+                icon: ExternalLink,
+                ability: null,
+                external: true,
+            },
+        ],
+    },
+];
 
 export default function AdminLayout({
     children,
@@ -59,7 +304,6 @@ export default function AdminLayout({
      * the menu.
      */
     const abilities = user.abilities || [];
-    const can = (ability) => abilities.includes(ability);
     const currentUrl =
         typeof window !== 'undefined' ? window.location.pathname : '';
 
@@ -98,6 +342,22 @@ export default function AdminLayout({
         setNavOpen(false);
     }, [currentUrl]);
 
+    /*
+     * The groups this account actually sees.
+     *
+     * A group with nothing left in it is dropped along with its heading, so a
+     * storekeeper does not get a "Money" label sitting over empty space.
+     *
+     * Not memoised: it is a filter over thirty entries, which costs less than
+     * the dependency array needed to skip it would.
+     */
+    const visibleGroups = NAV_GROUPS.map((group) => ({
+        ...group,
+        items: group.items.filter(
+            (item) => item.ability === null || abilities.includes(item.ability),
+        ),
+    })).filter((group) => group.items.length > 0);
+
     const handleLogout = () => {
         router.post(ROUTES.LOGOUT);
     };
@@ -118,358 +378,35 @@ export default function AdminLayout({
                 </div>
 
                 <div className="admin-sidebar-nav">
-                    <div className="admin-nav-section-label">Management</div>
+                    {visibleGroups.map((group) => (
+                        <React.Fragment key={group.label ?? 'top'}>
+                            {group.label && (
+                                <div className="admin-nav-section-label admin-nav-section-spacer">
+                                    {group.label}
+                                </div>
+                            )}
 
-                    <Link
-                        href={ROUTES.ADMIN_DASHBOARD}
-                        className={`admin-nav-link ${isActive(ROUTES.ADMIN_DASHBOARD) ? 'active' : ''}`}
-                    >
-                        <div className="admin-nav-left">
-                            <LayoutDashboard size={17} />
-                            <span>Overview</span>
-                        </div>
-                    </Link>
-
-                    {can('orders') && (
-                        <Link
-                            href={ROUTES.ADMIN_ORDERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_ORDERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <ShoppingCart size={17} />
-                                <span>Orders & Shipping</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('catalogue') && (
-                        <Link
-                            href={ROUTES.ADMIN_PRODUCTS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_PRODUCTS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Package size={17} />
-                                <span>Products & Stock</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('stock') && (
-                        <Link
-                            href={ROUTES.ADMIN_STOCK}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Boxes size={17} />
-                                <span>Stock & Inventory</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('stock') && (
-                        <Link
-                            href={ROUTES.ADMIN_STOCK_COUNT}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_COUNT) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <ClipboardList size={17} />
-                                <span>Stock Take</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('stock') && (
-                        <Link
-                            href={ROUTES.ADMIN_STOCK_SERIALS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_SERIALS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Hash size={17} />
-                                <span>Serial Numbers</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('stock') && (
-                        <Link
-                            href={ROUTES.ADMIN_STOCK_ADJUSTMENTS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STOCK_ADJUSTMENTS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <SlidersHorizontal size={17} />
-                                <span>Adjustments</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('stock') && (
-                        <Link
-                            href={ROUTES.ADMIN_SUPPLIERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SUPPLIERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Truck size={17} />
-                                <span>Suppliers</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('catalogue') && (
-                        <Link
-                            href={ROUTES.ADMIN_CATEGORIES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_CATEGORIES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <FolderTree size={17} />
-                                <span>Category Tree</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('customers') && (
-                        <Link
-                            href={ROUTES.ADMIN_CUSTOMERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_CUSTOMERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Users size={17} />
-                                <span>Customers Directory</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('couriers') && (
-                        <Link
-                            href={ROUTES.ADMIN_COURIERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_COURIERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Truck size={17} />
-                                <span>Couriers</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {(can('refunds') || can('finance')) && (
-                        <div className="admin-nav-section-label admin-nav-section-spacer">
-                            Money
-                        </div>
-                    )}
-
-                    {can('refunds') && (
-                        <Link
-                            href={ROUTES.ADMIN_REFUNDS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REFUNDS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Undo2 size={17} />
-                                <span>Refunds</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('finance') && (
-                        <Link
-                            href={ROUTES.ADMIN_EXPENSES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_EXPENSES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Wallet size={17} />
-                                <span>Expenses</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('finance') && (
-                        <Link
-                            href={ROUTES.ADMIN_EXPENSE_CATEGORIES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_EXPENSE_CATEGORIES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Tags size={17} />
-                                <span>Expense Categories</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('finance') && (
-                        <Link
-                            href={ROUTES.ADMIN_REPORTS_PROFIT}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REPORTS_PROFIT) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <LineChart size={17} />
-                                <span>Profit &amp; Loss</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {(can('marketing') ||
-                        can('support') ||
-                        can('settings')) && (
-                        <div className="admin-nav-section-label admin-nav-section-spacer">
-                            Marketing &amp; Media
-                        </div>
-                    )}
-
-                    {can('marketing') && (
-                        <Link
-                            href={ROUTES.ADMIN_BANNERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_BANNERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Image size={17} />
-                                <span>Banners &amp; Sliders</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('marketing') && (
-                        <Link
-                            href={ROUTES.ADMIN_COUPONS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_COUPONS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Tag size={17} />
-                                <span>Promo Coupons</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('marketing') && (
-                        <Link
-                            href={ROUTES.ADMIN_BLOGS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_BLOGS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <BookOpen size={17} />
-                                <span>Tech Journal</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('settings') && (
-                        <Link
-                            href={ROUTES.ADMIN_STORES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STORES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <MapPin size={17} />
-                                <span>Showrooms</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('support') && (
-                        <Link
-                            href={ROUTES.ADMIN_REVIEWS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_REVIEWS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <MessageSquare size={17} />
-                                <span>Customer Reviews</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('support') && (
-                        <Link
-                            href={ROUTES.ADMIN_WARRANTY}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_WARRANTY) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <ShieldCheck size={17} />
-                                <span>Warranty &amp; RMA</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('support') && (
-                        <Link
-                            href={ROUTES.ADMIN_MESSAGES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_MESSAGES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Inbox size={17} />
-                                <span>Messages</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('marketing') && (
-                        <Link
-                            href={ROUTES.ADMIN_PAGES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_PAGES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <FileText size={17} />
-                                <span>Pages</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('marketing') && (
-                        <Link
-                            href={ROUTES.ADMIN_SUBSCRIBERS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SUBSCRIBERS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <AtSign size={17} />
-                                <span>Subscribers</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('staff') && (
-                        <Link
-                            href={ROUTES.ADMIN_ROLES}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_ROLES) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <ShieldCheck size={17} />
-                                <span>Roles</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('staff') && (
-                        <Link
-                            href={ROUTES.ADMIN_STAFF}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_STAFF) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <UserCog size={17} />
-                                <span>Staff & Roles</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    {can('settings') && (
-                        <Link
-                            href={ROUTES.ADMIN_SETTINGS}
-                            className={`admin-nav-link ${isActive(ROUTES.ADMIN_SETTINGS) ? 'active' : ''}`}
-                        >
-                            <div className="admin-nav-left">
-                                <Sliders size={17} />
-                                <span>Site Settings</span>
-                            </div>
-                        </Link>
-                    )}
-
-                    <div className="admin-nav-section-label admin-nav-section-spacer">
-                        Storefront
-                    </div>
-
-                    <Link
-                        href={ROUTES.HOME}
-                        className="admin-nav-link"
-                        target="_blank"
-                    >
-                        <div className="admin-nav-left">
-                            <ExternalLink size={17} />
-                            <span>View Live Shop</span>
-                        </div>
-                    </Link>
+                            {group.items.map((item) => (
+                                <Link
+                                    key={item.href + item.label}
+                                    href={item.href}
+                                    className={`admin-nav-link ${
+                                        !item.external && isActive(item.href)
+                                            ? 'active'
+                                            : ''
+                                    }`}
+                                    {...(item.external
+                                        ? { target: '_blank' }
+                                        : {})}
+                                >
+                                    <div className="admin-nav-left">
+                                        <item.icon size={17} />
+                                        <span>{item.label}</span>
+                                    </div>
+                                </Link>
+                            ))}
+                        </React.Fragment>
+                    ))}
                 </div>
 
                 {/* Sidebar Footer User Card */}
