@@ -1608,10 +1608,15 @@
     margin-top: 24px;
 }
 
+/*
+ * Two fields side by side where there is room for two, and stacked where there
+ * is not — auto-fit rather than a breakpoint, because these sit inside modals
+ * of several widths and it is the modal's room that decides, not the phone's.
+ */
 .admin-form-row-2col,
 .form-row-2col {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 14px;
     margin-bottom: 14px;
 }

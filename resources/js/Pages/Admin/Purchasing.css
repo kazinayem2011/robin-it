@@ -1,8 +1,16 @@
 /* Purchase orders: writing one, and booking in what arrives. */
 
+/*
+ * Two columns where there is room, one where there is not.
+ *
+ * auto-fit rather than a media query: these sit inside modals of several
+ * different widths, so the thing that decides is how much room the modal has,
+ * not how wide the phone is. A fixed 1fr 1fr squeezed a select down to 111px
+ * on a handset, where "Choose a supplier" rendered as "Choose a".
+ */
 .po-header-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 0 14px;
 }
 
