@@ -18,3 +18,62 @@
 .courier-credentials > .admin-field-hint {
     margin-bottom: 12px;
 }
+
+/* Delivery-area mapping, inside the courier modal. */
+.courier-zone-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 14px;
+    margin-bottom: 6px;
+}
+
+.courier-zone-table {
+    width: 100%;
+    margin-top: 22px;
+    border-top: 1px solid var(--border-color, #e2e5ea);
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.courier-zone-table th {
+    padding: 10px 6px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
+    text-align: left;
+}
+
+.courier-zone-table td {
+    padding: 8px 6px;
+    border-top: 1px solid var(--border-color, #e2e5ea);
+}
+
+/*
+ * Places are stored lowercased so the same district typed three ways matches
+ * one row. That is a matching decision, not how it should read back — a shop
+ * seeing "agrabad, chattogram" listed as its own mapping thinks something
+ * mangled it.
+ */
+.courier-zone-table td:first-child {
+    text-transform: capitalize;
+}
+
+.courier-zone-table td:last-child {
+    width: 40px;
+    text-align: right;
+}
+
+.courier-zone-table code {
+    font-size: 0.78rem;
+    color: var(--gray-500, #6b7280);
+}
+
+/* How many areas a courier has mapped, on its row. */
+.courier-zone-count {
+    margin-left: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--primary);
+}

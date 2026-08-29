@@ -7,6 +7,7 @@ use App\Models\Courier;
 use App\Models\Order;
 use App\Services\Courier\Consignment;
 use App\Services\Courier\CourierDriver;
+use App\Services\Courier\ZoneResolver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -73,15 +74,25 @@ class PathaoDriver implements CourierDriver
         $base = $courier->is_sandbox ? self::SANDBOX : self::LIVE;
         $token = $this->token($courier, $credentials, $base);
 
-        $address = $order->shipping_address ?? [];
-        $zone = $address['pathao_zone_id'] ?? $credentials['default_zone_id'] ?? null;
-        $city = $address['pathao_city_id'] ?? $credentials['default_city_id'] ?? null;
+        /*
+         * The customer's city and zone, looked up in the shop's mapping and
+         * falling back to the default saved with the credentials. Before there
+         * was a mapping every parcel went out on that one default, which is
+         * right for the shop's own district and wrong for the rest.
+         */
+        $ids = ZoneResolver::for($order, $courier);
+        $zone = $ids['zone_id'];
+        $city = $ids['city_id'];
 
         if (blank($zone) || blank($city)) {
+            $address = $order->shipping_address ?? [];
+            $place = trim(($address['zone'] ?? '').' '.($address['city'] ?? ''));
+
             throw CourierException::refused(
                 $courier->name,
-                'it needs a city and zone id, and neither this address nor the courier settings have one. '
-                    .'Set a default city and zone under Couriers.',
+                'it needs a city and zone id, and there is no mapping for '
+                    .($place !== '' ? '"'.$place.'"' : 'this address')
+                    .' and no default set. Map the area, or set a default city and zone, under Couriers.',
             );
         }
 

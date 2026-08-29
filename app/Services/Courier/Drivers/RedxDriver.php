@@ -7,6 +7,7 @@ use App\Models\Courier;
 use App\Models\Order;
 use App\Services\Courier\Consignment;
 use App\Services\Courier\CourierDriver;
+use App\Services\Courier\ZoneResolver;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -54,13 +55,14 @@ class RedxDriver implements CourierDriver
         }
 
         $address = $order->shipping_address ?? [];
-        $area = $address['redx_area_id'] ?? $credentials['default_area_id'] ?? null;
+        $area = ZoneResolver::for($order, $courier)['area_id'];
 
         if (blank($area)) {
             throw CourierException::refused(
                 $courier->name,
-                'it needs a delivery area id, and neither this address nor the courier settings have one. '
-                    .'Set a default area under Couriers.',
+                'it needs a delivery area id, and there is no mapping for '
+                    .(trim(($address['zone'] ?? '').' '.($address['city'] ?? '')) ?: 'this address')
+                    .' and no default set. Map the area, or set a default, under Couriers.',
             );
         }
 

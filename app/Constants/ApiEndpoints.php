@@ -258,6 +258,10 @@ class ApiEndpoints
 
     public const ADMIN_COURIERS_ITEM = 'couriers/{id}';
 
+    public const ADMIN_COURIER_ZONES = 'couriers/{id}/zones';
+
+    public const ADMIN_COURIER_ZONE_ITEM = 'couriers/{id}/zones/{zone}';
+
     // Stock: units enter through a receipt, are corrected by an audited
     // adjustment, and are never typed in as an absolute number.
     public const ADMIN_STOCK_RECEIPTS = 'stock/receipts';

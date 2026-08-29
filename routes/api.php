@@ -227,6 +227,13 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Carriers
         Route::post(ApiEndpoints::ADMIN_COURIERS, [AdminCourierController::class, 'store'])->middleware('can:couriers');
         Route::match(['put', 'patch'], ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'update'])->middleware('can:couriers');
+
+        /*
+         * Which of a courier's own delivery areas an address belongs to.
+         * Without a mapping every parcel books on the single default zone.
+         */
+        Route::post(ApiEndpoints::ADMIN_COURIER_ZONES, [AdminCourierController::class, 'storeZone'])->middleware('can:couriers');
+        Route::delete(ApiEndpoints::ADMIN_COURIER_ZONE_ITEM, [AdminCourierController::class, 'destroyZone'])->middleware('can:couriers');
         Route::delete(ApiEndpoints::ADMIN_COURIERS_ITEM, [AdminCourierController::class, 'destroy'])->middleware('can:couriers');
 
         // Stock

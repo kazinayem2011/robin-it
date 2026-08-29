@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CourierRequest;
 use App\Models\Courier;
+use App\Models\CourierZone;
 use App\Services\Courier\CourierDriverRegistry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,7 +37,68 @@ class CourierController extends Controller
             // The credential form is built from what each driver says it
             // needs, so adding a carrier does not mean writing a form too.
             'drivers' => $this->drivers->all(),
+            /*
+             * The address-to-area mappings, grouped by courier.
+             *
+             * Without these every parcel books against the one default zone
+             * saved with the credentials, which is right for the shop's own
+             * district and wrong for the other sixty-three.
+             */
+            'zones' => CourierZone::orderBy('city')->orderBy('zone')->get()
+                ->groupBy('courier_id'),
         ]);
+    }
+
+    /** Map one of the shop's delivery areas to a courier's own ids. */
+    public function storeZone(Request $request, int $id): JsonResponse
+    {
+        $courier = Courier::findOrFail($id);
+
+        $data = $request->validate([
+            'city' => 'required|string|max:100',
+            'zone' => 'nullable|string|max:100',
+            'city_id' => 'nullable|string|max:32',
+            'zone_id' => 'nullable|string|max:32',
+            'area_id' => 'nullable|string|max:32',
+        ]);
+
+        if (blank($data['city_id'] ?? null) && blank($data['zone_id'] ?? null) && blank($data['area_id'] ?? null)) {
+            return $this->errorResponse(
+                'Enter at least one id from the courier’s own area list, or the mapping does nothing.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        /*
+         * Saved over any existing row for the same place rather than refused.
+         * Somebody correcting a mapping types the same city and zone again;
+         * telling them it already exists makes them hunt for a row to edit.
+         */
+        $zone = CourierZone::updateOrCreate(
+            [
+                'courier_id' => $courier->id,
+                'city' => CourierZone::normalise($data['city']),
+                'zone' => CourierZone::normalise($data['zone'] ?? null),
+            ],
+            [
+                'city_id' => $data['city_id'] ?? null,
+                'zone_id' => $data['zone_id'] ?? null,
+                'area_id' => $data['area_id'] ?? null,
+            ]
+        );
+
+        return $this->successResponse(
+            $zone,
+            'Mapped '.($zone->zone ? "{$zone->zone}, {$zone->city}" : $zone->city)." to {$courier->name}."
+        );
+    }
+
+    public function destroyZone(int $id, int $zone): JsonResponse
+    {
+        CourierZone::where('courier_id', $id)->whereKey($zone)->firstOrFail()->delete();
+
+        return $this->successResponse([], 'Mapping removed.');
     }
 
     public function store(CourierRequest $request): JsonResponse

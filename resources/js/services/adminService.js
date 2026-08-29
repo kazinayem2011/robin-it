@@ -264,6 +264,28 @@ export const adminService = {
     },
 
     /**
+     * Map a city or thana to a courier's own area ids.
+     *
+     * Pathao and RedX book against numbers from their own lists, not against a
+     * written address. Without a mapping every parcel uses the one default
+     * saved with the credentials.
+     */
+    async mapCourierZone(courierId, payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.COURIER_ZONES(courierId),
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    async unmapCourierZone(courierId, zoneId) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.COURIER_ZONE(courierId, zoneId),
+        );
+        return response?.data || response;
+    },
+
+    /**
      * Record serials against stock already on the shelf.
      *
      * Serials normally arrive with a delivery. This is for the shop that
