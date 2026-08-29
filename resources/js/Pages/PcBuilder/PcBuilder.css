@@ -385,7 +385,7 @@
 .btn-choose-component:hover {
     background: var(--primary);
     border-color: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 .btn-choose-component svg {
@@ -410,7 +410,7 @@
 .btn-remove-component:hover {
     background: var(--primary);
     border-color: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 .component-live-price {
@@ -694,7 +694,7 @@
 
 /* A genuine conflict — these parts cannot be used together. */
 .pc-compat-panel.is-error {
-    background: #fdf2f2;
+    background: var(--primary-light);
     border-color: #f5c2c7;
     color: #842029;
 }
@@ -719,8 +719,8 @@
     gap: 8px;
     padding: 10px 12px;
     margin-bottom: 12px;
-    background: var(--bg-surface-subtle, #f7f8fa);
-    border: 1px dashed var(--border-color, #d9dde3);
+    background: var(--bg-surface-subtle);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     font-size: 13px;
     cursor: pointer;

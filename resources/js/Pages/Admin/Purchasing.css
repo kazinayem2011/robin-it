@@ -20,8 +20,8 @@
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 700;
-    background: var(--gray-100, #f1f2f4);
-    color: var(--gray-600, #4b5563);
+    background: var(--gray-100);
+    color: var(--gray-600);
 }
 
 .po-sent {
@@ -31,12 +31,12 @@
 
 .po-partial {
     background: var(--warning-light, #fff4e0);
-    color: var(--warning, #a35b00);
+    color: var(--warning);
 }
 
 .po-received {
     background: var(--success-light, #e6f6ed);
-    color: var(--success, #158a4a);
+    color: var(--success);
 }
 
 .po-cancelled {
@@ -45,7 +45,7 @@
 
 /* What the supplier still owes — the number the screen exists for. */
 .po-outstanding {
-    color: var(--warning, #a35b00);
+    color: var(--warning);
 }
 
 .po-results {
@@ -56,7 +56,7 @@
     margin-bottom: 16px;
     padding: 6px;
     overflow-y: auto;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
 }
 
@@ -71,7 +71,7 @@
 }
 
 .po-results button:hover {
-    background: var(--gray-100, #f1f2f4);
+    background: var(--gray-100);
     color: var(--primary);
 }
 
@@ -84,7 +84,7 @@
 
 .po-lines th {
     padding: 8px 6px;
-    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -95,7 +95,7 @@
 
 .po-lines td {
     padding: 8px 6px;
-    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .po-num {
@@ -105,7 +105,7 @@
 .po-lines input {
     width: 96px;
     padding: 6px 8px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     text-align: right;
@@ -118,7 +118,7 @@
 
 .po-lines tfoot td {
     border-bottom: 0;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 /* A line being taken off an order reads as struck through before it is saved. */

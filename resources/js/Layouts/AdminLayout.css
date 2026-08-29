@@ -45,12 +45,14 @@
 .admin-logo-badge {
     width: 36px;
     height: 36px;
-    background: linear-gradient(135deg, var(--primary) 0%, #d32f2f 100%);
+    /* The brand's own gradient, rather than a second red mixed to sit
+       beside it — those two are three hundredths apart and drift separately. */
+    background: var(--primary-gradient);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--white);
     box-shadow: 0 4px 12px rgba(234, 72, 79, 0.25);
 }
 
@@ -73,7 +75,7 @@
     letter-spacing: 0.5px;
     background: rgba(37, 99, 235, 0.08);
     border: 1px solid rgba(37, 99, 235, 0.3);
-    color: #2563eb;
+    color: var(--info);
     padding: 2px 7px;
     border-radius: var(--radius-xs);
     white-space: nowrap;
@@ -165,7 +167,7 @@
     justify-content: center;
     font-weight: 800;
     font-size: 0.9rem;
-    color: #ffffff;
+    color: var(--white);
     flex-shrink: 0;
 }
 
@@ -343,17 +345,17 @@
 
 .admin-kpi-icon-emerald {
     background: rgba(16, 185, 129, 0.1);
-    color: #059669;
+    color: var(--success-hover);
 }
 
 .admin-kpi-icon-blue {
     background: rgba(37, 99, 235, 0.1);
-    color: #2563eb;
+    color: var(--info);
 }
 
 .admin-kpi-icon-amber {
     background: rgba(245, 158, 11, 0.1);
-    color: #d97706;
+    color: var(--warning-hover);
 }
 
 .admin-kpi-icon-red {
@@ -363,7 +365,7 @@
 
 .admin-kpi-icon-purple {
     background: rgba(124, 58, 237, 0.1);
-    color: #7c3aed;
+    color: var(--accent-purple);
 }
 
 .admin-kpi-val {
@@ -383,15 +385,15 @@
 }
 
 .admin-kpi-trend.emerald {
-    color: #059669;
+    color: var(--success-hover);
 }
 
 .admin-kpi-trend.blue {
-    color: #2563eb;
+    color: var(--info);
 }
 
 .admin-kpi-trend.amber {
-    color: #d97706;
+    color: var(--warning-hover);
 }
 
 .admin-kpi-trend.red {
@@ -594,7 +596,7 @@ a.admin-card:hover,
 
 .admin-badge-stock-ok {
     background: rgba(16, 185, 129, 0.08);
-    color: #059669;
+    color: var(--success-hover);
     border: 1px solid rgba(16, 185, 129, 0.3);
     padding: 2px 8px;
     border-radius: var(--radius-xs);
@@ -647,7 +649,7 @@ a.admin-card:hover,
 
 .admin-tab-btn.active {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 .admin-card-header {
@@ -769,7 +771,7 @@ a.admin-card:hover,
 
 .admin-btn-primary {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border: none;
     border-radius: var(--radius-sm);
     padding: 8px 16px;
@@ -925,7 +927,7 @@ a.admin-card:hover,
 .admin-order-detail-btn {
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
-    color: #2563eb;
+    color: var(--info);
     padding: 6px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -939,7 +941,7 @@ a.admin-card:hover,
 
 .admin-order-detail-btn:hover {
     background: rgba(37, 99, 235, 0.06);
-    border-color: #2563eb;
+    border-color: var(--info);
 }
 
 /* ── Order Modal ────────────────────────────────────────────────────────────── */
@@ -1085,7 +1087,7 @@ a.admin-card:hover,
 }
 
 .admin-product-status-active {
-    color: #059669;
+    color: var(--success-hover);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1254,9 +1256,9 @@ a.admin-card:hover,
 .admin-cat-inactive-pill {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #64748b;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
     padding: 2px 7px;
     border-radius: var(--radius-md);
     text-transform: uppercase;
@@ -1276,20 +1278,22 @@ a.admin-card:hover,
 }
 
 .badge-hot {
+    /* Orange: the only badge colour with no token, and deliberately not the
+       amber warning tone — this one shouts rather than cautions. */
     background: #ea580c;
-    color: #fff;
+    color: var(--white);
 }
 .badge-popular {
-    background: #2563eb;
-    color: #fff;
+    background: var(--info);
+    color: var(--white);
 }
 .badge-new {
-    background: #10b981;
-    color: #fff;
+    background: var(--success);
+    color: var(--white);
 }
 .badge-sale {
     background: var(--primary);
-    color: #fff;
+    color: var(--white);
 }
 
 .admin-cat-action-btn {
@@ -1316,20 +1320,20 @@ a.admin-card:hover,
 }
 
 .admin-cat-action-btn.btn-danger-sm {
-    color: #dc2626;
-    border-color: #fecaca;
-    background: #fff;
+    color: var(--danger);
+    border-color: var(--danger-border);
+    background: var(--white);
 }
 
 .admin-cat-action-btn.btn-danger-sm:hover {
-    background: #fee2e2;
-    color: #b91c1c;
-    border-color: #fca5a5;
+    background: var(--danger-tint);
+    color: var(--danger-hover);
+    border-color: var(--danger-tint-border);
 }
 
 .admin-cat-action-btn.btn-primary-sm {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border-color: var(--primary);
     height: 32px;
     box-sizing: border-box;
@@ -1354,7 +1358,7 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-sub-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 14px 16px;
@@ -1431,9 +1435,9 @@ a.admin-card:hover,
 }
 
 .admin-sub-icon-btn.btn-danger:hover {
-    background: #fee2e2;
-    color: #dc2626;
-    border-color: #fca5a5;
+    background: var(--danger-tint);
+    color: var(--danger);
+    border-color: var(--danger-tint-border);
 }
 
 .admin-sub-slug-tag {
@@ -1452,7 +1456,7 @@ a.admin-card:hover,
 
 .admin-cat-tree-l3-chip {
     font-size: 0.72rem;
-    background: #f8fafc;
+    background: var(--gray-50);
     color: var(--dark-700);
     border: 1px solid var(--border-color);
     padding: 3px 8px;
@@ -1465,7 +1469,7 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-l3-chip:hover {
-    background: #ffffff;
+    background: var(--white);
     border-color: var(--gray-400);
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
@@ -1494,7 +1498,7 @@ a.admin-card:hover,
 }
 
 .l3-chip-remove-btn:hover {
-    color: #dc2626;
+    color: var(--danger);
 }
 
 .admin-cat-tree-l3-add-chip {
@@ -1530,7 +1534,7 @@ a.admin-card:hover,
     height: 32px;
     border-radius: 50%;
     background: rgba(37, 99, 235, 0.1);
-    color: #2563eb;
+    color: var(--info);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1550,7 +1554,7 @@ a.admin-card:hover,
 
 .admin-customer-phone {
     font-size: 0.82rem;
-    color: #2563eb;
+    color: var(--info);
     font-weight: 600;
 }
 
@@ -1792,7 +1796,7 @@ a.admin-card:hover,
 }
 
 .admin-modal-card {
-    background: #ffffff;
+    background: var(--white);
     border-radius: var(--radius-md);
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
     width: 100%;
@@ -1826,7 +1830,7 @@ a.admin-card:hover,
     align-items: center;
     padding: 16px 22px;
     border-bottom: 1px solid var(--border-color);
-    background: #ffffff;
+    background: var(--white);
 }
 
 .admin-modal-header h3 {
@@ -1850,7 +1854,7 @@ a.admin-card:hover,
 
 .admin-modal-close:hover {
     color: var(--dark-900);
-    background: #f1f5f9;
+    background: var(--gray-100);
 }
 
 .admin-modal-form {
@@ -1868,7 +1872,7 @@ a.admin-card:hover,
     gap: 10px;
     padding: 16px 22px;
     border-top: 1px solid var(--border-color);
-    background: #f8fafc;
+    background: var(--gray-50);
 }
 
 /* Coupon Badges */
@@ -1914,10 +1918,10 @@ a.admin-card:hover,
 .admin-delete-warning-box {
     margin-top: 12px;
     padding: 10px 14px;
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
+    background: var(--danger-tint);
+    border: 1px solid var(--danger-tint-border);
     border-radius: var(--radius-sm);
-    color: #991b1b;
+    color: var(--danger-text);
     font-size: 0.8rem;
     display: flex;
     gap: 8px;
@@ -1955,9 +1959,9 @@ a.admin-card:hover,
 }
 
 .admin-table-icon-btn.btn-danger:hover {
-    background: #fee2e2;
-    color: #dc2626;
-    border-color: #fca5a5;
+    background: var(--danger-tint);
+    color: var(--danger);
+    border-color: var(--danger-tint-border);
     box-shadow: none;
 }
 
@@ -1985,7 +1989,7 @@ a.admin-card:hover,
 }
 
 .admin-banner-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -2016,7 +2020,7 @@ a.admin-card:hover,
     padding: 3px 8px;
     border-radius: var(--radius-xs);
     background: rgba(15, 23, 42, 0.85);
-    color: #ffffff;
+    color: var(--white);
     backdrop-filter: blur(4px);
 }
 
@@ -2196,14 +2200,14 @@ a.admin-card:hover,
 }
 
 .admin-settings-tab-btn:hover {
-    background: #ffffff;
+    background: var(--white);
     border-color: var(--gray-400);
 }
 
 .admin-settings-tab-btn.active {
     background: var(--primary);
     border-color: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 /* ── Review Moderation ──────────────────────────────────────────────────────── */
@@ -2286,7 +2290,7 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-light);
     /* The logo artwork is dark, so preview it on the light ground it is used on. */
-    background: #ffffff;
+    background: var(--white);
 }
 
 /*
@@ -2383,7 +2387,7 @@ a.admin-card:hover,
 }
 
 .admin-stock-variant-tick {
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     font-size: 13px;
 }
 
@@ -2395,7 +2399,7 @@ a.admin-card:hover,
     font-size: 11px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     background: rgba(0, 0, 0, 0.05);
     padding: 2px 6px;
     border-radius: var(--radius-md);
@@ -2438,17 +2442,17 @@ a.admin-card:hover,
     align-self: end;
     margin-bottom: 4px;
     background: none;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 8px;
     cursor: pointer;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     transition: all 0.15s ease;
 }
 
 .admin-receive-line-remove:hover:not(:disabled) {
-    color: #d93025;
-    border-color: #d93025;
+    color: var(--danger);
+    border-color: var(--danger);
 }
 
 .admin-receive-line-remove:disabled {
@@ -2467,7 +2471,7 @@ a.admin-card:hover,
 
 .admin-receive-total {
     font-size: 14px;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
 }
 
 /* ── Adjustments ───────────────────────────────────────────────────────────── */
@@ -2475,7 +2479,7 @@ a.admin-card:hover,
 .admin-adjust-summary {
     margin-bottom: 14px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--color-border, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .admin-adjust-name {
@@ -2488,13 +2492,13 @@ a.admin-card:hover,
     padding: 10px 12px;
     border-radius: var(--radius-md);
     background: rgba(16, 143, 74, 0.08);
-    color: #0d7a3f;
+    color: var(--success-text);
     font-size: 13px;
 }
 
 .admin-adjust-projection-bad {
     background: rgba(217, 48, 37, 0.08);
-    color: #b3261e;
+    color: var(--danger-text);
 }
 
 .admin-modal-actions {
@@ -2505,12 +2509,12 @@ a.admin-card:hover,
 /* ── Ledger ────────────────────────────────────────────────────────────────── */
 
 .admin-ledger-in {
-    color: #0d7a3f;
+    color: var(--success-text);
     font-weight: 600;
 }
 
 .admin-ledger-out {
-    color: #b3261e;
+    color: var(--danger-text);
     font-weight: 600;
 }
 
@@ -2519,7 +2523,7 @@ a.admin-card:hover,
     padding: 10px 12px;
     border-radius: var(--radius-md);
     background: rgba(217, 48, 37, 0.08);
-    color: #b3261e;
+    color: var(--danger-text);
     font-size: 13px;
 }
 
@@ -2544,7 +2548,7 @@ a.admin-card:hover,
 .admin-variant-editor {
     margin: 18px 0;
     padding: 16px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.015);
 }
@@ -2565,9 +2569,9 @@ a.admin-card:hover,
     gap: 10px;
     align-items: start;
     padding: 12px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
 }
 
 .admin-variant-row > * {
@@ -2583,10 +2587,10 @@ a.admin-card:hover,
 /* Stock is shown, never typed: editing an option must not move units. */
 .admin-variant-stock {
     padding: 9px 12px;
-    border: 1px dashed var(--color-border, #e2e5ea);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     font-size: 13px;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     background: rgba(0, 0, 0, 0.02);
 }
 
@@ -2599,12 +2603,12 @@ a.admin-card:hover,
 
 .admin-variant-allocation-ok {
     background: rgba(16, 143, 74, 0.08);
-    color: #0d7a3f;
+    color: var(--success-text);
 }
 
 .admin-variant-allocation-pending {
     background: rgba(217, 119, 6, 0.1);
-    color: #92400e;
+    color: var(--warning-text);
 }
 
 .admin-variant-warning {
@@ -2612,7 +2616,7 @@ a.admin-card:hover,
     padding: 10px 12px;
     border-radius: var(--radius-md);
     background: rgba(217, 119, 6, 0.1);
-    color: #92400e;
+    color: var(--warning-text);
     font-size: 13px;
 }
 
@@ -2624,7 +2628,7 @@ a.admin-card:hover,
     justify-content: space-between;
     gap: 10px;
     padding: 9px 12px;
-    border: 1px dashed var(--color-border, #e2e5ea);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.02);
 }
@@ -2636,7 +2640,7 @@ a.admin-card:hover,
 
 .admin-stock-readonly-link {
     font-size: 12px;
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
     text-decoration: none;
     white-space: nowrap;
 }
@@ -2663,7 +2667,7 @@ a.admin-card:hover,
     gap: 8px;
     margin: 6px 0 14px;
     padding: 14px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.015);
 }
@@ -2682,16 +2686,16 @@ a.admin-card:hover,
     align-items: center;
     gap: 7px;
     padding: 6px 11px;
-    border: 1.5px solid var(--color-border, #e2e5ea);
+    border: 1.5px solid var(--border-color);
     border-radius: var(--radius-full);
-    background: #fff;
+    background: var(--white);
     font-size: 13px;
     cursor: pointer;
     user-select: none;
 }
 
 .admin-coupon-scope-chip.is-selected {
-    border-color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
     background: rgba(209, 32, 47, 0.06);
 }
 
@@ -2703,7 +2707,7 @@ a.admin-card:hover,
    worth flagging before it is saved rather than after it fails at checkout. */
 .admin-coupon-scope-warning {
     font-size: 12px;
-    color: #92400e;
+    color: var(--warning-text);
 }
 
 /* ── Operational alert ─────────────────────────────────────────────────────── */
@@ -2717,16 +2721,16 @@ a.admin-card:hover,
     margin-bottom: 20px;
     padding: 14px 16px;
     border: 1px solid rgba(179, 38, 30, 0.3);
-    border-left: 4px solid #b3261e;
+    border-left: 4px solid var(--danger-text);
     border-radius: var(--radius-md);
     background: rgba(217, 48, 37, 0.06);
-    color: #7f1d1b;
+    color: var(--danger-text);
 }
 
 .admin-alert-banner > svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: #b3261e;
+    color: var(--danger-text);
 }
 
 .admin-alert-banner > div {
@@ -2769,16 +2773,16 @@ a.admin-card:hover,
     height: 38px;
     flex-shrink: 0;
     border-radius: var(--radius-md);
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     object-fit: cover;
-    background: #fff;
+    background: var(--white);
 }
 
 .admin-variant-thumb-empty {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     background: rgba(0, 0, 0, 0.03);
 }
 
@@ -2795,7 +2799,7 @@ a.admin-card:hover,
     padding: 0;
     font-size: 12px;
     text-align: left;
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
     cursor: pointer;
 }
 
@@ -2809,7 +2813,7 @@ a.admin-card:hover,
 }
 
 .admin-variant-image-clear {
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
 }
 
 /* Delivery history: a row expands to show what was on that invoice. */
@@ -2833,7 +2837,7 @@ a.admin-card:hover,
     gap: 16px;
     padding: 5px 0;
     font-size: 13px;
-    border-bottom: 1px dashed var(--color-border, #e2e5ea);
+    border-bottom: 1px dashed var(--border-color);
 }
 
 .admin-receipt-lines li:last-child {
@@ -2856,9 +2860,9 @@ a.admin-card:hover,
     min-width: 0;
     flex: 1 1 180px;
     padding: 12px 14px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
     text-align: left;
 }
 
@@ -2870,7 +2874,7 @@ a.admin-card:hover,
 
 .admin-stock-stat-label {
     font-size: 12px;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     line-height: 1.4;
 }
 
@@ -2884,16 +2888,16 @@ a.admin-card:hover,
 }
 
 .admin-stock-stat-action:hover {
-    border-color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
 }
 
 .admin-stock-stat-action.is-active {
-    border-color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
     background: rgba(209, 32, 47, 0.05);
 }
 
 .admin-stock-stat-action.is-active .admin-stock-stat-value {
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
 }
 
 /* Short column headings should not wrap onto two lines in a narrow column. */
@@ -2929,7 +2933,7 @@ a.admin-card:hover,
 }
 
 .searchable-select-placeholder {
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
 }
 
 .searchable-select-panel {
@@ -2938,9 +2942,9 @@ a.admin-card:hover,
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
     overflow: hidden;
 }
@@ -2950,8 +2954,8 @@ a.admin-card:hover,
     align-items: center;
     gap: 8px;
     padding: 9px 11px;
-    border-bottom: 1px solid var(--color-border, #e2e5ea);
-    color: var(--color-text-muted, #8a8f98);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--gray-400);
 }
 
 .searchable-select-search input {
@@ -3003,25 +3007,25 @@ a.admin-card:hover,
 }
 
 .searchable-select-option.is-selected {
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
     font-weight: 600;
 }
 
 .searchable-select-hint {
     flex-shrink: 0;
     font-size: 12px;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
 }
 
 .searchable-select-empty,
 .searchable-select-more {
     padding: 10px 12px;
     font-size: 13px;
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
 }
 
 .searchable-select-more {
-    border-top: 1px solid var(--color-border, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 /* A supplier kept for its history but no longer offered when receiving. */
@@ -3030,7 +3034,7 @@ a.admin-card:hover,
     padding: 2px 7px;
     border-radius: var(--radius-full);
     background: rgba(0, 0, 0, 0.06);
-    color: var(--color-text-muted, #8a8f98);
+    color: var(--gray-400);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -3049,16 +3053,16 @@ a.admin-card:hover,
     align-items: baseline;
     gap: 5px;
     padding: 2px 8px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
     font-size: 11px;
     white-space: nowrap;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .admin-branch-chip strong {
     font-size: 12px;
-    color: var(--color-text, #0f172a);
+    color: var(--dark-900);
 }
 
 .admin-stock-branch-filter {
@@ -3068,12 +3072,12 @@ a.admin-card:hover,
 .admin-stock-branch-filter select {
     width: 100%;
     padding: 5px 8px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     font: inherit;
     font-size: 13px;
     /* Not the shorthand: it would clear the arrow's background-image. */
-    background-color: #fff;
+    background-color: var(--white);
 }
 
 /* A builder component the compatibility engine cannot check, because a spec it
@@ -3086,7 +3090,7 @@ a.admin-card:hover,
     padding: 2px 8px;
     border-radius: var(--radius-full);
     background: rgba(217, 119, 6, 0.12);
-    color: #92400e;
+    color: var(--warning-text);
     font-size: 11px;
     font-weight: 600;
 }
@@ -3109,7 +3113,7 @@ a.admin-card:hover,
     margin-right: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
     color: var(--dark-900);
     cursor: pointer;
 }
@@ -3279,7 +3283,7 @@ a.admin-card:hover,
     padding: 10px 12px;
     border-radius: var(--radius-sm);
     background: rgba(217, 119, 6, 0.1);
-    color: #92400e;
+    color: var(--warning-text);
 }
 
 /* Sortable column headers. */
@@ -3670,7 +3674,7 @@ a.admin-card:hover,
 .admin-sms-events {
     margin-top: 28px;
     padding-top: 20px;
-    border-top: 1px solid var(--color-border, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 /* Nothing here does anything until the master switch is on; say so quietly. */
@@ -3684,7 +3688,7 @@ a.admin-card:hover,
     font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 .admin-sms-event {
@@ -3693,7 +3697,7 @@ a.admin-card:hover,
     align-items: flex-start;
     padding: 12px 2px;
     cursor: pointer;
-    border-bottom: 1px solid var(--color-border, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .admin-sms-event:last-of-type {
@@ -3734,7 +3738,7 @@ a.admin-card:hover,
     gap: 6px;
     padding: 12px;
     margin-top: 4px;
-    border-top: 1px solid var(--border-color, #e2e5ea);
+    border-top: 1px solid var(--border-color);
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--primary);

@@ -107,7 +107,7 @@
 .profile-page-sub {
     margin: 0;
     font-size: 0.88rem;
-    color: var(--gray-500, #64748b);
+    color: var(--gray-500);
 }
 
 .profile-sections {

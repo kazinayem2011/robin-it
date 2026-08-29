@@ -44,7 +44,7 @@
     justify-content: center;
     font-size: 1.45rem;
     font-weight: 900;
-    color: #ffffff;
+    color: var(--white);
     /*
      * A ring rather than a coloured glow. The glow was the one element here
      * that read as dated, and it also bled colour into the panel's whitespace.
@@ -76,7 +76,7 @@
     border-radius: 50%;
     border: 2px solid var(--bg-surface);
     background: var(--dark-900);
-    color: #ffffff;
+    color: var(--white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -170,7 +170,7 @@
  * and the nav underneath it. The tick still carries the meaning.
  */
 .account-identity-meta .is-verified svg {
-    color: var(--success, #16a34a);
+    color: var(--success);
 }
 
 .dashboard-content-grid {
@@ -194,7 +194,7 @@
 
 /* Sidebar Navigation */
 .dashboard-sidebar-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     /* No padding of its own: the member panel needs to reach the card's edges
@@ -269,7 +269,7 @@
 
 .dash-nav-badge {
     background: var(--dark-900);
-    color: #ffffff;
+    color: var(--white);
     font-size: 0.68rem;
     font-weight: 800;
     padding: 2px 7px;
@@ -296,12 +296,12 @@
 }
 
 .dash-logout-btn:hover {
-    background: #fef2f2 !important;
+    background: var(--danger-light) !important;
 }
 
 /* Main Content Surface */
 .dashboard-main-surface {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 28px;
@@ -381,23 +381,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--white);
 }
 
 .dash-kpi-icon.bg-blue {
-    background: #2563eb;
+    background: var(--info);
 }
 
 .dash-kpi-icon.bg-amber {
-    background: #f59e0b;
+    background: var(--warning);
 }
 
 .dash-kpi-icon.bg-emerald {
-    background: #10b981;
+    background: var(--success);
 }
 
 .dash-kpi-icon.bg-purple {
-    background: #7c3aed;
+    background: var(--accent-purple);
 }
 
 .dash-kpi-info {
@@ -492,7 +492,7 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     object-fit: cover;
-    background: #ffffff;
+    background: var(--white);
     flex-shrink: 0;
 }
 
@@ -792,7 +792,7 @@
 }
 
 .dash-order-cancel-btn:hover:not(:disabled) {
-    background: #fdf2f2;
+    background: var(--primary-light);
     border-color: #b42318;
 }
 
@@ -808,15 +808,15 @@
     gap: 6px;
     margin-bottom: 14px;
     padding: 8px 14px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 600;
-    color: var(--color-text, #0f172a);
+    color: var(--dark-900);
     text-decoration: none;
 }
 
 .dash-invoice-link:hover {
-    border-color: var(--color-brand-red, #d1202f);
-    color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
+    color: var(--primary);
 }

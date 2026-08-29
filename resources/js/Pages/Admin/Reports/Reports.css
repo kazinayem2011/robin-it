@@ -17,9 +17,9 @@
 .rep-index-card {
     display: block;
     padding: 22px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--bg-surface, #fff);
+    background: var(--bg-surface);
     transition: all var(--transition-fast);
 }
 
@@ -52,7 +52,7 @@
     margin: 0 0 14px;
     font-size: 0.85rem;
     line-height: 1.6;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 .rep-index-go {
@@ -93,9 +93,9 @@
 
 .rep-period-dates input {
     padding: 8px 10px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background: var(--bg-surface, #fff);
+    background: var(--bg-surface);
     font-size: 0.85rem;
 }
 
@@ -112,12 +112,12 @@
 
 .rep-period-shortcuts button {
     padding: 7px 13px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: 999px;
-    background: var(--bg-surface, #fff);
+    background: var(--bg-surface);
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--gray-600, #4b5563);
+    color: var(--gray-600);
     cursor: pointer;
 }
 
@@ -125,7 +125,7 @@
 .rep-period-shortcuts button.is-on {
     border-color: var(--primary);
     background: var(--primary);
-    color: #fff;
+    color: var(--white);
 }
 
 /* ── Headline figures ───────────────────────────────────────────────────── */
@@ -146,9 +146,9 @@
     flex-direction: column;
     gap: 4px;
     padding: 16px 18px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--bg-surface, #fff);
+    background: var(--bg-surface);
 }
 
 .rep-figure-label {
@@ -179,11 +179,11 @@
 }
 
 .rep-figure-change.is-up {
-    color: var(--success, #158a4a);
+    color: var(--success);
 }
 
 .rep-figure-change.is-down {
-    color: var(--danger, #d1202f);
+    color: var(--danger);
 }
 
 .rep-figure-change.is-flat {
@@ -205,7 +205,7 @@
     margin-bottom: 24px;
     padding: 12px;
     border-radius: var(--radius-sm);
-    background: var(--bg-surface-subtle, #f8fafc);
+    background: var(--bg-surface-subtle);
 }
 
 .rep-bar {
@@ -242,7 +242,7 @@
 
 .rep-table th {
     padding: 9px 10px;
-    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
     font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -254,7 +254,7 @@
 
 .rep-table td {
     padding: 10px;
-    border-bottom: 1px solid var(--border-color, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
     vertical-align: top;
 }
 
@@ -305,7 +305,7 @@
     gap: 3px;
     padding: 13px 15px;
     border-radius: var(--radius-sm);
-    background: var(--bg-surface-subtle, #f8fafc);
+    background: var(--bg-surface-subtle);
 }
 
 .rep-bucket span {
@@ -335,7 +335,7 @@
     margin: 0 0 18px;
     font-size: 0.8rem;
     line-height: 1.6;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 .rep-note svg {
@@ -356,28 +356,28 @@
     gap: 4px;
     padding: 2px 8px;
     border-radius: 999px;
-    background: var(--gray-100, #f1f2f4);
+    background: var(--gray-100);
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 .rep-tag.is-ok {
     background: var(--success-light, #e6f6ed);
-    color: var(--success, #158a4a);
+    color: var(--success);
 }
 
 .rep-tag.is-warn {
     background: var(--warning-light, #fff4e0);
-    color: var(--warning, #a35b00);
+    color: var(--warning);
 }
 
 /* A figure the shop genuinely cannot know, rather than a zero pretending. */
 .rep-unknown {
     font-size: 0.78rem;
-    color: var(--gray-300, #cbd5e1);
+    color: var(--gray-300);
 }
 
 .rep-alarm {
-    color: var(--danger, #d1202f);
+    color: var(--danger);
 }

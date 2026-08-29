@@ -12,7 +12,7 @@
     );
     border-radius: var(--radius-lg);
     padding: 36px 32px;
-    color: #ffffff;
+    color: var(--white);
     margin-bottom: 32px;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -34,7 +34,7 @@
     font-weight: 900;
     font-family: var(--font-heading);
     margin-bottom: 10px;
-    color: #ffffff;
+    color: var(--white);
 }
 
 .stores-header-card p {
@@ -54,7 +54,7 @@
 .city-pill {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    color: var(--white);
     font-size: 0.82rem;
     font-weight: 600;
     padding: 6px 14px;
@@ -67,7 +67,7 @@
 .city-pill.active {
     background: var(--primary);
     border-color: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 /* Stores Grid */
@@ -84,7 +84,7 @@
 }
 
 .store-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
@@ -193,7 +193,7 @@
 
 .store-map-btn {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
 }
 
 .store-map-btn:hover {
@@ -207,7 +207,7 @@
 }
 
 .store-call-btn:hover {
-    background: #ffffff;
+    background: var(--white);
     border-color: var(--primary);
     color: var(--primary);
 }

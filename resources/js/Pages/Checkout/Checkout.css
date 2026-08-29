@@ -402,7 +402,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #10b981;
+    color: var(--success);
 }
 
 .coupon-applied-left strong {
@@ -451,9 +451,9 @@
     padding: 14px 16px;
     margin-bottom: 20px;
     border: 1px solid #f5c2c7;
-    border-left: 4px solid #d12127;
+    border-left: 4px solid var(--primary);
     border-radius: var(--radius-md);
-    background: #fdf2f2;
+    background: var(--primary-light);
     color: #842029;
     font-size: 14px;
     line-height: 1.5;
@@ -489,7 +489,7 @@
    product reads as two distinguishable lines. */
 .cart-item-variant {
     font-size: 12px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
     margin-top: 2px;
 }
 

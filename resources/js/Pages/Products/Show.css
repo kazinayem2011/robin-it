@@ -169,7 +169,7 @@
 }
 
 .stock-status {
-    color: #059669;
+    color: var(--success-hover);
 }
 
 /* Pricing Row */
@@ -423,7 +423,7 @@
 }
 
 .reviews-stars-row {
-    color: #f59e0b;
+    color: var(--warning);
     font-size: 1.2rem;
     margin: 6px 0 4px;
     letter-spacing: 2px;
@@ -479,7 +479,7 @@
 }
 
 .verified-buyer-notice.warning {
-    background: #f8fafc;
+    background: var(--gray-50);
     border-color: var(--border-color);
 }
 
@@ -503,7 +503,7 @@
 
 .review-progress-fill {
     height: 100%;
-    background: #f59e0b;
+    background: var(--warning);
     border-radius: var(--radius-full);
 }
 
@@ -515,7 +515,7 @@
 
 /* Write Review Card */
 .write-review-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
@@ -566,7 +566,7 @@
 
 .star-pick-btn.selected,
 .star-pick-btn:hover {
-    color: #f59e0b;
+    color: var(--warning);
     transform: scale(1.15);
 }
 
@@ -617,7 +617,7 @@
 }
 
 .review-item-card {
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 18px;
@@ -647,14 +647,14 @@
     gap: 3px;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #10b981;
+    color: var(--success);
     background: rgba(16, 185, 129, 0.1);
     padding: 2px 8px;
     border-radius: var(--radius-full);
 }
 
 .review-stars-pill {
-    color: #f59e0b;
+    color: var(--warning);
     font-size: 0.95rem;
     letter-spacing: 1px;
 }
@@ -749,7 +749,7 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
     margin-bottom: 10px;
 }
 
@@ -766,9 +766,9 @@
     gap: 2px;
     min-width: 118px;
     padding: 10px 14px;
-    border: 1.5px solid var(--color-border, #e2e5ea);
+    border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
     cursor: pointer;
     text-align: left;
     transition:
@@ -777,11 +777,11 @@
 }
 
 .pdp-variant-chip:hover:not(:disabled) {
-    border-color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
 }
 
 .pdp-variant-chip.is-selected {
-    border-color: var(--color-brand-red, #d1202f);
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(209, 32, 47, 0.12);
 }
 
@@ -792,7 +792,7 @@
 
 .pdp-variant-price {
     font-size: 13px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .pdp-variant-chip.is-out {
@@ -812,7 +812,7 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #b3261e;
+    color: var(--danger-text);
 }
 
 /* ── Back-in-stock request ─────────────────────────────────────────────────── */
@@ -823,7 +823,7 @@
     gap: 12px;
     margin-top: 18px;
     padding: 16px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: rgba(0, 0, 0, 0.02);
 }
@@ -837,7 +837,7 @@
 .pdp-notify-head > svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
 }
 
 .pdp-notify-head strong,
@@ -852,7 +852,7 @@
     margin-top: 2px;
     font-size: 13px;
     line-height: 1.5;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .pdp-notify-row {
@@ -864,19 +864,19 @@
     flex: 1;
     min-width: 0;
     padding: 10px 12px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     font: inherit;
     font-size: 14px;
 }
 
 .pdp-notify-row input.has-error {
-    border-color: #b3261e;
+    border-color: var(--danger-text);
 }
 
 .pdp-notify-error {
     font-size: 12px;
-    color: #b3261e;
+    color: var(--danger-text);
 }
 
 /* Confirmed state: green rather than the alert red, since nothing is wrong. */
@@ -890,7 +890,7 @@
 .pdp-notify-done > svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: #0d7a3f;
+    color: var(--success-text);
 }
 
 /* ── Showroom availability ─────────────────────────────────────────────────── */
@@ -898,7 +898,7 @@
 .pdp-branches {
     margin-top: 18px;
     padding: 14px 16px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
 
@@ -910,7 +910,7 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .pdp-branch-list {
@@ -925,7 +925,7 @@
     justify-content: space-between;
     gap: 14px;
     padding: 9px 0;
-    border-bottom: 1px solid var(--color-border, #e2e5ea);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .pdp-branch-list li:last-child {
@@ -941,7 +941,7 @@
     display: block;
     margin-top: 1px;
     font-size: 12px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .pdp-branch-phone {
@@ -951,7 +951,7 @@
     flex-shrink: 0;
     font-size: 13px;
     font-weight: 600;
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
     text-decoration: none;
     white-space: nowrap;
 }
@@ -964,5 +964,5 @@
     display: block;
     margin-top: 10px;
     font-size: 12px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }

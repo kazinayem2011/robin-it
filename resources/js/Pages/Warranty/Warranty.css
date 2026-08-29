@@ -396,7 +396,7 @@
         padding: 0 !important;
         border: 0 !important;
         box-shadow: none !important;
-        background: #ffffff !important;
+        background: var(--white) !important;
         max-width: none !important;
     }
 

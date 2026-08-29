@@ -69,7 +69,7 @@
 
 .pagination-btn.active {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border-color: var(--primary);
     font-weight: 800;
 }

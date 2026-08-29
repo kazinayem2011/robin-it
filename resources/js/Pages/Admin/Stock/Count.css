@@ -260,10 +260,10 @@
     justify-content: center;
     width: 30px;
     height: 30px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background: var(--bg-surface, #fff);
-    color: var(--gray-500, #6b7280);
+    background: var(--bg-surface);
+    color: var(--gray-500);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -274,8 +274,8 @@
 }
 
 .serial-row-actions button.is-danger:hover {
-    border-color: var(--danger, #d1202f);
-    color: var(--danger, #d1202f);
+    border-color: var(--danger);
+    color: var(--danger);
 }
 
 /*
@@ -289,9 +289,9 @@
     align-items: center;
     gap: 8px;
     padding: 0 12px;
-    border: 1px solid var(--border-color, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background: var(--bg-surface, #fff);
+    background: var(--bg-surface);
     color: var(--gray-400);
 }
 
@@ -321,9 +321,9 @@
 }
 
 .count-scan-note.is-ok {
-    color: var(--success, #158a4a);
+    color: var(--success);
 }
 
 .count-scan-note.is-bad {
-    color: var(--danger, #d1202f);
+    color: var(--danger);
 }

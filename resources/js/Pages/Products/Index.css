@@ -167,9 +167,9 @@
     position: sticky;
     top: calc(var(--site-chrome-h, 142px) + 16px);
     padding: 18px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
 }
 
 .plp-filters-head {
@@ -194,7 +194,7 @@
     background: none;
     padding: 0;
     font-size: 12px;
-    color: var(--color-brand-red, #d1202f);
+    color: var(--primary);
     cursor: pointer;
 }
 
@@ -204,7 +204,7 @@
 
 .plp-filter-group {
     padding: 12px 0;
-    border-top: 1px solid var(--color-border, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 .plp-filter-group:first-of-type {
@@ -368,13 +368,13 @@
 .plp-filter-hint {
     margin: 0 0 10px;
     font-size: 12px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .plp-filter-total {
     margin: 14px 0 0;
     padding-top: 12px;
-    border-top: 1px solid var(--color-border, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 .plp-price-inputs {
@@ -387,7 +387,7 @@
     width: 100%;
     min-width: 0;
     padding: 8px 10px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     font: inherit;
     font-size: 13px;
@@ -396,7 +396,7 @@
 .plp-price-inputs span {
     flex-shrink: 0;
     font-size: 12px;
-    color: var(--color-text-muted, #6b7280);
+    color: var(--gray-400);
 }
 
 .plp-filter-options {
@@ -448,9 +448,9 @@
     width: 100%;
     margin-bottom: 14px;
     padding: 10px 14px;
-    border: 1px solid var(--color-border, #e2e5ea);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: #fff;
+    background: var(--white);
     font: inherit;
     font-size: 14px;
     font-weight: 600;
@@ -461,8 +461,8 @@
     margin-left: auto;
     padding: 1px 8px;
     border-radius: var(--radius-full);
-    background: var(--color-brand-red, #d1202f);
-    color: #fff;
+    background: var(--primary);
+    color: var(--white);
     font-size: 12px;
 }
 

@@ -38,7 +38,7 @@
 .courier-zone-table {
     width: 100%;
     margin-top: 22px;
-    border-top: 1px solid var(--border-color, #e2e5ea);
+    border-top: 1px solid var(--border-color);
     border-collapse: collapse;
     font-size: 0.85rem;
 }
@@ -55,7 +55,7 @@
 
 .courier-zone-table td {
     padding: 8px 6px;
-    border-top: 1px solid var(--border-color, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 /*
@@ -75,7 +75,7 @@
 
 .courier-zone-table code {
     font-size: 0.78rem;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 /* How many areas a courier has mapped, on its row. */

@@ -94,10 +94,32 @@
     --accent-emerald: #10b981;
 
     /* Functional Status Colors */
+    /*
+     * Text shades for a status colour sitting on its own tint.
+     *
+     * Three different dark reds were hardcoded across the admin doing this one
+     * job, because there was a token for the fill and the border and none for
+     * the writing on top. Worse, --danger itself scores only 4.41 against its
+     * own light tint and --success-hover scores 3.58 — both under the 4.5 body
+     * text needs — so the correct-looking choice was the failing one and the
+     * accessible shades were the hardcoded accidents.
+     */
+    --danger-text: #991b1b;
+    --success-text: #065f46;
+    --warning-text: #92400e;
+
     --danger: #dc2626;
     --danger-hover: #b91c1c;
     --danger-light: #fef2f2;
     --danger-border: #fecdd3;
+    /*
+     * Two more steps of the same red, named because four rules each reached
+     * for them independently: the tint an alert sits on, and the stronger
+     * border that goes round it. The scale had a pale wash and a hairline and
+     * nothing in between, so the middle was written out by hand every time.
+     */
+    --danger-tint: #fee2e2;
+    --danger-tint-border: #fca5a5;
     --danger-glow: rgba(220, 38, 38, 0.3);
 
     --success: #10b981;
@@ -222,6 +244,16 @@
     --radius-xl: 8px;
     --radius-2xl: 8px;
     --radius-full: 999px;
+
+    /*
+     * Monospace, for what is read a character at a time: serial numbers,
+     * barcodes, verification codes, an SMS preview. Four rules already asked
+     * for --font-mono and it had never been declared, so each carried its own
+     * stack as a fallback and they had drifted apart.
+     */
+    --font-mono:
+        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+        'Liberation Mono', monospace;
 
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -1678,7 +1710,7 @@ textarea.has-error:focus,
 
 .discount-badge {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -1706,7 +1738,7 @@ textarea.has-error:focus,
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #ffffff;
+    background: var(--white);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-xs);
     display: flex;
@@ -1719,14 +1751,14 @@ textarea.has-error:focus,
 
 .card-action-btn:hover {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border-color: var(--primary);
     transform: scale(1.1);
 }
 
 .card-action-btn.active {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border-color: var(--primary);
 }
 
@@ -1902,7 +1934,7 @@ textarea.has-error:focus,
     gap: 4px;
     font-size: 0.72rem;
     font-weight: 700;
-    color: #059669;
+    color: var(--success-hover);
 }
 
 .out-of-stock-pill {
@@ -1942,7 +1974,7 @@ textarea.has-error:focus,
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #f59e0b 0%, #ea484f 100%);
+    background: linear-gradient(90deg, var(--warning) 0%, #ea484f 100%);
     border-radius: var(--radius-full);
 }
 
@@ -2018,7 +2050,7 @@ textarea.has-error:focus,
     width: 100%;
     gap: 6px;
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     border: none;
     border-radius: var(--radius-sm);
     padding: 8px 14px;
@@ -2225,7 +2257,7 @@ textarea.admin-form-input {
 }
 
 .cropper-modal-dialog {
-    background: #ffffff;
+    background: var(--white);
     border-radius: var(--radius-lg);
     box-shadow: 0 20px 48px rgba(15, 23, 42, 0.25);
     width: 820px;
@@ -2368,7 +2400,7 @@ textarea.admin-form-input {
 
 .cropper-file-upload-btn {
     background: var(--primary);
-    color: #ffffff;
+    color: var(--white);
     font-size: 0.84rem;
     font-weight: 700;
     padding: 8px 16px;
@@ -2440,7 +2472,7 @@ textarea.admin-form-input {
 
 .aspect-btn:hover {
     border-color: var(--gray-400);
-    background: #ffffff;
+    background: var(--white);
 }
 
 .aspect-btn.active {
@@ -2530,7 +2562,7 @@ textarea.admin-form-input {
 .tool-action-btn:hover {
     border-color: var(--primary);
     color: var(--primary);
-    background: #ffffff;
+    background: var(--white);
 }
 
 .cropper-modal-footer {

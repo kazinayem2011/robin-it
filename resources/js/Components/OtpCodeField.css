@@ -12,7 +12,7 @@
 .otp-step {
     margin-bottom: 20px;
     padding-top: 18px;
-    border-top: 1px solid var(--border-color, #e2e5ea);
+    border-top: 1px solid var(--border-color);
 }
 
 .otp-step-head {
@@ -28,7 +28,7 @@
     margin: 0;
     font-size: 0.85rem;
     line-height: 1.5;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
 
 .otp-step-sent strong {
@@ -97,5 +97,5 @@
     margin: 8px 0 0;
     font-size: 0.8rem;
     text-align: center;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500);
 }
