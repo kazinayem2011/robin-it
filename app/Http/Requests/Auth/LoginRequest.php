@@ -73,6 +73,28 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        /*
+         * A suspended account cannot sign in.
+         *
+         * is_active existed and was only ever consulted for staff, so
+         * suspending a customer set a flag that stopped nothing — they could
+         * still sign in and order, which for the cases the flag exists for is
+         * the whole point of it.
+         *
+         * Checked after the password, deliberately. Refusing before it would
+         * tell anybody with a list of addresses which ones have accounts here.
+         */
+        if (Auth::user()?->is_active === false) {
+            Auth::logout();
+            $this->session()->invalidate();
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'login' => 'This account has been suspended. Please contact us if you think that is a mistake.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

@@ -1,3 +1,16 @@
+/*
+ * Every method here returns the response envelope, not the payload inside it.
+ *
+ * The axios instance already unwraps one level — its interceptor returns
+ * response.data, which is { error, code, message, data, meta } — so the
+ * `response?.data || response` these all used unwrapped a second time and
+ * threw the message away. Twenty-nine methods did it, and the effect was that
+ * the backend wrote a careful sentence ("Received. 6 still outstanding on
+ * PO-20260829-001.") and the interface showed whichever generic fallback the
+ * calling component happened to have.
+ *
+ * Callers read `.message` for the sentence and `.data` for the payload.
+ */
 import axiosInstance from './axiosInstance';
 import { API_ENDPOINTS } from '../constants/endpoints';
 
@@ -275,7 +288,22 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_LINES(orderId),
             payload,
         );
-        return response?.data || response;
+        return response;
+    },
+
+    /**
+     * Suspend a customer, or let them back in.
+     *
+     * Suspending keeps the account and its orders and closes the door; the
+     * alternative was deleting them, which loses the history you most want
+     * when the reason for stopping them is a dispute.
+     */
+    async setCustomerActive(id, active) {
+        const response = await axiosInstance.put(
+            API_ENDPOINTS.ADMIN.CUSTOMER_ACTIVE(id),
+            { is_active: active },
+        );
+        return response;
     },
 
     /** Who a campaign would reach, and what the texts would cost. Sends nothing. */
@@ -284,7 +312,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CAMPAIGN_PREVIEW,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Products and coupons to drop into a campaign. */
@@ -293,7 +321,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CAMPAIGN_PICKERS,
             { params },
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Who got a campaign, who did not, and why not. */
@@ -302,7 +330,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CAMPAIGN_RECIPIENTS(id),
             { params },
         );
-        return response?.data || response;
+        return response;
     },
 
     async createCampaign(payload) {
@@ -310,7 +338,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CAMPAIGNS,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Set it going. Queued: it cannot be recalled once started. */
@@ -318,14 +346,14 @@ export const adminService = {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.CAMPAIGN_SEND(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     async deleteCampaign(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.CAMPAIGN(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Ask a supplier for stock. Saved as a draft until it is sent. */
@@ -334,21 +362,21 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PURCHASE_ORDERS,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async sendPurchaseOrder(id) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.PURCHASE_ORDER_SEND(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     async cancelPurchaseOrder(id) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.PURCHASE_ORDER_CANCEL(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Book in what actually arrived; anything short stays outstanding. */
@@ -357,7 +385,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PURCHASE_ORDER_RECEIVE(id),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /**
@@ -371,7 +399,7 @@ export const adminService = {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.BARCODE, {
             params: { code },
         });
-        return response?.data || response;
+        return response;
     },
 
     /**
@@ -386,14 +414,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.COURIER_ZONES(courierId),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async unmapCourierZone(courierId, zoneId) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.COURIER_ZONE(courierId, zoneId),
         );
-        return response?.data || response;
+        return response;
     },
 
     /**
@@ -408,7 +436,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_SERIALS,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Fix a serial that was typed wrong, on a unit sold or not. */
@@ -417,7 +445,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_SERIAL(id),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Delete a serial recorded in error. Refused once the unit is sold. */
@@ -425,7 +453,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.STOCK_SERIAL(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Products and options that can hold stock, for the pickers. */
@@ -703,7 +731,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.MESSAGE_REPLY(id),
             { body, close },
         );
-        return response?.data || response;
+        return response;
     },
 
     async setMessageStatus(id, status) {
@@ -711,7 +739,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.MESSAGE_STATUS(id),
             { status },
         );
-        return response?.data || response;
+        return response;
     },
 
     /**
@@ -724,7 +752,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.SUBSCRIBER_ITEM(id),
             { active },
         );
-        return response?.data || response;
+        return response;
     },
 
     // --- Content pages -------------------------------------------------
@@ -734,7 +762,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PAGES,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async updatePage(id, payload) {
@@ -742,14 +770,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PAGE_ITEM(id),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async deletePage(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.PAGE_ITEM(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     // --- Roles ---------------------------------------------------------
@@ -759,7 +787,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ROLES,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async updateRole(id, payload) {
@@ -767,14 +795,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ROLE_ITEM(id),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     async deleteRole(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.ROLE_ITEM(id),
         );
-        return response?.data || response;
+        return response;
     },
 
     // --- Counting the shelves -------------------------------------------
@@ -788,7 +816,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_COUNT,
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 
     /** Record money received against an order — a deposit, or the balance. */
@@ -797,7 +825,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_PAYMENT(id),
             payload,
         );
-        return response?.data || response;
+        return response;
     },
 };
 

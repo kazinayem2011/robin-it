@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageCo
 use App\Http\Controllers\Admin\ContentPageController as AdminContentPageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 use App\Http\Controllers\Admin\CourierController as AdminCourierController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
@@ -225,6 +226,13 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * selling afresh, and every change is written down.
          */
         Route::put(ApiEndpoints::ADMIN_ORDER_LINES, [AdminOrderController::class, 'updateLines'])->middleware('can:orders');
+
+        /*
+         * Suspending a customer. Staff have had this since roles existed and
+         * customers never did, so the only way to stop somebody ordering was
+         * to delete them and lose their history with it.
+         */
+        Route::put(ApiEndpoints::ADMIN_CUSTOMER_ACTIVE, [CustomerController::class, 'setActive'])->middleware('can:customers');
         Route::post(ApiEndpoints::ADMIN_ORDERS_REFUND, [AdminRefundController::class, 'store'])->middleware('can:refunds');
         Route::delete(ApiEndpoints::ADMIN_REFUNDS_ITEM, [AdminRefundController::class, 'destroy'])->middleware('can:refunds');
 
