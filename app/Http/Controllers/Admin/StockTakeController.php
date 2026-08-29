@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\ProductSerial;
 use App\Models\StockMovement;
 use App\Models\StockTake;
 use App\Models\Store;
+use App\Services\SerialService;
 use App\Services\StockService;
 use App\Services\StockTakeService;
 use App\Support\BranchScope;
@@ -22,6 +24,95 @@ use Inertia\Response;
 class StockTakeController extends Controller
 {
     public function __construct(private readonly StockTakeService $takes) {}
+
+    /**
+     * Record serials against stock already on the shelf.
+     *
+     * Serials could only ever arrive with a delivery, which left a shop that
+     * started recording them part way through with no way to write down what
+     * it already had.
+     */
+    public function storeSerials(Request $request, SerialService $serials): JsonResponse
+    {
+        $data = $request->validate([
+            'product_id' => 'required|integer|exists:products,id',
+            'product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'store_id' => 'nullable|integer|exists:stores,id',
+            'serials' => 'required|array|min:1|max:200',
+            'serials.*' => 'required|string|max:100',
+        ]);
+
+        $storeId = BranchScope::narrow($request->user(), $data['store_id'] ?? null);
+
+        if (! BranchScope::allows($request->user(), $storeId)) {
+            return $this->errorResponse(
+                'You can only record serials for your own branch.',
+                403,
+                ApiCode::FORBIDDEN
+            );
+        }
+
+        $result = $serials->addToStock(
+            Product::findOrFail($data['product_id']),
+            $data['product_variant_id'] ?? null,
+            $data['serials'],
+            $storeId
+        );
+
+        $message = "{$result['added']} serial".($result['added'] === 1 ? '' : 's').' recorded.';
+
+        if ($result['skipped']) {
+            $message .= ' '.count($result['skipped']).' already on the books: '
+                .implode(', ', array_slice($result['skipped'], 0, 5)).'.';
+        }
+
+        return $this->successResponse($result, $message);
+    }
+
+    /** Correct a serial that was typed wrong, or delete one recorded in error. */
+    public function updateSerial(Request $request, SerialService $serials, int $id): JsonResponse
+    {
+        $serial = ProductSerial::findOrFail($id);
+
+        if (! BranchScope::allows($request->user(), $serial->store_id)) {
+            return $this->errorResponse(
+                'That unit belongs to another branch.',
+                403,
+                ApiCode::FORBIDDEN
+            );
+        }
+
+        $data = $request->validate([
+            'serial' => 'required|string|max:100',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $was = $serial->serial;
+        $serials->correct($serial, $data['serial'], $data['reason'] ?? null);
+
+        return $this->successResponse(
+            ['serial' => $serial->serial],
+            "Corrected {$was} to {$serial->serial}."
+        );
+    }
+
+    public function destroySerial(Request $request, SerialService $serials, int $id): JsonResponse
+    {
+        $serial = ProductSerial::findOrFail($id);
+
+        if (! BranchScope::allows($request->user(), $serial->store_id)) {
+            return $this->errorResponse(
+                'That unit belongs to another branch.',
+                403,
+                ApiCode::FORBIDDEN
+            );
+        }
+
+        $was = $serial->serial;
+        $serials->remove($serial);
+
+        return $this->successResponse([], "Serial {$was} removed.");
+    }
 
     /** The count sheet for one branch. */
     public function create(Request $request): Response
@@ -134,6 +225,8 @@ class StockTakeController extends Controller
 
         return Inertia::render('Admin/Stock/Serials', [
             'serials' => $serials,
+            // For the branch picker when adding serials to what is on the shelf.
+            'stores' => BranchScope::storesFor($request->user()),
             'filters' => ['status' => $status, 'q' => $search],
             'statuses' => ProductSerial::STATUSES,
             'branch' => BranchScope::name($request->user()),

@@ -238,6 +238,16 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->middleware('can:stock');
         // Counting the shelves: many corrections, applied as one count.
         Route::post(ApiEndpoints::ADMIN_STOCK_COUNT, [AdminStockTakeController::class, 'store'])->middleware('can:stock');
+
+        /*
+         * Serials could only ever be created by receiving a delivery, and could
+         * never be changed at all — so a shop that started recording them part
+         * way through could not write down what it already had, and a number
+         * typed wrong stayed wrong for the life of the unit.
+         */
+        Route::post(ApiEndpoints::ADMIN_STOCK_SERIALS, [AdminStockTakeController::class, 'storeSerials'])->middleware('can:stock');
+        Route::put(ApiEndpoints::ADMIN_STOCK_SERIAL_ITEM, [AdminStockTakeController::class, 'updateSerial'])->middleware('can:stock');
+        Route::delete(ApiEndpoints::ADMIN_STOCK_SERIAL_ITEM, [AdminStockTakeController::class, 'destroySerial'])->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_BRANCHES, [StockController::class, 'branches'])->middleware('can:stock');
 
         // Suppliers. `options` is declared before the {id} route or it is

@@ -263,6 +263,38 @@ export const adminService = {
         return response.data;
     },
 
+    /**
+     * Record serials against stock already on the shelf.
+     *
+     * Serials normally arrive with a delivery. This is for the shop that
+     * started tracking them part way through, and for the delivery received
+     * before anyone had time to open the boxes.
+     */
+    async addSerials(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STOCK_SERIALS,
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    /** Fix a serial that was typed wrong, on a unit sold or not. */
+    async correctSerial(id, payload) {
+        const response = await axiosInstance.put(
+            API_ENDPOINTS.ADMIN.STOCK_SERIAL(id),
+            payload,
+        );
+        return response?.data || response;
+    },
+
+    /** Delete a serial recorded in error. Refused once the unit is sold. */
+    async removeSerial(id) {
+        const response = await axiosInstance.delete(
+            API_ENDPOINTS.ADMIN.STOCK_SERIAL(id),
+        );
+        return response?.data || response;
+    },
+
     /** Products and options that can hold stock, for the pickers. */
     async getStockUnits(params = {}) {
         const response = await axiosInstance.get(

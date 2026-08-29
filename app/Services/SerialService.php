@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductSerial;
+use App\Models\ProductStock;
 use App\Models\StockReceipt;
 use Illuminate\Support\Facades\DB;
 
@@ -218,6 +219,173 @@ class SerialService
         }
 
         return $units->count();
+    }
+
+    /**
+     * Record serials against stock that is already on the shelf.
+     *
+     * Serials could only ever enter with a delivery, which left two ordinary
+     * situations with no way out. A shop that starts recording serials part way
+     * through has a shelf full of units and no way to write any of them down.
+     * And a delivery received without them — because the box was still sealed,
+     * or nobody had time — could never have them added afterwards.
+     *
+     * @param  array<int, string>  $serials
+     * @return array{added: int, skipped: array<int, string>}
+     */
+    public function addToStock(
+        Product $product,
+        ?int $variantId,
+        array $serials,
+        ?int $storeId = null,
+    ): array {
+        $clean = collect($serials)
+            ->map(fn ($s) => ProductSerial::normalise($s))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($clean->isEmpty()) {
+            throw new StorefrontException(
+                'Enter at least one serial number.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        return DB::transaction(function () use ($product, $variantId, $clean, $storeId) {
+            $taken = ProductSerial::whereIn('serial', $clean)->pluck('serial')->all();
+            $fresh = $clean->reject(fn ($s) => in_array($s, $taken, true))->values();
+
+            /*
+             * Never more serials on the shelf than units on the shelf.
+             *
+             * receive() does not need this — it is told the serials and the
+             * quantity in the same breath, so they agree by construction. Here
+             * somebody is typing into a box against stock recorded weeks ago,
+             * and getting it wrong means the serial list and the stock count
+             * disagree, which is the drift that makes both untrustworthy.
+             */
+            $onShelf = $this->unitsOnShelf($product, $variantId, $storeId);
+
+            $alreadyRecorded = ProductSerial::available()
+                ->where('product_id', $product->id)
+                ->where('product_variant_id', $variantId)
+                ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
+                ->count();
+
+            if ($alreadyRecorded + $fresh->count() > $onShelf) {
+                $room = max(0, $onShelf - $alreadyRecorded);
+
+                throw new StorefrontException(
+                    $room === 0
+                        ? "Every one of the {$onShelf} in stock already has a serial recorded."
+                        : "Only {$room} of the {$onShelf} in stock still need a serial, and "
+                            .$fresh->count().' were entered.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            foreach ($fresh as $serial) {
+                ProductSerial::create([
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variantId,
+                    'serial' => $serial,
+                    'store_id' => $storeId,
+                    'status' => ProductSerial::IN_STOCK,
+                    'note' => 'Added to stock already on the shelf.',
+                ]);
+            }
+
+            return ['added' => $fresh->count(), 'skipped' => $taken];
+        });
+    }
+
+    /**
+     * Correct a serial that was typed wrong.
+     *
+     * Deliberately allowed on a unit that has already been sold, because that
+     * is when the mistake surfaces: a customer brings a laptop in under
+     * warranty, the number on its underside does not match the number on the
+     * invoice, and until now there was nothing to be done about it. The sale,
+     * the dates and the cover all stay exactly as they were — only the label
+     * on the unit changes.
+     */
+    public function correct(ProductSerial $serial, string $replacement, ?string $reason = null): ProductSerial
+    {
+        $clean = ProductSerial::normalise($replacement);
+
+        if (! $clean) {
+            throw new StorefrontException(
+                'Enter the serial number as it reads on the unit.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        if ($clean === $serial->serial) {
+            throw new StorefrontException(
+                'That is the number already recorded.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        if (ProductSerial::where('serial', $clean)->whereKeyNot($serial->id)->exists()) {
+            throw new StorefrontException(
+                "Serial {$clean} is already recorded against another unit.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $was = $serial->serial;
+
+        $serial->forceFill([
+            'serial' => $clean,
+            // The old number is kept in writing. A warranty claim argued months
+            // later needs to show what was corrected and why, and a silent
+            // overwrite leaves the shop with nothing to point at.
+            'note' => trim(($serial->note ? $serial->note.' ' : '')
+                ."Corrected from {$was} on ".now()->toDateString()
+                .($reason ? ": {$reason}." : '.')),
+        ])->save();
+
+        return $serial;
+    }
+
+    /**
+     * Delete a serial recorded in error.
+     *
+     * Only one that never reached a customer. A sold unit's serial is part of
+     * that sale and of any warranty resting on it — the way to change one of
+     * those is correct(), which keeps the history. This is for the line typed
+     * twice or against the wrong product, where there is no history worth
+     * keeping because the unit it describes does not exist.
+     */
+    public function remove(ProductSerial $serial): void
+    {
+        if ($serial->status === ProductSerial::SOLD || $serial->order_id) {
+            throw new StorefrontException(
+                'That unit has been sold. Correct the number instead, so the sale keeps its record.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $serial->delete();
+    }
+
+    /** What the branch's books say is on the shelf. */
+    private function unitsOnShelf(Product $product, ?int $variantId, ?int $storeId): int
+    {
+        $stock = ProductStock::where('product_id', $product->id)
+            ->where('product_variant_id', $variantId)
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId));
+
+        // With no branch named, the question is how many the shop holds in all.
+        return (int) $stock->sum('quantity');
     }
 
     /**
