@@ -107,6 +107,7 @@
     --danger-text: #991b1b;
     --success-text: #065f46;
     --warning-text: #92400e;
+    --info-text: #1d4ed8;
 
     --danger: #dc2626;
     --danger-hover: #b91c1c;
@@ -1080,17 +1081,20 @@ textarea.has-error:focus,
 }
 
 /* 7. Toast Container & Toast */
-@keyframes toastIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-
+/*
+ * Notifications.
+ *
+ * These were a white box with a coloured stripe down one side, which put the
+ * severity in a 4px sliver and left the rest saying nothing. A notice is read
+ * for a second and a half out of the corner of an eye, so the colour has to be
+ * the first thing about it, not a detail on its edge.
+ *
+ * Each is now tinted in its own severity throughout — fill, text, icon and
+ * border from one family — which is how a notice announces what kind of thing
+ * it is before a word of it has been read. The text shades are the
+ * contrast-checked ones: every pairing here clears 6:1 against its own tint,
+ * where the obvious choice of the plain severity colour would have failed.
+ */
 .toast-container {
     position: fixed;
     bottom: 24px;
@@ -1098,7 +1102,11 @@ textarea.has-error:focus,
     z-index: 10000;
     display: flex;
     flex-direction: column;
+    /* Newest nearest the corner: the one just fired is the one being read. */
+    flex-direction: column-reverse;
     gap: 10px;
+    /* The stack must never cover the whole screen on a laptop. */
+    max-height: calc(100vh - 48px);
     pointer-events: none;
 }
 
@@ -1106,40 +1114,49 @@ textarea.has-error:focus,
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 14px 16px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    /* Softer than a card and lifted further off the page, so a notification
-       reads as floating above the interface rather than pasted onto it. */
+    padding: 13px 14px;
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
-    box-shadow:
-        0 16px 32px -8px rgba(15, 23, 42, 0.18),
-        0 4px 10px -4px rgba(15, 23, 42, 0.1);
+    /* Lifted well clear of the page: this is the topmost thing on screen. */
+    box-shadow: var(--shadow-lg);
     min-width: 300px;
     max-width: 420px;
     pointer-events: auto;
-    animation: toastIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .toast-success {
-    border-left: 4px solid var(--success);
+    background: var(--success-light);
+    border-color: var(--success-border);
+    color: var(--success-text);
 }
 
 .toast-error {
-    border-left: 4px solid var(--danger);
+    background: var(--danger-light);
+    border-color: var(--danger-border);
+    color: var(--danger-text);
 }
 
 .toast-warning {
-    border-left: 4px solid var(--warning);
+    background: var(--warning-light);
+    border-color: var(--warning-border);
+    color: var(--warning-text);
 }
 
 .toast-info {
-    border-left: 4px solid var(--accent-blue);
+    background: var(--info-light);
+    border-color: var(--info-border);
+    color: var(--info-text);
 }
 
+/*
+ * The icon in the full-strength severity colour rather than the text shade —
+ * it is a symbol read at a glance, so it wants to be the more saturated of the
+ * two, and it has no contrast requirement to meet as text.
+ */
 .toast-icon-box {
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .toast-success .toast-icon-box {
@@ -1155,40 +1172,90 @@ textarea.has-error:focus,
 }
 
 .toast-info .toast-icon-box {
-    color: var(--accent-blue);
+    color: var(--info);
 }
 
 .toast-content {
     flex: 1;
+    /* A long message wraps rather than stretching the notice off the screen. */
+    min-width: 0;
 }
 
+/* Shown only when a caller passes one that says more than the icon does. */
 .toast-title {
     display: block;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: var(--dark-900);
     margin-bottom: 2px;
 }
 
 .toast-message {
-    font-size: 0.82rem;
-    color: var(--gray-600);
-    line-height: 1.4;
+    font-size: 0.84rem;
+    line-height: 1.45;
     margin: 0;
+    /* Inherits the severity's text colour rather than a neutral grey, so the
+       whole notice reads as one thing. */
+    color: inherit;
+    overflow-wrap: anywhere;
 }
 
+/*
+ * The close button borrows the notice's own colour at reduced strength, so it
+ * belongs to the notice rather than sitting on it as a grey afterthought.
+ */
 .toast-close-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin: -2px -2px 0 4px;
     background: none;
     border: none;
-    color: var(--gray-400);
+    border-radius: var(--radius-full);
+    color: inherit;
+    opacity: 0.55;
     cursor: pointer;
-    padding: 2px;
-    margin-left: 8px;
-    transition: color var(--transition-fast);
+    transition:
+        opacity var(--transition-fast),
+        background-color var(--transition-fast);
 }
 
 .toast-close-btn:hover {
-    color: var(--dark-900);
+    opacity: 1;
+    background-color: var(--state-hover);
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        /* Up from below, which is where it lives — a notice that slides in
+           sideways reads as having come from somewhere else. */
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/*
+ * On a phone a 420px notice pinned to a corner either overhangs the screen or
+ * shrinks to a column of two words. Full width along the bottom instead, where
+ * a thumb can reach the close button.
+ */
+@media (max-width: 480px) {
+    .toast-container {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+    }
+
+    .toast-item {
+        min-width: 0;
+        max-width: none;
+    }
 }
 
 /* 8. Modal */
