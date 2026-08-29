@@ -22,15 +22,25 @@ class SettingController extends Controller
 {
     public function index(): Response
     {
-        // Send everything except the SMTP password, which must not travel back
-        // to the browser. The form shows whether one is set instead.
+        /*
+         * Credentials never travel back to the browser; the form is told
+         * whether one is saved instead.
+         *
+         * The SMTP password was already held back and the two SMS credentials
+         * were not, which was an oversight rather than a decision — a gateway
+         * token spends real money and puts messages out under the shop's name.
+         */
+        $withheld = array_merge(['mail_password'], SmsService::SECRET_KEYS);
+
         $settings = SiteSetting::all()
-            ->reject(fn ($setting) => $setting->key === 'mail_password')
+            ->reject(fn ($setting) => in_array($setting->key, $withheld, true))
             ->values();
 
         return Inertia::render('Admin/Settings', [
             'settings' => $settings,
             'mailPasswordSet' => MailSettings::isPasswordSet(),
+            'smsSecretsSet' => collect(SmsService::SECRET_KEYS)
+                ->mapWithKeys(fn ($key) => [$key => SmsService::isSecretSet($key)]),
             // Shipped rather than repeated in the page, so which messages
             // exist and which are on out of the box is decided in one place.
             'smsEvents' => collect(SmsService::EVENTS)
@@ -49,15 +59,26 @@ class SettingController extends Controller
         $settings = $request->settings();
 
         foreach ($settings as $key => $value) {
-            // The SMTP password is a live credential; encrypt it at rest. An
-            // empty submission means "leave it as it is" rather than "clear it",
-            // because the form never receives the current value to send back.
+            /*
+             * Credentials are encrypted at rest, and an empty submission means
+             * "leave it as it is" rather than "clear it" — the form never
+             * receives the current value, so a blank field is the absence of a
+             * change, not an instruction to wipe a working gateway.
+             */
             if ($key === 'mail_password') {
                 if ($value === '') {
                     continue;
                 }
 
                 $value = MailSettings::encryptPassword($value);
+            }
+
+            if (in_array($key, SmsService::SECRET_KEYS, true)) {
+                if ($value === '') {
+                    continue;
+                }
+
+                $value = SmsService::encryptSecret($value);
             }
 
             SiteSetting::updateOrCreate(['key' => $key], ['value' => $value]);

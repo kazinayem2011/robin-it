@@ -150,6 +150,61 @@ class SalesMarginTest extends TestCase
         $this->assertSame(4000.0, $summary['gross_profit']);
     }
 
+    /**
+     * Every live order lands on one side of the line or the other.
+     *
+     * The warning under the figures says how much is not counted, which is
+     * only true if "counted" and "not counted" between them cover everything.
+     * They did not: an order with no lines at all was dropped by the inner
+     * join that builds the costed set, and dropped again by the check for a
+     * line without a cost — so it was missing from the figure and missing from
+     * the notice about the figure.
+     */
+    public function test_no_order_falls_between_counted_and_excluded(): void
+    {
+        // One properly costed, one with a line nobody costed, and one with no
+        // lines at all — the shape that used to vanish.
+        $this->buy($this->stocked('costed', 20000, 14000), 1);
+        $this->buy($this->stocked('uncosted', 30000, null), 1);
+
+        Order::create([
+            'order_number' => 'ORD-EMPTY',
+            'session_id' => str_repeat('e', 40),
+            'status' => 'processing',
+            'subtotal' => 245000, 'shipping_fee' => 0, 'discount' => 0, 'total' => 245000,
+            'payment_method' => 'COD', 'payment_status' => 'unpaid',
+            'shipping_address' => ['name' => 'Rahim', 'phone' => '01712345678', 'city' => 'Dhaka'],
+        ]);
+
+        $summary = SalesMargin::summary();
+
+        $live = Order::whereNotIn('status', ['cancelled', 'returned'])->count();
+
+        $this->assertSame(3, $live);
+        $this->assertSame(
+            $live,
+            $summary['orders_counted'] + $summary['orders_uncosted'],
+            'Some live order is in neither the margin nor the warning about it.'
+        );
+
+        // And its money is named rather than quietly dropped.
+        $this->assertSame(2, $summary['orders_uncosted']);
+        $this->assertSame(275000.0, $summary['uncosted_revenue']);
+    }
+
+    /** A cancelled order is not a gap; it never counted in the first place. */
+    public function test_cancelled_orders_are_in_neither_column(): void
+    {
+        $order = $this->buy($this->stocked('ryzen', 20000, null), 1);
+        $order->forceFill(['status' => 'cancelled'])->save();
+
+        $summary = SalesMargin::summary();
+
+        $this->assertSame(0, $summary['orders_counted']);
+        $this->assertSame(0, $summary['orders_uncosted']);
+        $this->assertSame(0.0, $summary['uncosted_revenue']);
+    }
+
     public function test_the_dashboard_shows_it(): void
     {
         $this->buy($this->stocked('ryzen', 20000, 14000), 1);

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\PhoneHelper;
 use App\Models\SiteSetting;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -172,19 +173,63 @@ class SmsService
     }
 
     /**
+     * The two settings that are live credentials rather than configuration.
+     *
+     * A gateway token buys text messages. Somebody holding one can spend the
+     * shop's balance until it is gone, and send whatever they like under the
+     * shop's sender ID — which is the shop's name on a stranger's phone. That
+     * is the same class of thing as the SMTP password, and it is now kept the
+     * same way: encrypted in the table, never sent to the browser, and left
+     * alone when the form comes back with the field empty.
+     */
+    public const SECRET_KEYS = ['sms_token', 'sms_api_key'];
+
+    /** Encrypt before saving, matching how the SMTP password is stored. */
+    public static function encryptSecret(string $plain): string
+    {
+        return Crypt::encryptString($plain);
+    }
+
+    /** What the form should show instead of the credential itself. */
+    public static function isSecretSet(string $key): bool
+    {
+        return filled(SiteSetting::get($key));
+    }
+
+    /**
      * A setting from the admin, falling back to .env.
      */
     private function setting(string $key): ?string
     {
-        if (app()->runningUnitTests()) {
-            return config('services.sms.'.str_replace('sms_', '', $key));
-        }
-
+        /*
+         * The stored value wins, then .env.
+         *
+         * This used to skip the table entirely under test and read config
+         * directly, which meant the branch that actually runs in production —
+         * including decrypting the gateway token — was never executed by a
+         * single test. Nothing needs the shortcut: a test database starts with
+         * no settings rows, so a test that has not made one still falls
+         * through to the config it set.
+         */
         $stored = SiteSetting::get($key);
 
-        return filled($stored)
-            ? (string) $stored
-            : config('services.sms.'.str_replace('sms_', '', $key));
+        if (filled($stored)) {
+            return in_array($key, self::SECRET_KEYS, true)
+                ? self::decrypt((string) $stored)
+                : (string) $stored;
+        }
+
+        return config('services.sms.'.str_replace('sms_', '', $key));
+    }
+
+    private static function decrypt(string $stored): string
+    {
+        try {
+            return Crypt::decryptString($stored);
+        } catch (\Throwable) {
+            // Saved before this was encrypted, or written by hand.
+            return $stored;
+        }
     }
 
     /**

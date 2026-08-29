@@ -79,7 +79,7 @@ class SalesMargin
 
         $profit = round($goods - $cost - $refunded, 2);
 
-        $uncosted = self::uncostedOrders($from, $to);
+        $uncosted = self::uncostedOrders($from, $to, $costed->pluck('id')->all());
 
         return [
             'goods_revenue' => $goods,
@@ -123,15 +123,27 @@ class SalesMargin
      * What is missing from the figures above, so the gap is visible rather
      * than silently absorbed.
      *
+     * Defined as "every live order the costed set did not pick up", rather than
+     * by asking which orders have an uncosted line. Those are not the same
+     * question, and the difference is a hole: an order with no lines at all
+     * has no line without a cost, so it answered no to both — the inner join
+     * dropped it from the costed figure and this dropped it from the warning
+     * about the costed figure. It appeared nowhere, and the notice that exists
+     * to say what is missing was itself missing it.
+     *
+     * Subtracting one set from the other makes counted + uncosted equal the
+     * number of live orders by construction, whatever shape the data is in.
+     *
+     * @param  array<int, int>  $costedIds  orders already counted in the figures
      * @return array{count:int, revenue:float}
      */
-    private static function uncostedOrders(?string $from, ?string $to): array
+    private static function uncostedOrders(?string $from, ?string $to, array $costedIds): array
     {
         $orders = Order::query()
             ->whereNotIn('status', self::EXCLUDED_STATUSES)
             ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
-            ->whereHas('items', fn ($q) => $q->whereNull('unit_cost'))
+            ->whereNotIn('id', $costedIds)
             ->get(['subtotal', 'discount', 'vat_amount', 'vat_inclusive']);
 
         return [

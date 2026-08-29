@@ -42,6 +42,7 @@ const tabFromUrl = () => {
 export default function AdminSettings({
     settings = [],
     mailPasswordSet = false,
+    smsSecretsSet = {},
     smsEvents = [],
 }) {
     const [activeTab, setActiveTab] = useState(tabFromUrl);
@@ -179,9 +180,10 @@ export default function AdminSettings({
             ),
             mail_mailer: initialMap.mail_mailer || 'smtp',
             sms_enabled: initialMap.sms_enabled === '1',
-            sms_token: initialMap.sms_token || '',
+            // Never arrives from the server; blank means "keep what is saved".
+            sms_token: '',
             sms_url: initialMap.sms_url || '',
-            sms_api_key: initialMap.sms_api_key || '',
+            sms_api_key: '',
             sms_sender_id: initialMap.sms_sender_id || '',
             mail_host: initialMap.mail_host || 'smtp.mailtrap.io',
             mail_port: Number(initialMap.mail_port || 2525),
@@ -775,8 +777,13 @@ export default function AdminSettings({
                                 <FormInput
                                     label="GreenWeb token"
                                     name="sms_token"
+                                    type="password"
                                     formik={formik}
-                                    placeholder="Leave blank to use the gateway below"
+                                    placeholder={
+                                        smsSecretsSet.sms_token
+                                            ? 'Saved — type to replace'
+                                            : 'Leave blank to use the gateway below'
+                                    }
                                 />
                                 <FormInput
                                     label="Sender ID"
@@ -796,9 +803,25 @@ export default function AdminSettings({
                                 <FormInput
                                     label="Gateway API key"
                                     name="sms_api_key"
+                                    type="password"
                                     formik={formik}
+                                    placeholder={
+                                        smsSecretsSet.sms_api_key
+                                            ? 'Saved — type to replace'
+                                            : ''
+                                    }
                                 />
                             </div>
+
+                            {(smsSecretsSet.sms_token ||
+                                smsSecretsSet.sms_api_key) && (
+                                <p className="admin-field-hint">
+                                    A credential is already saved. Leave the
+                                    field blank to keep it, or type a new one to
+                                    replace it — like the SMTP password, it is
+                                    never sent back to this page.
+                                </p>
+                            )}
 
                             <p className="admin-field-hint">
                                 A GreenWeb token is used on its own when one is
