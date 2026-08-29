@@ -3747,3 +3747,23 @@ a.admin-card:hover,
 .admin-stock-alert-more:hover {
     text-decoration: underline;
 }
+
+/*
+ * A customer's name, number and dates each read as one thing.
+ *
+ * Adding two columns to this table left it exactly at the container width, so
+ * every cell wrapped: "Customer Number 2" over two lines, "+880 1710-000002"
+ * over two, "Can sign in" over two. Nothing overflowed, so no overflow check
+ * caught it — the table just quietly became twice as tall and half as legible.
+ */
+.admin-customer-name,
+.admin-customer-date,
+.admin-customer-phone {
+    white-space: nowrap;
+}
+
+/* The suspended chip sits under the name rather than beside it. */
+.admin-customer-name + .cmp-badge {
+    display: inline-block;
+    margin-top: 3px;
+}

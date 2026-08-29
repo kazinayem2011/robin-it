@@ -1752,26 +1752,41 @@ textarea.has-error:focus,
 }
 
 /*
- * Seamed: a one-pixel gap over a coloured ground, so the gap itself becomes
- * the divider and the block reads as one table of products rather than a
- * scatter of tiles. The cards inside give up their own border and corners —
- * two borders meeting at a seam is a two-pixel line, and rounded corners leave
- * white notches at every junction.
+ * Seamed: cards edge to edge with a hairline between them, so the block reads
+ * as one table of products rather than a scatter of tiles.
+ *
+ * The seams are drawn by the cards, not by a coloured ground showing through a
+ * gap. That was the first attempt and it fails the moment a row is not full:
+ * the background paints the whole grid area, including the cells no card
+ * landed in, so a filter narrowing the shop to two results left two
+ * card-shaped blocks of grey beside them.
+ *
+ * box-shadow rather than a border, because a shadow is drawn outside the box
+ * and takes up no space — so the cards still divide the row evenly, and two
+ * meeting at a seam draw one line rather than two.
  */
 .flash-products-grid {
-    gap: 1px;
-    background: var(--border-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    /* Clips the cards' square corners back to the block's rounded ones. */
-    overflow: hidden;
+    gap: 0;
 }
 
+/*
+ * Each card rings itself, and touching rings overlap into one line.
+ *
+ * The block is drawn entirely by the cards, with no border or background on
+ * the grid, because a grid with 1fr columns always spans the full width — so
+ * anything painted on the container shows in the cells no card landed in. A
+ * filter narrowing the shop to two results was leaving two card-shaped blocks
+ * of the container's colour beside them, and a border left an empty box.
+ *
+ * box-shadow rather than a border, because a shadow is drawn outside the box
+ * and takes no space, so the cards still divide the row evenly.
+ */
 .flash-products-grid > .flash-product-card,
 .flash-products-grid > .standard-product-card {
     border: 0;
     border-radius: 0;
-    box-shadow: none;
+    background: var(--bg-surface);
+    box-shadow: 0 0 0 1px var(--border-color);
 }
 
 @media (max-width: 1024px) {

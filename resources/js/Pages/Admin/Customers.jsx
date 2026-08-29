@@ -70,7 +70,22 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
                     <div className="admin-customer-avatar">
                         {c.name ? c.name.charAt(0).toUpperCase() : 'U'}
                     </div>
-                    <strong className="admin-customer-name">{c.name}</strong>
+                    <div>
+                        <strong className="admin-customer-name">
+                            {c.name}
+                        </strong>
+                        {/*
+                         * Only when they are suspended. A column saying "can
+                         * sign in" against every row is a column of noise, and
+                         * it cost enough width that the names and numbers
+                         * beside it wrapped onto two lines.
+                         */}
+                        {c.is_active === false && (
+                            <div className="cmp-badge cmp-failed">
+                                Suspended
+                            </div>
+                        )}
+                    </div>
                 </div>
             ),
         },
@@ -116,16 +131,6 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
                     {formatDate(c.created_at)}
                 </span>
             ),
-        },
-        {
-            key: 'status',
-            header: 'Access',
-            render: (c) =>
-                c.is_active === false ? (
-                    <span className="cmp-badge cmp-failed">Suspended</span>
-                ) : (
-                    <span className="admin-field-hint">Can sign in</span>
-                ),
         },
         {
             key: 'actions',
