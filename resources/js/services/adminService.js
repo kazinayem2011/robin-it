@@ -263,6 +263,21 @@ export const adminService = {
         return response.data;
     },
 
+    /**
+     * Change what is on an order after it was placed.
+     *
+     * The whole line list, not a patch: stock is already held against every
+     * line, so the server settles the difference and needs to see the shape
+     * the order should end up in.
+     */
+    async updateOrderLines(orderId, payload) {
+        const response = await axiosInstance.put(
+            API_ENDPOINTS.ADMIN.ORDER_LINES(orderId),
+            payload,
+        );
+        return response?.data || response;
+    },
+
     /** Ask a supplier for stock. Saved as a draft until it is sent. */
     async createPurchaseOrder(payload) {
         const response = await axiosInstance.post(

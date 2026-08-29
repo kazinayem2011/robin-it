@@ -152,6 +152,12 @@ class Order extends Model
         return $this->hasMany(OrderPayment::class)->orderBy('received_on')->orderBy('id');
     }
 
+    /** Every change made to this order after it was placed. */
+    public function edits()
+    {
+        return $this->hasMany(OrderEdit::class)->latest('id');
+    }
+
     /**
      * What the shop has actually received against this order.
      *

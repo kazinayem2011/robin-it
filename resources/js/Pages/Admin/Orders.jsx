@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Eye, ShoppingCart, Undo2, Printer, Truck, Wallet } from 'lucide-react';
+import {
+    Eye,
+    ShoppingCart,
+    Undo2,
+    Printer,
+    Truck,
+    Wallet,
+    PencilLine,
+} from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Modal from '@/Components/Modal';
@@ -9,6 +17,9 @@ import StatusBadge from '@/Components/StatusBadge';
 import { toast } from '@/Components/Toast';
 import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
+import EditOrderModal from './Components/EditOrderModal';
+// The edit modal reuses the purchase-order line table.
+import './Purchasing.css';
 import RecordPaymentModal from './Components/RecordPaymentModal';
 import RefundOrderModal from './Components/RefundOrderModal';
 import { adminService } from '@/services';
@@ -37,6 +48,7 @@ export default function Orders({
     const [dispatchingOrder, setDispatchingOrder] = useState(null);
     const [refundingOrder, setRefundingOrder] = useState(null);
     const [payingOrder, setPayingOrder] = useState(null);
+    const [editingOrder, setEditingOrder] = useState(null);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -282,6 +294,22 @@ export default function Orders({
                         <Wallet size={14} />
                     </button>
 
+                    {/*
+                     * Only while the order is still in the shop. Once it is
+                     * with a courier the consignment is booked against a value
+                     * and the paperwork would stop matching what is in the box.
+                     */}
+                    {['pending', 'processing'].includes(order.status) && (
+                        <button
+                            type="button"
+                            className="admin-table-icon-btn"
+                            onClick={() => setEditingOrder(order)}
+                            title="Change what is on this order"
+                        >
+                            <PencilLine size={14} />
+                        </button>
+                    )}
+
                     <button
                         type="button"
                         className="admin-table-icon-btn"
@@ -490,6 +518,15 @@ export default function Orders({
                 onClose={() => setDispatchingOrder(null)}
                 onDone={() => {
                     setDispatchingOrder(null);
+                    router.reload({ only: ['orders'] });
+                }}
+            />
+
+            <EditOrderModal
+                order={editingOrder}
+                onClose={() => setEditingOrder(null)}
+                onDone={() => {
+                    setEditingOrder(null);
                     router.reload({ only: ['orders'] });
                 }}
             />

@@ -112,3 +112,13 @@
     border-bottom: 0;
     color: var(--gray-500, #6b7280);
 }
+
+/* A line being taken off an order reads as struck through before it is saved. */
+.po-lines tr.is-removed td {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+.po-lines tr.is-removed input {
+    text-decoration: none;
+}

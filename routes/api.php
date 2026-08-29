@@ -217,6 +217,13 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Money received against an order — a deposit, or the balance on
         // delivery. Under refunds rather than orders: it is the till.
         Route::post(ApiEndpoints::ADMIN_ORDER_PAYMENT, [AdminOrderController::class, 'recordPayment'])->middleware('can:refunds');
+
+        /*
+         * Changing an order after it is placed. Stock is already reserved
+         * against every line, so this settles the difference rather than
+         * selling afresh, and every change is written down.
+         */
+        Route::put(ApiEndpoints::ADMIN_ORDER_LINES, [AdminOrderController::class, 'updateLines'])->middleware('can:orders');
         Route::post(ApiEndpoints::ADMIN_ORDERS_REFUND, [AdminRefundController::class, 'store'])->middleware('can:refunds');
         Route::delete(ApiEndpoints::ADMIN_REFUNDS_ITEM, [AdminRefundController::class, 'destroy'])->middleware('can:refunds');
 

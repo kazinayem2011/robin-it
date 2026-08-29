@@ -2152,6 +2152,15 @@ textarea.admin-form-input {
     margin-top: 5px;
 }
 
+/* Guidance under a field, in place of the error when there is not one. */
+.auth-field-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--gray-400);
+}
+
 /* ==========================================================================
    IMAGE CROPPER MODAL (SSOT CANVAS CROPPER)
    ========================================================================== */

@@ -11,6 +11,7 @@ use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\Refund;
+use App\Services\OrderEditService;
 use App\Services\OrderPaymentService;
 use App\Services\OrderService;
 use App\Support\SearchTerm;
@@ -112,6 +113,34 @@ class OrderController extends Controller
     /**
      * Move an order to a new status.
      */
+    /**
+     * Change what is on an order after it was placed.
+     *
+     * A customer ringing to add a stick of RAM meant cancelling and starting
+     * again, which lost the order number, the tracking link already texted to
+     * them, and any deposit's connection to the order it was paid against.
+     */
+    public function updateLines(Request $request, OrderEditService $edits, int $id): JsonResponse
+    {
+        $order = Order::with('items')->findOrFail($id);
+
+        $data = $request->validate([
+            'reason' => 'nullable|string|max:255',
+            'lines' => 'required|array|min:1',
+            'lines.*.order_item_id' => 'nullable|integer',
+            'lines.*.product_id' => 'nullable|integer|exists:products,id',
+            'lines.*.product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'lines.*.quantity' => 'required|integer|min:0|max:10000',
+        ]);
+
+        $order = $edits->apply($order, $request->user(), $data['lines'], $data['reason'] ?? null);
+
+        return $this->successResponse(
+            $order,
+            "{$order->order_number} updated. New total ".number_format((float) $order->total, 2).'.'
+        );
+    }
+
     public function updateStatus(OrderStatusRequest $request, OrderService $orderService, int $id): JsonResponse
     {
         $validated = $request->validated();

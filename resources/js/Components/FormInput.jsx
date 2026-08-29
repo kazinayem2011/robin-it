@@ -23,6 +23,20 @@ export const FormInput = ({
     style = {},
     rows = 3,
     formik = null,
+    /*
+     * A line of guidance under the field.
+     *
+     * Eight screens were already passing this and none of them showed it: it
+     * fell through to ...props and was spread onto the <input>, where React
+     * dropped it as an unknown attribute and warned about it in the console.
+     * Every one of those hints — what a reorder level does, why a pre-order
+     * without a date is a delay the customer did not agree to — was written
+     * and never seen.
+     *
+     * Hidden while an error is showing, because two lines of small print under
+     * one field is one line too many, and the error is the one that matters.
+     */
+    helperText = '',
     ...props
 }) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -108,8 +122,12 @@ export const FormInput = ({
                 )}
             </div>
 
-            {fieldError && (
+            {fieldError ? (
                 <span className="auth-field-error">{fieldError}</span>
+            ) : (
+                helperText && (
+                    <span className="auth-field-hint">{helperText}</span>
+                )
             )}
         </div>
     );
