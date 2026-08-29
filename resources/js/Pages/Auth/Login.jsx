@@ -1,7 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
-import { Mail, Lock, Phone, Sparkles, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Phone, ArrowRight } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
 import Checkbox from '../../Components/Checkbox';
@@ -32,22 +32,6 @@ export default function Login({
         },
     });
 
-    const handleQuickLogin = (loginVal, passVal) => {
-        // Directly submit via Inertia — bypasses Formik async setValues timing issue
-        formik.setSubmitting(true);
-        router.post(
-            ROUTES.LOGIN,
-            { login: loginVal, password: passVal, remember: false },
-            {
-                onFinish: () => formik.setSubmitting(false),
-                onError: (errs) => {
-                    formik.setSubmitting(false);
-                    formik.setErrors(errs);
-                },
-            },
-        );
-    };
-
     const isPhoneNumber =
         formik.values.login.trim().length > 0 && isBDPhone(formik.values.login);
 
@@ -68,44 +52,6 @@ export default function Login({
 
                 {/* Card Body */}
                 <div className="auth-card-body">
-                    {/* Quick Demo Credentials — One-click login */}
-                    <div className="auth-demo-helper">
-                        <div className="demo-helper-title">
-                            <Sparkles size={14} />
-                            <span>Quick Demo Accounts:</span>
-                        </div>
-                        <div className="demo-helper-pills">
-                            <button
-                                type="button"
-                                className="demo-pill admin"
-                                disabled={formik.isSubmitting}
-                                onClick={() =>
-                                    handleQuickLogin(
-                                        'admin@robinit.com',
-                                        'password',
-                                    )
-                                }
-                            >
-                                {formik.isSubmitting ? 'Signing in…' : 'Owner'}
-                            </button>
-                            <button
-                                type="button"
-                                className="demo-pill customer"
-                                disabled={formik.isSubmitting}
-                                onClick={() =>
-                                    handleQuickLogin(
-                                        'customer@robinit.com',
-                                        'password',
-                                    )
-                                }
-                            >
-                                {formik.isSubmitting
-                                    ? 'Signing in…'
-                                    : 'Customer'}
-                            </button>
-                        </div>
-                    </div>
-
                     {status && (
                         <div className="auth-status-alert">{status}</div>
                     )}
