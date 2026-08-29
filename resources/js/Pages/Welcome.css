@@ -675,23 +675,6 @@
     font-weight: 800;
 }
 
-/* Flash Products Grid */
-.flash-products-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border-color);
-}
-
-.flash-product-card {
-    background: var(--white);
-    --card-pad: 20px;
-    padding: var(--card-pad);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
 .card-top-badges {
     position: absolute;
     top: 10px;
@@ -734,79 +717,13 @@
     border-color: var(--primary);
 }
 
-.card-image-wrapper {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-    padding: 8px;
-    overflow: hidden;
-}
-
-.card-image-wrapper img {
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-    transition: transform var(--transition-normal);
-}
-
 .flash-product-card:hover .card-image-wrapper img {
     transform: scale(1.06);
-}
-
-.card-content-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.card-brand-tag {
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.6px;
-    color: var(--gray-400);
-    margin-bottom: 4px;
-}
-
-.card-product-title {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: var(--dark-900);
-    line-height: 1.4;
-    margin-bottom: 8px;
-    min-height: 2.8em;
-}
-
-.card-product-title:hover {
-    color: var(--primary);
-}
-
-.card-specs-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-bottom: 12px;
-    min-height: 38px;
 }
 
 .spec-item {
     font-size: 0.74rem;
     color: var(--gray-500);
-}
-
-.card-rating-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.stars-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
 .rating-score {
@@ -1481,10 +1398,6 @@
     .service-trust-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .flash-products-grid,
-    .standard-products-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
     .graphical-promos-grid,
     .tech-journal-grid {
         grid-template-columns: 1fr;
@@ -1499,10 +1412,6 @@
 
 @media (max-width: 640px) {
     .service-trust-grid {
-        grid-template-columns: 1fr;
-    }
-    .flash-products-grid,
-    .standard-products-grid {
         grid-template-columns: 1fr;
     }
     .builder-interactive-grid {

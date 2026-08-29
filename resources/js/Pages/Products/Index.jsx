@@ -370,7 +370,12 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
 
                         <div className="plp-results" id="shop-results">
                             {/* Product Grid Area with Skeleton Loading Shimmers */}
-                            <div className="standard-products-grid plp-grid-spacer">
+                            {/*
+                             * The seamed grid the homepage uses: cards edge
+                             * to edge with a hairline between, which reads as
+                             * one catalogue rather than a scatter of tiles.
+                             */}
+                            <div className="flash-products-grid plp-grid-spacer">
                                 {loading ? (
                                     Array.from({ length: 8 }).map((_, idx) => (
                                         <ProductCardSkeleton key={idx} />
@@ -410,7 +415,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                         <ProductCard
                                             key={product.id}
                                             product={product}
-                                            variant="standard"
+                                            variant="flash"
                                             isWishlisted={wishlistIds.includes(
                                                 product.id,
                                             )}

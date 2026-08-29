@@ -1731,6 +1731,70 @@ textarea.has-error:focus,
     }
 }
 
+/*
+ * The two ways a grid of products can look.
+ *
+ * These lived in the homepage's own stylesheet, which Vite loads only for the
+ * page that imports it — so the seamed grid existed on the homepage and
+ * nowhere else, and using it on the shop produced a column of full-width cards
+ * because the class had no rules there at all. They belong beside the card
+ * they arrange.
+ */
+.standard-products-grid,
+.flash-products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Separated tiles. */
+.standard-products-grid {
+    gap: 16px;
+}
+
+/*
+ * Seamed: a one-pixel gap over a coloured ground, so the gap itself becomes
+ * the divider and the block reads as one table of products rather than a
+ * scatter of tiles. The cards inside give up their own border and corners —
+ * two borders meeting at a seam is a two-pixel line, and rounded corners leave
+ * white notches at every junction.
+ */
+.flash-products-grid {
+    gap: 1px;
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    /* Clips the cards' square corners back to the block's rounded ones. */
+    overflow: hidden;
+}
+
+.flash-products-grid > .flash-product-card,
+.flash-products-grid > .standard-product-card {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+@media (max-width: 1024px) {
+    .standard-products-grid,
+    .flash-products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .standard-products-grid,
+    .flash-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .standard-products-grid,
+    .flash-products-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Standard Product Card */
 .standard-product-card,
 .flash-product-card {
