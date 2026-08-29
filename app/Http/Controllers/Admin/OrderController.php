@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ApiCode;
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DispatchOrderRequest;
 use App\Http\Requests\Admin\OrderPaymentRequest;
 use App\Http\Requests\Admin\OrderStatusRequest;
 use App\Mail\OrderStatusUpdatedMail;
+use App\Models\Coupon;
 use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\Refund;
+use App\Models\User;
 use App\Services\OrderEditService;
 use App\Services\OrderPaymentService;
 use App\Services\OrderService;
@@ -113,6 +117,98 @@ class OrderController extends Controller
     /**
      * Move an order to a new status.
      */
+    /**
+     * Take an order at the counter or over the phone.
+     *
+     * For a registered customer or a walk-in with nothing but a name and a
+     * number. Either way it goes through the same OrderService the storefront
+     * uses, so the stock check, the reservation, the coupon and the
+     * confirmation are the ones already known to work rather than a second set
+     * written for the counter.
+     */
+    public function store(Request $request, OrderService $orders): JsonResponse
+    {
+        PhoneHelper::canonicalise($request, 'phone');
+
+        $data = $request->validate([
+            // A customer if they have an account, or nothing at all if they
+            // walked in — the phone number is what identifies a guest order.
+            'user_id' => 'nullable|integer|exists:users,id',
+            'name' => 'required|string|max:255',
+            'phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
+            'street_address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'zone' => 'nullable|string|max:100',
+            'payment_method' => 'nullable|string|in:'.implode(',', Order::PAYMENT_METHODS),
+            'coupon_code' => 'nullable|string|max:50',
+            'lines' => 'required|array|min:1',
+            'lines.*.product_id' => 'required|integer|exists:products,id',
+            'lines.*.product_variant_id' => 'nullable|integer|exists:product_variants,id',
+            'lines.*.quantity' => 'required|integer|min:1|max:1000',
+        ], [
+            'phone.regex' => PhoneHelper::MESSAGE,
+            'street_address.required' => 'Enter where this is going, or the shop counter if they are taking it with them.',
+        ]);
+
+        $customer = ! empty($data['user_id'])
+            ? User::where('role', User::ROLE_CUSTOMER)->find($data['user_id'])
+            : null;
+
+        $coupon = ! empty($data['coupon_code'])
+            ? Coupon::findByCode($data['coupon_code'])
+            : null;
+
+        if (! empty($data['coupon_code']) && ! $coupon) {
+            return $this->errorResponse(
+                "There is no code \"{$data['coupon_code']}\".",
+                422,
+                ApiCode::COUPON_INVALID
+            );
+        }
+
+        $order = $orders->placeForCustomer(
+            $data['lines'],
+            $data + ['payment_method' => $data['payment_method'] ?? 'COD'],
+            $customer,
+            $coupon
+        );
+
+        return $this->successResponse(
+            $order->load('items'),
+            "{$order->order_number} created for {$data['name']}. "
+                .'Record the payment when the money is taken.'
+        );
+    }
+
+    /**
+     * Customers to attach an order to, matched on the things a person says
+     * over the phone: their name, their number, or their email.
+     */
+    public function searchCustomers(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->query('search', ''));
+
+        if (mb_strlen($term) < 2) {
+            return $this->successResponse([]);
+        }
+
+        $like = '%'.$term.'%';
+
+        return $this->successResponse(
+            User::query()
+                ->where('role', User::ROLE_CUSTOMER)
+                // A suspended customer cannot order for themselves, so staff
+                // must not be able to order on their behalf either.
+                ->where('is_active', true)
+                ->where(fn ($q) => $q->where('name', 'like', $like)
+                    ->orWhere('phone', 'like', $like)
+                    ->orWhere('email', 'like', $like))
+                ->orderBy('name')
+                ->limit(15)
+                ->get(['id', 'name', 'email', 'phone'])
+        );
+    }
+
     /**
      * Change what is on an order after it was placed.
      *

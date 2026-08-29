@@ -225,6 +225,14 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
          * against every line, so this settles the difference rather than
          * selling afresh, and every change is written down.
          */
+        /*
+         * Taking an order at the counter or over the phone. Goes through the
+         * same OrderService as the storefront: a second path would be a second
+         * copy of the stock, coupon and reservation rules to keep in step.
+         */
+        Route::post(ApiEndpoints::ADMIN_ORDERS, [AdminOrderController::class, 'store'])->middleware('can:orders');
+        Route::get(ApiEndpoints::ADMIN_ORDER_CUSTOMERS, [AdminOrderController::class, 'searchCustomers'])->middleware('can:orders');
+
         Route::put(ApiEndpoints::ADMIN_ORDER_LINES, [AdminOrderController::class, 'updateLines'])->middleware('can:orders');
 
         /*

@@ -29,7 +29,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_STATUS(orderId),
             { status },
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -41,7 +41,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PRODUCTS,
             productData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -54,7 +54,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.PRODUCT_ITEM(productId),
             productData,
         );
-        return response.data;
+        return response;
     },
 
     // ── Inventory ────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_RECEIPTS,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     // ── Running costs ────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.EXPENSES,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async updateExpense(id, payload) {
@@ -92,14 +92,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.EXPENSE_ITEM(id),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async deleteExpense(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.EXPENSE_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     /** Hand a parcel to a carrier, with the number to chase it by. */
@@ -108,7 +108,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_DISPATCH(orderId),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     /** Record money given back on an order. */
@@ -117,14 +117,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_REFUND(orderId),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async deleteRefund(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.REFUND_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     async createStaff(payload) {
@@ -132,7 +132,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STAFF,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async updateStaff(id, payload) {
@@ -140,14 +140,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STAFF_ITEM(id),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async suspendStaff(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.STAFF_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     async createCourier(payload) {
@@ -155,7 +155,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.COURIERS,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async updateCourier(id, payload) {
@@ -163,14 +163,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.COURIER_ITEM(id),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async deleteCourier(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.COURIER_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     async createExpenseCategory(payload) {
@@ -178,7 +178,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.EXPENSE_CATEGORIES,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async updateExpenseCategory(id, payload) {
@@ -186,20 +186,20 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.EXPENSE_CATEGORY_ITEM(id),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async deleteExpenseCategory(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.EXPENSE_CATEGORY_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     /** Suppliers, for the delivery form's dropdown. */
     async getSuppliers() {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.SUPPLIERS);
-        return response.data;
+        return response;
     },
 
     async createSupplier(payload) {
@@ -207,7 +207,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.SUPPLIERS,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async updateSupplier(id, payload) {
@@ -215,14 +215,14 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.SUPPLIER_ITEM(id),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     async deleteSupplier(id) {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.SUPPLIER_ITEM(id),
         );
-        return response.data;
+        return response;
     },
 
     /** Past deliveries. */
@@ -231,7 +231,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_RECEIPTS,
             { params },
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -243,7 +243,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_ADJUST,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -255,7 +255,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_TRANSFER,
             payload,
         );
-        return response.data;
+        return response;
     },
 
     /** What each branch holds of one product or option. */
@@ -264,7 +264,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_BRANCHES(productId),
             { params: variantId ? { variant_id: variantId } : {} },
         );
-        return response.data;
+        return response;
     },
 
     /** The ledger for one product, newest first. */
@@ -273,7 +273,31 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_MOVEMENTS(productId),
             { params },
         );
-        return response.data;
+        return response;
+    },
+
+    /**
+     * Take an order at the counter or over the phone.
+     *
+     * Goes through the same OrderService the storefront uses, so the stock
+     * check, the reservation and the coupon rules are the ones already known
+     * to work rather than a second set written for the counter.
+     */
+    async createOrder(payload) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.ORDERS,
+            payload,
+        );
+        return response;
+    },
+
+    /** Customers an order can be attached to, matched on what a caller says. */
+    async searchOrderCustomers(search) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.ORDER_CUSTOMERS,
+            { params: { search } },
+        );
+        return response;
     },
 
     /**
@@ -462,7 +486,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_UNITS,
             { params },
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -475,7 +499,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.ORDER_RETURN(orderId),
             payload,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -483,7 +507,7 @@ export const adminService = {
      */
     async getDashboardMetrics() {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.DASHBOARD);
-        return response.data;
+        return response;
     },
 
     /**
@@ -494,7 +518,7 @@ export const adminService = {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.ORDERS, {
             params,
         });
-        return response.data;
+        return response;
     },
 
     /**
@@ -505,7 +529,7 @@ export const adminService = {
         const response = await axiosInstance.get(API_ENDPOINTS.ADMIN.PRODUCTS, {
             params,
         });
-        return response.data;
+        return response;
     },
 
     /**
@@ -517,7 +541,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CUSTOMERS,
             { params },
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -529,7 +553,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CATEGORIES,
             categoryData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -542,7 +566,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.CATEGORY_ITEM(categoryId),
             categoryData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -553,7 +577,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.CATEGORY_ITEM(categoryId),
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -565,7 +589,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.BANNERS,
             bannerData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -578,7 +602,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.BANNER_ITEM(bannerId),
             bannerData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -589,7 +613,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.BANNER_ITEM(bannerId),
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -601,7 +625,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.COUPONS,
             couponData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -614,7 +638,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.COUPON_ITEM(couponId),
             couponData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -625,7 +649,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.COUPON_ITEM(couponId),
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -637,7 +661,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STORES,
             storeData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -650,7 +674,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STORE_ITEM(storeId),
             storeData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -661,7 +685,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.STORE_ITEM(storeId),
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -685,7 +709,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.SETTINGS,
             { settings: settingsData },
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -697,7 +721,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.BLOGS,
             blogData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -710,7 +734,7 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.BLOG_ITEM(blogId),
             blogData,
         );
-        return response.data;
+        return response;
     },
 
     /**
@@ -721,7 +745,7 @@ export const adminService = {
         const response = await axiosInstance.delete(
             API_ENDPOINTS.ADMIN.BLOG_ITEM(blogId),
         );
-        return response.data;
+        return response;
     },
 
     // --- Contact inbox -------------------------------------------------

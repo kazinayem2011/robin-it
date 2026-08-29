@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
+    Plus,
     Eye,
     ShoppingCart,
     Undo2,
@@ -18,6 +19,7 @@ import { toast } from '@/Components/Toast';
 import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
 import EditOrderModal from './Components/EditOrderModal';
+import NewOrderModal from './Components/NewOrderModal';
 // The edit modal reuses the purchase-order line table.
 import './Purchasing.css';
 import RecordPaymentModal from './Components/RecordPaymentModal';
@@ -49,6 +51,7 @@ export default function Orders({
     const [refundingOrder, setRefundingOrder] = useState(null);
     const [payingOrder, setPayingOrder] = useState(null);
     const [editingOrder, setEditingOrder] = useState(null);
+    const [takingOrder, setTakingOrder] = useState(false);
 
     const handleSearch = (term) => {
         setSearchTerm(term);
@@ -358,25 +361,42 @@ export default function Orders({
                 emptyTitle="No Orders Found"
                 emptyDescription="There are no customer orders matching the current filter criteria."
                 headerActions={
-                    <div className="admin-tabs-bar">
-                        {[
-                            'all',
-                            'pending',
-                            'processing',
-                            'shipped',
-                            'delivered',
-                            'cancelled',
-                        ].map((st) => (
-                            <button
-                                key={st}
-                                type="button"
-                                onClick={() => handleFilterStatus(st)}
-                                className={`admin-tab-btn ${currentStatus === st ? 'active' : ''}`}
-                            >
-                                {st}
-                            </button>
-                        ))}
-                    </div>
+                    <>
+                        {/*
+                         * Taking an order from the counter or the phone. The
+                         * shop could only ever receive one through the
+                         * storefront, so a customer ringing up had to be sent
+                         * to the website.
+                         */}
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            icon={Plus}
+                            onClick={() => setTakingOrder(true)}
+                        >
+                            Take an order
+                        </Button>
+
+                        <div className="admin-tabs-bar">
+                            {[
+                                'all',
+                                'pending',
+                                'processing',
+                                'shipped',
+                                'delivered',
+                                'cancelled',
+                            ].map((st) => (
+                                <button
+                                    key={st}
+                                    type="button"
+                                    onClick={() => handleFilterStatus(st)}
+                                    className={`admin-tab-btn ${currentStatus === st ? 'active' : ''}`}
+                                >
+                                    {st}
+                                </button>
+                            ))}
+                        </div>
+                    </>
                 }
             />
 
@@ -518,6 +538,15 @@ export default function Orders({
                 onClose={() => setDispatchingOrder(null)}
                 onDone={() => {
                     setDispatchingOrder(null);
+                    router.reload({ only: ['orders'] });
+                }}
+            />
+
+            <NewOrderModal
+                open={takingOrder}
+                onClose={() => setTakingOrder(false)}
+                onCreated={() => {
+                    setTakingOrder(false);
                     router.reload({ only: ['orders'] });
                 }}
             />

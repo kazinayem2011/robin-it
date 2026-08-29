@@ -466,8 +466,14 @@ class StockController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $products = Product::query()
-            ->select('id', 'name', 'stock_quantity', 'has_variants')
-            ->with(['variants:id,product_id,name,stock_quantity,is_active'])
+            /*
+             * Price included, because three screens use this list to build
+             * something priced — a purchase order, a counter sale, an edited
+             * order — and without it each showed a running total of zero while
+             * the server quietly worked out the real one.
+             */
+            ->select('id', 'name', 'stock_quantity', 'has_variants', 'price', 'discount_price')
+            ->with(['variants:id,product_id,name,stock_quantity,is_active,price,discount_price'])
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->where('is_active', true)
             ->orderBy('name')

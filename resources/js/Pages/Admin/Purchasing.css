@@ -130,3 +130,102 @@
 .po-lines tr.is-removed input {
     text-decoration: none;
 }
+
+/* ── Taking an order: finding a customer and the products ────────────────── */
+
+.no-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    color: var(--gray-400);
+}
+
+.no-search input {
+    width: 100%;
+    padding: 10px 0;
+    border: 0;
+    background: none;
+    font-size: 0.85rem;
+}
+
+.no-search input:focus {
+    outline: none;
+}
+
+.no-results {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 210px;
+    margin-bottom: 14px;
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.no-results button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.no-results button:hover {
+    background: var(--state-hover);
+    color: var(--primary);
+}
+
+.no-results span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.no-results small,
+.no-chosen-customer small {
+    font-size: 0.74rem;
+    color: var(--gray-400);
+}
+
+/* The account this order will be filed against, once one is chosen. */
+.no-chosen-customer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-sm);
+    background: var(--success-light);
+    color: var(--success-text);
+    font-size: 0.85rem;
+}
+
+.no-chosen-customer span {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.no-chosen-customer button {
+    border: 0;
+    background: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}

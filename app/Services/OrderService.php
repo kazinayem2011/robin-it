@@ -8,6 +8,7 @@ use App\Helpers\PhoneHelper;
 use App\Mail\OrderConfirmationMail;
 use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Courier;
 use App\Models\Order;
@@ -158,6 +159,84 @@ class OrderService
         $this->sendConfirmationEmail($order, $addressData);
 
         return $order;
+    }
+
+    /**
+     * Take an order at the counter or over the phone.
+     *
+     * The shop could only receive an order through the storefront, so a
+     * customer ringing up, or standing at the counter, could not be served
+     * without asking them to go home and use the website. Every other part of
+     * the app assumes an order exists: stock, serials, payments, delivery,
+     * the margin report.
+     *
+     * This deliberately builds a cart and hands it to placeOrder rather than
+     * writing an order itself. Everything that makes a storefront order
+     * correct — the stock check against the branch that actually ships, the
+     * pre-order allowance, the atomic reservation, the coupon redeemed under a
+     * row lock, the totals, the confirmation — is in there, and a second path
+     * would be a second set of those rules to keep in step. There would be no
+     * way to notice they had drifted until a counter sale oversold something.
+     *
+     * @param  array<int, array{product_id:int, product_variant_id?:?int, quantity:int}>  $lines
+     */
+    public function placeForCustomer(
+        array $lines,
+        array $addressData,
+        ?User $customer = null,
+        ?Coupon $coupon = null,
+    ): Order {
+        $lines = array_values(array_filter($lines, fn ($l) => (int) ($l['quantity'] ?? 0) > 0));
+
+        if ($lines === []) {
+            throw new StorefrontException(
+                'Add at least one product to the order.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        /*
+         * A cart of its own, never the customer's.
+         *
+         * Writing into the cart they already have would empty it when this
+         * order is placed — somebody who rings up to buy one thing would lose
+         * the basket they had been building on the website. The session id is
+         * random so it can never collide with a live browser session either.
+         */
+        $cart = Cart::create([
+            'user_id' => null,
+            'session_id' => 'counter-'.Str::random(32),
+        ]);
+
+        try {
+            foreach ($lines as $line) {
+                CartItem::create([
+                    'cart_id' => $cart->id,
+                    'product_id' => (int) $line['product_id'],
+                    'product_variant_id' => $line['product_variant_id'] ?? null,
+                    'quantity' => (int) $line['quantity'],
+                ]);
+            }
+
+            return $this->placeOrder(
+                $cart->fresh(),
+                $addressData,
+                $customer?->id,
+                $cart->session_id,
+                $coupon
+            );
+        } catch (\Throwable $e) {
+            /*
+             * A refused order must not leave its scratch cart behind. Without
+             * this, every out-of-stock attempt at the counter leaves a row
+             * nobody will ever look at, and the carts table fills with them.
+             */
+            $cart->items()->delete();
+            $cart->delete();
+
+            throw $e;
+        }
     }
 
     /**

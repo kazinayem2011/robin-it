@@ -176,6 +176,8 @@ export const API_ENDPOINTS = {
         COURIER_ZONES: (id) => `/admin/couriers/${id}/zones`,
         COURIER_ZONE: (id, zone) => `/admin/couriers/${id}/zones/${zone}`,
         BARCODE: '/admin/stock/barcode',
+        ORDERS: '/admin/orders',
+        ORDER_CUSTOMERS: '/admin/orders/customers',
         ORDER_LINES: (id) => `/admin/orders/${id}/lines`,
         CUSTOMER_ACTIVE: (id) => `/admin/customers/${id}/active`,
         CAMPAIGNS: '/admin/campaigns',

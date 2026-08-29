@@ -143,6 +143,8 @@ class ApiEndpoints
 
     public const ADMIN_ORDER_PAYMENT = 'orders/{id}/payment';
 
+    public const ADMIN_ORDER_CUSTOMERS = 'orders/customers';
+
     public const ADMIN_ORDER_LINES = 'orders/{id}/lines';
 
     public const ADMIN_CUSTOMER_ACTIVE = 'customers/{id}/active';
