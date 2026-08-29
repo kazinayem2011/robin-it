@@ -20,6 +20,7 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
 import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
+import { scrollBehavior } from '../../utils/scroll';
 import { ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
@@ -231,7 +232,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
 
         document
             .getElementById('shop-results')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            ?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
     }, [page]);
 
     /**

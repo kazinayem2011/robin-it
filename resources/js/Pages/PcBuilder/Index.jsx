@@ -12,6 +12,7 @@ import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { essentialsStatus, stockLabel } from '../../utils/pcBuild';
+import { scrollBehavior } from '../../utils/scroll';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
     Cpu,
@@ -678,7 +679,7 @@ export default function PcBuilderIndex() {
                         document
                             .getElementById(`slot-${first.id}`)
                             ?.scrollIntoView({
-                                behavior: 'smooth',
+                                behavior: scrollBehavior(),
                                 block: 'center',
                             });
                     }

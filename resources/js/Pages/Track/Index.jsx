@@ -9,6 +9,7 @@ import { toast } from '../../Components/Toast';
 import { orderTrackingService } from '../../services';
 import { trackingSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
+import { scrollBehavior } from '../../utils/scroll';
 import siteConfig from '../../constants/siteConfig';
 import {
     Truck,
@@ -89,7 +90,7 @@ export default function TrackOrder({ orderNumber = null }) {
             values: { order_number: '', phone: authUser?.phone || '' },
         });
         showInUrl('/track');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: scrollBehavior() });
     };
 
     /*
