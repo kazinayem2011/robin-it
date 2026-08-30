@@ -2256,3 +2256,186 @@
     flex-shrink: 0;
     color: var(--success);
 }
+
+/* ---------------------------------------------------------------------------
+   Category bar
+
+   Replaced a three-column mega panel that showed one subcategory's children at
+   a time. That shape was designed for nine top-level categories; at fifteen
+   with 237 subcategories it made a shopper hunt through hover states for what
+   a plain list shows outright.
+   --------------------------------------------------------------------------- */
+.cat-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cat-nav-item {
+    position: relative;
+}
+
+.cat-nav-link,
+.cat-nav-sublink,
+.cat-nav-brandlink {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    white-space: nowrap;
+}
+
+.cat-nav-link {
+    padding: 11px 14px;
+    font-size: 0.86rem;
+    font-weight: 500;
+}
+
+.cat-nav-item:hover > .cat-nav-link,
+.cat-nav-item.is-open > .cat-nav-link {
+    color: var(--primary-color, #c1121f);
+}
+
+.cat-nav-badge {
+    font-style: normal;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: var(--radius-full);
+    background: var(--primary-color, #c1121f);
+    color: #fff;
+}
+
+/* Level 2 */
+.cat-nav-drop {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 60;
+    min-width: 250px;
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.25);
+}
+
+.cat-nav-item.is-open > .cat-nav-drop {
+    display: block;
+}
+
+.cat-nav-subitem {
+    position: relative;
+}
+
+.cat-nav-sublink {
+    padding: 7px 14px;
+    font-size: 0.83rem;
+}
+
+.cat-nav-subitem:hover > .cat-nav-sublink {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--primary-color, #c1121f);
+}
+
+.cat-nav-chevron {
+    margin-left: auto;
+    opacity: 0.5;
+}
+
+/* Level 3 — brands.
+
+   Graphics Card carries nineteen and Keyboard twenty-eight, so a single column
+   would run off the bottom of the screen. Columns wrap instead, and the panel
+   is capped at the viewport height with its own scroll rather than growing
+   past it. */
+.cat-nav-brands {
+    display: none;
+    position: absolute;
+    top: -6px;
+    left: 100%;
+    z-index: 61;
+    max-height: min(70vh, 520px);
+    margin: 0;
+    padding: 8px;
+    list-style: none;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.25);
+    columns: 3 190px;
+    column-gap: 4px;
+    overflow-y: auto;
+}
+
+.cat-nav-subitem.is-open > .cat-nav-brands {
+    display: block;
+}
+
+.cat-nav-brands li {
+    /* Without this a link can be split across two columns mid-row. */
+    break-inside: avoid;
+}
+
+.cat-nav-brandlink {
+    padding: 5px 9px;
+    font-size: 0.81rem;
+    border-radius: var(--radius-md);
+}
+
+.cat-nav-brandlink:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--primary-color, #c1121f);
+}
+
+.cat-nav-all {
+    margin-top: 4px;
+    padding: 8px 14px 4px;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+    font-size: 0.79rem;
+    font-weight: 600;
+}
+
+.cat-nav-all a {
+    color: var(--primary-color, #c1121f);
+    text-decoration: none;
+}
+
+/* The mark beside every row: a drawn icon for a thing, a lettermark for a
+   brand. Sized identically so the text lines up either way. */
+.cat-nav-icon {
+    flex: none;
+    opacity: 0.75;
+}
+
+.brand-mark {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.brand-mark-logo {
+    object-fit: contain;
+    background: #fff;
+}
+
+/* The dropdowns are hover-driven and have no touch equivalent; the drawer is
+   what phones get. */
+@media (max-width: 992px) {
+    .cat-nav {
+        display: none;
+    }
+}

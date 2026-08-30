@@ -6,21 +6,18 @@ import {
     Heart,
     ShoppingCart,
     User,
-    ChevronDown,
     PhoneCall,
     MapPin,
     Truck,
-    ArrowRight,
     Menu,
     LayoutDashboard,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
-import { ProductImage } from './ProductImage';
 import { SearchBar } from './SearchBar';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
-import { getCategoryIcon } from '../utils/iconMap';
+import CategoryNav from './CategoryNav';
 import { splitAnnouncement } from '../utils/announcement';
 import { useMarqueeDuration } from '../hooks';
 import { categoryService } from '../services';
@@ -47,8 +44,6 @@ export const Header = () => {
     const isStaff = (auth?.user?.abilities ?? []).length > 0;
 
     const [categories, setCategories] = useState([]);
-    const [hoveredCategory, setHoveredCategory] = useState(null);
-    const [hoveredSubCategory, setHoveredSubCategory] = useState('sc1');
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
@@ -71,9 +66,6 @@ export const Header = () => {
             .then((data) => {
                 if (data && Array.isArray(data)) {
                     setCategories(data);
-                    if (data.length > 0 && data[0].subcategories?.length > 0) {
-                        setHoveredSubCategory(data[0].subcategories[0].id);
-                    }
                 }
             })
             .catch((error) =>
@@ -422,236 +414,11 @@ export const Header = () => {
                             category bar. The logo already goes home, which is
                             where every shop puts that link. */}
 
-                        {/* Dynamic categories with 3-Level Dropdown */}
-                        {categories.map((category) => (
-                            <li
-                                key={category.id}
-                                className={`nav-item nav-item-dropdown ${hoveredCategory === category.id ? 'is-open' : ''}`}
-                                onMouseEnter={() => {
-                                    setHoveredCategory(category.id);
-                                    if (category.subcategories?.length > 0) {
-                                        setHoveredSubCategory(
-                                            category.subcategories[0].id,
-                                        );
-                                    }
-                                }}
-                                onMouseLeave={() => setHoveredCategory(null)}
-                            >
-                                {/*
-                                 * An offer category has no products assigned to
-                                 * it — the discounts live on the products — so
-                                 * linking it into the shop led to an empty
-                                 * page. The flag existed and was only being
-                                 * used to colour the link.
-                                 */}
-                                <Link
-                                    href={
-                                        category.isOffer
-                                            ? ROUTES.OFFERS
-                                            : ROUTES.SHOP_CATEGORY(
-                                                  category.slug,
-                                              )
-                                    }
-                                    className={`nav-link-main ${category.isOffer ? 'offer-link' : ''}`}
-                                >
-                                    <span>{category.name}</span>
-                                    {category.badge && (
-                                        <span
-                                            className={`nav-chip-badge badge-${category.badge.toLowerCase()}`}
-                                        >
-                                            {category.badge}
-                                        </span>
-                                    )}
-                                    {category.subcategories?.length > 0 && (
-                                        <ChevronDown
-                                            size={13}
-                                            className="nav-chevron-icon"
-                                        />
-                                    )}
-                                </Link>
-
-                                {/* 3-Level Mega Menu Overlay */}
-                                {category.subcategories?.length > 0 &&
-                                    hoveredCategory === category.id && (
-                                        <div className="mega-menu-dropdown-surface">
-                                            <div
-                                                className={`mega-dropdown-layout${category.promoBanner ? ' has-spotlight' : ''}`}
-                                            >
-                                                {/* Column 1: Level 2 Subcategories */}
-                                                <div className="mega-sidebar-col">
-                                                    <div className="mega-col-header">
-                                                        <span>
-                                                            Browse Subcategories
-                                                        </span>
-                                                    </div>
-                                                    <ul className="mega-level2-list">
-                                                        {category.subcategories.map(
-                                                            (sub) => (
-                                                                <li
-                                                                    key={sub.id}
-                                                                    className={`mega-level2-item ${hoveredSubCategory === sub.id ? 'active-level2' : ''}`}
-                                                                    onMouseEnter={() =>
-                                                                        setHoveredSubCategory(
-                                                                            sub.id,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Link
-                                                                        href={ROUTES.SHOP_CATEGORY(
-                                                                            sub.slug,
-                                                                        )}
-                                                                        className="level2-link"
-                                                                    >
-                                                                        <span className="level2-icon">
-                                                                            {getCategoryIcon(
-                                                                                sub,
-                                                                                {
-                                                                                    size: 16,
-                                                                                },
-                                                                            )}
-                                                                        </span>
-                                                                        <span className="level2-name">
-                                                                            {
-                                                                                sub.name
-                                                                            }
-                                                                        </span>
-                                                                    </Link>
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                    </ul>
-                                                </div>
-
-                                                {/* Column 2: Level 3 Child Products/Series (Dynamic per active Level 2) */}
-                                                <div className="mega-content-col">
-                                                    {category.subcategories.map(
-                                                        (sub) =>
-                                                            hoveredSubCategory ===
-                                                                sub.id && (
-                                                                <div
-                                                                    key={sub.id}
-                                                                    className="level3-panel-container"
-                                                                >
-                                                                    <div className="level3-panel-header">
-                                                                        <h3>
-                                                                            {
-                                                                                sub.name
-                                                                            }{' '}
-                                                                            Lineup
-                                                                            &
-                                                                            Series
-                                                                        </h3>
-                                                                        <Link
-                                                                            href={ROUTES.SHOP_CATEGORY(
-                                                                                sub.slug,
-                                                                            )}
-                                                                            className="view-all-sub-link"
-                                                                        >
-                                                                            View
-                                                                            All{' '}
-                                                                            {
-                                                                                sub.name
-                                                                            }{' '}
-                                                                            <ArrowRight
-                                                                                size={
-                                                                                    13
-                                                                                }
-                                                                            />
-                                                                        </Link>
-                                                                    </div>
-                                                                    <div className="level3-items-grid">
-                                                                        {sub.children &&
-                                                                            sub.children.map(
-                                                                                (
-                                                                                    child,
-                                                                                ) => (
-                                                                                    <Link
-                                                                                        key={
-                                                                                            child.id
-                                                                                        }
-                                                                                        href={ROUTES.SHOP_CATEGORY(
-                                                                                            child.slug,
-                                                                                        )}
-                                                                                        className="level3-card-item"
-                                                                                    >
-                                                                                        <span className="child-name">
-                                                                                            {
-                                                                                                child.name
-                                                                                            }
-                                                                                        </span>
-                                                                                    </Link>
-                                                                                ),
-                                                                            )}
-                                                                    </div>
-                                                                </div>
-                                                            ),
-                                                    )}
-                                                </div>
-
-                                                {/* Column 3: Featured Promotional Tech Spotlight Card */}
-                                                {category.promoBanner && (
-                                                    <div className="mega-spotlight-col">
-                                                        <div className="spotlight-card">
-                                                            <div className="spotlight-badge">
-                                                                FEATURED
-                                                                SPOTLIGHT
-                                                            </div>
-                                                            <div className="spotlight-img-box">
-                                                                {/*
-                                                                 * A plain <img> here showed the alt text
-                                                                 * as soon as a spotlight pointed at a file
-                                                                 * that no longer existed — which is what
-                                                                 * two of the seeded categories did. This
-                                                                 * degrades to the placeholder instead.
-                                                                 */}
-                                                                <ProductImage
-                                                                    src={
-                                                                        category
-                                                                            .promoBanner
-                                                                            .image
-                                                                    }
-                                                                    alt={
-                                                                        category
-                                                                            .promoBanner
-                                                                            .title
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            <h4>
-                                                                {
-                                                                    category
-                                                                        .promoBanner
-                                                                        .title
-                                                                }
-                                                            </h4>
-                                                            <p>
-                                                                {
-                                                                    category
-                                                                        .promoBanner
-                                                                        .subtitle
-                                                                }
-                                                            </p>
-                                                            <Link
-                                                                href={
-                                                                    category
-                                                                        .promoBanner
-                                                                        .link
-                                                                }
-                                                                className="spotlight-cta-btn"
-                                                            >
-                                                                Explore Series{' '}
-                                                                <ArrowRight
-                                                                    size={13}
-                                                                />
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                            </li>
-                        ))}
+                        {/* The category bar. Was a three-column mega panel
+                            with a promo card per category; that shape was
+                            built for nine top-level categories and stopped
+                            working at fifteen with 237 subcategories. */}
+                        <CategoryNav categories={categories} />
                     </ul>
                 </div>
             </nav>

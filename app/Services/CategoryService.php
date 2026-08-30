@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Collection;
@@ -75,6 +76,20 @@ class CategoryService
     {
         $stocked = $this->categoryIdsWithProducts();
 
+        /*
+         * Third-level entries are overwhelmingly brand names, and a drawn icon
+         * cannot say "ASUS" — a generic box next to every one of eleven hundred
+         * brands is noise pretending to be information. Where the name matches
+         * a row in `brands`, its logo is used; everything else falls back to a
+         * lettermark in the interface.
+         *
+         * Loaded once here rather than per node: the tree is built behind an
+         * hour-long cache, so this is one query per rebuild, not per visitor.
+         */
+        $brandLogos = Brand::whereNotNull('logo_path')
+            ->pluck('logo_path', 'name')
+            ->mapWithKeys(fn ($path, $name) => [mb_strtolower(trim($name)) => $path]);
+
         return Category::whereNull('parent_id')
             ->where('is_active', true)
             ->where(fn ($q) => $q->where('is_offer', true)
@@ -88,7 +103,7 @@ class CategoryService
                     }]);
             }])
             ->get()
-            ->map(function (Category $cat) {
+            ->map(function (Category $cat) use ($brandLogos) {
                 return [
                     'id' => $cat->id,
                     'name' => $cat->name,
@@ -96,17 +111,18 @@ class CategoryService
                     'badge' => $cat->badge,
                     'icon' => $cat->icon,
                     'isOffer' => (bool) $cat->is_offer,
-                    'subcategories' => $cat->children->map(function ($sub) {
+                    'subcategories' => $cat->children->map(function ($sub) use ($brandLogos) {
                         return [
                             'id' => $sub->id,
                             'name' => $sub->name,
                             'slug' => $sub->slug,
                             'icon' => $sub->icon,
-                            'children' => $sub->children->map(function ($child) {
+                            'children' => $sub->children->map(function ($child) use ($brandLogos) {
                                 return [
                                     'id' => $child->id,
                                     'name' => $child->name,
                                     'slug' => $child->slug,
+                                    'logo' => $brandLogos->get(mb_strtolower(trim($child->name))),
                                     'isHot' => str_contains(strtolower($child->name), '4090')
                                         || str_contains(strtolower($child->name), '5090')
                                         || str_contains(strtolower($child->name), 'ultra beast'),
