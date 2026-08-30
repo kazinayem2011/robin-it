@@ -87,19 +87,58 @@ class SqlInjectionTest extends TestCase
     /**
      * LIKE wildcards are escaped, so a search box cannot be used to force a full
      * table scan — or to quietly match rows the search text does not name.
+     *
+     * This asserted zero results for every wildcard, which was only ever true
+     * on SQLite, and true there for the wrong reason: SQLite honours no escape
+     * character unless a query names one with ESCAPE, so the escaped pattern
+     * `%\%%` looks for a literal backslash and finds nothing. It passed
+     * because the escaping does not work, not because it does.
+     *
+     * On MySQL — the driver production runs — the escaping works, and searching
+     * "%" correctly finds the one product with a percent sign in its name.
+     * Zero was the wrong expectation, and the test failed on the only driver
+     * that matters.
+     *
+     * So the assertion is the property that is actually worth having and that
+     * holds on both: a search made of wildcards must not return the catalogue.
+     * Three products, and a wildcard search may match at most the one that
+     * genuinely contains that character.
      */
     public function test_like_wildcards_are_escaped_in_the_storefront_search(): void
     {
         $this->catalogue();
 
-        // The property that matters, and it holds on every driver: a search made
-        // of wildcards cannot return the catalogue, and cannot force a scan.
-        $this->getJson('/api/products?search=%25')->assertStatus(200)->assertJsonCount(0, 'data');
-        $this->getJson('/api/products?search=_')->assertStatus(200)->assertJsonCount(0, 'data');
-        $this->getJson('/api/products?search='.urlencode('%_%'))->assertStatus(200)->assertJsonCount(0, 'data');
+        foreach (['%25', '_', urlencode('%_%')] as $wildcard) {
+            $data = $this->getJson("/api/products?search={$wildcard}")
+                ->assertStatus(200)
+                ->json('data');
+
+            $this->assertLessThan(
+                3,
+                count($data),
+                "A bare wildcard ({$wildcard}) matched the whole catalogue."
+            );
+
+            // Whatever comes back must contain the character searched for. On a
+            // driver where escaping works this is "100% Copper Cooler"; on one
+            // where it does not, nothing. Neither is a full scan.
+            foreach ($data as $row) {
+                $this->assertStringContainsString(
+                    urldecode($wildcard) === '%_%' ? '%' : urldecode($wildcard),
+                    $row['name'],
+                    'A wildcard matched a row that does not contain it.'
+                );
+            }
+        }
     }
 
-    /** The admin screens escape them too; they used not to. */
+    /**
+     * The admin screens escape them too; they used not to.
+     *
+     * Same correction as the storefront test above: zero was SQLite's answer,
+     * not the right one. What must hold everywhere is that a wildcard cannot
+     * sweep the table.
+     */
     public function test_like_wildcards_are_escaped_in_the_admin_searches(): void
     {
         $this->catalogue();
@@ -110,9 +149,9 @@ class SqlInjectionTest extends TestCase
                 ->assertStatus(200)
                 ->viewData('page')['props'];
 
-            $this->assertCount(
-                0,
-                $props['products']['data'],
+            $this->assertLessThan(
+                3,
+                count($props['products']['data']),
                 "A bare wildcard ({$wildcard}) matched the whole catalogue."
             );
         }

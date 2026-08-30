@@ -113,7 +113,7 @@
 .rep-period-shortcuts button {
     padding: 7px 13px;
     border: 1px solid var(--border-color);
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: var(--bg-surface);
     font-size: 0.78rem;
     font-weight: 600;
@@ -218,7 +218,9 @@
 
 .rep-bar-fill {
     width: 100%;
-    border-radius: 2px 2px 0 0;
+    /* These bars are a few pixels wide; the 8px token would round them into
+       lozenges rather than bars. */
+    border-radius: 2px 2px 0 0; /* radius-exempt: chart bar cap */
     background: var(--primary);
     opacity: 0.75;
     transition: opacity var(--transition-fast);
@@ -355,7 +357,7 @@
     align-items: center;
     gap: 4px;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     background: var(--gray-100);
     font-size: 0.7rem;
     font-weight: 700;

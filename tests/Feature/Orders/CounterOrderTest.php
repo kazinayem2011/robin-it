@@ -197,7 +197,10 @@ class CounterOrderTest extends TestCase
             ->postJson('/api/admin/orders', $this->payload(['user_id' => $customer->id]))
             ->assertOk();
 
-        $this->assertSame(3, $theirs->fresh()->items()->sum('quantity'), 'Their basket is untouched.');
+        // assertEquals, not assertSame: sum() comes back as an int on SQLite
+        // and a numeric string on MySQL, and the claim here is about the
+        // quantity, not about which driver typed it.
+        $this->assertEquals(3, $theirs->fresh()->items()->sum('quantity'), 'Their basket is untouched.');
     }
 
     /** A refused order must not leave its scratch cart behind. */

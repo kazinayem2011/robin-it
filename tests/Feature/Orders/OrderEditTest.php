@@ -326,7 +326,10 @@ class OrderEditTest extends TestCase
         $this->assertSame((float) $order->fresh()->total, $edit->total_after);
         $this->assertGreaterThan(0, $edit->difference);
         $this->assertSame('Customer rang to add two.', $edit->reason);
-        $this->assertSame(
+        // assertEquals, not assertSame: `changes` is a JSON column, and the
+        // two drivers hand its keys back in different orders. The record has to
+        // say what changed; it does not have to say it in a fixed key order.
+        $this->assertEquals(
             [['product' => 'RTX 4090', 'from' => 2, 'to' => 4]],
             $edit->changes
         );

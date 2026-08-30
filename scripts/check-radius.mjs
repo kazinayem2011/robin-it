@@ -29,6 +29,19 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
  */
 const ALLOWED = new Set(['0', '0px', '50%', 'inherit', 'initial', 'unset', 'revert']);
 
+/*
+ * A narrow, deliberate way out.
+ *
+ * The rule is about chrome — cards, buttons, inputs — and chart geometry is not
+ * chrome. A 3px-wide bar capped at the 8px token is not a bar any more, so the
+ * choice was either to distort a chart to satisfy a rule about panels, or to
+ * let the exception be stated. It has to be stated: the comment carries a
+ * reason, so the next person reads why rather than assuming an oversight.
+ *
+ *     border-radius: 2px 2px 0 0; // radius-exempt: chart bar cap
+ */
+const EXEMPT = /radius-exempt:/;
+
 const walk = (dir, out = []) => {
     for (const entry of readdirSync(dir)) {
         if (entry === 'node_modules' || entry === 'vendor' || entry[0] === '.') continue;
@@ -54,9 +67,18 @@ for (const file of targets) {
      * numbers still point at the right place. Without this the prose in
      * app.css explaining the scale reads as a declaration and reports itself.
      */
-    const source = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (m) =>
-        m.replace(/[^\n]/g, ' '),
+    const raw = readFileSync(file, 'utf8');
+
+    // Read the markers before comments are blanked, or the blanking erases the
+    // very thing being looked for.
+    const exempt = new Set(
+        raw
+            .split('\n')
+            .map((line, i) => (EXEMPT.test(line) ? i + 1 : null))
+            .filter(Boolean),
     );
+
+    const source = raw.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
     const lines = source.split('\n');
 
     lines.forEach((line, i) => {
@@ -69,7 +91,7 @@ for (const file of targets) {
                 (c) => !c.startsWith('var(--radius') && !ALLOWED.has(c),
             );
 
-            if (bad.length) {
+            if (bad.length && !exempt.has(i + 1)) {
                 offenders.push({
                     file: relative(ROOT, file),
                     line: i + 1,

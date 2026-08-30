@@ -33,9 +33,19 @@ class SearchTerm
      * The property that actually protects the database holds on both: a search
      * consisting of wildcards cannot return the whole table, and cannot be used
      * to force a full scan. What differs is only the ability to *find* a literal
-     * "%" or "_", which works on MySQL and not on SQLite. If SQLite ever becomes
-     * a production driver here, these clauses need an explicit ESCAPE and the
-     * literal differs per driver (MySQL wants '\\', SQLite wants '\').
+     * "%" or "_", which works on MySQL and not on SQLite.
+     *
+     * That difference is real and visible, and the test that guards this used to
+     * get it backwards. It asserted zero results for a wildcard search, which is
+     * SQLite's answer and only because its escaping does nothing — so the test
+     * passed on the broken driver and failed on the correct one. Searching "%"
+     * on MySQL rightly returns the product with a percent sign in its name.
+     *
+     * If SQLite ever becomes a production driver here, these clauses need an
+     * explicit ESCAPE and the literal differs per driver (MySQL wants '\\',
+     * SQLite wants '\'). It is not worth doing for the test driver alone: the
+     * change would touch every LIKE in five admin controllers to alter
+     * behaviour nobody ships.
      */
     public static function escape(string $value): string
     {
