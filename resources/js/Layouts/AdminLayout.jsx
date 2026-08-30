@@ -20,6 +20,7 @@ import {
     BookOpen,
     ShieldCheck,
     KeyRound,
+    HelpCircle,
     MessageSquare,
     Menu,
     X,
@@ -235,6 +236,12 @@ const NAV_GROUPS = [
                 label: 'Messages',
                 href: ROUTES.ADMIN_MESSAGES,
                 icon: Inbox,
+                ability: 'support',
+            },
+            {
+                label: 'Product Questions',
+                href: ROUTES.ADMIN_QUESTIONS,
+                icon: HelpCircle,
                 ability: 'support',
             },
             {

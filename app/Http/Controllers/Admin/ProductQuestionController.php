@@ -29,7 +29,20 @@ class ProductQuestionController extends Controller
             ->orderByRaw('answer IS NOT NULL')
             ->latest()
             ->paginate(20)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (ProductQuestion $q) => [
+                'id' => $q->id,
+                'name' => $q->name,
+                'question' => $q->question,
+                'answer' => $q->answer,
+                'is_published' => $q->is_published,
+                'created_at' => $q->created_at?->toDateTimeString(),
+                'answered_by_name' => $q->answerer?->name,
+                'product' => $q->product ? [
+                    'name' => $q->product->name,
+                    'slug' => $q->product->slug,
+                ] : null,
+            ]);
 
         return Inertia::render('Admin/ProductQuestions', [
             'questions' => $questions,
