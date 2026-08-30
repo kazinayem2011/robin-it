@@ -119,6 +119,8 @@ class ProductController extends Controller
             ]);
         }
 
+        $this->syncSpecifications($product, $validated['specifications'] ?? null);
+
         return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
     }
 
@@ -139,6 +141,13 @@ class ProductController extends Controller
 
         $this->applyVariantChanges($request, $product);
 
+        // validated(), not $attributes: productAttributes() strips this out, and
+        // an empty array here is the instruction to clear the spec sheet, which
+        // a null-filtering pick would silently discard.
+        if ($request->has('specifications')) {
+            $this->syncSpecifications($product, $request->validated()['specifications'] ?? []);
+        }
+
         if (! empty($attributes['image_path'])) {
             $primaryImage = $product->images()->where('is_primary', true)->first();
 
@@ -153,6 +162,49 @@ class ProductController extends Controller
         }
 
         return $this->successResponse($product, "Product '{$product->name}' updated successfully.");
+    }
+
+    /**
+     * Replace a product's spec sheet with what the form submitted.
+     *
+     * Replace rather than merge: the form always sends the whole sheet, so a
+     * row the admin deleted is one that is simply absent from the payload.
+     * Trying to diff row-by-row would need stable ids for rows that are still
+     * being typed.
+     *
+     * Blank rows are dropped rather than rejected. The editor starts every
+     * product with an empty row and leaves one at the bottom; making that an
+     * error would mean nobody could save a product without first tidying up
+     * after the UI.
+     *
+     * @param  array<int, array{group?: ?string, name?: ?string, value?: ?string}>|null  $rows
+     */
+    private function syncSpecifications(Product $product, ?array $rows): void
+    {
+        if ($rows === null) {
+            return;
+        }
+
+        $product->specifications()->delete();
+
+        $position = 0;
+
+        foreach ($rows as $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            $value = trim((string) ($row['value'] ?? ''));
+
+            // A name with no value is half-typed, not a spec.
+            if ($name === '' || $value === '') {
+                continue;
+            }
+
+            $product->specifications()->create([
+                'group' => trim((string) ($row['group'] ?? '')) ?: null,
+                'name' => $name,
+                'value' => $value,
+                'sort_order' => $position++,
+            ]);
+        }
     }
 
     /**

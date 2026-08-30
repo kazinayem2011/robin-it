@@ -25,11 +25,11 @@ class ProductStoreRequest extends AdminRequest
             'discount_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
             'short_description' => 'nullable|string|max:500',
-            'description' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
             'reorder_level' => 'nullable|integer|min:0|max:100000',
 
+            ...ProductRules::details(),
             ...ProductRules::preorder(),
         ];
     }

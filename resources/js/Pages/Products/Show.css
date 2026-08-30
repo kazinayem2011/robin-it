@@ -966,3 +966,25 @@
     font-size: 12px;
     color: var(--gray-400);
 }
+
+/* Specification section headings.
+
+   A laptop carries forty specs; as one flat list it is unreadable, which is why
+   every shop this one is measured against breaks them into sections. Rows with
+   no group render exactly as before, so short spec sheets are unaffected. */
+.specifications-table .spec-group-row th.spec-group {
+    padding: 14px 12px 8px;
+    text-align: left;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--primary-color, #c1121f);
+    background: transparent;
+    border-bottom: 2px solid currentColor;
+}
+
+/* The first heading sits directly under the table's own title. */
+.specifications-table tbody:first-of-type .spec-group-row th.spec-group {
+    padding-top: 4px;
+}

@@ -28,7 +28,6 @@ class ProductUpdateRequest extends AdminRequest
             'price' => 'nullable|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
             'short_description' => 'nullable|string|max:500',
-            'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
@@ -36,6 +35,7 @@ class ProductUpdateRequest extends AdminRequest
             // because it moves nothing.
             'reorder_level' => 'nullable|integer|min:0|max:100000',
 
+            ...ProductRules::details(),
             ...ProductRules::preorder(),
             ...ProductRules::variants(),
         ];
@@ -52,8 +52,11 @@ class ProductUpdateRequest extends AdminRequest
      */
     public function productAttributes(): array
     {
+        // `specifications` is a table of its own, not a column on products, and
+        // is applied separately — leaving it here would reach Product::update()
+        // as an unknown attribute.
         $scalar = collect($this->validated())
-            ->except(['has_variants', 'variant_attributes', 'variants'])
+            ->except(['has_variants', 'variant_attributes', 'variants', 'specifications'])
             ->all();
 
         return array_filter(

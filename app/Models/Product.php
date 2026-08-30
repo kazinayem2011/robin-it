@@ -82,9 +82,14 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    /**
+     * Ordered, because a spec sheet reads top-down — processor first, warranty
+     * last — and insertion order is not that: editing one row would otherwise
+     * move it to the bottom of the product page.
+     */
     public function specifications()
     {
-        return $this->hasMany(ProductSpecification::class);
+        return $this->hasMany(ProductSpecification::class)->inDisplayOrder();
     }
 
     public function reviews()

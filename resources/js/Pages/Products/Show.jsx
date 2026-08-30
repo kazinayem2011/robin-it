@@ -36,6 +36,32 @@ import {
 } from 'lucide-react';
 import './Show.css';
 
+/**
+ * Specs arranged into the sections the admin gave them, preserving entry order
+ * both between groups and within one.
+ *
+ * Rows with no group collect under an empty key rather than being dropped or
+ * given an invented heading: every spec written before grouping existed has a
+ * null group, and those products still have to render.
+ */
+const groupSpecifications = (specifications) => {
+    const order = [];
+    const bucket = new Map();
+
+    specifications.forEach((spec) => {
+        const group = (spec.group || '').trim();
+
+        if (!bucket.has(group)) {
+            bucket.set(group, []);
+            order.push(group);
+        }
+
+        bucket.get(group).push(spec);
+    });
+
+    return order.map((group) => ({ group, items: bucket.get(group) }));
+};
+
 export default function ProductDetails(props) {
     const productSlug =
         props.productSlug ||
@@ -678,9 +704,28 @@ export default function ProductDetails(props) {
                                     {product.specifications &&
                                     product.specifications.length > 0 ? (
                                         <table>
-                                            <tbody>
-                                                {product.specifications.map(
-                                                    (spec) => (
+                                            {/* Grouped into sections, in the order
+                                                the admin entered them. A product
+                                                whose specs predate grouping has no
+                                                `group` on any row and renders as
+                                                the plain two-column table it
+                                                always was. */}
+                                            {groupSpecifications(
+                                                product.specifications,
+                                            ).map(({ group, items }) => (
+                                                <tbody key={group || '__none'}>
+                                                    {group && (
+                                                        <tr className="spec-group-row">
+                                                            <th
+                                                                colSpan={2}
+                                                                scope="colgroup"
+                                                                className="spec-group"
+                                                            >
+                                                                {group}
+                                                            </th>
+                                                        </tr>
+                                                    )}
+                                                    {items.map((spec) => (
                                                         <tr key={spec.id}>
                                                             <td className="spec-name">
                                                                 {spec.name}
@@ -689,9 +734,9 @@ export default function ProductDetails(props) {
                                                                 {spec.value}
                                                             </td>
                                                         </tr>
-                                                    ),
-                                                )}
-                                            </tbody>
+                                                    ))}
+                                                </tbody>
+                                            ))}
                                         </table>
                                     ) : (
                                         <p>

@@ -79,6 +79,35 @@ class ProductRules
     }
 
     /**
+     * The spec sheet, and the two fields that belong beside it.
+     *
+     * `specifications` is sent whole and replaces what is stored, so an absent
+     * key means "not editing these" while an empty array means "remove them
+     * all" — see ProductController::syncSpecifications.
+     *
+     * A blank `group` is allowed: a mouse has six specs and needs no headings.
+     *
+     * @return array<string, mixed>
+     */
+    public static function details(): array
+    {
+        return [
+            'description' => 'nullable|string',
+
+            // Months rather than a date, because the clock starts when the
+            // customer buys it, not when the shop lists it. 600 is fifty years:
+            // high enough for a "lifetime" claim, low enough to catch a typo
+            // where someone meant days.
+            'warranty_months' => 'nullable|integer|min:0|max:600',
+
+            'specifications' => 'nullable|array|max:200',
+            'specifications.*.group' => 'nullable|string|max:80',
+            'specifications.*.name' => 'required_with:specifications.*.value|nullable|string|max:120',
+            'specifications.*.value' => 'nullable|string|max:2000',
+        ];
+    }
+
+    /**
      * Options. Stock is deliberately absent from every one of these: editing a
      * product must never move a unit.
      *

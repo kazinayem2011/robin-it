@@ -3767,3 +3767,93 @@ a.admin-card:hover,
     display: inline-block;
     margin-top: 3px;
 }
+
+/* ---------------------------------------------------------------------------
+   Specification editor
+
+   The product_specifications table shipped in the first migration and the
+   storefront has always rendered it, but no admin screen could write a row.
+   Laid out to mirror the variant editor above, one column wider: a spec sheet
+   carries a section heading as well as a name and a value.
+   --------------------------------------------------------------------------- */
+.admin-spec-editor {
+    margin: 18px 0;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.admin-spec-header {
+    margin-bottom: 12px;
+}
+
+.admin-spec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.admin-spec-row {
+    display: grid;
+    /* handle | group | name | value | remove */
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr) minmax(
+            0,
+            1.6fr
+        ) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Column labels, so three near-identical text boxes are not a guessing game. */
+.admin-spec-row-head {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+}
+
+.admin-spec-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    color: var(--gray-400);
+}
+
+.admin-spec-remove-head {
+    width: 28px;
+}
+
+.admin-spec-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Below this the five columns stop being readable, so each row becomes a
+   stacked block with its own labels carried by the placeholders. */
+@media (max-width: 860px) {
+    .admin-spec-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-spec-row input {
+        grid-column: 1;
+    }
+
+    .admin-spec-row .admin-receive-line-remove {
+        grid-column: 2;
+        grid-row: 1 / span 3;
+        align-self: start;
+    }
+
+    .admin-spec-handle,
+    .admin-spec-row-head {
+        display: none;
+    }
+}

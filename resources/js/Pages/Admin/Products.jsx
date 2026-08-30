@@ -25,6 +25,7 @@ import { adminService, uploadService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
+import SpecificationEditor from './Components/SpecificationEditor';
 import { ROUTES } from '@/constants/endpoints';
 
 /**
@@ -59,6 +60,27 @@ const buildProductPayload = (values, editingProduct) => {
             ? null
             : Number(rest.preorder_limit);
     rest.preorder_release_at = rest.preorder_release_at || null;
+
+    // Same trap as the pre-order fields: an untouched number input holds '',
+    // which fails `nullable|integer`. Blank means the product has no warranty.
+    rest.warranty_months =
+        rest.warranty_months === '' || rest.warranty_months === null
+            ? null
+            : Number(rest.warranty_months);
+
+    /*
+     * `key` exists only so React can tell two half-typed rows apart; it is not
+     * a column and has no meaning to the server. Rows still being filled in are
+     * dropped here rather than sent to fail validation — the editor always
+     * leaves a blank row at the bottom.
+     */
+    rest.specifications = (rest.specifications || [])
+        .filter((spec) => spec.name?.trim() && spec.value?.trim())
+        .map((spec) => ({
+            group: spec.group?.trim() || null,
+            name: spec.name.trim(),
+            value: spec.value.trim(),
+        }));
 
     if (!hasVariants) {
         return { ...rest, has_variants: false };
@@ -126,6 +148,8 @@ export default function Products({
             stock_quantity: 10,
             short_description: '',
             description: '',
+            warranty_months: '',
+            specifications: [],
             image_path: '/images/product_cpu_i9.jpg',
             is_featured: false,
             is_active: true,
@@ -220,6 +244,8 @@ export default function Products({
                 stock_quantity: 10,
                 short_description: '',
                 description: '',
+                warranty_months: '',
+                specifications: [],
                 image_path: '/images/product_cpu_i9.jpg',
                 is_featured: false,
                 is_active: true,
@@ -247,6 +273,15 @@ export default function Products({
                 stock_quantity: p.stock_quantity ?? 0,
                 short_description: p.short_description || '',
                 description: p.description || '',
+                warranty_months: p.warranty_months ?? '',
+                // Server rows have no `key`; the editor needs one that survives
+                // re-renders, so give each an identity as it is loaded in.
+                specifications: (p.specifications || []).map((spec, i) => ({
+                    key: `spec-${spec.id ?? i}`,
+                    group: spec.group || '',
+                    name: spec.name || '',
+                    value: spec.value || '',
+                })),
                 image_path: p.images?.[0]?.image_path || '',
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
@@ -728,6 +763,45 @@ export default function Products({
                         }
                         placeholder="e.g. 20 Cores (8P + 12E), up to 5.6 GHz, LGA1700 Socket"
                     />
+
+                    {/* The column has existed since the first migration and the
+                        product page has always rendered it, but the form had no
+                        field — so every description on the site came from a
+                        seeder and no admin could write one. */}
+                    <FormInput
+                        id="description"
+                        name="description"
+                        type="textarea"
+                        rows={8}
+                        label="Full Description"
+                        value={formik.values.description}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                            formik.touched.description &&
+                            formik.errors.description
+                        }
+                        placeholder="What the product is, who it suits, what is in the box. Basic HTML is allowed."
+                        helperText="Shown under the Description tab on the product page."
+                    />
+
+                    <FormInput
+                        id="warranty_months"
+                        name="warranty_months"
+                        type="number"
+                        label="Warranty (months)"
+                        value={formik.values.warranty_months}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                            formik.touched.warranty_months &&
+                            formik.errors.warranty_months
+                        }
+                        placeholder="24"
+                        helperText="Counted from the day the customer buys it. Leave blank if the product has none."
+                    />
+
+                    <SpecificationEditor formik={formik} />
 
                     {/* Product image. The form carried an image_path value with no
                         field to edit it, so every product kept the same stock photo. */}
