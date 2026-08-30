@@ -9,7 +9,7 @@ class ProductImage extends Model
     /** Shipped with the app, so this one is always there. */
     public const PLACEHOLDER = '/images/product-placeholder.svg';
 
-    protected $fillable = ['product_id', 'image_path', 'is_primary'];
+    protected $fillable = ['product_id', 'image_path', 'is_primary', 'alt_text'];
 
     /**
      * The resolved URL travels alongside the stored path, never instead of it.

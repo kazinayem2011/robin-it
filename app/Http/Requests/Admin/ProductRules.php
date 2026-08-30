@@ -105,6 +105,17 @@ class ProductRules
              * Google will actually render before truncating — a longer one is
              * not wrong, it just will not be seen.
              */
+            /*
+             * Not `barcode`. That is the number on this shop's box, scanned at
+             * a delivery. The MPN is the manufacturer's own part number — what
+             * a customer pastes into Google to check the revision — and the
+             * model is what they say out loud at the counter. Neither is
+             * unique: two sellers list the same MPN, and an 8GB and a 16GB
+             * build share a model string.
+             */
+            'model' => 'nullable|string|max:255',
+            'mpn' => 'nullable|string|max:120',
+
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'meta_keyword' => 'nullable|string|max:500',

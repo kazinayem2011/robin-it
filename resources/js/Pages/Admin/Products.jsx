@@ -156,6 +156,8 @@ export default function Products({
             description: '',
             warranty_months: '',
             category_ids: [],
+            model: '',
+            mpn: '',
             meta_title: '',
             meta_description: '',
             meta_keyword: '',
@@ -312,6 +314,8 @@ export default function Products({
                 description: '',
                 warranty_months: '',
                 category_ids: [],
+                model: '',
+                mpn: '',
                 meta_title: '',
                 meta_description: '',
                 meta_keyword: '',
@@ -344,6 +348,8 @@ export default function Products({
                 short_description: p.short_description || '',
                 description: p.description || '',
                 warranty_months: p.warranty_months ?? '',
+                model: p.model ?? '',
+                mpn: p.mpn ?? '',
                 category_ids: (p.categories || []).map((c) => c.id),
                 meta_title: p.meta_title || '',
                 meta_description: p.meta_description || '',
@@ -656,6 +662,31 @@ export default function Products({
                                 value: b.id,
                                 label: b.name,
                             }))}
+                        />
+                    </div>
+
+                    <div className="admin-modal-form-grid">
+                        <FormInput
+                            id="model"
+                            name="model"
+                            label="Model"
+                            value={formik.values.model}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.model && formik.errors.model}
+                            placeholder="Cyborg 15 Black Edition A13UC"
+                            helperText="What a customer says at the counter."
+                        />
+                        <FormInput
+                            id="mpn"
+                            name="mpn"
+                            label="MPN"
+                            value={formik.values.mpn}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.mpn && formik.errors.mpn}
+                            placeholder="9S7-15K112-2423"
+                            helperText="Manufacturer part number. Not the barcode."
                         />
                     </div>
 
