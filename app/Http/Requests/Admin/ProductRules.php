@@ -101,6 +101,15 @@ class ProductRules
             'warranty_months' => 'nullable|integer|min:0|max:600',
 
             /*
+             * Written for a search result, not for the page. Lengths match what
+             * Google will actually render before truncating — a longer one is
+             * not wrong, it just will not be seen.
+             */
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_keyword' => 'nullable|string|max:500',
+
+            /*
              * Extra categories to list the product under, beyond its primary
              * one. The primary is added back regardless, so a caller cannot
              * take a product out of its own breadcrumb by omitting it.

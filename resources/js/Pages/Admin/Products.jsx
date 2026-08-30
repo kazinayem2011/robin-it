@@ -156,6 +156,9 @@ export default function Products({
             description: '',
             warranty_months: '',
             category_ids: [],
+            meta_title: '',
+            meta_description: '',
+            meta_keyword: '',
             specifications: [],
             image_path: '/images/product_cpu_i9.jpg',
             is_featured: false,
@@ -309,6 +312,9 @@ export default function Products({
                 description: '',
                 warranty_months: '',
                 category_ids: [],
+                meta_title: '',
+                meta_description: '',
+                meta_keyword: '',
                 specifications: [],
                 image_path: '/images/product_cpu_i9.jpg',
                 is_featured: false,
@@ -339,6 +345,9 @@ export default function Products({
                 description: p.description || '',
                 warranty_months: p.warranty_months ?? '',
                 category_ids: (p.categories || []).map((c) => c.id),
+                meta_title: p.meta_title || '',
+                meta_description: p.meta_description || '',
+                meta_keyword: p.meta_keyword || '',
                 // Server rows have no `key`; the editor needs one that survives
                 // re-renders, so give each an identity as it is loaded in.
                 specifications: (p.specifications || []).map((spec, i) => ({
@@ -916,6 +925,61 @@ export default function Products({
                     />
 
                     <SpecificationEditor formik={formik} />
+
+                    {/* Written for a search result, not for the page. The shop
+                        this follows keeps the two apart on purpose: the title
+                        reads "… Laptop Price in Bangladesh", the product name
+                        reads "… Core i5 13th Gen RTX 3050 15.6-inch FHD". Blank
+                        falls back to the name, exactly as before. */}
+                    <details className="admin-seo-block">
+                        <summary>Search engine listing (optional)</summary>
+
+                        <FormInput
+                            id="meta_title"
+                            name="meta_title"
+                            label="Meta Title"
+                            value={formik.values.meta_title}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.meta_title &&
+                                formik.errors.meta_title
+                            }
+                            placeholder="MSI Cyborg 15 A13UC Laptop Price in Bangladesh"
+                            helperText="Blank uses the product name."
+                        />
+
+                        <FormInput
+                            id="meta_description"
+                            name="meta_description"
+                            type="textarea"
+                            rows={3}
+                            label="Meta Description"
+                            value={formik.values.meta_description}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.meta_description &&
+                                formik.errors.meta_description
+                            }
+                            placeholder="Buy … at best price in Bangladesh. Order online for delivery in BD."
+                            helperText="Around 155 characters is what Google shows."
+                        />
+
+                        <FormInput
+                            id="meta_keyword"
+                            name="meta_keyword"
+                            label="Meta Keywords"
+                            value={formik.values.meta_keyword}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.meta_keyword &&
+                                formik.errors.meta_keyword
+                            }
+                            placeholder='Core i5 13th Gen RTX 3050 15.6" FHD Gaming Laptop'
+                        />
+                    </details>
 
                     {/* Product image. The form carried an image_path value with no
                         field to edit it, so every product kept the same stock photo. */}

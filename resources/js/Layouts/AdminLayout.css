@@ -3868,3 +3868,24 @@ a.admin-card:hover,
 .admin-multi-select option {
     padding: 3px 6px;
 }
+
+/* SEO block: collapsed by default. Most products never get hand-written meta,
+   and three always-open fields nobody fills push the save button off-screen. */
+.admin-seo-block {
+    margin: 18px 0;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.admin-seo-block > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    list-style-position: inside;
+}
+
+.admin-seo-block[open] > summary {
+    margin-bottom: 12px;
+}

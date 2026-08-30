@@ -9,7 +9,8 @@ class Product extends Model
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'slug', 'barcode', 'price',
         'discount_price', 'stock_quantity', 'short_description',
-        'description', 'is_featured', 'is_active',
+        'description', 'meta_title', 'meta_description', 'meta_keyword',
+        'is_featured', 'is_active',
         'has_variants', 'variant_attributes', 'reorder_level',
         'allow_preorder', 'preorder_limit', 'preorder_release_at',
         'warranty_months',

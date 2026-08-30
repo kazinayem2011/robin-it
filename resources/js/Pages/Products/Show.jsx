@@ -357,8 +357,13 @@ export default function ProductDetails(props) {
     return (
         <>
             <SEOHead
-                title={product.name}
-                description={product.short_description || product.name}
+                title={product.meta_title || product.name}
+                description={
+                    product.meta_description ||
+                    product.short_description ||
+                    product.name
+                }
+                keywords={product.meta_keyword || undefined}
                 image={images[0]}
                 type="product"
                 schemaData={schemaData}

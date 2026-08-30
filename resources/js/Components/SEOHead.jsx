@@ -10,6 +10,10 @@ export default function SEOHead({
     url,
     type = 'website',
     schemaData = null,
+    // Per-page keywords. Site Settings supplies the shop-wide fallback; a
+    // product's own spec line is far more use than one generic list repeated
+    // on every page.
+    keywords = '',
     // Pages behind a login or in the checkout funnel should not be indexed
     // even if a crawler reaches them past robots.txt.
     noindex = false,
@@ -33,7 +37,7 @@ export default function SEOHead({
         description || settings.meta_description || siteConfig.description;
     const pageImage =
         image || settings.og_image || '/images/hero_gaming_pc.png';
-    const pageKeywords = settings.meta_keywords || '';
+    const pageKeywords = keywords || settings.meta_keywords || '';
     const pageUrl =
         url || (typeof window !== 'undefined' ? window.location.href : '');
 
