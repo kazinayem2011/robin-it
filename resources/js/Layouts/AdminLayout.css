@@ -3798,10 +3798,9 @@ a.admin-card:hover,
 .admin-spec-row {
     display: grid;
     /* handle | group | name | value | remove */
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr) minmax(
-            0,
-            1.6fr
-        ) auto;
+    grid-template-columns:
+        auto minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.6fr)
+        auto;
     gap: 10px;
     align-items: center;
 }
@@ -3856,4 +3855,16 @@ a.admin-card:hover,
     .admin-spec-row-head {
         display: none;
     }
+}
+
+/* Multi-select for additional categories. The tree is over a thousand rows, so
+   it needs real height — a three-row box makes finding anything a scroll hunt. */
+.admin-multi-select {
+    min-height: 180px;
+    padding: 6px;
+    font-family: inherit;
+}
+
+.admin-multi-select option {
+    padding: 3px 6px;
 }

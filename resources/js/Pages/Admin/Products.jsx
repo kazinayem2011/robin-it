@@ -74,6 +74,12 @@ const buildProductPayload = (values, editingProduct) => {
      * dropped here rather than sent to fail validation — the editor always
      * leaves a blank row at the bottom.
      */
+    // The primary is added back server-side regardless, so it is dropped here
+    // rather than sent as a duplicate.
+    rest.category_ids = (rest.category_ids || [])
+        .map(Number)
+        .filter((id) => id && id !== Number(rest.category_id));
+
     rest.specifications = (rest.specifications || [])
         .filter((spec) => spec.name?.trim() && spec.value?.trim())
         .map((spec) => ({
@@ -149,6 +155,7 @@ export default function Products({
             short_description: '',
             description: '',
             warranty_months: '',
+            category_ids: [],
             specifications: [],
             image_path: '/images/product_cpu_i9.jpg',
             is_featured: false,
@@ -301,6 +308,7 @@ export default function Products({
                 short_description: '',
                 description: '',
                 warranty_months: '',
+                category_ids: [],
                 specifications: [],
                 image_path: '/images/product_cpu_i9.jpg',
                 is_featured: false,
@@ -330,6 +338,7 @@ export default function Products({
                 short_description: p.short_description || '',
                 description: p.description || '',
                 warranty_months: p.warranty_months ?? '',
+                category_ids: (p.categories || []).map((c) => c.id),
                 // Server rows have no `key`; the editor needs one that survives
                 // re-renders, so give each an identity as it is loaded in.
                 specifications: (p.specifications || []).map((spec, i) => ({
@@ -639,6 +648,49 @@ export default function Products({
                                 label: b.name,
                             }))}
                         />
+                    </div>
+
+                    {/* A product belongs in more than one place: an Asus gaming
+                        laptop sits under both "Gaming Laptop > Asus" and "All
+                        Laptop > Asus". The primary above still gives it its
+                        breadcrumb and canonical URL. */}
+                    <div className="auth-form-group">
+                        <label className="auth-label" htmlFor="category_ids">
+                            Also list under
+                        </label>
+                        <select
+                            id="category_ids"
+                            name="category_ids"
+                            multiple
+                            size={8}
+                            className="auth-input admin-multi-select"
+                            value={(formik.values.category_ids || []).map(
+                                String,
+                            )}
+                            onChange={(e) =>
+                                formik.setFieldValue(
+                                    'category_ids',
+                                    Array.from(
+                                        e.target.selectedOptions,
+                                        (opt) => Number(opt.value),
+                                    ),
+                                )
+                            }
+                        >
+                            {categoryOptionGroups.map((group) => (
+                                <optgroup key={group.id} label={group.name}>
+                                    {group.options.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            ))}
+                        </select>
+                        <span className="admin-field-hint">
+                            Optional. Hold Cmd/Ctrl to pick several. The primary
+                            category is always included.
+                        </span>
                     </div>
 
                     <div className="admin-form-grid-3">

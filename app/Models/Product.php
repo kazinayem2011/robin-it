@@ -45,9 +45,64 @@ class Product extends Model
         'preorder_release_at' => 'date',
     ];
 
+    /**
+     * The primary category is mirrored into the pivot on every save.
+     *
+     * Without this, anything that writes a product without going through the
+     * admin form — a seeder, tinker, an import — would create a product the
+     * catalogue cannot find, because the catalogue reads the pivot and nothing
+     * would have put a row in it. syncWithoutDetaching, so it never disturbs
+     * the additional categories someone chose.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (self $product) {
+            if ($product->category_id) {
+                $product->categories()->syncWithoutDetaching([$product->category_id]);
+            }
+        });
+    }
+
+    /**
+     * The primary category: the one that gives this product its breadcrumb and
+     * its canonical URL. Always also present in `categories()`.
+     */
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Every category this product is listed under, the primary one included.
+     *
+     * The catalogue reads this, never `category_id` — an Asus gaming laptop
+     * belongs under both "Gaming Laptop > Asus" and "All Laptop > Asus", and a
+     * single column can only put it in one of them.
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
+    /**
+     * Put the product in these categories, keeping the primary one whatever
+     * else changes.
+     *
+     * Dropping the primary from the pivot would take the product out of its own
+     * breadcrumb, so it is added back regardless of what the caller passed.
+     *
+     * @param  array<int, int|string>  $categoryIds
+     */
+    public function syncCategories(array $categoryIds): void
+    {
+        $ids = collect($categoryIds)
+            ->push($this->category_id)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->all();
+
+        $this->categories()->sync($ids);
     }
 
     public function brand()

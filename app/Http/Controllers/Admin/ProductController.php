@@ -39,7 +39,7 @@ class ProductController extends Controller
         // compatibility gap check below reads both. Loading them per product
         // instead turned this page into 61 queries for 20 rows.
         $query = Product::with([
-            'category.parent.parent', 'brand', 'images', 'variants', 'specifications',
+            'category.parent.parent', 'categories:id', 'brand', 'images', 'variants', 'specifications',
         ])
             // withExists rather than asking per product: checking each row
             // individually took this page from 23 queries to 52.
@@ -120,6 +120,7 @@ class ProductController extends Controller
         }
 
         $this->syncSpecifications($product, $validated['specifications'] ?? null);
+        $product->syncCategories($validated['category_ids'] ?? []);
 
         return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
     }
@@ -146,6 +147,12 @@ class ProductController extends Controller
         // a null-filtering pick would silently discard.
         if ($request->has('specifications')) {
             $this->syncSpecifications($product, $request->validated()['specifications'] ?? []);
+        }
+
+        // Absent means "not editing these"; an empty array means "only the
+        // primary" — which syncCategories keeps regardless.
+        if ($request->has('category_ids')) {
+            $product->syncCategories($request->validated()['category_ids'] ?? []);
         }
 
         if (! empty($attributes['image_path'])) {

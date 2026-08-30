@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class CategoryService
 {
@@ -141,9 +142,13 @@ class CategoryService
      */
     private function categoryIdsWithProducts(): array
     {
-        $direct = Product::where('is_active', true)
+        // Read through the pivot: a product listed in several categories has
+        // to make every one of them visible, not just its primary.
+        $direct = DB::table('category_product')
+            ->join('products', 'products.id', '=', 'category_product.product_id')
+            ->where('products.is_active', true)
             ->distinct()
-            ->pluck('category_id')
+            ->pluck('category_product.category_id')
             ->filter()
             ->all();
 
@@ -209,9 +214,10 @@ class CategoryService
         $counts = empty($allIds)
             ? collect()
             : Product::active()
-                ->whereIn('category_id', array_unique($allIds))
-                ->groupBy('category_id')
-                ->selectRaw('category_id, COUNT(*) as aggregate')
+                ->join('category_product', 'category_product.product_id', '=', 'products.id')
+                ->whereIn('category_product.category_id', array_unique($allIds))
+                ->groupBy('category_product.category_id')
+                ->selectRaw('category_product.category_id as category_id, COUNT(DISTINCT products.id) as aggregate')
                 ->pluck('aggregate', 'category_id');
 
         $colors = [

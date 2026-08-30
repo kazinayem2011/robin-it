@@ -75,10 +75,10 @@ class ProductService
         // Filter by Category Slug or ID
         if (! empty($filters['category_slug'])) {
             $categoryIds = $this->categoryService->getDescendantIds($filters['category_slug']);
-            $query->whereIn('category_id', $categoryIds ?: [0]);
+            $this->scopeToCategories($query, $categoryIds);
         } elseif (! empty($filters['category_id'])) {
             $categoryIds = $this->categoryService->getDescendantIds((int) $filters['category_id']);
-            $query->whereIn('category_id', $categoryIds ?: [0]);
+            $this->scopeToCategories($query, $categoryIds);
         }
 
         // Filter by Brand. Several may be selected at once — a shopper
@@ -253,7 +253,7 @@ class ProductService
             $allCatIds = $this->categoryService->getDescendantIds($tabSlug);
 
             if (! empty($allCatIds)) {
-                $query->whereIn('category_id', $allCatIds);
+                $this->scopeToCategories($query, $allCatIds);
             }
         }
 
@@ -282,8 +282,9 @@ class ProductService
 
         $counts = $this->baseFilteredQuery($scope)
             ->reorder()
-            ->selectRaw('category_id, COUNT(*) as total')
-            ->groupBy('category_id')
+            ->join('category_product', 'category_product.product_id', '=', 'products.id')
+            ->selectRaw('category_product.category_id as category_id, COUNT(DISTINCT products.id) as total')
+            ->groupBy('category_product.category_id')
             ->pluck('total', 'category_id');
 
         if ($counts->isEmpty()) {
@@ -737,5 +738,29 @@ class ProductService
     private function clampLimit(int $limit): int
     {
         return max(1, min($limit, self::MAX_PER_PAGE));
+    }
+
+    /**
+     * Narrow a product query to a set of categories, through the pivot.
+     *
+     * whereHas rather than a join: a product listed under both "Gaming Laptop >
+     * Asus" and "All Laptop > Asus" matches two pivot rows, and a join would
+     * return it twice — once as a duplicate card in the grid, and again as a
+     * doubled figure in every count built on the same query.
+     *
+     * @param  array<int, int>  $categoryIds
+     */
+    private function scopeToCategories($query, array $categoryIds): void
+    {
+        if (empty($categoryIds)) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
+
+        $query->whereHas(
+            'categories',
+            fn ($q) => $q->whereIn('categories.id', $categoryIds)
+        );
     }
 }

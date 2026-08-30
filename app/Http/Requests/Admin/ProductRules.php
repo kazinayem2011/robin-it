@@ -100,6 +100,14 @@ class ProductRules
             // where someone meant days.
             'warranty_months' => 'nullable|integer|min:0|max:600',
 
+            /*
+             * Extra categories to list the product under, beyond its primary
+             * one. The primary is added back regardless, so a caller cannot
+             * take a product out of its own breadcrumb by omitting it.
+             */
+            'category_ids' => 'nullable|array|max:30',
+            'category_ids.*' => 'integer|exists:categories,id',
+
             'specifications' => 'nullable|array|max:200',
             'specifications.*.group' => 'nullable|string|max:80',
             'specifications.*.name' => 'required_with:specifications.*.value|nullable|string|max:120',
