@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -204,18 +204,74 @@ export default function Products({
         },
     });
 
+    /*
+     * Typing "keyboard" used to fire eight full page requests, one per
+     * keystroke, each replacing the last — the results flickered through
+     * "k", "ke", "key" on the way to the answer, and on a slow connection
+     * they could land out of order and leave the wrong list on screen.
+     *
+     * The input stays instant; only the request waits.
+     */
+    /*
+     * The category list is a flat array of several hundred rows, and the select
+     * showed nothing but `cat.name`. Once the tree went three levels deep that
+     * became unusable: "Type-C Cable" appears under both Mobile Accessories and
+     * Cable, "Car Charger" under both Mobile Accessories and Gadget, and the
+     * dropdown offered no way to tell which was which.
+     *
+     * Grouped by top-level category, indented by depth, so a name is read in
+     * the context that gives it meaning.
+     */
+    const categoryOptionGroups = useMemo(() => {
+        const byParent = new Map();
+
+        categories.forEach((cat) => {
+            const key = cat.parent_id ?? 'root';
+            if (!byParent.has(key)) byParent.set(key, []);
+            byParent.get(key).push(cat);
+        });
+
+        const branch = (cat, depth) => [
+            {
+                id: cat.id,
+                // Non-breaking spaces: a <option> collapses ordinary ones, so
+                // regular indentation simply does not render.
+                label: `${'   '.repeat(depth)}${depth ? '└ ' : ''}${cat.name}`,
+            },
+            ...(byParent.get(cat.id) ?? []).flatMap((child) =>
+                branch(child, depth + 1),
+            ),
+        ];
+
+        return (byParent.get('root') ?? []).map((root) => ({
+            id: root.id,
+            name: root.name,
+            options: branch(root, 0),
+        }));
+    }, [categories]);
+
+    const searchTimer = useRef(null);
+
+    useEffect(() => () => clearTimeout(searchTimer.current), []);
+
     const handleSearch = (term) => {
         setSearchTerm(term);
-        router.get(
-            ROUTES.ADMIN_PRODUCTS,
-            {
-                search: term,
-                category_id: selectedCategory,
-            },
-            {
-                preserveState: true,
-            },
-        );
+
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => {
+            router.get(
+                ROUTES.ADMIN_PRODUCTS,
+                {
+                    search: term,
+                    category_id: selectedCategory,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 350);
     };
 
     const handleCategoryFilter = (catId) => {
@@ -548,7 +604,7 @@ export default function Products({
                         id="name"
                         name="name"
                         required
-                        label="Product Title *"
+                        label="Product Title"
                         value={formik.values.name}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -562,11 +618,17 @@ export default function Products({
                             name="category_id"
                             required
                             formik={formik}
-                            options={categories.map((cat) => ({
-                                value: cat.id,
-                                label: cat.name,
-                            }))}
-                        />
+                        >
+                            {categoryOptionGroups.map((group) => (
+                                <optgroup key={group.id} label={group.name}>
+                                    {group.options.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            ))}
+                        </FormSelect>
                         <FormSelect
                             label="Brand"
                             name="brand_id"
@@ -584,7 +646,7 @@ export default function Products({
                             id="price"
                             name="price"
                             required
-                            label="Regular Price (BDT) *"
+                            label="Regular Price (BDT)"
                             type="number"
                             value={formik.values.price}
                             onChange={formik.handleChange}

@@ -418,15 +418,9 @@ export const Header = () => {
                             </button>
                         </li>
 
-                        {/* Home link */}
-                        <li className="nav-item">
-                            <Link
-                                href={ROUTES.HOME}
-                                className="nav-link-main active-nav"
-                            >
-                                Home
-                            </Link>
-                        </li>
+                        {/* Home is not a category, and the row it sat in is the
+                            category bar. The logo already goes home, which is
+                            where every shop puts that link. */}
 
                         {/* Dynamic categories with 3-Level Dropdown */}
                         {categories.map((category) => (
