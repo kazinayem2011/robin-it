@@ -17,6 +17,13 @@ orders.
 > kill long-running processes. The queue is drained from cron there instead.
 > See [shared-hosting.md](shared-hosting.md), and set
 > `QUEUE_RUN_VIA_SCHEDULER=true` rather than installing a supervisor.
+>
+> **robinscomputer.com runs on Namecheap Stellar** — see
+> [namecheap.md](namecheap.md). Four of its rules contradict the Hostinger
+> guide above: cron cannot run more often than every five minutes, the main
+> domain's document root cannot be moved, PHP must be 8.4, and AutoSSL is
+> unavailable. Deploys there are automated by
+> [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml).
 
 ### Option A — supervisor
 

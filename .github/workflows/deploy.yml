@@ -1,0 +1,130 @@
+name: Deploy
+
+# Deploys to Namecheap Stellar shared hosting (server178, cPanel account
+# robicxns) over SSH.
+#
+# Triggers deliberately exclude `dev`: this publishes to the live storefront,
+# and every work-in-progress commit should not reach customers. Merge to main
+# to release, or use "Run workflow" for a manual deploy from any branch.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Two deploys rsyncing the same directory at once would interleave files and
+# leave the app in a state matching no commit. Queue them instead.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  # Namecheap shared hosting uses 21098, not 22. Not a secret; it is the same
+  # for every customer on the platform.
+  SSH_PORT: 21098
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 8.4, not 8.3: composer.lock pins Symfony 8.1, which requires
+      # php >=8.4.1. Installing on 8.3 fails at "Verifying lock file contents".
+      # The production server is on 8.4 for the same reason.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo, pdo_mysql, bcmath, fileinfo, zip
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # vendor/ is built here rather than on the server. Shared hosting caps
+      # process memory, and `composer install` there needs -d memory_limit=-1
+      # to avoid being killed part-way — which leaves a half-installed vendor
+      # directory and a site that 500s. Building in CI removes that failure
+      # mode entirely.
+      - name: Install PHP dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      # public/build is gitignored and there is no Node on the server, so this
+      # is the only place the production assets can come from. Without them
+      # every page renders as unstyled HTML.
+      - name: Build production assets
+        run: npm run build
+
+      # A test file co-located under Pages was once picked up by the Inertia
+      # page glob and shipped as the largest asset on the site. Same guard as
+      # tests.yml, because a bad bundle must not reach customers.
+      - name: No test code in the production bundle
+        run: |
+          if ls public/build/assets/ | grep -Ei '\.(test|spec)-'; then
+            echo "Test files were bundled into the production build."
+            exit 1
+          fi
+          echo "No test code in the bundle."
+
+      # public/hot is written by `npm run dev` and points at a local Vite
+      # server. If it ever reaches production, Laravel ignores the compiled
+      # manifest and points every asset at 127.0.0.1:5173 — the site loads with
+      # no CSS or JS and nothing in the logs explains why.
+      - name: Remove dev-server marker
+        run: rm -f public/hot
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # --delete keeps the server matching the commit, so a file removed from
+      # the repo is removed from production too.
+      #
+      # Every --exclude is also protected from that deletion:
+      #   .env            server-only; holds the DB password and APP_KEY
+      #   storage/        customer uploads, logs, sessions, the queue's files
+      #   public/storage  a symlink created on the server by storage:link
+      #   public/hot      never belongs in production (see above)
+      - name: Deploy
+        run: |
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude '.env' \
+            --exclude 'storage' \
+            --exclude 'public/storage' \
+            --exclude 'public/hot' \
+            --exclude 'tests' \
+            -e "ssh -p $SSH_PORT -i ~/.ssh/id_ed25519" \
+            ./ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      # config:cache freezes .env into a compiled file, so it must be rebuilt
+      # after every deploy or the app keeps reading the previous release's
+      # configuration.
+      #
+      # queue:restart is not optional: workers hold the old code in memory.
+      # Queued mail is fire-and-forget by design, so a worker running stale
+      # code fails silently — customers simply stop receiving confirmations.
+      - name: Migrate and refresh caches
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd ${{ secrets.DEPLOY_PATH }} && \
+             php artisan migrate --force && \
+             php artisan config:clear && \
+             php artisan config:cache && \
+             php artisan route:cache && \
+             php artisan view:cache && \
+             php artisan queue:restart && \
+             php artisan queue:health || true"
