@@ -29,7 +29,7 @@ jobs:
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # 8.4, not 8.3: composer.lock pins Symfony 8.1, which requires
       # php >=8.4.1. Installing on 8.3 fails at "Verifying lock file contents".
@@ -40,9 +40,9 @@ jobs:
           extensions: mbstring, pdo, pdo_mysql, bcmath, fileinfo, zip
           coverage: none
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       # vendor/ is built here rather than on the server. Shared hosting caps
