@@ -80,6 +80,19 @@ jobs:
       - name: Remove dev-server marker
         run: rm -f public/hot
 
+      # rsync leaves no record of which commit produced a release, so there is
+      # otherwise no way to answer "is my change actually live?" except by
+      # eye. Written above the document root, so it is readable over SSH but
+      # never served over HTTP.
+      - name: Stamp the release
+        run: |
+          {
+            echo "sha:     ${{ github.sha }}"
+            echo "ref:     ${{ github.ref_name }}"
+            echo "run:     ${{ github.run_number }}"
+            echo "at:      $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          } > .deployed
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh

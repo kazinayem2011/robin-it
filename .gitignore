@@ -27,3 +27,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /storage/framework/cache/htmlpurifier
+
+# Written by the deploy workflow, never committed.
+/.deployed
