@@ -11,13 +11,14 @@ use App\Models\ProductReview;
 use App\Models\SiteSetting;
 use App\Models\Store;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class DynamicContentSeeder extends Seeder
 {
     public function run(): void
     {
         // 1. SEED BANNERS
-        Banner::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => Banner::truncate());
 
         // Hero Slides (1920x600 / 16:9 Aspect Ratio)
         Banner::create([
@@ -94,7 +95,7 @@ class DynamicContentSeeder extends Seeder
         ]);
 
         // 2. SEED COUPONS
-        Coupon::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => Coupon::truncate());
 
         Coupon::create([
             'code' => 'WELCOME10',
@@ -131,7 +132,7 @@ class DynamicContentSeeder extends Seeder
         ]);
 
         // 3. SEED SHOWROOM STORES
-        Store::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => Store::truncate());
 
         Store::create([
             'name' => 'IDB Bhaban Flagship Showroom',
@@ -182,7 +183,7 @@ class DynamicContentSeeder extends Seeder
         ]);
 
         // 4. SEED SITE SETTINGS
-        SiteSetting::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => SiteSetting::truncate());
 
         SiteSetting::set(
             'announcement_ticker',
@@ -234,7 +235,7 @@ class DynamicContentSeeder extends Seeder
         }
 
         // 6. SEED PRODUCT REVIEWS
-        ProductReview::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => ProductReview::truncate());
 
         $products = Product::take(10)->get();
         $sampleReviews = [
@@ -274,7 +275,7 @@ class DynamicContentSeeder extends Seeder
         }
 
         // 7. SEED DYNAMIC BLOG POSTS / TECH JOURNAL
-        BlogPost::truncate();
+        Schema::withoutForeignKeyConstraints(fn () => BlogPost::truncate());
 
         BlogPost::create([
             'title' => 'Intel Core Ultra 200S vs AMD Ryzen 9000: Desktop Gaming Showdown',
