@@ -91,6 +91,12 @@ const buildProductPayload = (values, editingProduct) => {
             : Number(rest.emi_max_months);
     rest.related_product_ids = (rest.related_product_ids || []).map(Number);
 
+    // Empty dates mean "no schedule", which is not the same as an empty string
+    // — `nullable|date` rejects ''.
+    rest.discount_starts_at = rest.discount_starts_at || null;
+    rest.discount_ends_at = rest.discount_ends_at || null;
+    rest.min_order_quantity = Number(rest.min_order_quantity) || 1;
+
     rest.specifications = (rest.specifications || [])
         .filter((spec) => spec.name?.trim() && spec.value?.trim())
         .map((spec) => ({
@@ -172,6 +178,9 @@ export default function Products({
             warranty_text: '',
             key_features: '',
             checkout_discount: '',
+            discount_starts_at: '',
+            discount_ends_at: '',
+            min_order_quantity: 1,
             emi_available: false,
             emi_max_months: '',
             out_of_stock_status: '',
@@ -337,6 +346,9 @@ export default function Products({
                 warranty_text: '',
                 key_features: '',
                 checkout_discount: '',
+                discount_starts_at: '',
+                discount_ends_at: '',
+                min_order_quantity: 1,
                 emi_available: false,
                 emi_max_months: '',
                 out_of_stock_status: '',
@@ -377,6 +389,13 @@ export default function Products({
                 mpn: p.mpn ?? '',
                 warranty_text: p.warranty_text ?? '',
                 key_features: p.key_features ?? '',
+                discount_starts_at: p.discount_starts_at
+                    ? String(p.discount_starts_at).slice(0, 10)
+                    : '',
+                discount_ends_at: p.discount_ends_at
+                    ? String(p.discount_ends_at).slice(0, 10)
+                    : '',
+                min_order_quantity: p.min_order_quantity ?? 1,
                 checkout_discount: p.checkout_discount ?? '',
                 emi_available: Boolean(p.emi_available),
                 emi_max_months: p.emi_max_months ?? '',
@@ -1020,6 +1039,54 @@ export default function Products({
                         placeholder="<ul><li>Processor: Intel Core i5-13420H</li><li>RAM: 16GB DDR5</li></ul>"
                         helperText="The bullet list above the fold. Basic HTML allowed."
                     />
+
+                    {/* A sale that stops on time whether or not anyone is at a
+                        desk. Blank dates mean "until changed", which is what
+                        every discount was before this existed. */}
+                    <div className="admin-form-grid-3">
+                        <FormInput
+                            id="discount_starts_at"
+                            name="discount_starts_at"
+                            type="date"
+                            label="Discount Starts"
+                            value={formik.values.discount_starts_at}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.discount_starts_at &&
+                                formik.errors.discount_starts_at
+                            }
+                            helperText="Blank starts immediately."
+                        />
+                        <FormInput
+                            id="discount_ends_at"
+                            name="discount_ends_at"
+                            type="date"
+                            label="Discount Ends"
+                            value={formik.values.discount_ends_at}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.discount_ends_at &&
+                                formik.errors.discount_ends_at
+                            }
+                            helperText="Blank runs until you change it."
+                        />
+                        <FormInput
+                            id="min_order_quantity"
+                            name="min_order_quantity"
+                            type="number"
+                            label="Minimum Order Qty"
+                            value={formik.values.min_order_quantity}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.min_order_quantity &&
+                                formik.errors.min_order_quantity
+                            }
+                            helperText="For things not sold singly."
+                        />
+                    </div>
 
                     <div className="admin-form-grid-3">
                         <FormInput

@@ -160,6 +160,26 @@ class ProductRules
              */
             'out_of_stock_status' => 'nullable|string|max:60',
 
+            /*
+             * A sale that ends by itself. Both optional: no dates means "until
+             * somebody changes it", which is what every discount was before
+             * scheduling existed.
+             */
+            'discount_starts_at' => 'nullable|date',
+            'discount_ends_at' => 'nullable|date|after:discount_starts_at',
+
+            // Cable by the metre, paste by the sachet. One is the normal case.
+            'min_order_quantity' => 'nullable|integer|min:1|max:10000',
+
+            /*
+             * Buy-more-pay-less tiers. Sent whole and replacing what is stored,
+             * like specifications — a tier the admin deleted is one that is
+             * simply absent.
+             */
+            'quantity_discounts' => 'nullable|array|max:10',
+            'quantity_discounts.*.min_quantity' => 'required_with:quantity_discounts|integer|min:2|max:100000',
+            'quantity_discounts.*.price' => 'required_with:quantity_discounts|numeric|min:0',
+
             'related_product_ids' => 'nullable|array|max:12',
             'related_product_ids.*' => 'integer|exists:products,id',
 

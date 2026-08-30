@@ -36,10 +36,25 @@ class CartItem extends Model
         return $this->variant ?: $this->product;
     }
 
-    /** Unit price the shopper pays, from whichever level owns the price. */
+    /**
+     * Unit price the shopper pays, from whichever level owns the price.
+     *
+     * On a plain product the quantity matters: buy-more-pay-less tiers are
+     * priced per line, so ten cables cost the ten-up rate each. A variant
+     * carries its own price and its own shelf, so a tier on the parent cannot
+     * be applied to it without claiming a discount the option never had.
+     */
     public function unitPrice(): float
     {
-        return (float) ($this->variant?->effective_price ?? $this->product?->effective_price ?? 0);
+        if ($this->variant) {
+            return (float) $this->variant->effective_price;
+        }
+
+        if (! $this->product) {
+            return 0.0;
+        }
+
+        return $this->product->priceForQuantity((int) $this->quantity);
     }
 
     public function displayName(): string

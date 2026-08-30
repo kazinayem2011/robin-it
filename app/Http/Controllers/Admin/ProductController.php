@@ -123,6 +123,7 @@ class ProductController extends Controller
         $this->syncSpecifications($product, $validated['specifications'] ?? null);
         $product->syncCategories($validated['category_ids'] ?? []);
         $this->syncRelated($product, $validated['related_product_ids'] ?? null);
+        $this->syncQuantityDiscounts($product, $validated['quantity_discounts'] ?? null);
 
         return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
     }
@@ -165,6 +166,10 @@ class ProductController extends Controller
             $this->syncRelated($product, $request->validated()['related_product_ids'] ?? []);
         }
 
+        if ($request->has('quantity_discounts')) {
+            $this->syncQuantityDiscounts($product, $request->validated()['quantity_discounts'] ?? []);
+        }
+
         if (! empty($attributes['image_path'])) {
             $primaryImage = $product->images()->where('is_primary', true)->first();
 
@@ -179,6 +184,32 @@ class ProductController extends Controller
         }
 
         return $this->successResponse($product, "Product '{$product->name}' updated successfully.");
+    }
+
+    /**
+     * Replace the buy-more-pay-less tiers.
+     *
+     * Keyed by quantity while building, because two tiers starting at the same
+     * number is not a cheaper deal but an ambiguity — and the table's unique
+     * index would reject the pair with a 500 rather than a message.
+     *
+     * @param  array<int, array{min_quantity?: int, price?: float}>|null  $tiers
+     */
+    private function syncQuantityDiscounts(Product $product, ?array $tiers): void
+    {
+        if ($tiers === null) {
+            return;
+        }
+
+        $product->quantityDiscounts()->delete();
+
+        collect($tiers)
+            ->filter(fn ($tier) => ! empty($tier['min_quantity']) && isset($tier['price']))
+            ->keyBy(fn ($tier) => (int) $tier['min_quantity'])
+            ->each(fn ($tier, $quantity) => $product->quantityDiscounts()->create([
+                'min_quantity' => $quantity,
+                'price' => (float) $tier['price'],
+            ]));
     }
 
     /**

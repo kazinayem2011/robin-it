@@ -600,6 +600,36 @@ export default function ProductDetails(props) {
                                 )}
                             </div>
 
+                            {/* Buy-more-pay-less, shown as a table rather than
+                                buried in the description. A trade buyer who
+                                cannot see the tier phones instead of ordering,
+                                which is the problem this solves. */}
+                            {product.quantity_discounts?.length > 0 && (
+                                <div className="pdp-tier-table">
+                                    <h4>Bulk pricing</h4>
+                                    <table>
+                                        <tbody>
+                                            {product.quantity_discounts.map(
+                                                (tier) => (
+                                                    <tr key={tier.id}>
+                                                        <td>
+                                                            {tier.min_quantity}+
+                                                            units
+                                                        </td>
+                                                        <td>
+                                                            {formatBdt(
+                                                                tier.price,
+                                                            )}{' '}
+                                                            each
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
                             {/* Paying at once and paying monthly are different
                                 prices, so they are shown as the choice they
                                 are. The discount rewards paying now and the

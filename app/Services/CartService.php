@@ -75,6 +75,11 @@ class CartService
 
         $requested = ($cartItem->exists ? $cartItem->quantity : 0) + max(1, $quantity);
 
+        // Raised rather than refused. Some things are not sold singly — paste
+        // by the sachet, cable by the metre — and a shopper who asked for one
+        // wants the product, not an error about how it is packaged.
+        $requested = max($requested, $product->minimumOrderQuantity());
+
         $this->assertStockCovers($product, $requested, $variant);
 
         $cartItem->quantity = min($requested, self::MAX_QUANTITY_PER_ITEM);
@@ -144,6 +149,7 @@ class CartService
         }
 
         $requested = max(1, min($quantity, self::MAX_QUANTITY_PER_ITEM));
+        $requested = max($requested, $product->minimumOrderQuantity());
 
         $this->assertStockCovers($product, $requested, $variant);
 

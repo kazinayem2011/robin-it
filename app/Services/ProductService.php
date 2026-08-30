@@ -10,6 +10,7 @@ use App\Support\SearchTerm;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductService
@@ -19,8 +20,34 @@ class ProductService
 
     public const MAX_PER_PAGE = 60;
 
-    /** SQL for "the price the customer actually pays", matching Product::hasDiscount(). */
-    private const EFFECTIVE_PRICE_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price THEN discount_price ELSE price END';
+    /**
+     * SQL for "the price the customer actually pays", matching
+     * Product::hasDiscount() — including its schedule.
+     *
+     * These two must agree. One decides the price a card displays, the other
+     * decides where that card sorts and whether a price filter keeps it: if
+     * they drift, a shopper filtering "under 100,000" gets products whose
+     * shown price is above it, and the fault looks like a filter bug rather
+     * than a pricing one.
+     *
+     * The window is compared against a bound value rather than
+     * CURRENT_TIMESTAMP because the two drivers this runs on do not agree about
+     * it — SQLite's is UTC, MySQL's follows the session timezone. Binding
+     * PHP's own clock makes the comparison identical everywhere, and identical
+     * to the PHP.
+     */
+    private const EFFECTIVE_PRICE_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price'
+        .' AND (discount_starts_at IS NULL OR discount_starts_at <= ?)'
+        .' AND (discount_ends_at IS NULL OR discount_ends_at >= ?)'
+        .' THEN discount_price ELSE price END';
+
+    /** The two bindings EFFECTIVE_PRICE_SQL and DISCOUNT_DEPTH_SQL each need. */
+    private function priceWindowBindings(): array
+    {
+        $now = now();
+
+        return [$now, $now];
+    }
 
     /**
      * How deep the discount is, as a percentage of the original price.
@@ -31,7 +58,10 @@ class ProductService
      * zero and sinks to the bottom rather than being excluded, so this is a
      * safe sort for the full catalogue and not only the offers page.
      */
-    private const DISCOUNT_DEPTH_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price AND price > 0 THEN (price - discount_price) * 100.0 / price ELSE 0 END';
+    private const DISCOUNT_DEPTH_SQL = 'CASE WHEN discount_price IS NOT NULL AND discount_price > 0 AND discount_price < price AND price > 0'
+        .' AND (discount_starts_at IS NULL OR discount_starts_at <= ?)'
+        .' AND (discount_ends_at IS NULL OR discount_ends_at >= ?)'
+        .' THEN (price - discount_price) * 100.0 / price ELSE 0 END';
 
     public function __construct(
         protected CategoryService $categoryService,
@@ -50,12 +80,12 @@ class ProductService
         // Sorting — price sorts use the discounted price the customer sees.
         $sort = $filters['sort'] ?? 'latest';
         match ($sort) {
-            'price_low_high' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' asc'),
-            'price_high_low' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' desc'),
+            'price_low_high' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' asc', $this->priceWindowBindings()),
+            'price_high_low' => $query->orderByRaw(self::EFFECTIVE_PRICE_SQL.' desc', $this->priceWindowBindings()),
             'name_asc' => $query->orderBy('name', 'asc'),
             // Ties broken by newest, so the order is stable across pages
             // rather than left to whatever the database returns.
-            'discount_high' => $query->orderByRaw(self::DISCOUNT_DEPTH_SQL.' desc')
+            'discount_high' => $query->orderByRaw(self::DISCOUNT_DEPTH_SQL.' desc', $this->priceWindowBindings())
                 ->orderByDesc('id'),
             default => $query->latest(),
         };
@@ -115,11 +145,11 @@ class ProductService
         // number lower than every string: `50000 <= '100'` came out true.
         // Adding zero forces numeric context, and is a no-op on MySQL.
         if (isset($filters['min_price']) && $filters['min_price'] !== '' && $filters['min_price'] !== null) {
-            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' >= (? + 0)', [(float) $filters['min_price']]);
+            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' >= (? + 0)', [...$this->priceWindowBindings(), (float) $filters['min_price']]);
         }
 
         if (isset($filters['max_price']) && $filters['max_price'] !== '' && $filters['max_price'] !== null) {
-            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' <= (? + 0)', [(float) $filters['max_price']]);
+            $query->whereRaw(self::EFFECTIVE_PRICE_SQL.' <= (? + 0)', [...$this->priceWindowBindings(), (float) $filters['max_price']]);
         }
 
         // Genuinely discounted right now — the same rule the badge uses.
@@ -164,8 +194,8 @@ class ProductService
         ]));
 
         $bounds = (clone $query)
-            ->selectRaw('MIN('.self::EFFECTIVE_PRICE_SQL.') as min_price')
-            ->selectRaw('MAX('.self::EFFECTIVE_PRICE_SQL.') as max_price')
+            ->selectRaw('MIN('.self::EFFECTIVE_PRICE_SQL.') as min_price', $this->priceWindowBindings())
+            ->selectRaw('MAX('.self::EFFECTIVE_PRICE_SQL.') as max_price', $this->priceWindowBindings())
             ->reorder()
             ->first();
 
@@ -394,10 +424,10 @@ class ProductService
      */
     public function getProductBySlug(string $slug): Product
     {
-        return Product::active()
+        $product = Product::active()
             ->where('slug', $slug)
             ->with([
-                'category', 'brand', 'images', 'specifications',
+                'category', 'brand', 'images', 'specifications', 'quantityDiscounts',
                 // Stock and price live on the option for a variant product, so
                 // the detail page cannot render a buy button without them.
                 'activeVariants',
@@ -410,6 +440,20 @@ class ProductService
             ])
             ->withCatalogAggregates()
             ->firstOrFail();
+
+        /*
+         * Counted here rather than in the controller, so every route that shows
+         * a product counts it once and only once.
+         *
+         * Straight to the query builder: an Eloquent update would stamp
+         * updated_at, and a view is not an edit — letting it look like one
+         * makes "recently changed products" meaningless. An atomic increment
+         * rather than read-modify-write, so two visitors landing together do
+         * not each read the same number and write it back, losing one.
+         */
+        DB::table('products')->where('id', $product->getKey())->increment('views_count');
+
+        return $product;
     }
 
     /**

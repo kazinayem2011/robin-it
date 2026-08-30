@@ -8,10 +8,11 @@ class Product extends Model
 {
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'model', 'mpn', 'slug', 'barcode', 'price',
-        'discount_price', 'checkout_discount', 'stock_quantity', 'out_of_stock_status',
+        'discount_price', 'discount_starts_at', 'discount_ends_at',
+        'checkout_discount', 'stock_quantity', 'min_order_quantity', 'out_of_stock_status',
         'short_description', 'key_features', 'emi_available', 'emi_max_months',
         'description', 'meta_title', 'meta_description', 'meta_keyword',
-        'is_featured', 'is_active',
+        'is_featured', 'is_active', 'views_count',
         'has_variants', 'variant_attributes', 'reorder_level',
         'allow_preorder', 'preorder_limit', 'preorder_release_at',
         'warranty_months', 'warranty_text',
@@ -47,6 +48,10 @@ class Product extends Model
         'checkout_discount' => 'float',
         'emi_available' => 'boolean',
         'emi_max_months' => 'integer',
+        'discount_starts_at' => 'datetime',
+        'discount_ends_at' => 'datetime',
+        'min_order_quantity' => 'integer',
+        'views_count' => 'integer',
         'preorder_limit' => 'integer',
         'preorder_release_at' => 'date',
     ];
@@ -156,6 +161,67 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    /** Buy-more-pay-less tiers, cheapest threshold first. */
+    public function quantityDiscounts()
+    {
+        return $this->hasMany(ProductDiscount::class)->orderBy('min_quantity');
+    }
+
+    /**
+     * The per-unit price for buying this many.
+     *
+     * The tier that applies is the highest threshold the quantity reaches — ten
+     * units on a table of 5+ and 20+ pays the 5+ rate, not the 20+ one.
+     *
+     * A tier only wins if it actually beats the ordinary price. A trade rate
+     * left in place while a sharper site-wide sale runs must not quietly charge
+     * bulk buyers more than everybody else.
+     */
+    public function priceForQuantity(int $quantity): float
+    {
+        $base = $this->effective_price;
+
+        if ($quantity < 1) {
+            return $base;
+        }
+
+        $tier = $this->relationLoaded('quantityDiscounts')
+            ? $this->quantityDiscounts
+                ->filter(fn (ProductDiscount $d) => $d->min_quantity <= $quantity)
+                ->filter(fn (ProductDiscount $d) => $this->tierWindowIsOpen($d))
+                ->sortByDesc('min_quantity')
+                ->first()
+            : $this->quantityDiscounts()
+                ->active()
+                ->where('min_quantity', '<=', $quantity)
+                // reorder(), not orderByDesc(): the relation already sorts
+                // ascending, and Eloquent appends rather than replaces — the
+                // ASC would win and hand back the *lowest* tier, charging a
+                // fifty-unit order the ten-unit rate.
+                ->reorder('min_quantity', 'desc')
+                ->first();
+
+        if (! $tier) {
+            return $base;
+        }
+
+        return min($base, (float) $tier->price);
+    }
+
+    private function tierWindowIsOpen(ProductDiscount $tier): bool
+    {
+        $now = now();
+
+        return (! $tier->starts_at || $now->gte($tier->starts_at))
+            && (! $tier->ends_at || $now->lte($tier->ends_at));
+    }
+
+    /** The fewest units this may be sold in. Never below one. */
+    public function minimumOrderQuantity(): int
+    {
+        return max(1, (int) ($this->min_order_quantity ?? 1));
     }
 
     public function questions()
@@ -275,9 +341,38 @@ class Product extends Model
      */
     public function hasDiscount(): bool
     {
-        return $this->discount_price !== null
+        $priced = $this->discount_price !== null
             && (float) $this->discount_price > 0
             && (float) $this->discount_price < (float) $this->price;
+
+        return $priced && $this->discountWindowIsOpen();
+    }
+
+    /**
+     * Whether a scheduled discount is running right now.
+     *
+     * Both dates null means "on until somebody changes it", which is what every
+     * discount was before scheduling existed — so nothing that predates this
+     * behaves differently.
+     *
+     * ProductService::effectivePriceSql() is the SQL form of this. The two are
+     * used together — one to display a price, the other to sort and filter by
+     * it — so if they ever disagree the catalogue shows one price and orders
+     * by another.
+     */
+    public function discountWindowIsOpen(): bool
+    {
+        $now = now();
+
+        if ($this->discount_starts_at && $now->lt($this->discount_starts_at)) {
+            return false;
+        }
+
+        if ($this->discount_ends_at && $now->gt($this->discount_ends_at)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
