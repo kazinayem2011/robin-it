@@ -97,6 +97,11 @@ export const ICON_REGISTRY = {
     bluetooth: Bluetooth,
     stylus: PenTool,
     accessories: Package,
+    earbuds: Headphones,
+    earbud: Headphones,
+    drone: Camera,
+    drones: Camera,
+    iphone: Smartphone,
     // Processors & Components
     cpu: Cpu,
     processor: Cpu,
@@ -465,6 +470,23 @@ const KEYWORD_LIST_WITH_ICONS = [
 
 const KEYWORD_LIST = KEYWORD_LIST_WITH_ICONS.map(([keyword]) => keyword);
 
+/**
+ * Whole words only.
+ *
+ * Substring matching read "PowerColor" as power, "Microsoft" as micro,
+ * "Fantech" as fan and "Philips" as ip — handing seventy-seven brands an icon
+ * belonging to something they merely contain the letters of. A brand that gets
+ * a wrong icon is worse than one that gets a lettermark, because the wrong icon
+ * looks deliberate.
+ *
+ * Costs three categories that were only matching by accident — iPhone, Earbuds
+ * and Drones — each of which now has a key of its own above.
+ */
+const matchesKeyword = (haystack, keyword) =>
+    new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(
+        haystack,
+    );
+
 export const getCategoryIcon = (input, props = {}) => {
     if (!input) {
         const DefaultIcon = ICON_REGISTRY.default;
@@ -492,7 +514,7 @@ export const getCategoryIcon = (input, props = {}) => {
     // 2. Keyword heuristic search in priority order
 
     for (const [keyword, IconComp] of KEYWORD_LIST_WITH_ICONS) {
-        if (searchKey.includes(keyword) || normalized.includes(keyword)) {
+        if (matchesKeyword(searchKey, keyword)) {
             return <IconComp {...props} />;
         }
     }
@@ -525,9 +547,7 @@ export const hasCategoryIcon = (input) => {
         return true;
     }
 
-    return KEYWORD_LIST.some(
-        (keyword) => key.includes(keyword) || normalized.includes(keyword),
-    );
+    return KEYWORD_LIST.some((keyword) => matchesKeyword(key, keyword));
 };
 
 export default getCategoryIcon;

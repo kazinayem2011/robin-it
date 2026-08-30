@@ -2272,6 +2272,55 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    width: 100%;
+    /* min-width:0 so the flex parent lets this shrink to the container; without
+       it clientWidth reports the content width and nothing ever overflows as
+       far as the measurement is concerned. */
+    min-width: 0;
+}
+
+/*
+ * The one frame where every category is rendered so its width can be read.
+ *
+ * visibility, not overflow. `overflow: hidden` here also clips the dropdowns,
+ * which are absolutely positioned children — the bar looked right and no menu
+ * ever opened. visibility:hidden still lays the items out, which is the whole
+ * point, and hides the frame in which they overflow.
+ */
+.cat-nav.is-measuring {
+    visibility: hidden;
+}
+
+.cat-nav-item {
+    flex: none;
+}
+
+/* Anchored to the right edge, or a "More" panel opening leftward from the last
+   position in the bar would hang off the window. */
+.cat-nav-drop-right {
+    left: auto;
+    right: 0;
+}
+
+.cat-nav-more .cat-nav-drop {
+    min-width: 230px;
+}
+
+/* Inside "More" a category's subcategories open to the *left*, because the
+   control is already at the right edge of the window. */
+.cat-nav-moreitem {
+    position: relative;
+}
+
+.cat-nav-moreitem > .cat-nav-brands {
+    left: auto;
+    right: 100%;
+    columns: 1;
+    min-width: 230px;
+}
+
+.cat-nav-moreitem.is-open > .cat-nav-brands {
+    display: block;
 }
 
 .cat-nav-item {
@@ -2285,19 +2334,37 @@
     align-items: center;
     gap: 8px;
     text-decoration: none;
-    color: inherit;
     white-space: nowrap;
 }
 
+/*
+ * The bar sits on --dark-950. `color: inherit` here inherited the page's dark
+ * body text and rendered near-black on near-black — the categories were drawn
+ * the whole time and could not be read. The dropdowns below are on a light
+ * panel and need the opposite, which is why the two are stated separately
+ * rather than one rule inheriting into both.
+ */
 .cat-nav-link {
-    padding: 11px 14px;
-    font-size: 0.86rem;
-    font-weight: 500;
+    padding: 0 9px;
+    height: 44px;
+    font-size: 0.79rem;
+    font-weight: 600;
+    font-family: var(--font-heading);
+    color: rgba(255, 255, 255, 0.9);
+    background: none;
+    border: 0;
+    cursor: pointer;
 }
 
 .cat-nav-item:hover > .cat-nav-link,
 .cat-nav-item.is-open > .cat-nav-link {
-    color: var(--primary-color, #c1121f);
+    color: var(--white, #fff);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cat-nav-sublink,
+.cat-nav-brandlink {
+    color: var(--text-primary, #1a202c);
 }
 
 .cat-nav-badge {
