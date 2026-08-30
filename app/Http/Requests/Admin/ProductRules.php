@@ -101,6 +101,13 @@ class ProductRules
             'warranty_months' => 'nullable|integer|min:0|max:600',
 
             /*
+             * The sentence, where the number is not the whole story — a laptop
+             * is routinely "2 Years warranty (Battery & Adapter 1 Year)". Shown
+             * to the customer in preference to the months when both are set.
+             */
+            'warranty_text' => 'nullable|string|max:255',
+
+            /*
              * Written for a search result, not for the page. Lengths match what
              * Google will actually render before truncating — a longer one is
              * not wrong, it just will not be seen.

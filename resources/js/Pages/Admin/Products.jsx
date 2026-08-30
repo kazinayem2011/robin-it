@@ -158,6 +158,7 @@ export default function Products({
             category_ids: [],
             model: '',
             mpn: '',
+            warranty_text: '',
             meta_title: '',
             meta_description: '',
             meta_keyword: '',
@@ -316,6 +317,7 @@ export default function Products({
                 category_ids: [],
                 model: '',
                 mpn: '',
+                warranty_text: '',
                 meta_title: '',
                 meta_description: '',
                 meta_keyword: '',
@@ -350,6 +352,7 @@ export default function Products({
                 warranty_months: p.warranty_months ?? '',
                 model: p.model ?? '',
                 mpn: p.mpn ?? '',
+                warranty_text: p.warranty_text ?? '',
                 category_ids: (p.categories || []).map((c) => c.id),
                 meta_title: p.meta_title || '',
                 meta_description: p.meta_description || '',
@@ -953,6 +956,21 @@ export default function Products({
                         }
                         placeholder="24"
                         helperText="Counted from the day the customer buys it. Leave blank if the product has none."
+                    />
+
+                    <FormInput
+                        id="warranty_text"
+                        name="warranty_text"
+                        label="Warranty Terms"
+                        value={formik.values.warranty_text}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                            formik.touched.warranty_text &&
+                            formik.errors.warranty_text
+                        }
+                        placeholder="2 Years warranty (Battery & Adapter 1 Year)"
+                        helperText="What the customer is told. The months above are what the claims system counts."
                     />
 
                     <SpecificationEditor formik={formik} />
