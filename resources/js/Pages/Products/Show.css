@@ -988,3 +988,188 @@
 .specifications-table tbody:first-of-type .spec-group-row th.spec-group {
     padding-top: 4px;
 }
+
+/* Payment options: paying at once and paying monthly are different prices, and
+   showing one number for both misprices one of them. */
+.pdp-payment-options {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    margin: 16px 0;
+}
+
+.pdp-pay-option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md);
+}
+
+.pdp-pay-option.active {
+    border-color: var(--primary-color, #c1121f);
+}
+
+.pdp-pay-price {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.pdp-pay-tag {
+    font-size: 0.78rem;
+    color: var(--primary-color, #c1121f);
+}
+
+.pdp-pay-note {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* Authored markup, so the list styling has to be stated here rather than
+   inherited from the <ul> the fallback used. */
+.pdp-key-features ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.pdp-key-features li {
+    margin: 4px 0;
+}
+
+/* Similar products */
+.pdp-related {
+    margin: 28px 0;
+}
+
+.pdp-related-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    margin-top: 12px;
+}
+
+.pdp-related-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+}
+
+.pdp-related-item:hover {
+    border-color: var(--primary-color, #c1121f);
+}
+
+.pdp-related-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+}
+
+.pdp-related-name {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    /* Two lines then ellipsis: product names here run to fifteen words and an
+       untruncated one pushes the price out of the card. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.pdp-related-price {
+    font-weight: 700;
+    color: var(--primary-color, #c1121f);
+}
+
+/* The templated "what is the price of X" answer. */
+.pdp-latest-price {
+    margin: 24px 0;
+    padding: 16px 18px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.pdp-latest-price h3 {
+    font-size: 1rem;
+    margin: 0 0 8px;
+}
+
+.pdp-latest-price p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Questions */
+.pdp-question-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+}
+
+.pdp-question {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.pdp-q-marker,
+.pdp-a-marker {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.pdp-q-marker {
+    background: var(--primary-color, #c1121f);
+}
+
+.pdp-a-marker {
+    background: #2e6b4f;
+}
+
+.pdp-question-text {
+    font-weight: 600;
+    margin: 0 0 6px;
+}
+
+.pdp-answer-text {
+    margin: 0 0 6px;
+}
+
+.pdp-answer-pending {
+    margin: 0 0 6px;
+    font-size: 0.85rem;
+    opacity: 0.65;
+}
+
+.pdp-question-meta {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.pdp-questions-empty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px;
+    opacity: 0.7;
+}
+
+.pdp-question-form {
+    max-width: 560px;
+}
+
+.pdp-question-form h4 {
+    margin: 0 0 10px;
+}

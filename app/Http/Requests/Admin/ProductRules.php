@@ -135,6 +135,34 @@ class ProductRules
             'category_ids' => 'nullable|array|max:30',
             'category_ids.*' => 'integer|exists:categories,id',
 
+            /*
+             * The bullet list above the fold. HTML, and cleaned through
+             * RichText like the description — it is written by staff, but
+             * "written by staff" has never been a reason to trust markup.
+             */
+            'key_features' => 'nullable|string|max:4000',
+
+            /*
+             * A discount that only applies to paying at once. Cannot exceed the
+             * price it is taken off, or the shop pays the customer.
+             */
+            'checkout_discount' => 'nullable|numeric|min:0|lte:price',
+
+            'emi_available' => 'nullable|boolean',
+            // Twelve, twenty-four, thirty-six are the terms banks here offer;
+            // the cap allows for longer without allowing nonsense.
+            'emi_max_months' => 'nullable|integer|min:3|max:60',
+
+            /*
+             * Said only when the shelf is empty. Free text rather than an enum,
+             * because "Pre-Order", "2-3 Days" and "Call for Price" are the
+             * shop's words, not the developer's.
+             */
+            'out_of_stock_status' => 'nullable|string|max:60',
+
+            'related_product_ids' => 'nullable|array|max:12',
+            'related_product_ids.*' => 'integer|exists:products,id',
+
             'specifications' => 'nullable|array|max:200',
             'specifications.*.group' => 'nullable|string|max:80',
             'specifications.*.name' => 'required_with:specifications.*.value|nullable|string|max:120',

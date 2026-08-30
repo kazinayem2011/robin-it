@@ -8,7 +8,8 @@ class Product extends Model
 {
     protected $fillable = [
         'category_id', 'brand_id', 'name', 'model', 'mpn', 'slug', 'barcode', 'price',
-        'discount_price', 'stock_quantity', 'short_description',
+        'discount_price', 'checkout_discount', 'stock_quantity', 'out_of_stock_status',
+        'short_description', 'key_features', 'emi_available', 'emi_max_months',
         'description', 'meta_title', 'meta_description', 'meta_keyword',
         'is_featured', 'is_active',
         'has_variants', 'variant_attributes', 'reorder_level',
@@ -26,7 +27,8 @@ class Product extends Model
      * Computed pricing/availability the frontend can trust, present on every
      * serialized product so the UI never has to re-derive "is this discounted?".
      */
-    protected $appends = ['effective_price', 'has_discount', 'in_stock', 'is_preorder'];
+    protected $appends = ['effective_price', 'has_discount', 'in_stock', 'is_preorder',
+        'stock_status_label', 'checkout_price', 'emi_monthly'];
 
     /**
      * Without these casts the MySQL driver hands decimals back as strings, so
@@ -42,6 +44,9 @@ class Product extends Model
         'variant_attributes' => 'array',
         'reorder_level' => 'integer',
         'allow_preorder' => 'boolean',
+        'checkout_discount' => 'float',
+        'emi_available' => 'boolean',
+        'emi_max_months' => 'integer',
         'preorder_limit' => 'integer',
         'preorder_release_at' => 'date',
     ];
@@ -151,6 +156,90 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function questions()
+    {
+        return $this->hasMany(ProductQuestion::class);
+    }
+
+    /**
+     * Hand-picked suggestions. Not symmetric: "buy this cable with this
+     * monitor" is useful, the reverse is not.
+     */
+    public function relatedProducts()
+    {
+        return $this->belongsToMany(self::class, 'product_related', 'product_id', 'related_product_id')
+            ->withPivot('position')
+            ->orderBy('product_related.position')
+            ->orderBy('product_related.id');
+    }
+
+    /**
+     * What the availability line says.
+     *
+     * A boolean can only ever produce "In Stock" or "Out of Stock". A shop
+     * needs to distinguish a sale deferred from a sale lost: "Pre-Order" and
+     * "2-3 Days" both mean money, "Discontinued" does not.
+     */
+    public function getStockStatusLabelAttribute(): string
+    {
+        if (! $this->is_active) {
+            return 'Unavailable';
+        }
+
+        if ($this->stock_quantity > 0) {
+            return 'In Stock';
+        }
+
+        if (filled($this->out_of_stock_status)) {
+            return $this->out_of_stock_status;
+        }
+
+        return $this->allows_preorder_label();
+    }
+
+    private function allows_preorder_label(): string
+    {
+        return $this->allow_preorder ? 'Pre-Order' : 'Out of Stock';
+    }
+
+    /**
+     * The price actually charged when paying cash or online, after the
+     * checkout-only discount.
+     *
+     * Kept apart from effective_price because that figure is what an instalment
+     * buyer pays. Folding the two together would advertise a discount to
+     * someone who will not receive it.
+     */
+    public function getCheckoutPriceAttribute(): float
+    {
+        $discount = (float) ($this->checkout_discount ?? 0);
+
+        return max(0.0, $this->effective_price - max(0.0, $discount));
+    }
+
+    /**
+     * The monthly instalment, on the regular price.
+     *
+     * Regular, not discounted — the discount is the reward for paying at once,
+     * so an instalment buyer does not receive it. The shop this follows prints
+     * exactly that: "11,000৳/month" beside "Regular Price: 132,000৳", which is
+     * 132,000 over twelve, not the 125,000 a cash buyer pays.
+     *
+     * Dividing the discounted price instead would quietly hand every EMI
+     * customer a discount the shop never offered, on every product, forever.
+     *
+     * Rounded up: 11,000.4 rounded down across twelve months collects less than
+     * the machine costs.
+     */
+    public function getEmiMonthlyAttribute(): ?float
+    {
+        if (! $this->emi_available || ! $this->emi_max_months) {
+            return null;
+        }
+
+        return (float) ceil((float) $this->price / $this->emi_max_months);
     }
 
     public function orderItems()

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategory
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductQuestionController as AdminProductQuestionController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
@@ -176,6 +177,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_REPORTS_SUPPLIERS, [AdminReportController::class, 'suppliers'])->name('reports.suppliers')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit')->middleware('can:finance');
         Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs')->middleware('can:marketing');
+        Route::get(ApiEndpoints::ADMIN_QUESTIONS, [AdminProductQuestionController::class, 'index'])->name('questions')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_WARRANTY, [AdminWarrantyController::class, 'index'])->name('warranty')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_MESSAGES, [ContactMessageController::class, 'index'])->name('messages')->middleware('can:support');

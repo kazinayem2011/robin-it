@@ -84,6 +84,8 @@ class ApiEndpoints
     // Product Reviews
     public const PRODUCT_REVIEWS = 'products/{slug}/reviews';
 
+    public const PRODUCT_QUESTIONS = 'products/{slug}/questions';
+
     // Showrooms & Stores
     public const STORES = 'stores';
 
@@ -368,6 +370,14 @@ class ApiEndpoints
     public const ADMIN_MEDIA = 'media';
 
     public const ADMIN_SETTINGS_TEST_EMAIL = 'settings/test-email';
+
+    public const ADMIN_QUESTIONS = 'questions';
+
+    public const ADMIN_QUESTIONS_ANSWER = 'questions/{id}/answer';
+
+    public const ADMIN_QUESTIONS_PUBLISH = 'questions/{id}/publish';
+
+    public const ADMIN_QUESTIONS_ITEM = 'questions/{id}';
 
     public const ADMIN_REVIEWS = 'reviews';
 

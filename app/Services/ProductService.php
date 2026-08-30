@@ -401,6 +401,12 @@ class ProductService
                 // Stock and price live on the option for a variant product, so
                 // the detail page cannot render a buy button without them.
                 'activeVariants',
+                // Hand-picked suggestions. Constrained to what can actually be
+                // bought: a sidebar of dead links loses more trust than an
+                // empty sidebar.
+                'relatedProducts' => fn ($q) => $q->where('products.is_active', true)
+                    ->with('images')
+                    ->take(6),
             ])
             ->withCatalogAggregates()
             ->firstOrFail();

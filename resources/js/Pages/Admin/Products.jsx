@@ -80,6 +80,17 @@ const buildProductPayload = (values, editingProduct) => {
         .map(Number)
         .filter((id) => id && id !== Number(rest.category_id));
 
+    rest.checkout_discount =
+        rest.checkout_discount === '' || rest.checkout_discount === null
+            ? null
+            : Number(rest.checkout_discount);
+    rest.emi_available = Boolean(rest.emi_available);
+    rest.emi_max_months =
+        rest.emi_max_months === '' || rest.emi_max_months === null
+            ? null
+            : Number(rest.emi_max_months);
+    rest.related_product_ids = (rest.related_product_ids || []).map(Number);
+
     rest.specifications = (rest.specifications || [])
         .filter((spec) => spec.name?.trim() && spec.value?.trim())
         .map((spec) => ({
@@ -159,6 +170,12 @@ export default function Products({
             model: '',
             mpn: '',
             warranty_text: '',
+            key_features: '',
+            checkout_discount: '',
+            emi_available: false,
+            emi_max_months: '',
+            out_of_stock_status: '',
+            related_product_ids: [],
             meta_title: '',
             meta_description: '',
             meta_keyword: '',
@@ -318,6 +335,12 @@ export default function Products({
                 model: '',
                 mpn: '',
                 warranty_text: '',
+                key_features: '',
+                checkout_discount: '',
+                emi_available: false,
+                emi_max_months: '',
+                out_of_stock_status: '',
+                related_product_ids: [],
                 meta_title: '',
                 meta_description: '',
                 meta_keyword: '',
@@ -353,6 +376,14 @@ export default function Products({
                 model: p.model ?? '',
                 mpn: p.mpn ?? '',
                 warranty_text: p.warranty_text ?? '',
+                key_features: p.key_features ?? '',
+                checkout_discount: p.checkout_discount ?? '',
+                emi_available: Boolean(p.emi_available),
+                emi_max_months: p.emi_max_months ?? '',
+                out_of_stock_status: p.out_of_stock_status ?? '',
+                related_product_ids: (p.related_products || []).map(
+                    (r) => r.id,
+                ),
                 category_ids: (p.categories || []).map((c) => c.id),
                 meta_title: p.meta_title || '',
                 meta_description: p.meta_description || '',
@@ -971,6 +1002,78 @@ export default function Products({
                         }
                         placeholder="2 Years warranty (Battery & Adapter 1 Year)"
                         helperText="What the customer is told. The months above are what the claims system counts."
+                    />
+
+                    <FormInput
+                        id="key_features"
+                        name="key_features"
+                        type="textarea"
+                        rows={6}
+                        label="Key Features"
+                        value={formik.values.key_features}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                            formik.touched.key_features &&
+                            formik.errors.key_features
+                        }
+                        placeholder="<ul><li>Processor: Intel Core i5-13420H</li><li>RAM: 16GB DDR5</li></ul>"
+                        helperText="The bullet list above the fold. Basic HTML allowed."
+                    />
+
+                    <div className="admin-form-grid-3">
+                        <FormInput
+                            id="checkout_discount"
+                            name="checkout_discount"
+                            type="number"
+                            label="Checkout Discount (BDT)"
+                            value={formik.values.checkout_discount}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.checkout_discount &&
+                                formik.errors.checkout_discount
+                            }
+                            placeholder="1500"
+                            helperText="Only for paying at once. Not given to EMI buyers."
+                        />
+                        <FormInput
+                            id="emi_max_months"
+                            name="emi_max_months"
+                            type="number"
+                            label="EMI Months"
+                            value={formik.values.emi_max_months}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.emi_max_months &&
+                                formik.errors.emi_max_months
+                            }
+                            placeholder="12"
+                            helperText="Instalment is the regular price divided by this."
+                        />
+                        <FormInput
+                            id="out_of_stock_status"
+                            name="out_of_stock_status"
+                            label="When Out of Stock, say"
+                            value={formik.values.out_of_stock_status}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                                formik.touched.out_of_stock_status &&
+                                formik.errors.out_of_stock_status
+                            }
+                            placeholder="2-3 Days"
+                            helperText="Blank reads 'Out of Stock'."
+                        />
+                    </div>
+
+                    <Checkbox
+                        id="emi_available"
+                        name="emi_available"
+                        label="Offer EMI on this product"
+                        checked={formik.values.emi_available}
+                        onChange={formik.handleChange}
                     />
 
                     <SpecificationEditor formik={formik} />

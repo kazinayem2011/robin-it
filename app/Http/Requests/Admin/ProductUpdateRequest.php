@@ -56,7 +56,7 @@ class ProductUpdateRequest extends AdminRequest
         // is applied separately — leaving it here would reach Product::update()
         // as an unknown attribute.
         $scalar = collect($this->validated())
-            ->except(['has_variants', 'variant_attributes', 'variants', 'specifications', 'category_ids'])
+            ->except(['has_variants', 'variant_attributes', 'variants', 'specifications', 'category_ids', 'related_product_ids'])
             ->all();
 
         return array_filter(

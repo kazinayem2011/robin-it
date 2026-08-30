@@ -99,6 +99,7 @@ class ProductController extends Controller
         $validated['slug'] = SlugFactory::unique(Product::class, $validated['name']);
         $validated['is_active'] = true;
         $validated['description'] = RichText::clean($validated['description'] ?? null);
+        $validated['key_features'] = RichText::clean($validated['key_features'] ?? null);
 
         $opening = (int) ($validated['stock_quantity'] ?? 0);
 
@@ -121,6 +122,7 @@ class ProductController extends Controller
 
         $this->syncSpecifications($product, $validated['specifications'] ?? null);
         $product->syncCategories($validated['category_ids'] ?? []);
+        $this->syncRelated($product, $validated['related_product_ids'] ?? null);
 
         return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
     }
@@ -136,6 +138,10 @@ class ProductController extends Controller
 
         if (array_key_exists('description', $attributes)) {
             $attributes['description'] = RichText::clean($attributes['description']);
+        }
+
+        if (array_key_exists('key_features', $attributes)) {
+            $attributes['key_features'] = RichText::clean($attributes['key_features']);
         }
 
         $product->update($attributes);
@@ -155,6 +161,10 @@ class ProductController extends Controller
             $product->syncCategories($request->validated()['category_ids'] ?? []);
         }
 
+        if ($request->has('related_product_ids')) {
+            $this->syncRelated($product, $request->validated()['related_product_ids'] ?? []);
+        }
+
         if (! empty($attributes['image_path'])) {
             $primaryImage = $product->images()->where('is_primary', true)->first();
 
@@ -169,6 +179,31 @@ class ProductController extends Controller
         }
 
         return $this->successResponse($product, "Product '{$product->name}' updated successfully.");
+    }
+
+    /**
+     * Replace the hand-picked suggestions.
+     *
+     * A product cannot suggest itself — the sidebar would send a shopper to the
+     * page they are already on — and order is the order they were chosen in.
+     *
+     * @param  array<int, int>|null  $ids
+     */
+    private function syncRelated(Product $product, ?array $ids): void
+    {
+        if ($ids === null) {
+            return;
+        }
+
+        $payload = collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->reject(fn (int $id) => $id === $product->id)
+            ->unique()
+            ->values()
+            ->mapWithKeys(fn (int $id, int $i) => [$id => ['position' => $i]])
+            ->all();
+
+        $product->relatedProducts()->sync($payload);
     }
 
     /**

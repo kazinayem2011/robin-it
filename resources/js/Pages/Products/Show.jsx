@@ -15,6 +15,7 @@ import CountdownTimer from '../../Components/CountdownTimer';
 // The gallery renders <ProductImage> but never imported it, so the whole page
 // threw "ProductImage is not defined" and rendered nothing at all.
 import ProductImage from '../../Components/ProductImage';
+import ProductQuestions from '../../Components/ProductQuestions';
 import RatingBreakdown from '../../Components/RatingBreakdown';
 import ReviewForm from '../../Components/ReviewForm';
 import ReviewList from '../../Components/ReviewList';
@@ -129,6 +130,22 @@ export default function ProductDetails(props) {
         reviews: [],
     });
     const [submittingReview, setSubmittingReview] = useState(false);
+    const [questions, setQuestions] = useState([]);
+
+    const loadQuestions = React.useCallback(() => {
+        if (!productSlug) return;
+        fetch(`/api/products/${productSlug}/questions`, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => setQuestions(d?.data?.questions || []))
+            .catch(() => setQuestions([]));
+    }, [productSlug]);
+
+    useEffect(() => {
+        loadQuestions();
+    }, [loadQuestions]);
 
     useEffect(() => {
         if (!productSlug) return;
@@ -433,13 +450,20 @@ export default function ProductDetails(props) {
                                 <div className="meta-item">
                                     <span className="meta-label">Status:</span>
                                     <span className="meta-value stock-status">
+                                        {/* The label is the server's, so a shop
+                                            can say "2-3 Days" or "Call for
+                                            Price" rather than only in/out. The
+                                            count is still ours: it depends on
+                                            the chosen option, which the server
+                                            does not know. */}
                                         {needsVariantChoice
                                             ? 'Choose an option'
                                             : availableStock > 0
                                               ? `In Stock (${availableStock} available)`
-                                              : isPreorder
-                                                ? 'Available to pre-order'
-                                                : 'Out of Stock'}
+                                              : product.stock_status_label ||
+                                                (isPreorder
+                                                    ? 'Pre-Order'
+                                                    : 'Out of Stock')}
                                     </span>
                                 </div>
                                 <div className="meta-item">
@@ -546,20 +570,82 @@ export default function ProductDetails(props) {
                                 </div>
                             )}
 
+                            {/* Key Features is authored markup — a curated list
+                                that opens with the model and the part number.
+                                short_description splitting on newlines was the
+                                stand-in for it, and is still the fallback for
+                                every product written before the field existed.
+                                Sanitised server-side through RichText. */}
                             <div className="pdp-short-desc">
-                                <ul>
-                                    {product.short_description
-                                        ?.split('\n')
-                                        .map((line, i) => (
-                                            <li key={i}>{line}</li>
-                                        )) || (
-                                        <li>
-                                            100% Genuine product with official
-                                            brand warranty.
-                                        </li>
-                                    )}
-                                </ul>
+                                {product.key_features ? (
+                                    <div
+                                        className="pdp-key-features"
+                                        dangerouslySetInnerHTML={{
+                                            __html: product.key_features,
+                                        }}
+                                    />
+                                ) : (
+                                    <ul>
+                                        {product.short_description
+                                            ?.split('\n')
+                                            .map((line, i) => (
+                                                <li key={i}>{line}</li>
+                                            )) || (
+                                            <li>
+                                                100% Genuine product with
+                                                official brand warranty.
+                                            </li>
+                                        )}
+                                    </ul>
+                                )}
                             </div>
+
+                            {/* Paying at once and paying monthly are different
+                                prices, so they are shown as the choice they
+                                are. The discount rewards paying now and the
+                                instalment is on the regular price — presenting
+                                one figure would misprice one of the two. */}
+                            {(product.checkout_price <
+                                product.effective_price ||
+                                product.emi_monthly) && (
+                                <div className="pdp-payment-options">
+                                    <div className="pdp-pay-option active">
+                                        <span className="pdp-pay-price">
+                                            {formatBdt(product.checkout_price)}
+                                        </span>
+                                        {product.checkout_price <
+                                            product.effective_price && (
+                                            <span className="pdp-pay-tag">
+                                                {formatBdt(
+                                                    product.effective_price -
+                                                        product.checkout_price,
+                                                )}{' '}
+                                                off on checkout
+                                            </span>
+                                        )}
+                                        <span className="pdp-pay-note">
+                                            Online / Cash payment
+                                        </span>
+                                    </div>
+
+                                    {product.emi_monthly && (
+                                        <div className="pdp-pay-option">
+                                            <span className="pdp-pay-price">
+                                                {formatBdt(product.emi_monthly)}
+                                                /month
+                                            </span>
+                                            <span className="pdp-pay-tag">
+                                                Regular price:{' '}
+                                                {formatBdt(product.price)}
+                                            </span>
+                                            <span className="pdp-pay-note">
+                                                0% EMI up to{' '}
+                                                {product.emi_max_months} months
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="pdp-actions">
                                 <div className="quantity-selector">
@@ -679,6 +765,57 @@ export default function ProductDetails(props) {
                         </div>
                     </div>
 
+                    {/* Hand-picked suggestions. Hidden entirely when none are
+                        set rather than falling back to category-mates: an
+                        arbitrary product is worse than no suggestion, because
+                        it looks deliberate. */}
+                    {product.related_products?.length > 0 && (
+                        <section className="pdp-related">
+                            <h3>Similar Products</h3>
+                            <div className="pdp-related-grid">
+                                {product.related_products.map((item) => (
+                                    <Link
+                                        key={item.id}
+                                        href={`/products/${item.slug}`}
+                                        className="pdp-related-item"
+                                    >
+                                        <ProductImage
+                                            product={item}
+                                            className="pdp-related-img"
+                                        />
+                                        <span className="pdp-related-name">
+                                            {item.name}
+                                        </span>
+                                        <span className="pdp-related-price">
+                                            {formatBdt(
+                                                item.effective_price ??
+                                                    item.price,
+                                            )}
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {/* The question people actually type into Google, answered
+                        on the page rather than left to a snippet generator.
+                        Templated from the product's own figures, so it cannot
+                        drift out of date the way a hand-written line would. */}
+                    <section className="pdp-latest-price">
+                        <h3>
+                            What is the price of {product.name} in Bangladesh?
+                        </h3>
+                        <p>
+                            The latest price of {product.name} in Bangladesh is{' '}
+                            {formatBdt(
+                                product.effective_price ?? product.price,
+                            )}
+                            . You can buy it at the best price from our website
+                            or visit any of our showrooms.
+                        </p>
+                    </section>
+
                     {/* Bottom Section: Reusable Tabs */}
                     <div className="pdp-tabs-section">
                         <Tabs
@@ -692,6 +829,11 @@ export default function ProductDetails(props) {
                                     label: 'Description',
                                 },
                                 {
+                                    key: 'questions',
+                                    label: 'Questions',
+                                    badge: questions.length,
+                                },
+                                {
                                     key: 'reviews',
                                     label: 'Reviews',
                                     badge: reviewsData.total_reviews || 0,
@@ -703,6 +845,14 @@ export default function ProductDetails(props) {
                         />
 
                         <div className="tab-content">
+                            {activeTab === 'questions' && (
+                                <ProductQuestions
+                                    slug={productSlug}
+                                    questions={questions}
+                                    onAsked={loadQuestions}
+                                />
+                            )}
+
                             {activeTab === 'specifications' && (
                                 <div className="specifications-table">
                                     <h3>Technical Specifications</h3>

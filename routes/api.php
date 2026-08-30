@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductQuestionController as AdminProductQuestionController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
 use App\Http\Controllers\Admin\RefundController as AdminRefundController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\PcBuilderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductQuestionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\StockNotificationController;
@@ -169,6 +171,12 @@ Route::middleware(['web', 'throttle:api'])->group(function () {
     // customer and the page told them to log in — while they were logged in.
     Route::get(ApiEndpoints::PRODUCT_REVIEWS, [ReviewController::class, 'index']);
     Route::post(ApiEndpoints::PRODUCT_REVIEWS, [ReviewController::class, 'store']);
+
+    // Same session reasoning as reviews: a signed-in shopper should not have to
+    // retype their name to ask a question.
+    Route::get(ApiEndpoints::PRODUCT_QUESTIONS, [ProductQuestionController::class, 'index']);
+    Route::post(ApiEndpoints::PRODUCT_QUESTIONS, [ProductQuestionController::class, 'store'])
+        ->middleware('throttle:6,1');
 });
 
 /*
@@ -341,6 +349,12 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'destroy'])->middleware('can:marketing');
 
         // Reviews
+        // Answering a shopper's question is support work, same ability as
+        // moderating a review.
+        Route::patch(ApiEndpoints::ADMIN_QUESTIONS_ANSWER, [AdminProductQuestionController::class, 'answer'])->middleware('can:support');
+        Route::patch(ApiEndpoints::ADMIN_QUESTIONS_PUBLISH, [AdminProductQuestionController::class, 'publish'])->middleware('can:support');
+        Route::delete(ApiEndpoints::ADMIN_QUESTIONS_ITEM, [AdminProductQuestionController::class, 'destroy'])->middleware('can:support');
+
         Route::patch(ApiEndpoints::ADMIN_REVIEWS_STATUS, [AdminReviewController::class, 'updateStatus'])->middleware('can:support');
         Route::delete(ApiEndpoints::ADMIN_REVIEWS_ITEM, [AdminReviewController::class, 'destroy'])->middleware('can:support');
 
