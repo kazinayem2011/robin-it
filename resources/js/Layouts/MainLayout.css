@@ -2565,6 +2565,14 @@
     background: #fff;
 }
 
+/* Below this a three-column brand panel is wider than the room beside the row
+   that opens it, so it gets taller and narrower instead. */
+@media (max-width: 1200px) {
+    .cat-nav-brands {
+        grid-template-rows: repeat(18, min-content);
+    }
+}
+
 /* The dropdowns are hover-driven and have no touch equivalent; the drawer is
    what phones get. */
 @media (max-width: 992px) {

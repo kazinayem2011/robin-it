@@ -126,7 +126,6 @@ export default function CategoryNav({ categories = [] }) {
             top: row.offsetTop,
             rowLeft: row.offsetLeft,
             rowRight: row.offsetLeft + row.offsetWidth,
-            panelWidth: panel.offsetWidth,
             clamped: false,
             ...(alignRight
                 ? { right: panel.offsetWidth - row.offsetLeft }
@@ -236,19 +235,33 @@ export default function CategoryNav({ categories = [] }) {
             window.innerHeight - gutter - flyout.offsetHeight - panelBox.top;
 
         /*
-         * Which side of the row it opens on.
+         * Where it sits horizontally.
          *
-         * Office Equipment's dropdown is three columns wide, so a flyout from
-         * its rightmost column opened past the window — the same failure as the
-         * vertical one, on the other axis. Whichever side has room for it wins;
-         * where neither does, the roomier side.
+         * Beside the row by preference, flipped to its other side when that
+         * would leave the window, and finally pinned inside the window when
+         * neither side fits — Monitor Brands is thirty-one entries and three
+         * columns wide, which at 1024px is wider than the space on either side
+         * of the row that opens it. Choosing the roomier side is not enough
+         * there; it has to be clamped.
+         *
+         * Worked in viewport coordinates and converted back at the end, because
+         * "inside the window" is not a statement about the panel it hangs off.
          */
-        const { rowLeft, rowRight, panelWidth } = flyoutOffset;
+        const { rowLeft, rowRight } = flyoutOffset;
         const width = flyout.offsetWidth;
-        const roomRight =
-            window.innerWidth - gutter - (panelBox.left + rowRight);
-        const roomLeft = panelBox.left + rowLeft - gutter;
-        const openLeftward = roomRight < width && roomLeft > roomRight;
+
+        const beside = panelBox.left + rowRight;
+        const flipped = panelBox.left + rowLeft - width;
+
+        const preferred =
+            beside + width <= window.innerWidth - gutter || flipped < gutter
+                ? beside
+                : flipped;
+
+        const clampedX = Math.min(
+            Math.max(gutter, preferred),
+            Math.max(gutter, window.innerWidth - gutter - width),
+        );
 
         setFlyoutOffset((current) =>
             current && current.id === flyoutOffset.id
@@ -260,8 +273,10 @@ export default function CategoryNav({ categories = [] }) {
                           -6,
                           Math.min(current.top, highestItMayStart),
                       ),
-                      left: openLeftward ? undefined : rowRight,
-                      right: openLeftward ? panelWidth - rowLeft : undefined,
+                      // Only ever `left`: setting both over-constrains the
+                      // box, and `left` silently wins.
+                      left: clampedX - panelBox.left,
+                      right: undefined,
                       clamped: true,
                   }
                 : current,
