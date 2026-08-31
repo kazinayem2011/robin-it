@@ -57,6 +57,8 @@ export default function CategoryNav({ categories = [] }) {
     const [openSub, setOpenSub] = useState(null);
     const [moreOpen, setMoreOpen] = useState(false);
     const [visibleCount, setVisibleCount] = useState(0);
+    // Index from which a dropdown should open leftward instead of rightward.
+    const [alignRightFrom, setAlignRightFrom] = useState(Infinity);
 
     /*
      * Until this is true every category is rendered, because widths can only be
@@ -87,6 +89,25 @@ export default function CategoryNav({ categories = [] }) {
         const available = nav.clientWidth;
         const widths = widthsRef.current;
         const total = widths.reduce((sum, w) => sum + w, 0);
+
+        /*
+         * Where a panel has to start opening leftward. Past roughly half the
+         * bar, a two- or three-column dropdown opening rightward runs off the
+         * window — and the items that fall off are unreachable, which is the
+         * same failure as the one that made this a column layout.
+         */
+        let run = 0;
+        let flipAt = widths.length;
+
+        for (let i = 0; i < widths.length; i++) {
+            if (run > available * 0.5) {
+                flipAt = i;
+                break;
+            }
+            run += widths[i];
+        }
+
+        setAlignRightFrom(flipAt);
 
         if (total <= available) {
             setVisibleCount(widths.length);
@@ -140,13 +161,13 @@ export default function CategoryNav({ categories = [] }) {
         return () => observer.disconnect();
     }, [recompute]);
 
-    const renderCategory = (category, { inMore = false } = {}) => (
+    const renderCategory = (category, { inMore = false, index = 0 } = {}) => (
         <li
             key={category.id}
             data-cat-item={inMore ? undefined : ''}
             className={`${inMore ? 'cat-nav-moreitem' : 'cat-nav-item'} ${
                 openCategory === category.id ? 'is-open' : ''
-            }`}
+            } ${!inMore && index >= alignRightFrom ? 'align-right' : ''}`}
             onMouseEnter={() => {
                 setOpenCategory(category.id);
                 setOpenSub(null);
@@ -247,7 +268,9 @@ export default function CategoryNav({ categories = [] }) {
             className={`cat-nav ${measured ? '' : 'is-measuring'}`}
             ref={navRef}
         >
-            {shown.map((category) => renderCategory(category))}
+            {shown.map((category, index) =>
+                renderCategory(category, { index }),
+            )}
 
             {overflow.length > 0 && (
                 <li

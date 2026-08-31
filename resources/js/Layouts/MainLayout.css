@@ -2304,6 +2304,8 @@
 
 .cat-nav-more .cat-nav-drop {
     min-width: 230px;
+    grid-template-rows: none;
+    grid-auto-flow: row;
 }
 
 /* Inside "More" a category's subcategories open to the *left*, because the
@@ -2379,9 +2381,22 @@
     color: #fff;
 }
 
-/* Level 2 */
+/* Level 2.
+
+   Laid out in columns rather than one long list. Phone has 23 subcategories
+   and Office Equipment 30: as a single column they run past the bottom of the
+   window, and the items below the fold cannot be reached at all.
+
+   Columns rather than a scrollbar, because `overflow` here would also clip the
+   brand flyouts — they are absolutely positioned children of this element, and
+   clipping them is the bug this menu already had once.
+
+   grid rather than CSS `columns`, which fragments a box across a column break
+   and would split a link's icon from its label. */
 .cat-nav-drop {
     display: none;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(12, min-content);
     position: absolute;
     top: 100%;
     left: 0;
@@ -2397,7 +2412,14 @@
 }
 
 .cat-nav-item.is-open > .cat-nav-drop {
-    display: block;
+    display: grid;
+}
+
+/* Near the right of the bar a two- or three-column panel opening leftward
+   would hang off the window. */
+.cat-nav-item.align-right > .cat-nav-drop {
+    left: auto;
+    right: 0;
 }
 
 .cat-nav-subitem {
@@ -2464,10 +2486,10 @@
     color: var(--primary-color, #c1121f);
 }
 
+/* No top border: in a column layout this lands at the foot of whichever column
+   it flows into, and a rule across the middle of a panel reads as a mistake. */
 .cat-nav-all {
-    margin-top: 4px;
     padding: 8px 14px 4px;
-    border-top: 1px solid var(--border-color, #e2e8f0);
     font-size: 0.79rem;
     font-weight: 600;
 }
