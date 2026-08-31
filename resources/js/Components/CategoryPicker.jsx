@@ -15,6 +15,13 @@ import { Search, X } from 'lucide-react';
  * Results are fetched as you type, capped server-side, and each carries its
  * ancestry — the names repeat, and "Type-C Cable" under Mobile Accessories is
  * not the same shelf as "Type-C Cable" under Cable.
+ *
+ * The markup deliberately mirrors FormInput's: same auth-form-group wrapper,
+ * auth-input-wrapper, auth-text-input, input-error, auth-field-error and
+ * auth-field-hint. A field that sits in the same column as six others and
+ * styles its own box and its own error text is the one that looks broken, and
+ * this one did — it was reaching for an `auth-input` class the project does not
+ * define.
  */
 export default function CategoryPicker({
     value,
@@ -35,6 +42,8 @@ export default function CategoryPicker({
     chips = [],
     onRemove,
     placeholder = 'Type to find a category…',
+    helperText = '',
+    id = 'category-picker-input',
 }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
@@ -109,10 +118,12 @@ export default function CategoryPicker({
 
     return (
         <div className="auth-form-group category-picker" ref={boxRef}>
-            <label className="auth-label" htmlFor="category-picker-input">
-                {label}{' '}
-                {required && <span className="required-asterisk">*</span>}
-            </label>
+            {label && (
+                <label className="auth-label" htmlFor={id}>
+                    {label}{' '}
+                    {required && <span className="required-asterisk">*</span>}
+                </label>
+            )}
 
             {multiple && chips.length > 0 && (
                 <div className="category-picker-chips">
@@ -134,7 +145,7 @@ export default function CategoryPicker({
             {!multiple && chosen && !open ? (
                 <button
                     type="button"
-                    className="auth-input category-picker-chosen"
+                    className={`auth-text-input category-picker-chosen ${error ? 'input-error' : ''}`}
                     onClick={() => {
                         setOpen(true);
                         fetchResults('');
@@ -158,12 +169,12 @@ export default function CategoryPicker({
                     />
                 </button>
             ) : (
-                <div className="category-picker-search">
-                    <Search size={14} />
+                <div className="auth-input-wrapper">
+                    <Search size={18} className="auth-input-icon" />
                     <input
-                        id="category-picker-input"
+                        id={id}
                         type="text"
-                        className="auth-input"
+                        className={`auth-text-input icon-padded ${error ? 'input-error' : ''}`}
                         autoComplete="off"
                         placeholder={placeholder}
                         value={query}
@@ -207,7 +218,13 @@ export default function CategoryPicker({
                 </ul>
             )}
 
-            {error && <span className="auth-error">{error}</span>}
+            {error ? (
+                <span className="auth-field-error">{error}</span>
+            ) : (
+                helperText && (
+                    <span className="auth-field-hint">{helperText}</span>
+                )
+            )}
         </div>
     );
 }

@@ -3945,23 +3945,8 @@ a.admin-card:hover,
     position: relative;
 }
 
-.category-picker-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.category-picker-search svg {
-    position: absolute;
-    left: 10px;
-    opacity: 0.45;
-    pointer-events: none;
-}
-
-.category-picker-search input {
-    padding-left: 32px;
-}
-
+/* The chosen value reads as the field's own input, so it takes the shared
+   auth-text-input styling and only adds what a button needs on top of it. */
 .category-picker-chosen {
     display: flex;
     align-items: center;

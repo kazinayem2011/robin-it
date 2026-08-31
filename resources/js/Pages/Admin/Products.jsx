@@ -665,6 +665,7 @@ export default function Products({
                                 formik.touched.category_id &&
                                 formik.errors.category_id
                             }
+                            helperText="Where the product lives. Type a few letters."
                         />
                         <FormSelect
                             label="Brand"
