@@ -12,7 +12,8 @@
         "lint": "eslint resources/js --no-warn-ignored",
         "lint:fix": "eslint resources/js --no-warn-ignored --fix",
         "lint:css-classes": "node scripts/find-unstyled-classes.mjs",
-        "lint:radius": "node scripts/check-radius.mjs"
+        "lint:radius": "node scripts/check-radius.mjs",
+        "check:menu": "node scripts/check-menu-overflow.mjs"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.5",

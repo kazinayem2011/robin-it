@@ -2295,9 +2295,14 @@
     flex: none;
 }
 
-/* Anchored to the right edge, or a "More" panel opening leftward from the last
-   position in the bar would hang off the window. */
-.cat-nav-drop-right {
+/* Anchored to the right edge, or a "More" panel opening from the last position
+   in the bar hangs off the window.
+ *
+ * Doubled selector deliberately: `.cat-nav-drop` sets `left: 0` and is declared
+ * further down this file, so at equal specificity it won and the panel was
+ * over-constrained — left and right both 0, left wins, and it ran 32px past the
+ * window with no way to reach what was out there. */
+.cat-nav-drop.cat-nav-drop-right {
     left: auto;
     right: 0;
 }
@@ -2397,6 +2402,10 @@
     display: none;
     grid-auto-flow: column;
     grid-template-rows: repeat(12, min-content);
+    /* A floor under each column, so a column of short brand names is not
+       markedly narrower than its neighbour. max-content above it, so a long
+       name still gets the width it needs rather than wrapping. */
+    grid-auto-columns: minmax(190px, max-content);
     position: absolute;
     top: 100%;
     left: 0;
@@ -2506,11 +2515,17 @@
 }
 
 /* No top border: in a column layout this lands at the foot of whichever column
-   it flows into, and a rule across the middle of a panel reads as a mistake. */
+   it flows into, and a rule across the middle of a panel reads as a mistake.
+ *
+ * nowrap because this is the one row not covered by the rule the links share,
+ * and it was wrapping — "Show all Tablet" broke across two lines, and because
+ * grid rows are as tall as their tallest cell, that also opened a gap in the
+ * neighbouring column beside it. */
 .cat-nav-all {
     padding: 8px 14px 4px;
     font-size: 0.79rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .cat-nav-all a {
