@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\StockService;
 use Illuminate\Database\Seeder;
 
 /**
@@ -133,7 +134,10 @@ class ReferenceProductSeeder extends Seeder
                 'price' => 132000,
                 'discount_price' => 125000,
 
-                'stock_quantity' => 5,
+                // Posted through the ledger after creation, not written here:
+                // stock the shop never bought and cannot explain is exactly
+                // what the stock screen should never show.
+                'stock_quantity' => 0,
 
                 // Their "Key Features" list, which is a curated summary rather
                 // than a truncated description.
@@ -179,6 +183,19 @@ class ReferenceProductSeeder extends Seeder
                 'alt_text' => 'Front open view of MSI Cyborg 15 Black Edition A13UC gaming laptop showing display and backlit keyboard',
                 'is_primary' => true,
             ]);
+        }
+
+        // Idempotent: the seeder is re-runnable, and a second opening balance
+        // on the same product would be a quantity nobody delivered.
+        if (! $product->stockMovements()->exists()) {
+            app(StockService::class)->recordOpeningBalance(
+                $product,
+                null,
+                5,
+                null,
+                'Seeded opening balance — replace with a real delivery',
+            );
+            $product->update(['stock_quantity' => 5]);
         }
 
         $this->command?->info(sprintf(

@@ -1958,6 +1958,14 @@ a.admin-card:hover,
     box-shadow: none;
 }
 
+/* Two or more icon buttons in one cell. The column is right-aligned, so
+   without this they stack and the row grows to two lines. */
+.admin-table-icon-group {
+    display: inline-flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
 .admin-table-icon-btn.btn-danger:hover {
     background: var(--danger-tint);
     color: var(--danger);

@@ -549,23 +549,38 @@ class StockService
 
     /**
      * Seed the ledger for stock that predates it, so balances stay explainable.
+     *
+     * Also puts the units somewhere. A quantity that no branch holds is stock
+     * the shop cannot pick, count or transfer: it showed on the product row and
+     * nowhere on the branch stock screen, which is how a shop with no purchases
+     * ended up with items apparently in stock and an empty History behind them.
      */
-    public function recordOpeningBalance(Product $product, ?ProductVariant $variant, int $quantity, ?int $userId = null): ?StockMovement
+    public function recordOpeningBalance(Product $product, ?ProductVariant $variant, int $quantity, ?int $userId = null, ?string $note = null): ?StockMovement
     {
         if ($quantity === 0) {
             return null;
         }
 
+        $store = Store::onlineFulfilment();
+
         // The balance is already on the row; write the history without moving it.
         $movement = StockMovement::create([
             'product_id' => $product->id,
             'product_variant_id' => $variant?->id,
+            'store_id' => $store?->id,
             'quantity' => $quantity,
             'type' => StockMovement::OPENING,
             'balance_after' => $quantity,
-            'note' => 'Balance carried over when stock tracking was introduced',
+            'note' => $note ?? 'Balance carried over when stock tracking was introduced',
             'user_id' => $userId,
         ]);
+
+        if ($store) {
+            ProductStock::updateOrCreate(
+                ['product_id' => $product->id, 'product_variant_id' => $variant?->id, 'store_id' => $store->id],
+                ['quantity' => $quantity]
+            );
+        }
 
         return $movement;
     }

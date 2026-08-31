@@ -1,0 +1,286 @@
+/*
+ * The read-only product panel.
+ *
+ * Two columns of definition lists on a wide screen, one on a narrow one. The
+ * labels are fixed-width so the values line up down the column — a product
+ * sheet is scanned for one field, not read through, and a ragged left edge on
+ * the values makes that scan slower than it needs to be.
+ */
+
+.pd-body {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.pd-loading,
+.pd-failed {
+    padding: 28px 4px;
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+.pd-failed {
+    color: var(--danger-text);
+}
+
+/* ------------------------------------------------------------------ header */
+
+.pd-head {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.pd-thumb {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 96px;
+    object-fit: contain;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.pd-head-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pd-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pd-price {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.pd-price strong {
+    font-size: 1.15rem;
+    color: var(--dark-900);
+}
+
+.pd-price s {
+    color: var(--gray-400);
+}
+
+.pd-price em {
+    font-style: normal;
+    color: var(--success);
+    font-weight: 600;
+}
+
+.pd-warn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--danger-text);
+}
+
+.pd-warn-inline {
+    color: var(--danger-text);
+}
+
+/* ----------------------------------------------------------------- columns */
+
+/*
+ * Newspaper columns rather than a grid. A grid aligns rows, so a short section
+ * beside a long one leaves a block of empty space the height of the difference
+ * — "Filed under" against "Identity" left a hole most of a screen deep. These
+ * flow, and a section never breaks across the fold.
+ */
+.pd-columns {
+    columns: 2;
+    column-gap: 28px;
+}
+
+.pd-columns .pd-section {
+    break-inside: avoid;
+    margin-bottom: 18px;
+}
+
+.pd-section h4 {
+    margin: 0 0 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+.pd-section h5 {
+    margin: 12px 0 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dark-800);
+}
+
+.pd-section dl {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pd-row {
+    display: grid;
+    /* Fixed label column: the values line up so one field can be found by
+       running an eye down the edge rather than reading every row. */
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.82rem;
+}
+
+.pd-row:last-child {
+    border-bottom: none;
+}
+
+.pd-row dt {
+    color: var(--gray-500);
+}
+
+.pd-row dd {
+    margin: 0;
+    color: var(--dark-800);
+    overflow-wrap: anywhere;
+}
+
+.pd-empty {
+    color: var(--gray-400);
+    font-style: italic;
+}
+
+/* ------------------------------------------------------------------- chips */
+
+.pd-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.pd-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-size: 0.74rem;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    color: var(--dark-700);
+}
+
+.pd-chip em {
+    font-style: normal;
+    color: var(--gray-400);
+}
+
+/* ------------------------------------------------------------------ tables */
+
+/* Options and tiers can be wider than the modal; they scroll, the page does not. */
+.pd-scroll {
+    overflow-x: auto;
+}
+
+.pd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-top: 8px;
+}
+
+.pd-table th,
+.pd-table td {
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-light);
+    white-space: nowrap;
+}
+
+.pd-table th {
+    font-weight: 600;
+    color: var(--gray-500);
+    background: var(--bg-surface-subtle);
+}
+
+.pd-table td {
+    color: var(--dark-800);
+    font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------- rich text */
+
+.pd-rich {
+    font-size: 0.84rem;
+    line-height: 1.65;
+    color: var(--dark-700);
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.pd-rich :first-child {
+    margin-top: 0;
+}
+
+/*
+ * A description written for the product page opens with an <h2> the size of
+ * the page's own title. Inside this panel that outranks the section headings
+ * and the whole thing reads as a document rather than a field.
+ */
+.pd-rich h1,
+.pd-rich h2,
+.pd-rich h3,
+.pd-rich h4 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    margin: 12px 0 4px;
+}
+
+.pd-rich img,
+.pd-rich table {
+    max-width: 100%;
+}
+
+/* ----------------------------------------------------------------- actions */
+
+.pd-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-light);
+    margin-top: 2px;
+}
+
+@media (max-width: 720px) {
+    .pd-columns {
+        columns: 1;
+    }
+
+    .pd-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+
+    .pd-head {
+        flex-direction: column;
+    }
+
+    .pd-actions {
+        flex-direction: column-reverse;
+    }
+}

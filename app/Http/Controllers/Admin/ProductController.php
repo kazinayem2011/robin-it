@@ -95,6 +95,56 @@ class ProductController extends Controller
     }
 
     /**
+     * Everything known about one product, for the details panel.
+     *
+     * The index deliberately ships a thin row — it is twenty products a page
+     * and the tree alone was 113 KB — so the columns can only show a name, a
+     * price and a stock figure. Answering "what is this product, exactly?"
+     * meant opening the edit form and reading it out of the inputs, which is
+     * both slower and a live form somebody can save by accident.
+     *
+     * One product, everything on it, read-only.
+     */
+    public function show(int $id): JsonResponse
+    {
+        $product = Product::with([
+            'category.parent.parent',
+            'categories:id,name,slug,parent_id',
+            'categories.parent:id,name',
+            'brand:id,name,slug,logo_path',
+            'images',
+            'variants',
+            'specifications',
+            'quantityDiscounts',
+            'relatedProducts:id,name,slug,price',
+            'stockLevels.store:id,name',
+        ])
+            ->withCount([
+                'reviews',
+                'questions',
+                'orderItems',
+                'stockMovements',
+            ])
+            ->findOrFail($id);
+
+        // Computed here, not in the browser: whether a discount is currently
+        // running, what a saving comes to, where the reorder level actually
+        // falls. A second implementation in JSX is a second set of rounding
+        // decisions, and it drifts from what the shop charges.
+        //
+        // effective_price, has_discount, in_stock, stock_status_label and
+        // emi_monthly are already on $appends; these are the rest.
+        $product->setAttribute('missing_specs', $this->compatibility->missingSpecsFor($product));
+        $product->setAttribute('saving', $product->saving);
+        $product->setAttribute('discount_window_open', $product->discountWindowIsOpen());
+        $product->setAttribute('average_rating', $product->average_rating);
+        $product->setAttribute('reorder_level_effective', $product->reorderLevel());
+        $product->setAttribute('needs_reorder', $product->needsReorder());
+
+        return $this->successResponse($product);
+    }
+
+    /**
      * Create a new product.
      */
     public function store(ProductStoreRequest $request): JsonResponse

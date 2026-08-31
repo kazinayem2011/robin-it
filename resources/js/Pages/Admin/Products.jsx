@@ -6,6 +6,7 @@ import {
     Package,
     Plus,
     Edit2,
+    Eye,
     CheckCircle,
     XCircle,
     Crop,
@@ -26,6 +27,7 @@ import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
 import SpecificationEditor from './Components/SpecificationEditor';
+import ProductDetailsModal from './Components/ProductDetailsModal';
 import CategoryPicker from '@/Components/CategoryPicker';
 import RichTextEditor from '@/Components/RichTextEditor';
 import { bulletsToLines, linesToBullets } from '@/utils/bulletHtml';
@@ -163,6 +165,9 @@ export default function Products({
     const [cropTarget, setCropTarget] = useState('product');
     const [uploadingImage, setUploadingImage] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    // The read-only panel. Holds an id rather than the row, because it
+    // fetches the full record — the table row is a thin projection.
+    const [detailsId, setDetailsId] = useState(null);
     // Names for the extra-category chips. The ids live in Formik; these are
     // only what the chips display, and come from whatever was just picked or
     // from the product being edited.
@@ -541,14 +546,26 @@ export default function Products({
             header: 'Actions',
             align: 'right',
             render: (p) => (
-                <button
-                    type="button"
-                    className="admin-table-icon-btn"
-                    onClick={() => handleOpenEdit(p)}
-                    title="Edit Product"
-                >
-                    <Edit2 size={14} />
-                </button>
+                <div className="admin-table-icon-group">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        onClick={() => setDetailsId(p.id)}
+                        title="View full details"
+                        aria-label={`View details for ${p.name}`}
+                    >
+                        <Eye size={14} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        onClick={() => handleOpenEdit(p)}
+                        title="Edit Product"
+                        aria-label={`Edit ${p.name}`}
+                    >
+                        <Edit2 size={14} />
+                    </button>
+                </div>
             ),
         },
     ];
@@ -1253,6 +1270,13 @@ export default function Products({
                     title="Crop Product Image (1:1)"
                 />
             )}
+
+            <ProductDetailsModal
+                productId={detailsId}
+                isOpen={detailsId !== null}
+                onClose={() => setDetailsId(null)}
+                onEdit={handleOpenEdit}
+            />
         </AdminLayout>
     );
 }

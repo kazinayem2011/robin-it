@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductSpecification;
+use App\Services\StockService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
 
@@ -649,7 +650,10 @@ class CatalogSeeder extends Seeder
             'slug' => $data['slug'],
             'price' => $data['price'],
             'discount_price' => $data['discount'] ?? null,
-            'stock_quantity' => $data['stock'],
+            // Zero here, then posted through the ledger below: a quantity
+            // written straight onto the row is stock the shop cannot account
+            // for, with an empty History behind it.
+            'stock_quantity' => 0,
             'short_description' => $data['short'],
             'description' => $data['description'],
             'is_featured' => $data['featured'] ?? false,
@@ -661,6 +665,15 @@ class CatalogSeeder extends Seeder
             'image_path' => $data['image'],
             'is_primary' => true,
         ]);
+
+        app(StockService::class)->recordOpeningBalance(
+            $product,
+            null,
+            (int) $data['stock'],
+            null,
+            'Seeded opening balance — replace with a real delivery',
+        );
+        $product->update(['stock_quantity' => (int) $data['stock']]);
 
         foreach ($data['specs'] as $name => $value) {
             ProductSpecification::create([
