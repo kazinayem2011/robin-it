@@ -61,6 +61,23 @@ export default function CategoryNav({ categories = [] }) {
     const [alignRightFrom, setAlignRightFrom] = useState(Infinity);
 
     /*
+     * Where the brand panel sits horizontally, in pixels from the edge of the
+     * dropdown it belongs to.
+     *
+     * The two axes want different anchors, which no single absolutely
+     * positioned element can express: horizontally it belongs beside the row
+     * being hovered, vertically it belongs level with the top of the dropdown —
+     * anchored to the row it would start halfway down a long list and run off
+     * the bottom.
+     *
+     * So the vertical stays CSS against the panel, and the horizontal is
+     * measured off the row. In a multi-column dropdown that is the difference
+     * between opening beside Graphics Card and opening past both columns with a
+     * gap in between.
+     */
+    const [flyoutOffset, setFlyoutOffset] = useState(null);
+
+    /*
      * Until this is true every category is rendered, because widths can only be
      * read off elements that exist — a hidden item has no width to measure.
      *
@@ -79,6 +96,28 @@ export default function CategoryNav({ categories = [] }) {
     const close = () => {
         setOpenCategory(null);
         setOpenSub(null);
+        setFlyoutOffset(null);
+    };
+
+    const openFlyout = (event, sub, alignRight) => {
+        setOpenSub(sub.id);
+
+        const row = event.currentTarget;
+        // The row is unpositioned, so its offsetParent is the dropdown itself —
+        // which is what these numbers need to be relative to.
+        const panel = row.offsetParent;
+
+        if (!panel) {
+            setFlyoutOffset(null);
+
+            return;
+        }
+
+        setFlyoutOffset(
+            alignRight
+                ? { id: sub.id, right: panel.offsetWidth - row.offsetLeft }
+                : { id: sub.id, left: row.offsetLeft + row.offsetWidth },
+        );
     };
 
     const recompute = useCallback(() => {
@@ -203,7 +242,9 @@ export default function CategoryNav({ categories = [] }) {
                         <li
                             key={sub.id}
                             className={`cat-nav-subitem ${openSub === sub.id ? 'is-open' : ''}`}
-                            onMouseEnter={() => setOpenSub(sub.id)}
+                            onMouseEnter={(event) =>
+                                openFlyout(event, sub, index >= alignRightFrom)
+                            }
                         >
                             <Link
                                 href={ROUTES.SHOP_CATEGORY(sub.slug)}
@@ -229,7 +270,25 @@ export default function CategoryNav({ categories = [] }) {
                              * navigable with a mouse.
                              */}
                             {!inMore && sub.children?.length > 0 && (
-                                <ul className="cat-nav-brands">
+                                <ul
+                                    className="cat-nav-brands"
+                                    style={
+                                        flyoutOffset?.id === sub.id
+                                            ? {
+                                                  left:
+                                                      flyoutOffset.left ===
+                                                      undefined
+                                                          ? 'auto'
+                                                          : `${flyoutOffset.left}px`,
+                                                  right:
+                                                      flyoutOffset.right ===
+                                                      undefined
+                                                          ? 'auto'
+                                                          : `${flyoutOffset.right}px`,
+                                              }
+                                            : undefined
+                                    }
+                                >
                                     {sub.children.map((child) => (
                                         <li key={child.id}>
                                             <Link
