@@ -57,6 +57,16 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
     padding: 8px 20px;
+    /*
+     * One height for the row, whatever a tab happens to carry.
+     *
+     * The vertical padding sized each tab to its own content, and a tab with a
+     * count badge is taller than a tab with only a label — so "All" came out
+     * 39px beside "On the shelf 12" at 43px, in the same strip.
+     */
+    min-height: var(--admin-control-h, 38px);
+    padding-block: 0;
+
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--dark-800);
@@ -87,6 +97,16 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 10px 20px;
+    /*
+     * One height for the row, whatever a tab happens to carry.
+     *
+     * The vertical padding sized each tab to its own content, and a tab with a
+     * count badge is taller than a tab with only a label — so "All" came out
+     * 39px beside "On the shelf 12" at 43px, in the same strip.
+     */
+    min-height: var(--admin-control-h, 38px);
+    padding-block: 0;
+
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--dark-800);

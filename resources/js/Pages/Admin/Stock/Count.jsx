@@ -176,8 +176,20 @@ export default function StockCount({
             <Head title="Stock take" />
 
             <div className="admin-card">
-                <div className="count-toolbar">
-                    <div className="count-toolbar-left">
+                {/* The same bar as every other screen: heading left, then the
+                    controls and the action, all at one height. This page built
+                    its own, and the branch select came out 46px beside a 38px
+                    search box and a 34px scan field. */}
+                <div className="admin-card-header">
+                    <div className="admin-card-title-group">
+                        <h3 className="admin-card-title">Count sheet</h3>
+                        <span className="admin-table-item-sub">
+                            Scan or type what is on the shelf — the difference
+                            is recorded as an adjustment
+                        </span>
+                    </div>
+
+                    <div className="admin-header-actions">
                         {branch ? (
                             <span className="count-branch-fixed">{branch}</span>
                         ) : (
@@ -206,34 +218,37 @@ export default function StockCount({
                                     { preserveState: true, replace: true },
                                 )
                             }
-                            placeholder="Find a product on the sheet…"
+                            placeholder="Find a product…"
                         />
-                    </div>
 
-                    {/*
-                     * The scanner types here. Kept beside the search box rather
-                     * than in a mode of its own — somebody counting a shelf
-                     * scans most lines and types the odd one nobody labelled.
-                     */}
-                    <div className="count-scan">
-                        <ScanLine size={15} />
-                        <input
-                            ref={scanBox}
-                            type="text"
-                            className="count-scan-input"
-                            placeholder="Scan a barcode…"
-                            onKeyDown={onScan}
-                            autoFocus
-                        />
-                    </div>
+                        {/*
+                         * The scanner types here. Kept beside the search box
+                         * rather than in a mode of its own — somebody counting
+                         * a shelf scans most lines and types the odd one
+                         * nobody labelled.
+                         */}
+                        <div className="count-scan">
+                            <ScanLine size={15} />
+                            <input
+                                ref={scanBox}
+                                type="text"
+                                className="count-scan-input"
+                                placeholder="Scan a barcode…"
+                                onKeyDown={onScan}
+                                autoFocus
+                            />
+                        </div>
 
-                    <Button
-                        icon={Save}
-                        onClick={save}
-                        disabled={saving || totals.checked === 0}
-                    >
-                        {saving ? 'Saving…' : `Save count (${totals.checked})`}
-                    </Button>
+                        <Button
+                            icon={Save}
+                            onClick={save}
+                            disabled={saving || totals.checked === 0}
+                        >
+                            {saving
+                                ? 'Saving…'
+                                : `Save count (${totals.checked})`}
+                        </Button>
+                    </div>
                 </div>
 
                 {scanned && (

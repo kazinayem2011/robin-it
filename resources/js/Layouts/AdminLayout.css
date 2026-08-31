@@ -838,10 +838,23 @@ a.admin-card:hover,
     width: 230px;
 }
 
+/*
+ * Above the input, not under it.
+ *
+ * The global :focus-visible rule lifts a focused field to z-index 1 so its
+ * ring is not clipped by a neighbour. A text input matches :focus-visible the
+ * moment it has focus, however that happened — a plain click is enough — so
+ * the input's own opaque background then painted straight over this icon, and
+ * every search box in the admin lost its magnifier as soon as it was clicked
+ * in. The auth forms already carry this z-index on their own field icons; the
+ * admin's were missed.
+ */
 .admin-search-icon {
     position: absolute;
     left: 12px;
     color: var(--gray-400);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .admin-search-input {
@@ -859,6 +872,9 @@ a.admin-card:hover,
 .admin-search-clear-btn {
     position: absolute;
     right: 10px;
+    /* Same reason as the icon — and this one is clickable, so being painted
+       over would also swallow the click that clears the search. */
+    z-index: 2;
     background: transparent;
     border: none;
     cursor: pointer;
