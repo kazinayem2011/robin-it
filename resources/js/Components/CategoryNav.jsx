@@ -119,9 +119,14 @@ export default function CategoryNav({ categories = [] }) {
 
         setFlyoutOffset({
             id: sub.id,
-            // Level with the row to begin with; the layout effect below pulls it
-            // up if it would hang off the bottom.
+            // Level with the row and beside it to begin with. The layout effect
+            // below pulls it up if it hangs off the bottom, and flips it to the
+            // other side of the row if it hangs off an edge — neither is
+            // knowable until it has been measured.
             top: row.offsetTop,
+            rowLeft: row.offsetLeft,
+            rowRight: row.offsetLeft + row.offsetWidth,
+            panelWidth: panel.offsetWidth,
             clamped: false,
             ...(alignRight
                 ? { right: panel.offsetWidth - row.offsetLeft }
@@ -224,10 +229,26 @@ export default function CategoryNav({ categories = [] }) {
 
         if (!panel || !flyout) return;
 
-        const panelTop = panel.getBoundingClientRect().top;
+        const panelBox = panel.getBoundingClientRect();
         const gutter = 12;
+
         const highestItMayStart =
-            window.innerHeight - gutter - flyout.offsetHeight - panelTop;
+            window.innerHeight - gutter - flyout.offsetHeight - panelBox.top;
+
+        /*
+         * Which side of the row it opens on.
+         *
+         * Office Equipment's dropdown is three columns wide, so a flyout from
+         * its rightmost column opened past the window — the same failure as the
+         * vertical one, on the other axis. Whichever side has room for it wins;
+         * where neither does, the roomier side.
+         */
+        const { rowLeft, rowRight, panelWidth } = flyoutOffset;
+        const width = flyout.offsetWidth;
+        const roomRight =
+            window.innerWidth - gutter - (panelBox.left + rowRight);
+        const roomLeft = panelBox.left + rowLeft - gutter;
+        const openLeftward = roomRight < width && roomLeft > roomRight;
 
         setFlyoutOffset((current) =>
             current && current.id === flyoutOffset.id
@@ -239,6 +260,8 @@ export default function CategoryNav({ categories = [] }) {
                           -6,
                           Math.min(current.top, highestItMayStart),
                       ),
+                      left: openLeftward ? undefined : rowRight,
+                      right: openLeftward ? panelWidth - rowLeft : undefined,
                       clamped: true,
                   }
                 : current,

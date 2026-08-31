@@ -12,7 +12,8 @@
  *
  * This drives a real pointer through the DevTools protocol over each category
  * and each flyout, and fails on: a panel outside the window, a link past its
- * panel's edge, or truncated text.
+ * panel's edge, truncated text, or a panel that scrolls — the last because
+ * items behind a scrollbar in a hover menu are items nobody finds.
  *
  * Not part of CI — it needs the dev server and a real Chrome. Run it after
  * touching the menu:
@@ -55,6 +56,24 @@ const problems = (label) => `(() => {
         if (pr.right > window.innerWidth + 0.5) out.push({ where: ${JSON.stringify(label)}, issue: 'panel past right edge' });
         if (pr.bottom > window.innerHeight + 0.5) out.push({ where: ${JSON.stringify(label)}, issue: 'panel past bottom', by: Math.round(pr.bottom - window.innerHeight) });
         if (pr.left < -0.5) out.push({ where: ${JSON.stringify(label)}, issue: 'panel past left edge' });
+        /*
+         * A panel that scrolls is a panel whose last items are never found —
+         * nobody hunts for a scrollbar inside a hover menu. Projector hid
+         * Projection Screen and Projector Mount this way, and the clipping
+         * checks above called it fine because nothing was off-window.
+         *
+         * Guarded on the overflow mode, because scrollHeight counts content
+         * outside the padding box whether or not it is reachable: with
+         * overflow visible it exceeds clientHeight on every panel taller than
+         * its own padding, which flagged all fourteen of them.
+         */
+        const cs = getComputedStyle(panel);
+        const hides = (mode) => mode === 'auto' || mode === 'scroll' || mode === 'hidden';
+
+        if (hides(cs.overflowY) && panel.scrollHeight > panel.clientHeight + 1)
+            out.push({ where: ${JSON.stringify(label)}, issue: 'panel hides items below the fold', hidden: Math.round(panel.scrollHeight - panel.clientHeight) + 'px' });
+        if (hides(cs.overflowX) && panel.scrollWidth > panel.clientWidth + 1)
+            out.push({ where: ${JSON.stringify(label)}, issue: 'panel hides items sideways' });
         for (const link of panel.querySelectorAll('a')) {
             const span = link.querySelector('span');
             if (span && span.scrollWidth > span.clientWidth + 1)
@@ -96,7 +115,8 @@ if (found.length === 0) {
 
 console.error(`${found.length} menu problem(s):\n`);
 for (const problem of found.slice(0, 25)) {
-    console.error(`  ${problem.where}: ${problem.issue}${problem.text ? ` — "${problem.text}"` : ''}`);
+    const detail = problem.text ? ` — "${problem.text}"` : problem.hidden ? ` (${problem.hidden} hidden)` : problem.by ? ` (by ${problem.by}px)` : '';
+    console.error(`  ${problem.where}: ${problem.issue}${detail}`);
 }
 ws.close();
 process.exit(1);
