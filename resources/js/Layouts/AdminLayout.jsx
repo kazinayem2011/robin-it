@@ -114,6 +114,12 @@ const NAV_GROUPS = [
                 icon: FolderTree,
                 ability: 'catalogue',
             },
+            {
+                label: 'Brands',
+                href: ROUTES.ADMIN_BRANDS,
+                icon: Tag,
+                ability: 'catalogue',
+            },
         ],
     },
     {

@@ -324,6 +324,12 @@ class ApiEndpoints
 
     public const ADMIN_CATEGORIES_ITEM = 'categories/{id}';
 
+    public const ADMIN_CATEGORIES_SEARCH = 'categories/search';
+
+    public const ADMIN_BRANDS = 'brands';
+
+    public const ADMIN_BRANDS_ITEM = 'brands/{id}';
+
     public const ADMIN_BANNERS = 'banners';
 
     public const ADMIN_BANNERS_ITEM = 'banners/{id}';

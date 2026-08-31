@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\SearchTerm;
 use App\Support\SlugFactory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -127,5 +129,46 @@ class CategoryController extends Controller
         });
 
         return $this->successResponse([], "Category '{$name}' deleted successfully.");
+    }
+
+    /**
+     * Categories matching a search term, with their ancestry.
+     *
+     * Added so the product form stops receiving the entire tree. Admin/Products
+     * shipped `Category::all()` as an Inertia prop — 1,392 rows and 113 KB of
+     * JSON on every page load — to fill two dropdowns, and the resulting select
+     * had 1,392 options and no way to search them.
+     *
+     * The path is returned with each row because the names repeat: "Type-C
+     * Cable" is a real child of both Mobile Accessories and Cable, and a bare
+     * name cannot tell a shopkeeper which one they are filing a product under.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        $query = Category::query()
+            ->where('is_active', true)
+            ->with('parent.parent:id,name')
+            ->orderBy('name');
+
+        if ($term !== '') {
+            $query->where('name', 'like', SearchTerm::contains($term));
+        }
+
+        // A cap, not a page: this feeds a typeahead, and nobody scrolls to the
+        // fortieth suggestion — they type another letter.
+        $categories = $query->limit(40)->get(['id', 'name', 'slug', 'parent_id']);
+
+        return $this->successResponse(
+            $categories->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'path' => collect([
+                    $category->parent?->parent?->name,
+                    $category->parent?->name,
+                ])->filter()->implode(' › '),
+            ])->all()
+        );
     }
 }

@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
@@ -214,6 +215,12 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
     ->name('api.admin.')
     ->group(function () {
         // Catalogue
+        Route::post(ApiEndpoints::ADMIN_BRANDS, [AdminBrandController::class, 'store'])->middleware('can:catalogue');
+        Route::patch(ApiEndpoints::ADMIN_BRANDS_ITEM, [AdminBrandController::class, 'update'])->middleware('can:catalogue');
+        Route::delete(ApiEndpoints::ADMIN_BRANDS_ITEM, [AdminBrandController::class, 'destroy'])->middleware('can:catalogue');
+
+        // Before the {id} route, or "search" is read as an id.
+        Route::get(ApiEndpoints::ADMIN_CATEGORIES_SEARCH, [AdminCategoryController::class, 'search'])->middleware('can:catalogue');
         Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store'])->middleware('can:catalogue');
         Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update'])->middleware('can:catalogue');
         Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy'])->middleware('can:catalogue');

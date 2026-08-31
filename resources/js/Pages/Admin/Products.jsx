@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -26,6 +26,7 @@ import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
 import SpecificationEditor from './Components/SpecificationEditor';
+import CategoryPicker from '@/Components/CategoryPicker';
 import { ROUTES } from '@/constants/endpoints';
 
 /**
@@ -145,7 +146,6 @@ const buildProductPayload = (values, editingProduct) => {
 
 export default function Products({
     products = { data: [] },
-    categories = [],
     brands = [],
     selectedCategory: initialCategory = '',
     search = '',
@@ -159,12 +159,16 @@ export default function Products({
     const [cropTarget, setCropTarget] = useState('product');
     const [uploadingImage, setUploadingImage] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    // Names for the extra-category chips. The ids live in Formik; these are
+    // only what the chips display, and come from whatever was just picked or
+    // from the product being edited.
+    const [extraCategoryChips, setExtraCategoryChips] = useState([]);
 
     // Unified Product Form (Formik + Yup)
     const formik = useFormik({
         initialValues: {
             name: '',
-            category_id: categories[0]?.id || '',
+            category_id: '',
             brand_id: brands[0]?.id || '',
             price: '',
             discount_price: '',
@@ -251,43 +255,6 @@ export default function Products({
      *
      * The input stays instant; only the request waits.
      */
-    /*
-     * The category list is a flat array of several hundred rows, and the select
-     * showed nothing but `cat.name`. Once the tree went three levels deep that
-     * became unusable: "Type-C Cable" appears under both Mobile Accessories and
-     * Cable, "Car Charger" under both Mobile Accessories and Gadget, and the
-     * dropdown offered no way to tell which was which.
-     *
-     * Grouped by top-level category, indented by depth, so a name is read in
-     * the context that gives it meaning.
-     */
-    const categoryOptionGroups = useMemo(() => {
-        const byParent = new Map();
-
-        categories.forEach((cat) => {
-            const key = cat.parent_id ?? 'root';
-            if (!byParent.has(key)) byParent.set(key, []);
-            byParent.get(key).push(cat);
-        });
-
-        const branch = (cat, depth) => [
-            {
-                id: cat.id,
-                // Non-breaking spaces: a <option> collapses ordinary ones, so
-                // regular indentation simply does not render.
-                label: `${'   '.repeat(depth)}${depth ? '└ ' : ''}${cat.name}`,
-            },
-            ...(byParent.get(cat.id) ?? []).flatMap((child) =>
-                branch(child, depth + 1),
-            ),
-        ];
-
-        return (byParent.get('root') ?? []).map((root) => ({
-            id: root.id,
-            name: root.name,
-            options: branch(root, 0),
-        }));
-    }, [categories]);
 
     const searchTimer = useRef(null);
 
@@ -332,7 +299,7 @@ export default function Products({
         formik.resetForm({
             values: {
                 name: '',
-                category_id: categories[0]?.id || '',
+                category_id: '',
                 brand_id: brands[0]?.id || '',
                 price: '',
                 discount_price: '',
@@ -377,7 +344,7 @@ export default function Products({
         formik.resetForm({
             values: {
                 name: p.name || '',
-                category_id: p.category_id || categories[0]?.id || '',
+                category_id: p.category_id || '',
                 brand_id: p.brand_id || brands[0]?.id || '',
                 price: p.price || '',
                 discount_price: p.discount_price || '',
@@ -635,20 +602,16 @@ export default function Products({
                 emptyDescription="Try adjusting your search keyword or selected category filter."
                 headerActions={
                     <>
-                        <select
-                            value={selectedCategory}
-                            onChange={(e) =>
-                                handleCategoryFilter(e.target.value)
-                            }
-                            className="admin-select-input"
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="admin-filter-picker">
+                            <CategoryPicker
+                                label=""
+                                placeholder="Filter by category…"
+                                value={selectedCategory}
+                                onChange={(id) =>
+                                    handleCategoryFilter(id || '')
+                                }
+                            />
+                        </div>
 
                         <Button
                             variant="primary"
@@ -674,7 +637,7 @@ export default function Products({
                         ? `Edit Product: ${editingProduct.name}`
                         : 'Add New Technology Product'
                 }
-                maxWidth="640px"
+                maxWidth="860px"
             >
                 <form onSubmit={formik.handleSubmit} noValidate>
                     <FormInput
@@ -690,22 +653,19 @@ export default function Products({
                     />
 
                     <div className="admin-modal-form-grid">
-                        <FormSelect
+                        <CategoryPicker
                             label="Category"
-                            name="category_id"
                             required
-                            formik={formik}
-                        >
-                            {categoryOptionGroups.map((group) => (
-                                <optgroup key={group.id} label={group.name}>
-                                    {group.options.map((opt) => (
-                                        <option key={opt.id} value={opt.id}>
-                                            {opt.label}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </FormSelect>
+                            value={formik.values.category_id}
+                            initialLabel={editingProduct?.category?.name || ''}
+                            onChange={(id) =>
+                                formik.setFieldValue('category_id', id)
+                            }
+                            error={
+                                formik.touched.category_id &&
+                                formik.errors.category_id
+                            }
+                        />
                         <FormSelect
                             label="Brand"
                             name="brand_id"
@@ -747,44 +707,37 @@ export default function Products({
                         laptop sits under both "Gaming Laptop > Asus" and "All
                         Laptop > Asus". The primary above still gives it its
                         breadcrumb and canonical URL. */}
-                    <div className="auth-form-group">
-                        <label className="auth-label" htmlFor="category_ids">
-                            Also list under
-                        </label>
-                        <select
-                            id="category_ids"
-                            name="category_ids"
-                            multiple
-                            size={8}
-                            className="auth-input admin-multi-select"
-                            value={(formik.values.category_ids || []).map(
-                                String,
-                            )}
-                            onChange={(e) =>
-                                formik.setFieldValue(
-                                    'category_ids',
-                                    Array.from(
-                                        e.target.selectedOptions,
-                                        (opt) => Number(opt.value),
-                                    ),
+                    <CategoryPicker
+                        label="Also list under"
+                        multiple
+                        placeholder="Search to add another category…"
+                        chips={extraCategoryChips}
+                        onRemove={(id) => {
+                            setExtraCategoryChips((c) =>
+                                c.filter((x) => x.id !== id),
+                            );
+                            formik.setFieldValue(
+                                'category_ids',
+                                (formik.values.category_ids || []).filter(
+                                    (x) => x !== id,
+                                ),
+                            );
+                        }}
+                        onChange={(category) => {
+                            if (
+                                (formik.values.category_ids || []).includes(
+                                    category.id,
                                 )
+                            ) {
+                                return;
                             }
-                        >
-                            {categoryOptionGroups.map((group) => (
-                                <optgroup key={group.id} label={group.name}>
-                                    {group.options.map((opt) => (
-                                        <option key={opt.id} value={opt.id}>
-                                            {opt.label}
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            ))}
-                        </select>
-                        <span className="admin-field-hint">
-                            Optional. Hold Cmd/Ctrl to pick several. The primary
-                            category is always included.
-                        </span>
-                    </div>
+                            setExtraCategoryChips((c) => [...c, category]);
+                            formik.setFieldValue('category_ids', [
+                                ...(formik.values.category_ids || []),
+                                category.id,
+                            ]);
+                        }}
+                    />
 
                     <div className="admin-form-grid-3">
                         <FormInput

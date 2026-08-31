@@ -80,7 +80,12 @@ class ProductController extends Controller
 
         return Inertia::render('Admin/Products', [
             'products' => $products,
-            'categories' => Category::all(['id', 'name', 'slug', 'parent_id']),
+            /*
+             * The tree is no longer sent. It was 1,392 rows and 113 KB of JSON
+             * on every load of this screen, to fill two dropdowns — and the
+             * dropdown it filled had 1,392 options and no search. Both now use
+             * a typeahead against categories/search.
+             */
             'brands' => Brand::all(['id', 'name', 'slug']),
             'filters' => [
                 'search' => $search,
