@@ -681,13 +681,33 @@ a.admin-card:hover,
     flex-direction: column;
     gap: 3px;
     min-width: 0;
+    /* Shrinks before the controls do: a truncated sentence costs less than a
+       squeezed dropdown, and far less than a clipped button label. */
+    flex-shrink: 3;
     /*
      * Shrinks, never grows. With flex-grow the heading claimed the free space
      * on the line and pushed the actions onto a row of their own — a header
      * twice as tall as it needed to be, on a screen where everything fit.
      * The actions are held right by their own auto margin instead.
      */
-    flex: 0 1 auto;
+    flex-basis: auto;
+    flex-grow: 0;
+}
+
+/*
+ * Truncated with an ellipsis, not painted under whatever sits beside it.
+ *
+ * A heading or subtitle longer than the space left over used to overflow its
+ * box and run on behind the first control, so the stock take subtitle
+ * disappeared mid-word underneath the branch select — text that looked cut
+ * off rather than shortened.
+ */
+.admin-card-title-group .admin-card-title,
+.admin-card-title-group .admin-table-item-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 /*
@@ -738,10 +758,13 @@ a.admin-card:hover,
     min-width: 0;
 }
 
-/* Shrinkable, so a tight bar narrows the boxes instead of breaking the row. */
+/*
+ * Shrinkable, so a tight bar narrows the boxes instead of breaking the row —
+ * but only down to where a placeholder still says what the box is for.
+ */
 .admin-header-actions .admin-search-wrapper,
 .admin-filter-picker {
-    min-width: 0;
+    min-width: 9rem;
     flex: 0 1 230px;
 }
 
@@ -773,12 +796,30 @@ a.admin-card:hover,
  * Beats .btn-sm, which some pages pass and some do not — a 28px button next
  * to a 38px search box is the misalignment this whole block exists to end.
  * Vertical padding goes because the height is now doing that job.
+ *
+ * flex-shrink 0: an action's label is not negotiable. On the stock take
+ * screen the branch select refused to shrink and everything else gave way
+ * instead, taking "Save count (0)" down from 104px to 73px and cutting the
+ * label off inside its own button.
  */
 .admin-header-actions .btn {
     padding-block: 0;
     padding-inline: 18px;
     border-radius: var(--radius-sm);
     white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+/*
+ * A select's automatic minimum is its widest option, so it holds that width
+ * however tight the row gets. Given a floor of its own it gives way like
+ * everything else, and a long branch name truncates rather than squeezing the
+ * controls beside it.
+ */
+.admin-header-actions select {
+    min-width: 7rem;
+    flex: 0 1 auto;
+    text-overflow: ellipsis;
 }
 
 .admin-header-actions .admin-search-wrapper {

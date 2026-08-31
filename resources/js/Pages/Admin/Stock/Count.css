@@ -286,7 +286,9 @@
     background: var(--bg-surface);
     color: var(--gray-400);
     flex: 0 1 190px;
-    min-width: 0;
+    /* A floor, like the search box: below this the placeholder stops saying
+       "Scan a barcode" and the field means nothing. */
+    min-width: 8.5rem;
 }
 
 /* The scanner's target, so it says so when it has focus — but in the same

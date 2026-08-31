@@ -184,8 +184,7 @@ export default function StockCount({
                     <div className="admin-card-title-group">
                         <h3 className="admin-card-title">Count sheet</h3>
                         <span className="admin-table-item-sub">
-                            Scan or type what is on the shelf — the difference
-                            is recorded as an adjustment
+                            Differences are recorded as adjustments
                         </span>
                     </div>
 
@@ -233,7 +232,7 @@ export default function StockCount({
                                 ref={scanBox}
                                 type="text"
                                 className="count-scan-input"
-                                placeholder="Scan a barcode…"
+                                placeholder="Scan barcode…"
                                 onKeyDown={onScan}
                                 autoFocus
                             />
