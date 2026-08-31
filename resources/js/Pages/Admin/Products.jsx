@@ -178,7 +178,7 @@ export default function Products({
         initialValues: {
             name: '',
             category_id: '',
-            brand_id: brands[0]?.id || '',
+            brand_id: '',
             price: '',
             discount_price: '',
             stock_quantity: 0,
@@ -309,7 +309,7 @@ export default function Products({
             values: {
                 name: '',
                 category_id: '',
-                brand_id: brands[0]?.id || '',
+                brand_id: '',
                 price: '',
                 discount_price: '',
                 stock_quantity: 0,
@@ -354,7 +354,15 @@ export default function Products({
             values: {
                 name: p.name || '',
                 category_id: p.category_id || '',
-                brand_id: p.brand_id || brands[0]?.id || '',
+                /*
+                 * Not brands[0]. Falling back to the first row in the table
+                 * meant every one of the 1,267 brandless products opened with
+                 * "Intel" already chosen — and saving anything at all, a price
+                 * or a typo in the name, filed it under Intel for good. The
+                 * empty value is a real option here ("No Brand / Generic"), so
+                 * an absent brand can stay absent.
+                 */
+                brand_id: p.brand_id || '',
                 price: p.price || '',
                 discount_price: p.discount_price || '',
                 stock_quantity: p.stock_quantity ?? 0,
@@ -474,11 +482,17 @@ export default function Products({
         {
             key: 'brand',
             header: 'Brand',
-            render: (p) => (
-                <span className="admin-table-item-title">
-                    {p.brand?.name || 'Standard'}
-                </span>
-            ),
+            render: (p) =>
+                p.brand?.name ? (
+                    <span className="admin-table-item-title">
+                        {p.brand.name}
+                    </span>
+                ) : (
+                    // Not "Standard". There is no such brand — it read as the
+                    // answer to "which brand?" rather than as no answer, and
+                    // disagreed with both the form and the details panel.
+                    <span className="admin-field-hint">No brand</span>
+                ),
         },
         {
             key: 'price',
