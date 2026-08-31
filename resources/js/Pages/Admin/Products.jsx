@@ -988,6 +988,23 @@ export default function Products({
                                     adjustments — never edited here.
                                 </span>
                             </div>
+                        ) : formik.values.has_variants ? (
+                            /* A product sold in options has no shelf of its
+                               own — its stock is the sum of the options'. A
+                               number typed here would be ignored, so it is not
+                               offered. */
+                            <div className="auth-form-group">
+                                <label className="auth-label">Stock</label>
+                                <div className="admin-stock-readonly">
+                                    <span className="admin-stock-readonly-qty">
+                                        Per option
+                                    </span>
+                                </div>
+                                <span className="admin-field-hint">
+                                    Enter what is on the shelf against each
+                                    option below.
+                                </span>
+                            </div>
                         ) : (
                             <FormInput
                                 id="stock_quantity"

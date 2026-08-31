@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\ProductUpdateRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Services\PcCompatibilityService;
 use App\Services\ProductGalleryService;
 use App\Services\ProductVariantService;
@@ -162,7 +163,32 @@ class ProductController extends Controller
         $validated['description'] = RichText::clean($validated['description'] ?? null);
         $validated['key_features'] = RichText::clean($validated['key_features'] ?? null);
 
-        $opening = (int) ($validated['stock_quantity'] ?? 0);
+        /*
+         * Options are applied after the row exists, through the same service
+         * the edit form uses — never by mass assignment.
+         *
+         * has_variants is a fillable column, so leaving it in would create a
+         * product already flagged as sold in options but with none, and
+         * convertToVariants would then refuse it as "already uses options".
+         */
+        $wantsVariants = (bool) ($validated['has_variants'] ?? false);
+        $variantDefinitions = $wantsVariants ? ($validated['variants'] ?? []) : [];
+        $variantAttributes = $validated['variant_attributes'] ?? [];
+
+        unset($validated['has_variants'], $validated['variant_attributes'], $validated['variants']);
+
+        /*
+         * A product sold in options has no shelf of its own — its stock is the
+         * sum of the options'. So the opening quantity is read per option and
+         * the product row starts at nothing.
+         */
+        $opening = $wantsVariants
+            ? 0
+            : (int) ($validated['stock_quantity'] ?? 0);
+
+        if ($wantsVariants) {
+            $validated['stock_quantity'] = 0;
+        }
 
         $product = Product::create($validated);
 
@@ -172,6 +198,22 @@ class ProductController extends Controller
         // audited adjustments can move it.
         if ($opening > 0) {
             $this->stock->recordOpeningBalance($product, null, $opening, $request->user()?->id);
+        }
+
+        /*
+         * The options editor is on the create form, so a shopkeeper entering a
+         * product sold in sizes fills it in and presses Create. Until now the
+         * request came back 201 with a success toast and the options were
+         * thrown away — the product saved as a single-stock item and had to be
+         * opened again and given its options a second time.
+         */
+        if ($variantDefinitions !== []) {
+            $this->createWithOptions(
+                $product,
+                $variantAttributes,
+                $variantDefinitions,
+                $request->user()?->id,
+            );
         }
 
         $this->gallery->syncProduct($product, $this->galleryFrom($validated));
@@ -233,6 +275,42 @@ class ProductController extends Controller
         }
 
         return $this->successResponse($product, "Product '{$product->name}' updated successfully.");
+    }
+
+    /**
+     * Turn a freshly created product into one sold in options.
+     *
+     * The switch happens while the row is still pristine, because the service
+     * refuses to restructure a product that has stock recorded against it —
+     * and an opening balance written first is exactly that. So the options are
+     * made empty, and each one's opening quantity is posted afterwards as its
+     * own balance, the same shape a single product's opening stock takes.
+     *
+     * @param  array<int, string>  $attributes
+     * @param  array<int, array<string, mixed>>  $definitions
+     */
+    private function createWithOptions(Product $product, array $attributes, array $definitions, ?int $userId): void
+    {
+        $empty = array_map(
+            fn (array $definition) => array_replace($definition, ['opening_stock' => 0]),
+            array_values($definitions),
+        );
+
+        $this->variants->convertToVariants($product, $attributes, $empty, $userId);
+
+        $variants = $product->refresh()->variants()->orderBy('position')->get();
+
+        foreach (array_values($definitions) as $position => $definition) {
+            $opening = (int) ($definition['opening_stock'] ?? 0);
+            $variant = $variants[$position] ?? null;
+
+            if ($opening > 0 && $variant) {
+                $this->stock->record($product, $variant, $opening, StockMovement::OPENING, [
+                    'note' => 'Stock already on the shelf when this option was entered',
+                    'user_id' => $userId,
+                ]);
+            }
+        }
     }
 
     /**

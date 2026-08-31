@@ -41,6 +41,9 @@ class ProductStoreRequest extends AdminRequest
 
             ...ProductRules::details(),
             ...ProductRules::preorder(),
+            // A product sold in options can be entered in one go. The form
+            // always showed the options editor here; nothing read it.
+            ...ProductRules::variants(),
         ];
     }
 

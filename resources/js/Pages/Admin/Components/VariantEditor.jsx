@@ -47,6 +47,14 @@ export default function VariantEditor({
 
     // Only a single product being switched over needs its shelf split up.
     const isConverting = hasVariants && !wasVariant && !isNewProduct;
+
+    /*
+     * When an opening quantity can be typed against an option: while splitting
+     * an existing product's shelf, and when entering a product the shop already
+     * has on hand. Never on an option that exists — that stock moves through
+     * deliveries, orders and recorded adjustments.
+     */
+    const canEnterOpeningStock = isConverting || isNewProduct;
     const onHand = Number(editingProduct?.stock_quantity ?? 0);
 
     const attributes = formik.values.variant_attributes || [];
@@ -232,9 +240,13 @@ export default function VariantEditor({
                                     placeholder="Product default"
                                 />
 
-                                {isConverting ? (
+                                {canEnterOpeningStock ? (
                                     <FormInput
-                                        label="Units"
+                                        label={
+                                            isConverting
+                                                ? 'Units'
+                                                : 'Opening stock'
+                                        }
                                         type="number"
                                         min="0"
                                         value={variant.opening_stock ?? ''}

@@ -94,6 +94,7 @@ class ProductVariantService
 
             foreach (array_values($variants) as $position => $definition) {
                 $created = $this->createVariant($product, $definition, $position);
+                $this->applyGallery($created, $definition);
                 $opening = (int) ($definition['opening_stock'] ?? 0);
 
                 if ($opening > 0) {

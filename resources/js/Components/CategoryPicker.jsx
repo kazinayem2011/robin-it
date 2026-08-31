@@ -56,8 +56,24 @@ export default function CategoryPicker({
     const boxRef = useRef(null);
     const timer = useRef(null);
 
+    /*
+     * Follows the parent, but never overwrites what was just picked.
+     *
+     * The parent only knows the id — choosing a category calls onChange(id),
+     * which re-ran this and replaced the row that had just been selected with
+     * {id, name: initialLabel}. On a create form initialLabel is empty, so the
+     * field you had just filled in went back to reading "Category #1307".
+     */
     useEffect(() => {
-        setChosen(value ? { id: value, name: initialLabel, path: '' } : null);
+        setChosen((current) => {
+            if (!value) return null;
+
+            if (current && String(current.id) === String(value)) {
+                return current;
+            }
+
+            return { id: value, name: initialLabel, path: '' };
+        });
     }, [value, initialLabel]);
 
     const fetchResults = useCallback(async (term) => {
