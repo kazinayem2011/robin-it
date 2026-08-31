@@ -4030,3 +4030,85 @@ a.admin-card:hover,
 .category-picker-chip button:hover {
     opacity: 1;
 }
+
+/* Rich text editor. Wears the same box as a text input so it sits in the same
+   column as the other fields without announcing itself as something else. */
+.rte {
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--surface, #fff);
+}
+
+.rte.input-error {
+    border-color: var(--danger, #c1121f);
+}
+
+.rte-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.rte-toolbar button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: none;
+    cursor: pointer;
+    opacity: 0.75;
+}
+
+.rte-toolbar button:hover {
+    background: rgba(0, 0, 0, 0.07);
+    opacity: 1;
+}
+
+.rte-surface {
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    outline: none;
+    overflow-y: auto;
+    max-height: 340px;
+}
+
+/* contentEditable has no placeholder of its own. */
+.rte-surface:empty::before {
+    content: attr(data-placeholder);
+    opacity: 0.45;
+}
+
+/* The editor shows what the product page will show, so the tags it produces
+   are styled here rather than left to the browser's defaults. */
+.rte-surface h2 {
+    font-size: 1.05rem;
+    margin: 12px 0 6px;
+}
+
+.rte-surface h3 {
+    font-size: 0.95rem;
+    margin: 10px 0 6px;
+}
+
+.rte-surface p {
+    margin: 0 0 8px;
+}
+
+.rte-surface ul,
+.rte-surface ol {
+    margin: 0 0 8px;
+    padding-left: 20px;
+}
+
+.rte-surface a {
+    color: var(--primary-color, #c1121f);
+    text-decoration: underline;
+}

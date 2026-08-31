@@ -16,11 +16,17 @@ export const adminProductSchema = Yup.object().shape({
         .positive('Discount price must be positive')
         .nullable()
         .transform((curr, orig) => (orig === '' ? null : curr)),
+    /*
+     * Not required. Stock normally arrives on a purchase order and is received
+     * under Purchasing; this is only for units already on the shelf when a
+     * product is first entered, and demanding a number invited a guess.
+     */
     stock_quantity: Yup.number()
         .typeError('Stock quantity must be a valid number')
         .integer('Stock quantity must be a whole number')
         .min(0, 'Stock quantity cannot be negative')
-        .required('Stock quantity is required'),
+        .nullable()
+        .transform((curr, orig) => (orig === '' ? 0 : curr)),
     short_description: Yup.string()
         .max(1000, 'Description cannot exceed 1000 characters')
         .nullable(),

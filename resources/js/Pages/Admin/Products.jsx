@@ -27,6 +27,8 @@ import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
 import SpecificationEditor from './Components/SpecificationEditor';
 import CategoryPicker from '@/Components/CategoryPicker';
+import RichTextEditor from '@/Components/RichTextEditor';
+import { bulletsToLines, linesToBullets } from '@/utils/bulletHtml';
 import { ROUTES } from '@/constants/endpoints';
 
 /**
@@ -80,6 +82,8 @@ const buildProductPayload = (values, editingProduct) => {
     rest.category_ids = (rest.category_ids || [])
         .map(Number)
         .filter((id) => id && id !== Number(rest.category_id));
+
+    rest.key_features = linesToBullets(rest.key_features);
 
     rest.checkout_discount =
         rest.checkout_discount === '' || rest.checkout_discount === null
@@ -172,7 +176,7 @@ export default function Products({
             brand_id: brands[0]?.id || '',
             price: '',
             discount_price: '',
-            stock_quantity: 10,
+            stock_quantity: 0,
             short_description: '',
             description: '',
             warranty_months: '',
@@ -303,7 +307,7 @@ export default function Products({
                 brand_id: brands[0]?.id || '',
                 price: '',
                 discount_price: '',
-                stock_quantity: 10,
+                stock_quantity: 0,
                 short_description: '',
                 description: '',
                 warranty_months: '',
@@ -355,7 +359,7 @@ export default function Products({
                 model: p.model ?? '',
                 mpn: p.mpn ?? '',
                 warranty_text: p.warranty_text ?? '',
-                key_features: p.key_features ?? '',
+                key_features: bulletsToLines(p.key_features),
                 discount_starts_at: p.discount_starts_at
                     ? String(p.discount_starts_at).slice(0, 10)
                     : '',
@@ -886,7 +890,6 @@ export default function Products({
                             <FormInput
                                 id="stock_quantity"
                                 name="stock_quantity"
-                                required
                                 label="Opening stock"
                                 type="number"
                                 value={formik.values.stock_quantity}
@@ -896,7 +899,7 @@ export default function Products({
                                     formik.touched.stock_quantity &&
                                     formik.errors.stock_quantity
                                 }
-                                helperText="Units already on the shelf. Later arrivals are recorded as deliveries."
+                                helperText="Only stock already on the shelf. Leave at 0 if it is arriving on a purchase order — deliveries are recorded under Purchasing."
                             />
                         )}
                     </div>
@@ -929,21 +932,19 @@ export default function Products({
                         product page has always rendered it, but the form had no
                         field — so every description on the site came from a
                         seeder and no admin could write one. */}
-                    <FormInput
+                    <RichTextEditor
                         id="description"
-                        name="description"
-                        type="textarea"
-                        rows={8}
                         label="Full Description"
                         value={formik.values.description}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                        onChange={(html) =>
+                            formik.setFieldValue('description', html)
+                        }
                         error={
                             formik.touched.description &&
                             formik.errors.description
                         }
-                        placeholder="What the product is, who it suits, what is in the box. Basic HTML is allowed."
-                        helperText="Shown under the Description tab on the product page."
+                        placeholder="What the product is, who it suits, what is in the box."
+                        helperText="Shown under the Description tab. Formatting here appears on the product page."
                     />
 
                     <FormInput
@@ -977,6 +978,10 @@ export default function Products({
                         helperText="What the customer is told. The months above are what the claims system counts."
                     />
 
+                    {/* One feature per line. The field is stored as markup —
+                        the product page renders it as a list — but that is no
+                        reason to make a shopkeeper type <ul><li>, which the
+                        placeholder used to ask them to do. */}
                     <FormInput
                         id="key_features"
                         name="key_features"
@@ -990,8 +995,12 @@ export default function Products({
                             formik.touched.key_features &&
                             formik.errors.key_features
                         }
-                        placeholder="<ul><li>Processor: Intel Core i5-13420H</li><li>RAM: 16GB DDR5</li></ul>"
-                        helperText="The bullet list above the fold. Basic HTML allowed."
+                        placeholder={
+                            'Processor: Intel Core i5-13420H\n' +
+                            'RAM: 16GB DDR5 5200MHz\n' +
+                            'Graphics: NVIDIA RTX 3050 4GB'
+                        }
+                        helperText="One feature per line. Shown as a bulleted list at the top of the product page."
                     />
 
                     {/* A sale that stops on time whether or not anyone is at a
