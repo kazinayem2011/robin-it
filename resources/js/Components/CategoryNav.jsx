@@ -61,19 +61,23 @@ export default function CategoryNav({ categories = [] }) {
     const [alignRightFrom, setAlignRightFrom] = useState(Infinity);
 
     /*
-     * Where the brand panel sits horizontally, in pixels from the edge of the
-     * dropdown it belongs to.
+     * Where the brand panel sits, in pixels relative to the dropdown it belongs
+     * to. Both axes are measured, for the same underlying reason: a cascading
+     * menu is only usable if the pointer can travel from the row to the panel
+     * without leaving either.
      *
-     * The two axes want different anchors, which no single absolutely
-     * positioned element can express: horizontally it belongs beside the row
-     * being hovered, vertically it belongs level with the top of the dropdown —
-     * anchored to the row it would start halfway down a long list and run off
-     * the bottom.
+     * Level with the row, not with the top of the dropdown. Anchored to the top
+     * it opened far above a row near the bottom — "Mobile Accessories" is the
+     * last entry in Phone's second column, and its panel appeared five hundred
+     * pixels higher, with nothing under the pointer in between. Moving toward
+     * it left the menu, which closed it. The items were on screen and could not
+     * be clicked.
      *
-     * So the vertical stays CSS against the panel, and the horizontal is
-     * measured off the row. In a multi-column dropdown that is the difference
-     * between opening beside Graphics Card and opening past both columns with a
-     * gap in between.
+     * Shifted up only as far as it must to fit the window, which is what keeps
+     * both properties at once: the panel stays on screen, and because it is
+     * only ever pushed up by its own overhang, its vertical span still contains
+     * the row that opened it — so moving straight right from the row always
+     * lands inside it.
      */
     const [flyoutOffset, setFlyoutOffset] = useState(null);
 
@@ -113,11 +117,16 @@ export default function CategoryNav({ categories = [] }) {
             return;
         }
 
-        setFlyoutOffset(
-            alignRight
-                ? { id: sub.id, right: panel.offsetWidth - row.offsetLeft }
-                : { id: sub.id, left: row.offsetLeft + row.offsetWidth },
-        );
+        setFlyoutOffset({
+            id: sub.id,
+            // Level with the row to begin with; the layout effect below pulls it
+            // up if it would hang off the bottom.
+            top: row.offsetTop,
+            clamped: false,
+            ...(alignRight
+                ? { right: panel.offsetWidth - row.offsetLeft }
+                : { left: row.offsetLeft + row.offsetWidth }),
+        });
     };
 
     const recompute = useCallback(() => {
@@ -200,6 +209,42 @@ export default function CategoryNav({ categories = [] }) {
         return () => observer.disconnect();
     }, [recompute]);
 
+    /*
+     * Runs once per open, after the panel has a height to measure. `clamped`
+     * stops it re-entering: the effect writes the state it depends on.
+     */
+    useLayoutEffect(() => {
+        if (!flyoutOffset || flyoutOffset.clamped) return;
+
+        const nav = navRef.current;
+        const panel = nav?.querySelector(
+            '.cat-nav-item.is-open > .cat-nav-drop',
+        );
+        const flyout = nav?.querySelector(`[data-flyout="${flyoutOffset.id}"]`);
+
+        if (!panel || !flyout) return;
+
+        const panelTop = panel.getBoundingClientRect().top;
+        const gutter = 12;
+        const highestItMayStart =
+            window.innerHeight - gutter - flyout.offsetHeight - panelTop;
+
+        setFlyoutOffset((current) =>
+            current && current.id === flyoutOffset.id
+                ? {
+                      ...current,
+                      // -6 lines its top edge up with the dropdown's padding;
+                      // never higher, or it floats above the menu.
+                      top: Math.max(
+                          -6,
+                          Math.min(current.top, highestItMayStart),
+                      ),
+                      clamped: true,
+                  }
+                : current,
+        );
+    }, [flyoutOffset]);
+
     const renderCategory = (category, { inMore = false, index = 0 } = {}) => (
         <li
             key={category.id}
@@ -272,9 +317,11 @@ export default function CategoryNav({ categories = [] }) {
                             {!inMore && sub.children?.length > 0 && (
                                 <ul
                                     className="cat-nav-brands"
+                                    data-flyout={sub.id}
                                     style={
                                         flyoutOffset?.id === sub.id
                                             ? {
+                                                  top: `${flyoutOffset.top}px`,
                                                   left:
                                                       flyoutOffset.left ===
                                                       undefined
