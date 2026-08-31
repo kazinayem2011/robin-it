@@ -3,6 +3,15 @@
    Aligned with client-side design system (var tokens from app.css)
    ========================================================================== */
 
+/*
+ * The height of everything that sits in a card header: the search box, a
+ * filter, the primary action. One number, because a bar built out of three
+ * height scales is a bar where nothing lines up — see .admin-card-header.
+ */
+:root {
+    --admin-control-h: 38px;
+}
+
 /* ── Wrapper ───────────────────────────────────────────────────────────────── */
 .admin-wrapper {
     display: flex;
@@ -436,24 +445,6 @@ a.admin-card:hover,
     margin-bottom: 0;
 }
 
-.admin-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-    /*
-     * Wraps rather than letting the actions ride over the heading. On a phone
-     * the title and its buttons overlapped and the last button was cut off at
-     * the card edge.
-     */
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.admin-card-header > * {
-    min-width: 0;
-}
-
 .admin-card-title {
     font-size: 1rem;
     font-weight: 800;
@@ -652,12 +643,37 @@ a.admin-card:hover,
     color: var(--white);
 }
 
+/*
+ * ── The card header bar ───────────────────────────────────────────────────
+ *
+ * Heading on the left, then the search, the filters and the primary action,
+ * all on one line and all the same height.
+ *
+ * They were not. Every page assembled its own bar and the pieces came from
+ * three different height scales: the search input is 38px, `auth-text-input`
+ * — which the category filter is built from — is 46px, and a button is 38px
+ * or 28px depending on whether the page happened to pass size="sm". On the
+ * products page that put three controls at three heights and three different
+ * vertical positions, thirteen pixels apart.
+ *
+ * So the height is settled here rather than per page. A page says what goes in
+ * the bar; it does not get to decide how tall it is.
+ *
+ * This rule was also written twice in this file, and the second copy silently
+ * dropped the flex-wrap from the first — which is why the bar stopped wrapping
+ * on a narrow screen and the last button rode off the card edge.
+ */
 .admin-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 12px 20px;
     margin-bottom: 20px;
+}
+
+.admin-card-header > * {
+    min-width: 0;
 }
 
 .admin-card-title-group {
@@ -665,6 +681,13 @@ a.admin-card:hover,
     flex-direction: column;
     gap: 3px;
     min-width: 0;
+    /*
+     * Shrinks, never grows. With flex-grow the heading claimed the free space
+     * on the line and pushed the actions onto a row of their own — a header
+     * twice as tall as it needed to be, on a screen where everything fit.
+     * The actions are held right by their own auto margin instead.
+     */
+    flex: 0 1 auto;
 }
 
 /*
@@ -690,11 +713,121 @@ a.admin-card:hover,
     min-width: 0;
 }
 
+/*
+ * Takes whatever the heading leaves, and never less than nothing.
+ *
+ * `flex: 1 1 0` rather than auto: a wrapping flex container wraps an item
+ * before it shrinks it, and with an auto basis the actions' base size is their
+ * max-content — so on the orders screen, where the bar carries a search box,
+ * six status tabs and a button, the whole group dropped to a second row on a
+ * 1600px display with thirteen pixels to spare. A zero basis lets it take the
+ * space that is actually left and lay its own children out inside that.
+ *
+ * Right-aligned by justify-content, so a card with no heading beside it still
+ * puts its button against the right edge.
+ */
 .admin-header-actions {
     display: flex;
     align-items: center;
+    /* One line on a desktop: the controls shrink to fit rather than stacking.
+       Wrapping returns below 640px, where there is genuinely no room. */
+    flex-wrap: nowrap;
+    justify-content: flex-end;
     gap: 10px;
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* Shrinkable, so a tight bar narrows the boxes instead of breaking the row. */
+.admin-header-actions .admin-search-wrapper,
+.admin-filter-picker {
+    min-width: 0;
+    flex: 0 1 230px;
+}
+
+/* Filter chips scroll rather than forcing the bar to a second row. */
+.admin-header-actions .admin-tabs-bar {
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.admin-header-actions .admin-tabs-bar::-webkit-scrollbar {
+    display: none;
+}
+
+/*
+ * One height for everything in the bar, whatever the page put there and
+ * whatever scale it came from.
+ */
+.admin-header-actions .admin-search-input,
+.admin-header-actions .auth-text-input,
+.admin-header-actions select,
+.admin-header-actions .btn {
+    height: var(--admin-control-h);
+    font-size: 0.84rem;
+}
+
+/*
+ * Beats .btn-sm, which some pages pass and some do not — a 28px button next
+ * to a 38px search box is the misalignment this whole block exists to end.
+ * Vertical padding goes because the height is now doing that job.
+ */
+.admin-header-actions .btn {
+    padding-block: 0;
+    padding-inline: 18px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.admin-header-actions .admin-search-wrapper {
+    width: 230px;
+}
+
+/*
+ * A category typeahead used as a filter. The component is built for a form
+ * column — a label, a 46px box, room under it for a hint — and none of that
+ * belongs in a header bar.
+ */
+.admin-filter-picker {
+    width: 230px;
     flex-shrink: 0;
+}
+
+.admin-filter-picker .auth-form-group {
+    gap: 0;
+    margin: 0;
+}
+
+.admin-filter-picker .auth-label,
+.admin-filter-picker .auth-field-hint {
+    display: none;
+}
+
+.admin-filter-picker .auth-text-input {
+    height: var(--admin-control-h);
+    font-size: 0.84rem;
+}
+
+.admin-filter-picker .category-picker-chosen {
+    padding-block: 0;
+}
+
+@media (max-width: 640px) {
+    /* Stacked, and each control full width — a 230px box on a 360px screen
+       leaves the button nowhere to go but a line of its own anyway. */
+    .admin-header-actions {
+        flex-wrap: wrap;
+        width: 100%;
+        flex-basis: 100%;
+        justify-content: flex-end;
+    }
+
+    .admin-header-actions .admin-search-wrapper,
+    .admin-filter-picker {
+        flex: 1 1 100%;
+    }
 }
 
 .admin-search-form,
@@ -1755,13 +1888,6 @@ a.admin-card:hover,
     display: flex;
     justify-content: flex-end;
     gap: 6px;
-}
-
-.admin-section-header-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
 }
 
 .admin-btn-quick-restock {
@@ -3913,14 +4039,6 @@ a.admin-card:hover,
 }
 
 /* Brands screen */
-.admin-brand-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-}
-
 .admin-brand-cell {
     display: flex;
     align-items: center;

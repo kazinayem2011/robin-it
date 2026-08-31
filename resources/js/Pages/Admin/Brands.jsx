@@ -219,24 +219,26 @@ export default function AdminBrands({
             <Head title="Brands" />
 
             <div className="admin-page-container">
-                <div className="admin-brand-toolbar">
-                    <Button icon={Plus} onClick={openCreate}>
-                        Add brand
-                    </Button>
-                    <span className="admin-field-hint">
-                        {counts.total ?? 0} brands · {counts.withLogo ?? 0} with
-                        a logo · {counts.featured ?? 0} featured
-                    </span>
-                </div>
-
+                {/*
+                 * The counts read as the subtitle and the action sits in the
+                 * header bar, like every other screen. This page had its own
+                 * toolbar above the card, so "Add brand" was the one primary
+                 * button in the admin that was not where the others are.
+                 */}
                 <DataTable
                     title="Brands"
+                    subtitle={`${counts.total ?? 0} brands · ${counts.withLogo ?? 0} with a logo · ${counts.featured ?? 0} featured`}
                     columns={columns}
                     data={brands}
                     searchable
                     searchValue={search}
                     onSearch={onSearch}
                     searchPlaceholder="Search brands..."
+                    headerActions={
+                        <Button icon={Plus} onClick={openCreate}>
+                            Add brand
+                        </Button>
+                    }
                     emptyIcon={Tag}
                     emptyTitle="No brands yet"
                     emptyDescription="Add the makes you stock so products can be filed under them."

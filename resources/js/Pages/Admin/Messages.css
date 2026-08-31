@@ -198,12 +198,9 @@
 }
 
 /* Search and ordering, above a list that is not a table. */
+/* Layout comes from .admin-card-header now; this only adds the space under
+   the status tabs that sit above it. */
 .msg-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
     margin-top: 18px;
 }
 

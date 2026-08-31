@@ -362,21 +362,9 @@ export default function Orders({
                 emptyDescription="There are no customer orders matching the current filter criteria."
                 headerActions={
                     <>
-                        {/*
-                         * Taking an order from the counter or the phone. The
-                         * shop could only ever receive one through the
-                         * storefront, so a customer ringing up had to be sent
-                         * to the website.
-                         */}
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            icon={Plus}
-                            onClick={() => setTakingOrder(true)}
-                        >
-                            Take an order
-                        </Button>
-
+                        {/* Filters first, action last — the same order as
+                            every other screen, so the primary button is
+                            always the rightmost thing in the bar. */}
                         <div className="admin-tabs-bar">
                             {[
                                 'all',
@@ -396,6 +384,20 @@ export default function Orders({
                                 </button>
                             ))}
                         </div>
+
+                        {/*
+                         * Taking an order from the counter or the phone. The
+                         * shop could only ever receive one through the
+                         * storefront, so a customer ringing up had to be sent
+                         * to the website.
+                         */}
+                        <Button
+                            variant="primary"
+                            icon={Plus}
+                            onClick={() => setTakingOrder(true)}
+                        >
+                            Take an order
+                        </Button>
                     </>
                 }
             />

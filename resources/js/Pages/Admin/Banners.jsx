@@ -131,24 +131,29 @@ export default function AdminBanners({ banners = [] }) {
             <Head title="Admin Banners &amp; Sliders" />
 
             <div className="admin-page-container">
-                {/* Header Action Bar */}
-                <div className="admin-section-header-bar">
-                    <div>
-                        <h2 className="admin-section-heading">
+                {/* The same bar as every table screen: heading left, action
+                    right, one control height. This page is a grid rather than
+                    a table, which is no reason for its header to differ. */}
+                <div className="admin-card-header">
+                    <div className="admin-card-title-group">
+                        <h3 className="admin-card-title">
                             Active Promotional Assets ({banners.length} Banners)
-                        </h2>
-                        <p className="admin-section-sub">
+                        </h3>
+                        <span className="admin-table-item-sub">
                             Configure responsive banner imagery, custom links,
                             and crop aspect ratios.
-                        </p>
+                        </span>
                     </div>
-                    <Button
-                        variant="primary"
-                        icon={Plus}
-                        onClick={handleOpenCreate}
-                    >
-                        Add New Banner
-                    </Button>
+
+                    <div className="admin-header-actions">
+                        <Button
+                            variant="primary"
+                            icon={Plus}
+                            onClick={handleOpenCreate}
+                        >
+                            Add New Banner
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Banners Grid */}

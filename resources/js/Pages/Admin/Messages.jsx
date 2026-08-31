@@ -141,30 +141,34 @@ export default function AdminMessages({
                 onChange={filterBy}
             />
 
-            <div className="msg-toolbar">
-                <SearchInput
-                    value={filters.q || ''}
-                    onSearch={(q) => go({ q: q || undefined })}
-                    placeholder="Search subject, name, email or message…"
-                />
-                <div className="msg-sorts">
-                    <span className="admin-field-hint">Sort by</span>
-                    {SORTS.map((s) => (
-                        <button
-                            key={s.key}
-                            type="button"
-                            className={`msg-sort-btn ${sort.by === s.key ? 'is-active' : ''}`}
-                            onClick={() => sortBy(s.key)}
-                        >
-                            {s.label}
-                            {sort.by === s.key &&
-                                (sort.dir === 'asc' ? (
-                                    <ChevronUp size={13} />
-                                ) : (
-                                    <ChevronDown size={13} />
-                                ))}
-                        </button>
-                    ))}
+            {/* Search and sorts on the right, at the shared control height —
+                the same bar as every other screen. */}
+            <div className="admin-card-header msg-toolbar">
+                <div className="admin-header-actions">
+                    <SearchInput
+                        value={filters.q || ''}
+                        onSearch={(q) => go({ q: q || undefined })}
+                        placeholder="Search subject, name, email or message…"
+                    />
+                    <div className="msg-sorts">
+                        <span className="admin-field-hint">Sort by</span>
+                        {SORTS.map((s) => (
+                            <button
+                                key={s.key}
+                                type="button"
+                                className={`msg-sort-btn ${sort.by === s.key ? 'is-active' : ''}`}
+                                onClick={() => sortBy(s.key)}
+                            >
+                                {s.label}
+                                {sort.by === s.key &&
+                                    (sort.dir === 'asc' ? (
+                                        <ChevronUp size={13} />
+                                    ) : (
+                                        <ChevronDown size={13} />
+                                    ))}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

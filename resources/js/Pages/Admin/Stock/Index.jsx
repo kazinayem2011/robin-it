@@ -284,7 +284,7 @@ export default function AdminStock({
                             <Boxes size={18} className="admin-card-icon" />
                             On the shelves
                         </h2>
-                        <div className="admin-input-row-flex">
+                        <div className="admin-header-actions">
                             <Button
                                 variant="secondary"
                                 icon={ClipboardList}

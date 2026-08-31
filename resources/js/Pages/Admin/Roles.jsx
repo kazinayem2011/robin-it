@@ -106,14 +106,19 @@ export default function AdminRoles({
         <AdminLayout title="Roles" subtitle="What each job in the shop covers">
             <Head title="Roles" />
 
-            <div className="roles-head">
-                <p className="admin-field-hint">
-                    Tick what a role covers and it saves straight away. Anyone
-                    holding it sees the change on their next page.
-                </p>
-                <Button icon={Plus} onClick={openCreate}>
-                    New role
-                </Button>
+            <div className="admin-card-header">
+                <div className="admin-card-title-group">
+                    <span className="admin-table-item-sub">
+                        Tick what a role covers and it saves straight away.
+                        Anyone holding it sees the change on their next page.
+                    </span>
+                </div>
+
+                <div className="admin-header-actions">
+                    <Button icon={Plus} onClick={openCreate}>
+                        New role
+                    </Button>
+                </div>
             </div>
 
             {roles.length === 0 ? (
