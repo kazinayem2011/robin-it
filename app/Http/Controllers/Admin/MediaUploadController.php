@@ -24,8 +24,20 @@ class MediaUploadController extends Controller
 
     private const MAX_KILOBYTES = 5120; // 5 MB
 
-    /** Folders an upload may target, so `folder` can't be used to write anywhere. */
-    private const ALLOWED_FOLDERS = ['products', 'banners', 'blogs', 'brands', 'categories'];
+    /**
+     * Folders an upload may target, and the ability each one belongs to.
+     *
+     * Keyed rather than a flat list, so `folder` still cannot be used to write
+     * anywhere — and a storekeeper who may photograph a product cannot also
+     * replace the homepage banner.
+     */
+    private const FOLDER_ABILITIES = [
+        'products' => 'catalogue',
+        'brands' => 'catalogue',
+        'categories' => 'catalogue',
+        'banners' => 'marketing',
+        'blogs' => 'marketing',
+    ];
 
     public function store(Request $request): JsonResponse
     {
@@ -37,7 +49,7 @@ class MediaUploadController extends Controller
                 'mimes:'.implode(',', self::ALLOWED_MIMES),
                 'max:'.self::MAX_KILOBYTES,
             ],
-            'folder' => 'nullable|string|in:'.implode(',', self::ALLOWED_FOLDERS),
+            'folder' => 'nullable|string|in:'.implode(',', array_keys(self::FOLDER_ABILITIES)),
         ], [
             'image.required' => 'Please choose an image to upload.',
             'image.image' => 'That file is not an image.',
@@ -49,6 +61,10 @@ class MediaUploadController extends Controller
         /** @var UploadedFile $file */
         $file = $validated['image'];
         $folder = $validated['folder'] ?? 'products';
+
+        if ($refusal = $this->refuseFolder($request, $folder)) {
+            return $refusal;
+        }
 
         // Never reuse the client's filename: it can carry path traversal or a
         // double extension such as "shell.php.jpg".
@@ -70,6 +86,27 @@ class MediaUploadController extends Controller
             'name' => $name,
             'size' => $file->getSize(),
         ], 'Image uploaded successfully.', 201);
+    }
+
+    /**
+     * Whether this member of staff may write to this folder.
+     *
+     * The route admits catalogue and marketing alike, because one endpoint
+     * serves both; this is where they part.
+     */
+    private function refuseFolder(Request $request, string $folder): ?JsonResponse
+    {
+        $ability = self::FOLDER_ABILITIES[$folder] ?? null;
+
+        if ($ability && $request->user()?->can_($ability)) {
+            return null;
+        }
+
+        return $this->errorResponse(
+            'Your role does not cover uploads for that part of the site.',
+            403,
+            ApiCode::FORBIDDEN
+        );
     }
 
     /**

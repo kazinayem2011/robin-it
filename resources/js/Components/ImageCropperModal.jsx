@@ -26,6 +26,21 @@ import Button from './Button';
  * - aspectRatio: number | null (e.g. 1, 16/9, 4/3, null for free)
  * - title: string (modal title)
  */
+/*
+ * Module scope, not a default parameter.
+ *
+ * As an inline default this array was rebuilt on every render, which gave
+ * validateAndProcessFile a new identity every render, which re-ran the effect
+ * that loads the image on every render. See that effect for what it then did.
+ */
+const DEFAULT_ACCEPTED_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/avif',
+    'image/jpg',
+];
+
 export const ImageCropperModal = ({
     isOpen,
     onClose,
@@ -36,13 +51,7 @@ export const ImageCropperModal = ({
     aspectRatio = 1,
     title = 'Crop & Optimize Image',
     maxSizeMB = 10, // Maximum allowed file upload size in Megabytes
-    acceptedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'image/avif',
-        'image/jpg',
-    ],
+    acceptedTypes = DEFAULT_ACCEPTED_TYPES,
     outputFormat = 'image/jpeg', // 'image/jpeg' | 'image/webp' | 'image/png'
     outputQuality = 0.92, // 0.1 to 1.0
 }) => {
@@ -87,12 +96,21 @@ export const ImageCropperModal = ({
         [acceptedTypes, maxSizeMB],
     );
 
-    // Load Image Object from src / File
+    /*
+     * Load whatever the caller handed in.
+     *
+     * The early return used to be `setImageObj(null)`, and that made the
+     * cropper impossible to upload through. Every caller in the admin opens
+     * this modal empty and lets the user browse for a file from inside it, so
+     * `imageSrc` is null the whole time. Choosing a file set imageObj, the
+     * re-render re-ran this effect — its dependencies changed identity on
+     * every render — and the first branch immediately set it back to null. The
+     * canvas never appeared and "Apply & Crop" stayed disabled for good.
+     *
+     * Nothing is cleared here now; the modal empties itself when it closes.
+     */
     useEffect(() => {
-        if (!imageSrc) {
-            setImageObj(null);
-            return;
-        }
+        if (!imageSrc) return;
 
         if (imageSrc instanceof File || imageSrc instanceof Blob) {
             if (!validateAndProcessFile(imageSrc)) return;
@@ -115,6 +133,14 @@ export const ImageCropperModal = ({
             setFileError(null);
         };
     }, [imageSrc, validateAndProcessFile]);
+
+    // Emptied on close, so the next thing cropped does not open onto the last.
+    useEffect(() => {
+        if (!isOpen) {
+            setImageObj(null);
+            setFileError(null);
+        }
+    }, [isOpen]);
 
     // Handle Local File Upload from modal
     const handleFileChange = (e) => {

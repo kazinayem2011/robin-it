@@ -399,6 +399,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminSettingController::class, 'sendTestEmail'])->middleware('can:settings');
 
         // Media uploads
-        Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store'])->middleware('can:marketing');
-        Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy'])->middleware('can:marketing');
+        // Either ability opens the endpoint; the folder decides which of them
+        // a given upload actually needs. Product photography is catalogue
+        // work, and marketing was the only ability that could reach this — so
+        // a storekeeper could edit a product and not add a picture to it.
+        Route::post(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'store'])->middleware('can:catalogue,marketing');
+        Route::delete(ApiEndpoints::ADMIN_MEDIA, [MediaUploadController::class, 'destroy'])->middleware('can:catalogue,marketing');
     });

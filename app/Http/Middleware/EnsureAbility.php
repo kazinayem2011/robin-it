@@ -22,10 +22,22 @@ class EnsureAbility
 {
     use ApiResponse;
 
-    public function handle(Request $request, Closure $next, string $ability): Response
+    /**
+     * Several abilities means any one of them is enough.
+     *
+     * Uploading an image is the case that needs it: a product shot is
+     * catalogue work and a banner is marketing, but they go through one
+     * endpoint. Which folder a given member of staff may write to is settled
+     * there, against the ability that folder belongs to.
+     */
+    public function handle(Request $request, Closure $next, string ...$abilities): Response
     {
-        if ($request->user()?->can_($ability)) {
-            return $next($request);
+        $user = $request->user();
+
+        foreach ($abilities as $ability) {
+            if ($user?->can_($ability)) {
+                return $next($request);
+            }
         }
 
         if ($request->expectsJson() || $request->is('api/*')) {
