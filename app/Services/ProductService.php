@@ -429,8 +429,9 @@ class ProductService
             ->with([
                 'category', 'brand', 'images', 'specifications', 'quantityDiscounts',
                 // Stock and price live on the option for a variant product, so
-                // the detail page cannot render a buy button without them.
-                'activeVariants',
+                // the detail page cannot render a buy button without them, and
+                // each carries its own photos for the gallery.
+                'activeVariants', 'activeVariants.images',
                 // Hand-picked suggestions. Constrained to what can actually be
                 // bought: a sidebar of dead links loses more trust than an
                 // empty sidebar.

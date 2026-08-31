@@ -1,0 +1,168 @@
+/*
+ * The photo gallery editor.
+ *
+ * Thumbnails on a wrapping grid, the lead shot marked. The controls sit under
+ * each thumbnail rather than hovering over it: a hover-only control is a
+ * control nobody finds on a touchscreen, and this form is used on tablets at
+ * the counter.
+ */
+
+.gallery-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gallery-editor-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.gallery-editor-head .auth-label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gallery-editor-count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    font-variant-numeric: tabular-nums;
+}
+
+.gallery-editor-empty {
+    margin: 0;
+    padding: 18px 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--gray-400);
+    background: var(--bg-surface-subtle);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.gallery-editor-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 10px;
+}
+
+.gallery-editor-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+/* The lead shot is what the catalogue card and the cart line show, so it is
+   marked here rather than being merely first by accident. */
+.gallery-editor-item.is-primary {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+}
+
+.gallery-editor-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    background: var(--bg-surface-subtle);
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+}
+
+.gallery-editor-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.gallery-editor-badge {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    background: var(--primary);
+    border-radius: var(--radius-full);
+}
+
+.gallery-editor-tools {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+}
+
+.gallery-editor-tools button {
+    flex: 1;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--gray-500);
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.gallery-editor-tools button:hover:not(:disabled) {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.gallery-editor-tools button.is-danger:hover:not(:disabled) {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.gallery-editor-tools button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.gallery-editor-alt {
+    width: 100%;
+    min-width: 0;
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    color: var(--dark-800);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xs);
+}
+
+.gallery-editor-alt:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Inside an option's row, where the column is narrow and there is no room for
+   alt text — the option's photos are the product's photos in another colour. */
+.gallery-editor.is-compact .gallery-editor-grid {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 6px;
+}
+
+.gallery-editor.is-compact .gallery-editor-empty {
+    padding: 10px 8px;
+    font-size: 0.72rem;
+}

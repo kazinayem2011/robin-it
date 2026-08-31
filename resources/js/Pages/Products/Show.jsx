@@ -339,13 +339,26 @@ export default function ProductDetails(props) {
                       '/images/product-placeholder.svg',
               ];
 
-    // An option can carry its own shot — a white card looks nothing like the
-    // black one. It leads the gallery so the picture matches what is selected,
-    // with the product's own images still available behind it.
-    const images = selectedVariant?.image_url
+    /*
+     * An option carries its own photos — a white card looks nothing like the
+     * black one. They lead the gallery so the pictures match what is selected,
+     * with the product's own still available behind them.
+     *
+     * image_url is the option's lead shot and is kept in step with the first of
+     * its photos, so it is the fallback for an option photographed before
+     * options had galleries.
+     */
+    const variantImages = selectedVariant
+        ? (selectedVariant.images?.length
+              ? selectedVariant.images.map((img) => img.image_path)
+              : [selectedVariant.image_url]
+          ).filter(Boolean)
+        : [];
+
+    const images = variantImages.length
         ? [
-              selectedVariant.image_url,
-              ...productImages.filter((i) => i !== selectedVariant.image_url),
+              ...variantImages,
+              ...productImages.filter((i) => !variantImages.includes(i)),
           ]
         : productImages;
 

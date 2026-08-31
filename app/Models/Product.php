@@ -143,9 +143,24 @@ class Product extends Model
         return $this->hasMany(ProductStock::class);
     }
 
+    /**
+     * The product's own photo gallery, in display order.
+     *
+     * Scoped to rows with no variant: an option's photos live in the same
+     * table and are its own, not the product's. Every row written before
+     * options had galleries has a null variant, so this is what it always was.
+     */
     public function images()
     {
-        return $this->hasMany(ProductImage::class);
+        return $this->hasMany(ProductImage::class)
+            ->whereNull('product_variant_id')
+            ->inGalleryOrder();
+    }
+
+    /** Product and option photos together — for a count, or a cleanup. */
+    public function allImages()
+    {
+        return $this->hasMany(ProductImage::class)->inGalleryOrder();
     }
 
     /**

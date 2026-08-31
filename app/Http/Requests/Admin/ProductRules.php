@@ -196,6 +196,26 @@ class ProductRules
      *
      * @return array<string, mixed>
      */
+    /**
+     * A gallery of photos, wherever it hangs.
+     *
+     * Capped at a dozen: past that the thumbnail strip on the product page
+     * needs its own scroller, and nobody clicks the thirteenth photo of a
+     * graphics card. The cap is a product decision, not a storage limit.
+     *
+     * @return array<string, mixed>
+     */
+    public static function gallery(string $key): array
+    {
+        return [
+            $key => 'nullable|array|max:12',
+            "{$key}.*.id" => 'nullable|integer',
+            "{$key}.*.image_path" => 'required|string|max:2048',
+            "{$key}.*.alt_text" => 'nullable|string|max:255',
+            "{$key}.*.is_primary" => 'nullable|boolean',
+        ];
+    }
+
     public static function variants(): array
     {
         return [
@@ -213,6 +233,9 @@ class ProductRules
             'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.discount_price' => 'nullable|numeric|min:0',
             'variants.*.image_url' => 'nullable|string|max:2048',
+            // An option's own gallery. image_url above stays the lead shot and
+            // is kept in step with the first of these.
+            ...self::gallery('variants.*.images'),
             'variants.*.reorder_level' => 'nullable|integer|min:0|max:100000',
             'variants.*.is_active' => 'nullable|boolean',
             // Only read when switching a single product over to options, where it

@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import Button from '../../../Components/Button';
+import ImageGalleryEditor from '../../../Components/ImageGalleryEditor';
 import Checkbox from '../../../Components/Checkbox';
 import FormInput from '../../../Components/FormInput';
-import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 const newVariant = () => ({
     key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -10,6 +11,7 @@ const newVariant = () => ({
     options: {},
     sku: '',
     image_url: '',
+    images: [],
     reorder_level: '',
     price: '',
     discount_price: '',
@@ -31,6 +33,7 @@ export default function VariantEditor({
     formik,
     editingProduct,
     onPickImage,
+    onImagesChange,
     uploading = false,
 }) {
     const isNewProduct = !editingProduct;
@@ -216,57 +219,6 @@ export default function VariantEditor({
                                     placeholder="Optional"
                                 />
 
-                                {/* Options often differ visually — a white card
-                                    looks nothing like the black one — so each
-                                    can carry its own shot. It leads the gallery
-                                    when that option is selected. */}
-                                <div className="auth-form-group">
-                                    <label className="auth-label">Image</label>
-                                    <div className="admin-variant-image">
-                                        {variant.image_url ? (
-                                            <img
-                                                src={variant.image_url}
-                                                alt=""
-                                                className="admin-variant-thumb"
-                                            />
-                                        ) : (
-                                            <span className="admin-variant-thumb admin-variant-thumb-empty">
-                                                <ImageIcon size={14} />
-                                            </span>
-                                        )}
-                                        <div className="admin-variant-image-actions">
-                                            <button
-                                                type="button"
-                                                className="admin-variant-image-btn"
-                                                disabled={uploading}
-                                                onClick={() =>
-                                                    onPickImage?.(variant.key)
-                                                }
-                                            >
-                                                {uploading
-                                                    ? 'Uploading…'
-                                                    : variant.image_url
-                                                      ? 'Replace'
-                                                      : 'Upload'}
-                                            </button>
-                                            {variant.image_url && (
-                                                <button
-                                                    type="button"
-                                                    className="admin-variant-image-btn admin-variant-image-clear"
-                                                    onClick={() =>
-                                                        patchVariant(
-                                                            variant.key,
-                                                            { image_url: '' },
-                                                        )
-                                                    }
-                                                >
-                                                    Clear
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <FormInput
                                     label="Reorder at"
                                     type="number"
@@ -324,6 +276,31 @@ export default function VariantEditor({
                                 >
                                     <Trash2 size={15} />
                                 </button>
+
+                                {/* Options often differ visually — a white
+                                    card looks nothing like the black one — so
+                                    each carries its own photos, not one shot.
+                                    They lead the gallery when that option is
+                                    selected. */}
+                                <div className="auth-form-group admin-variant-gallery">
+                                    <ImageGalleryEditor
+                                        label="Photos"
+                                        compact
+                                        max={8}
+                                        busy={uploading}
+                                        images={variant.images || []}
+                                        onPick={() =>
+                                            onPickImage?.(variant.key)
+                                        }
+                                        onChange={(images) =>
+                                            onImagesChange?.(
+                                                variant.key,
+                                                images,
+                                            )
+                                        }
+                                        emptyHint="Uses the product's photos."
+                                    />
+                                </div>
                             </div>
                         ))}
                     </div>

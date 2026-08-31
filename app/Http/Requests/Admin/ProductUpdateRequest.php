@@ -35,6 +35,7 @@ class ProductUpdateRequest extends AdminRequest
             // because it moves nothing.
             'reorder_level' => 'nullable|integer|min:0|max:100000',
 
+            ...ProductRules::gallery('images'),
             ...ProductRules::details(),
             ...ProductRules::preorder(),
             ...ProductRules::variants(),
@@ -56,7 +57,7 @@ class ProductUpdateRequest extends AdminRequest
         // is applied separately — leaving it here would reach Product::update()
         // as an unknown attribute.
         $scalar = collect($this->validated())
-            ->except(['has_variants', 'variant_attributes', 'variants', 'specifications', 'category_ids', 'related_product_ids', 'quantity_discounts'])
+            ->except(['has_variants', 'variant_attributes', 'variants', 'specifications', 'category_ids', 'related_product_ids', 'quantity_discounts', 'images'])
             ->all();
 
         return array_filter(

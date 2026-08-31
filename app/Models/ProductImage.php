@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class ProductImage extends Model
@@ -9,7 +10,12 @@ class ProductImage extends Model
     /** Shipped with the app, so this one is always there. */
     public const PLACEHOLDER = '/images/product-placeholder.svg';
 
-    protected $fillable = ['product_id', 'image_path', 'is_primary', 'alt_text'];
+    protected $fillable = ['product_id', 'product_variant_id', 'image_path', 'is_primary', 'alt_text', 'position'];
+
+    protected $casts = [
+        'is_primary' => 'boolean',
+        'position' => 'integer',
+    ];
 
     /**
      * The resolved URL travels alongside the stored path, never instead of it.
@@ -37,6 +43,23 @@ class ProductImage extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /** Null for a photo of the product itself. */
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    /**
+     * Gallery order: the lead shot first, then the order they were arranged in.
+     *
+     * Never insertion order — replacing one photo would send it to the end of
+     * the gallery, and the shot somebody chose to lead with would stop leading.
+     */
+    public function scopeInGalleryOrder(Builder $query): Builder
+    {
+        return $query->orderByDesc('is_primary')->orderBy('position')->orderBy('id');
     }
 
     protected function casts(): array

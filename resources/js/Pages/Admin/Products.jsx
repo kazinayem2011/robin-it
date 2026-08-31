@@ -9,7 +9,6 @@ import {
     Eye,
     CheckCircle,
     XCircle,
-    Crop,
     AlertTriangle,
 } from 'lucide-react';
 import Button from '@/Components/Button';
@@ -28,6 +27,7 @@ import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
 import SpecificationEditor from './Components/SpecificationEditor';
 import ProductDetailsModal from './Components/ProductDetailsModal';
+import ImageGalleryEditor from '@/Components/ImageGalleryEditor';
 import CategoryPicker from '@/Components/CategoryPicker';
 import RichTextEditor from '@/Components/RichTextEditor';
 import { bulletsToLines, linesToBullets } from '@/utils/bulletHtml';
@@ -104,6 +104,15 @@ const buildProductPayload = (values, editingProduct) => {
     rest.discount_ends_at = rest.discount_ends_at || null;
     rest.min_order_quantity = Number(rest.min_order_quantity) || 1;
 
+    rest.images = (rest.images || [])
+        .filter((img) => img.image_path)
+        .map((img) => ({
+            id: img.id || undefined,
+            image_path: img.image_path,
+            alt_text: img.alt_text || null,
+            is_primary: Boolean(img.is_primary),
+        }));
+
     rest.specifications = (rest.specifications || [])
         .filter((spec) => spec.name?.trim() && spec.value?.trim())
         .map((spec) => ({
@@ -128,6 +137,18 @@ const buildProductPayload = (values, editingProduct) => {
                 options: variant.options || {},
                 sku: variant.sku || null,
                 image_url: variant.image_url || null,
+                /*
+                 * The option's own photos. This builder names every field it
+                 * sends, so a new one is invisible until it is added here —
+                 * the gallery reordered on screen, image_url followed it, and
+                 * the photos themselves never moved.
+                 */
+                images: (variant.images || []).map((img) => ({
+                    id: img.id || undefined,
+                    image_path: img.image_path,
+                    alt_text: img.alt_text || null,
+                    is_primary: Boolean(img.is_primary),
+                })),
                 reorder_level:
                     variant.reorder_level === '' ||
                     variant.reorder_level === undefined
@@ -202,7 +223,8 @@ export default function Products({
             meta_description: '',
             meta_keyword: '',
             specifications: [],
-            image_path: '/images/product_cpu_i9.jpg',
+            image_path: '',
+            images: [],
             is_featured: false,
             is_active: true,
             reorder_level: '',
@@ -333,7 +355,8 @@ export default function Products({
                 meta_description: '',
                 meta_keyword: '',
                 specifications: [],
-                image_path: '/images/product_cpu_i9.jpg',
+                image_path: '',
+                images: [],
                 is_featured: false,
                 is_active: true,
                 reorder_level: '',
@@ -400,6 +423,12 @@ export default function Products({
                     value: spec.value || '',
                 })),
                 image_path: p.images?.[0]?.image_path || '',
+                images: (p.images || []).map((img) => ({
+                    id: img.id,
+                    image_path: img.image_path,
+                    alt_text: img.alt_text || '',
+                    is_primary: Boolean(img.is_primary),
+                })),
                 is_featured: Boolean(p.is_featured),
                 is_active: Boolean(p.is_active),
                 reorder_level: p.reorder_level ?? '',
@@ -426,6 +455,12 @@ export default function Products({
                         is_active: Boolean(v.is_active),
                         // Read-only here: editing an option never moves stock.
                         stock_quantity: v.stock_quantity ?? 0,
+                        images: (v.images || []).map((img) => ({
+                            id: img.id,
+                            image_path: img.image_path,
+                            alt_text: img.alt_text || '',
+                            is_primary: Boolean(img.is_primary),
+                        })),
                     })),
             },
         });
@@ -584,24 +619,49 @@ export default function Products({
         },
     ];
 
+    /*
+     * A photo is appended to a gallery now, not written over the one slot
+     * there used to be. `cropTarget` says which gallery: the product's, or
+     * one option's, identified by its row key.
+     *
+     * The first photo added leads; the editor marks it and lets it be
+     * changed. is_primary is not set here, because ImageGalleryEditor keeps
+     * it in step with position on every change — two places deciding which
+     * photo is first is how they end up disagreeing.
+     */
     const handleCropComplete = async ({ file }) => {
         setCropperOpen(false);
         setUploadingImage(true);
         try {
             const { path } = await uploadService.uploadImage(file, 'products');
+            const photo = { image_path: path, alt_text: '', is_primary: false };
 
             if (cropTarget === 'product') {
-                formik.setFieldValue('image_path', path);
-                toast.success('Product image uploaded.', 'Upload Complete');
+                const next = [...(formik.values.images || []), photo].map(
+                    (img, i) => ({ ...img, is_primary: i === 0 }),
+                );
+                formik.setFieldValue('images', next);
+                // Kept in step for anything still posting the single field.
+                formik.setFieldValue('image_path', next[0]?.image_path || '');
+                toast.success('Photo added.', 'Upload Complete');
             } else {
-                // cropTarget is the option's row key.
                 formik.setFieldValue(
                     'variants',
-                    (formik.values.variants || []).map((v) =>
-                        v.key === cropTarget ? { ...v, image_url: path } : v,
-                    ),
+                    (formik.values.variants || []).map((v) => {
+                        if (v.key !== cropTarget) return v;
+
+                        const images = [...(v.images || []), photo].map(
+                            (img, i) => ({ ...img, is_primary: i === 0 }),
+                        );
+
+                        return {
+                            ...v,
+                            images,
+                            image_url: images[0]?.image_path || '',
+                        };
+                    }),
                 );
-                toast.success('Option image uploaded.', 'Upload Complete');
+                toast.success('Option photo added.', 'Upload Complete');
             }
         } catch (err) {
             toast.error(
@@ -613,6 +673,17 @@ export default function Products({
             setCropTarget('product');
         }
     };
+
+    /** One option's gallery changed: keep its lead shot on image_url too. */
+    const setVariantImages = (variantKey, images) =>
+        formik.setFieldValue(
+            'variants',
+            (formik.values.variants || []).map((v) =>
+                v.key === variantKey
+                    ? { ...v, images, image_url: images[0]?.image_path || '' }
+                    : v,
+            ),
+        );
 
     return (
         <AdminLayout
@@ -938,6 +1009,7 @@ export default function Products({
                     <VariantEditor
                         formik={formik}
                         editingProduct={editingProduct}
+                        onImagesChange={setVariantImages}
                         onPickImage={(variantKey) => {
                             setCropTarget(variantKey);
                             setCropperOpen(true);
@@ -1194,47 +1266,27 @@ export default function Products({
                         />
                     </details>
 
-                    {/* Product image. The form carried an image_path value with no
-                        field to edit it, so every product kept the same stock photo. */}
-                    <div className="admin-image-field">
-                        <FormInput
-                            id="image_path"
-                            name="image_path"
-                            label="Product Image"
-                            value={formik.values.image_path}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.image_path &&
-                                formik.errors.image_path
-                            }
-                            placeholder="/images/product.jpg or upload below"
-                        />
-                        <div className="admin-image-field-actions">
-                            {formik.values.image_path && (
-                                <img
-                                    src={formik.values.image_path}
-                                    alt="Product preview"
-                                    className="admin-image-preview"
-                                />
-                            )}
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                icon={Crop}
-                                loading={uploadingImage}
-                                disabled={uploadingImage}
-                                onClick={() => {
-                                    setCropTarget('product');
-                                    setCropperOpen(true);
-                                }}
-                            >
-                                {uploadingImage
-                                    ? 'Uploading…'
-                                    : 'Crop / Upload'}
-                            </Button>
-                        </div>
-                    </div>
+                    {/* A product's photos. This was one path field and one
+                        photo, so nothing could show the back of a box or what
+                        is in the carton — the table always could hold more. */}
+                    <ImageGalleryEditor
+                        label="Product Photos"
+                        images={formik.values.images || []}
+                        busy={uploadingImage}
+                        onPick={() => {
+                            setCropTarget('product');
+                            setCropperOpen(true);
+                        }}
+                        onChange={(images) => {
+                            formik.setFieldValue('images', images);
+                            formik.setFieldValue(
+                                'image_path',
+                                images[0]?.image_path || '',
+                            );
+                        }}
+                        helperText="The first photo is the one shown on the catalogue card, in the cart and in search results. Reorder with the arrows."
+                        emptyHint="No photos yet — this product will show the placeholder."
+                    />
 
                     <div className="admin-form-checkbox-row">
                         <Checkbox

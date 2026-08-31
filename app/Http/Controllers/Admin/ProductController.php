@@ -9,6 +9,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\PcCompatibilityService;
+use App\Services\ProductGalleryService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
 use App\Support\RichText;
@@ -25,6 +26,7 @@ class ProductController extends Controller
         protected PcCompatibilityService $compatibility,
         protected ProductVariantService $variants,
         protected StockService $stock,
+        protected ProductGalleryService $gallery,
     ) {}
 
     /**
@@ -39,7 +41,10 @@ class ProductController extends Controller
         // compatibility gap check below reads both. Loading them per product
         // instead turned this page into 61 queries for 20 rows.
         $query = Product::with([
-            'category.parent.parent', 'categories:id', 'brand', 'images', 'variants', 'specifications',
+            'category.parent.parent', 'categories:id', 'brand', 'images', 'specifications',
+            // variants.images so the edit form can show each option's own
+            // photos without a second request per row.
+            'variants', 'variants.images',
         ])
             // withExists rather than asking per product: checking each row
             // individually took this page from 23 queries to 52.
@@ -114,6 +119,7 @@ class ProductController extends Controller
             'brand:id,name,slug,logo_path',
             'images',
             'variants',
+            'variants.images',
             'specifications',
             'quantityDiscounts',
             'relatedProducts:id,name,slug,price',
@@ -168,12 +174,7 @@ class ProductController extends Controller
             $this->stock->recordOpeningBalance($product, null, $opening, $request->user()?->id);
         }
 
-        if (! empty($validated['image_path'])) {
-            $product->images()->create([
-                'image_path' => $validated['image_path'],
-                'is_primary' => true,
-            ]);
-        }
+        $this->gallery->syncProduct($product, $this->galleryFrom($validated));
 
         $this->syncSpecifications($product, $validated['specifications'] ?? null);
         $product->syncCategories($validated['category_ids'] ?? []);
@@ -225,20 +226,37 @@ class ProductController extends Controller
             $this->syncQuantityDiscounts($product, $request->validated()['quantity_discounts'] ?? []);
         }
 
-        if (! empty($attributes['image_path'])) {
-            $primaryImage = $product->images()->where('is_primary', true)->first();
-
-            if ($primaryImage) {
-                $primaryImage->update(['image_path' => $attributes['image_path']]);
-            } else {
-                $product->images()->create([
-                    'image_path' => $attributes['image_path'],
-                    'is_primary' => true,
-                ]);
-            }
+        // Absent means "not editing the photos"; an empty array means "remove
+        // them all". Saving a price must not clear a gallery.
+        if ($request->has('images') || $request->has('image_path')) {
+            $this->gallery->syncProduct($product, $this->galleryFrom($request->validated()));
         }
 
         return $this->successResponse($product, "Product '{$product->name}' updated successfully.");
+    }
+
+    /**
+     * The gallery a request is asking for.
+     *
+     * `image_path` was the whole of a product's photography before galleries:
+     * one string, one photo. It is still accepted, and still means "this is the
+     * lead shot", so an older client — or anything posting the single field —
+     * keeps working instead of silently saving a product with no picture.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<int, array<string, mixed>>
+     */
+    private function galleryFrom(array $validated): array
+    {
+        $images = $validated['images'] ?? null;
+
+        if (is_array($images)) {
+            return $images;
+        }
+
+        $single = trim((string) ($validated['image_path'] ?? ''));
+
+        return $single === '' ? [] : [['image_path' => $single, 'is_primary' => true]];
     }
 
     /**

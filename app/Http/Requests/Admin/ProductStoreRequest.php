@@ -35,6 +35,8 @@ class ProductStoreRequest extends AdminRequest
             'short_description' => 'nullable|string|max:500',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
+
+            ...ProductRules::gallery('images'),
             'reorder_level' => 'nullable|integer|min:0|max:100000',
 
             ...ProductRules::details(),

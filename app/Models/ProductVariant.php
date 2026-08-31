@@ -39,6 +39,19 @@ class ProductVariant extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    /**
+     * This option's own photos.
+     *
+     * `image_url` on this row is the lead shot and stays the column everything
+     * else reads — the cart, the order line, the storefront listings — so it is
+     * kept in step with the first of these rather than replaced by them.
+     */
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_variant_id')
+            ->inGalleryOrder();
+    }
+
     /** What each branch is holding of this option. */
     public function stockLevels()
     {

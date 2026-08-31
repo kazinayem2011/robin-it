@@ -2570,16 +2570,29 @@ a.admin-card:hover,
 
 .admin-variant-row {
     display: grid;
-    /* values | price | sku | image | reorder | stock | remove */
+    /*
+     * values | price | sku | reorder | stock | remove, with the photo gallery
+     * on a row of its own underneath.
+     *
+     * It used to be a seventh column holding one thumbnail. A gallery does not
+     * fit in a seventh of a row: the thumbnails stacked into a single tall
+     * column and the "Add photo" button wrapped over its neighbour.
+     */
     grid-template-columns:
-        minmax(0, 1.8fr) minmax(0, 0.8fr) minmax(0, 0.8fr)
-        minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
+        minmax(0, 1.8fr) minmax(0, 0.8fr) minmax(0, 0.9fr)
+        minmax(0, 0.8fr) minmax(0, 0.8fr) auto;
     gap: 10px;
     align-items: start;
     padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--white);
+}
+
+.admin-variant-gallery {
+    grid-column: 1 / -1;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-light);
 }
 
 .admin-variant-row > * {
@@ -2662,7 +2675,8 @@ a.admin-card:hover,
         grid-template-columns: 1fr 1fr;
     }
 
-    .admin-variant-values {
+    .admin-variant-values,
+    .admin-variant-gallery {
         grid-column: 1 / -1;
     }
 }

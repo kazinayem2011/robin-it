@@ -31,7 +31,8 @@ class ProductVariantService
     private const OPEN_ORDER_STATUSES = ['pending', 'processing', 'shipped'];
 
     public function __construct(
-        protected StockService $stock
+        protected StockService $stock,
+        protected ProductGalleryService $gallery,
     ) {}
 
     /**
@@ -192,12 +193,15 @@ class ProductVariantService
 
                 if ($id && $existing = ProductVariant::where('product_id', $product->id)->find($id)) {
                     $existing->update($this->variantAttributes($definition, $position));
+                    $this->applyGallery($existing, $definition);
                     $keptIds[] = $existing->id;
 
                     continue;
                 }
 
-                $keptIds[] = $this->createVariant($product, $definition, $position)->id;
+                $variant = $this->createVariant($product, $definition, $position);
+                $this->applyGallery($variant, $definition);
+                $keptIds[] = $variant->id;
             }
 
             $this->retireMissingVariants($product, $keptIds);
@@ -205,6 +209,23 @@ class ProductVariantService
 
             return $product->fresh('variants');
         });
+    }
+
+    /**
+     * An option's own photos, when the request carried any.
+     *
+     * Absent means the caller is not editing them — a price change through the
+     * options table must not wipe the shots somebody uploaded for a colour.
+     *
+     * @param  array<string, mixed>  $definition
+     */
+    private function applyGallery(ProductVariant $variant, array $definition): void
+    {
+        if (! array_key_exists('images', $definition)) {
+            return;
+        }
+
+        $this->gallery->syncVariant($variant, (array) $definition['images']);
     }
 
     /**
