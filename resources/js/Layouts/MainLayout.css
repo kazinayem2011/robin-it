@@ -2422,9 +2422,26 @@
     right: 0;
 }
 
-.cat-nav-subitem {
-    position: relative;
+/* ...and its brand panel has to go left as well, for the same reason. */
+.cat-nav-item.align-right .cat-nav-brands {
+    left: auto;
+    right: 100%;
 }
+
+/*
+ * Deliberately not positioned.
+ *
+ * With `position: relative` here the brand panel anchored to the hovered row,
+ * so hovering something low in a long list started the panel low and ran it off
+ * the bottom of the window — Component > Casing lost everything from Gigabyte
+ * down, and no amount of max-height helps when the top edge is already near the
+ * fold.
+ *
+ * Unpositioned, the panel anchors to .cat-nav-drop instead, which is itself
+ * absolutely positioned and so is the containing block. It therefore always
+ * opens level with the top of the dropdown, where its 70vh cap is enough to
+ * hold the longest list the shop has.
+ */
 
 .cat-nav-sublink {
     padding: 7px 14px;
@@ -2450,6 +2467,8 @@
 .cat-nav-brands {
     display: none;
     position: absolute;
+    /* Level with the top of the dropdown it belongs to, not with the row that
+       opened it. */
     top: -6px;
     left: 100%;
     z-index: 61;
