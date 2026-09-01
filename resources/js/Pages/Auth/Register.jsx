@@ -170,12 +170,19 @@ export default function Register({
                             autoFocus
                         />
 
-                        {/* Email Address */}
+                        {/*
+                         * One of these two, not both.
+                         *
+                         * Signing in has always taken either, and most
+                         * customers here have the mobile rather than an
+                         * address. Neither carries the asterisk, and each
+                         * says what it is for.
+                         */}
                         <FormInput
                             id="email"
                             name="email"
-                            required
                             label="Email Address"
+                            helperText="Either this or a mobile number."
                             type="email"
                             value={formik.values.email}
                             onChange={formik.handleChange}
@@ -189,16 +196,11 @@ export default function Register({
                             autoComplete="username"
                         />
 
-                        {/*
-                         * Never was optional — the server has always required
-                         * it, so the old label sent people into a rejection.
-                         * It is also now the thing the code confirms.
-                         */}
                         <FormInput
                             id="phone"
                             name="phone"
-                            required
                             label="Bangladeshi Mobile"
+                            helperText="Where order updates and the rider call. Either this or an email address."
                             type="tel"
                             value={formik.values.phone}
                             onChange={formik.handleChange}

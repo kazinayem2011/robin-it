@@ -70,6 +70,12 @@ export default function ProductDetails(props) {
     const { auth } = usePage().props;
 
     /*
+     * A signed-in customer may have registered with a mobile number instead of
+     * an email address. A guest is asked for one, so they can always be told.
+     */
+    const canBeEmailed = !auth?.user || Boolean(auth.user.email);
+
+    /*
      * The shared hook, not a handler of this page's own. It loads what is
      * already saved, so a returning customer sees a filled heart instead of an
      * empty one, and it keeps the header count in step. The page used to
@@ -809,8 +815,14 @@ export default function ProductDetails(props) {
 
                             {/* Only when the thing being looked at is actually
                                 unavailable — on a variant product that means
-                                the chosen option, not the product overall. */}
-                            {soldOut && (
+                                the chosen option, not the product overall.
+
+                                And only when there is somewhere to write to.
+                                An account can be opened with a mobile number
+                                and no address; this waiting list is email, so
+                                for those customers it is not an offer at all
+                                and asking would be a form they cannot use. */}
+                            {soldOut && canBeEmailed && (
                                 <BackInStockForm
                                     productId={product.id}
                                     variantId={selectedVariant?.id ?? null}

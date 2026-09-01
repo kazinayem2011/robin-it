@@ -27,33 +27,53 @@ export const loginSchema = Yup.object().shape({
 /**
  * Registration Validation Schema
  */
-export const registerSchema = Yup.object().shape({
-    name: Yup.string()
-        .required('Full name is required')
-        .min(2, 'Name must be at least 2 characters')
-        .max(100, 'Name cannot exceed 100 characters'),
-    email: Yup.string()
-        .required('Email address is required')
-        .email('Please enter a valid email address'),
-    /*
-     * Required, and it always was on the server. This said optional, so
-     * anybody who left it blank passed here and was rejected by the back end —
-     * and it is the number every order message and the delivery rider use.
-     */
-    phone: Yup.string()
-        .required('Mobile number is required')
-        .test(
-            'bd-phone',
-            'Please enter a valid BD mobile number (e.g. 01711223344)',
-            (value) => isBDPhone(value),
-        ),
-    password: Yup.string()
-        .required('Password is required')
-        .min(8, 'Password must be at least 8 characters'),
-    password_confirmation: Yup.string()
-        .required('Please confirm your password')
-        .oneOf([Yup.ref('password'), null], 'Passwords must match exactly'),
-});
+export const registerSchema = Yup.object().shape(
+    {
+        name: Yup.string()
+            .required('Full name is required')
+            .min(2, 'Name must be at least 2 characters')
+            .max(100, 'Name cannot exceed 100 characters'),
+        /*
+         * One of the two, not both.
+         *
+         * Signing in has always accepted either an address or a mobile, and most
+         * customers here have the mobile. Demanding both turned away anyone with
+         * only one, so each is required exactly when the other is empty — the same
+         * rule the server states with required_without.
+         */
+        email: Yup.string()
+            .email('Please enter a valid email address')
+            .when('phone', {
+                is: (phone) => !phone,
+                then: (schema) =>
+                    schema.required(
+                        'Give us an email address or a mobile number so we can reach you',
+                    ),
+            }),
+        phone: Yup.string()
+            .test(
+                'bd-phone',
+                'Please enter a valid BD mobile number (e.g. 01711223344)',
+                (value) => !value || isBDPhone(value),
+            )
+            .when('email', {
+                is: (email) => !email,
+                then: (schema) =>
+                    schema.required(
+                        'Give us a mobile number or an email address so we can reach you',
+                    ),
+            }),
+        password: Yup.string()
+            .required('Password is required')
+            .min(8, 'Password must be at least 8 characters'),
+        password_confirmation: Yup.string()
+            .required('Please confirm your password')
+            .oneOf([Yup.ref('password'), null], 'Passwords must match exactly'),
+    },
+    // Declared because email and phone each depend on the other, and Yup
+    // refuses to resolve such a pair unless the cycle is named.
+    [['email', 'phone']],
+);
 
 /**
  * Forgot Password Validation Schema

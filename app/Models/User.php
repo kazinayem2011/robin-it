@@ -74,6 +74,34 @@ class User extends Authenticatable implements MustVerifyEmail
         return Roles::isStaff($this->role) && $this->is_active !== false;
     }
 
+    /**
+     * Nothing to send, and nothing to verify.
+     *
+     * An account may carry a mobile number instead of an address. The
+     * framework would still try to send a verification link on sign-up and
+     * would still call the account unverified for ever afterwards, so both
+     * questions are answered here rather than left to fail quietly in a queue.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        if (blank($this->email)) {
+            return;
+        }
+
+        parent::sendEmailVerificationNotification();
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return blank($this->email) || parent::hasVerifiedEmail();
+    }
+
+    /** Where the shop can actually reach this customer. */
+    public function hasEmail(): bool
+    {
+        return filled($this->email);
+    }
+
     /** The owner, who may do everything including managing staff. */
     public function isOwner(): bool
     {

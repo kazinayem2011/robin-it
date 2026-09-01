@@ -51,19 +51,39 @@ class RegisteredUserController extends Controller
 
         $verifying = $this->otp->available();
 
+        /*
+         * Either identifier will do, and one of them must be there.
+         *
+         * Signing in has always accepted an address or a mobile, and most
+         * customers here have the mobile — asking for both turned away the
+         * ones who only had that. required_without in both directions says
+         * "one of these", and leaves either free to be omitted.
+         */
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => [
+                'required_without:phone',
+                'nullable',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:'.User::class,
+            ],
             'phone' => [
-                'required',
+                'required_without:email',
+                'nullable',
                 'string',
                 PhoneHelper::RULE,
                 'unique:'.User::class.',phone',
             ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            // Only asked for when a code could actually have been sent.
-            'code' => [$verifying ? 'required' : 'nullable', 'string'],
+            // Only asked for when a code could actually have been sent, which
+            // needs a number to have sent it to.
+            'code' => [$verifying && filled($request->phone) ? 'required' : 'nullable', 'string'],
         ], [
+            'email.required_without' => 'Give us an email address or a mobile number so we can reach you.',
+            'phone.required_without' => 'Give us a mobile number or an email address so we can reach you.',
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number (e.g. 01711223344).',
             'phone.unique' => 'This mobile number is already registered with an account.',
             'code.required' => 'Enter the code we sent to your mobile.',
@@ -76,7 +96,7 @@ class RegisteredUserController extends Controller
          * password that is too short is told that before their code is spent
          * and they have to wait out the cooldown for another.
          */
-        if ($verifying) {
+        if ($verifying && $normalizedPhone) {
             $this->otp->verify($normalizedPhone, OtpCode::PURPOSE_REGISTER, $request->string('code'));
         }
 
@@ -84,13 +104,15 @@ class RegisteredUserController extends Controller
         $user = new User;
         $user->fill([
             'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $normalizedPhone,
+            // Absent rather than empty: '' would occupy the unique index and
+            // the second account without an address would be refused.
+            'email' => $request->filled('email') ? $request->email : null,
+            'phone' => $normalizedPhone ?: null,
             'password' => Hash::make($request->password),
         ]);
 
         // Only when a code was actually read off a text sent to it.
-        if ($verifying) {
+        if ($verifying && $normalizedPhone) {
             $user->phone_verified_at = now();
         }
         $user->assignRole(User::ROLE_CUSTOMER)->save();

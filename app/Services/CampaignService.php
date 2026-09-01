@@ -84,6 +84,13 @@ class CampaignService
                 ->where('is_active', true)
                 ->get(['name', 'email', 'phone'])
                 ->each(function ($user) use ($people, $gone) {
+                    // An account may carry only a mobile number. Nothing to
+                    // unsubscribe and nothing to send to, so it is not a
+                    // recipient of an email campaign.
+                    if (blank($user->email)) {
+                        return;
+                    }
+
                     if (isset($gone[mb_strtolower(trim((string) $user->email))])) {
                         return;
                     }
