@@ -323,6 +323,10 @@ export default function ProductDetails(props) {
 
     const isWishlisted = wishlistIds.includes(product.id);
 
+    /* related_products is still read as a fallback, for any caller that has
+       not been given the worked-out list. */
+    const similar = product.similar_products ?? product.related_products ?? [];
+
     const productImages =
         product.images && product.images.length > 0
             ? product.images.map((img) => img.image_path)
@@ -819,15 +823,18 @@ export default function ProductDetails(props) {
                         </div>
                     </div>
 
-                    {/* Hand-picked suggestions. Hidden entirely when none are
-                        set rather than falling back to category-mates: an
-                        arbitrary product is worse than no suggestion, because
-                        it looks deliberate. */}
-                    {product.related_products?.length > 0 && (
+                    {/*
+                     * Hand-picked where a shopkeeper has chosen them, worked
+                     * out from the same shelf where nobody has. It used to be
+                     * hand-picked only, and nothing had been picked for any of
+                     * the shop's twelve hundred products — so a shopper
+                     * looking at a mouse was never offered another mouse.
+                     */}
+                    {similar.length > 0 && (
                         <section className="pdp-related">
                             <h3>Similar Products</h3>
                             <div className="pdp-related-grid">
-                                {product.related_products.map((item) => (
+                                {similar.map((item) => (
                                     <Link
                                         key={item.id}
                                         href={`/products/${item.slug}`}

@@ -442,6 +442,10 @@ class ProductService
             ->withCatalogAggregates()
             ->firstOrFail();
 
+        // Attached rather than eager-loaded: it is a query of its own, and the
+        // page reads it under one name whether it was picked or worked out.
+        $product->setRelation('similarProducts', $this->similarProducts($product));
+
         /*
          * Counted here rather than in the controller, so every route that shows
          * a product counts it once and only once.
@@ -455,6 +459,92 @@ class ProductService
         DB::table('products')->where('id', $product->getKey())->increment('views_count');
 
         return $product;
+    }
+
+    /**
+     * What else to show somebody looking at this product.
+     *
+     * Hand-picked first, always: where a shopkeeper has said "these go
+     * together", that is better than anything a query can work out.
+     *
+     * Where nobody has — which was every one of the shop's twelve hundred
+     * products — the section used to render nothing at all, so a shopper
+     * looking at a mouse was never offered another mouse. The fallback is
+     * deliberately narrow rather than arbitrary, because an arbitrary
+     * suggestion is worse than none: same shelf, in stock, and nearest in
+     * price, so a ৳12,000 mouse is not shown beside a ৳90,000 one.
+     *
+     * @return Collection<int, Product>
+     */
+    public function similarProducts(Product $product, int $limit = 6): Collection
+    {
+        $picked = $product->relatedProducts()
+            ->where('products.is_active', true)
+            ->with('images')
+            ->take($limit)
+            ->get();
+
+        if ($picked->isNotEmpty()) {
+            return $picked;
+        }
+
+        if (! $product->category_id) {
+            return collect();
+        }
+
+        $found = $this->nearestIn([$product->category_id], $product, $limit);
+
+        /*
+         * A thin shelf widens to its parent rather than showing one lonely
+         * suggestion — "Gaming Mouse" may hold three products where
+         * "Accessories" holds eighty.
+         */
+        if ($found->count() < $limit && $product->category?->parent_id) {
+            $siblings = Category::where('parent_id', $product->category->parent_id)
+                ->pluck('id')
+                ->all();
+
+            $found = $this->nearestIn($siblings, $product, $limit, $found->pluck('id')->all());
+        }
+
+        return $found;
+    }
+
+    /**
+     * The products nearest this one in price, on the given shelves.
+     *
+     * @param  array<int, int>  $categoryIds
+     * @param  array<int, int>  $exclude
+     * @return Collection<int, Product>
+     */
+    private function nearestIn(array $categoryIds, Product $product, int $limit, array $exclude = []): Collection
+    {
+        $bindings = $this->priceWindowBindings();
+
+        return Product::active()
+            ->whereKeyNot($product->getKey())
+            ->when($exclude !== [], fn ($q) => $q->whereKeyNot($exclude))
+            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
+            ->with('images')
+            ->withCatalogAggregates()
+            /*
+             * What can be bought comes first, but nothing is excluded for
+             * being out of stock.
+             *
+             * Excluding it emptied the section on a shop where two products
+             * in twelve hundred had stock — which is the state a shop is in
+             * the week it opens, and exactly when it most needs to show its
+             * range. An out-of-stock alternative still tells a shopper what
+             * else is on the shelf, and the product page takes their email
+             * for when it returns.
+             */
+            ->orderByRaw('CASE WHEN stock_quantity > 0 OR allow_preorder = 1 THEN 0 ELSE 1 END')
+            ->orderByRaw(
+                'ABS(('.self::EFFECTIVE_PRICE_SQL.') - ?)',
+                [...$bindings, (float) $product->effective_price]
+            )
+            ->take($limit)
+            ->get();
     }
 
     /**
