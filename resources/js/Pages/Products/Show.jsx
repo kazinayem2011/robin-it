@@ -695,68 +695,97 @@ export default function ProductDetails(props) {
                             )}
 
                             <div className="pdp-actions">
-                                <div className="quantity-selector">
-                                    <button
-                                        type="button"
-                                        disabled={quantity <= 1}
-                                        onClick={() =>
-                                            setQuantity((prev) =>
-                                                Math.max(1, prev - 1),
-                                            )
-                                        }
+                                {/*
+                                 * Sold out is one state, so it gets one
+                                 * control. "Buy Now" and "Add to Cart" both
+                                 * fall back to the same label when there is
+                                 * nothing to sell, which put two identical
+                                 * dead buttons side by side — and a quantity
+                                 * stepper above them for choosing how many of
+                                 * nothing to have. What a shopper can
+                                 * actually do next is the waiting list below.
+                                 */}
+                                {soldOut ? (
+                                    <Button
+                                        variant="secondary"
+                                        size="lg"
+                                        disabled
                                     >
-                                        -
-                                    </button>
-                                    <input
-                                        type="number"
-                                        value={quantity}
-                                        readOnly
-                                    />
-                                    <button
-                                        type="button"
-                                        disabled={quantity >= availableStock}
-                                        onClick={() =>
-                                            setQuantity((prev) =>
-                                                Math.min(
-                                                    availableStock || 99,
-                                                    prev + 1,
-                                                ),
-                                            )
-                                        }
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                                <Button
-                                    variant="primary"
-                                    size="lg"
-                                    disabled={soldOut}
-                                    onClick={handleBuyNow}
-                                >
-                                    {soldOut
-                                        ? 'Out of Stock'
-                                        : needsVariantChoice
-                                          ? 'Choose an option'
-                                          : isPreorder
-                                            ? 'Pre-order Now'
-                                            : 'Buy Now'}
-                                </Button>
-                                <Button
-                                    variant={addedToCart ? 'dark' : 'secondary'}
-                                    size="lg"
-                                    disabled={soldOut}
-                                    onClick={handleAddToCart}
-                                    loading={addingToCart}
-                                    icon={addedToCart ? Check : ShoppingCart}
-                                >
-                                    {soldOut
-                                        ? 'Out of Stock'
-                                        : addedToCart
-                                          ? 'Added to Cart'
-                                          : isPreorder
-                                            ? 'Pre-order'
-                                            : 'Add to Cart'}
-                                </Button>
+                                        Out of Stock
+                                    </Button>
+                                ) : (
+                                    <>
+                                        <div className="quantity-selector">
+                                            <button
+                                                type="button"
+                                                disabled={quantity <= 1}
+                                                onClick={() =>
+                                                    setQuantity((prev) =>
+                                                        Math.max(1, prev - 1),
+                                                    )
+                                                }
+                                            >
+                                                -
+                                            </button>
+                                            <input
+                                                type="number"
+                                                value={quantity}
+                                                readOnly
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={
+                                                    quantity >= availableStock
+                                                }
+                                                onClick={() =>
+                                                    setQuantity((prev) =>
+                                                        Math.min(
+                                                            availableStock ||
+                                                                99,
+                                                            prev + 1,
+                                                        ),
+                                                    )
+                                                }
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            disabled={soldOut}
+                                            onClick={handleBuyNow}
+                                        >
+                                            {needsVariantChoice
+                                                ? 'Choose an option'
+                                                : isPreorder
+                                                  ? 'Pre-order Now'
+                                                  : 'Buy Now'}
+                                        </Button>
+                                        <Button
+                                            variant={
+                                                addedToCart
+                                                    ? 'dark'
+                                                    : 'secondary'
+                                            }
+                                            size="lg"
+                                            disabled={soldOut}
+                                            onClick={handleAddToCart}
+                                            loading={addingToCart}
+                                            icon={
+                                                addedToCart
+                                                    ? Check
+                                                    : ShoppingCart
+                                            }
+                                        >
+                                            {addedToCart
+                                                ? 'Added to Cart'
+                                                : isPreorder
+                                                  ? 'Pre-order'
+                                                  : 'Add to Cart'}
+                                        </Button>
+                                    </>
+                                )}
                             </div>
 
                             {/* Nobody should reach the payment page and only
@@ -785,6 +814,7 @@ export default function ProductDetails(props) {
                                 <BackInStockForm
                                     productId={product.id}
                                     variantId={selectedVariant?.id ?? null}
+                                    defaultEmail={auth?.user?.email ?? ''}
                                 />
                             )}
 

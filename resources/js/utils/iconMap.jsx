@@ -1,5 +1,9 @@
 import React from 'react';
 import {
+    BrainCircuit,
+    Briefcase,
+    Building2,
+    Command,
     Cpu,
     Laptop,
     Monitor,
@@ -46,7 +50,13 @@ import {
     Droplets,
     HardDriveDownload,
     Bluetooth,
+    Aperture,
+    Car,
+    Focus,
+    Hand,
+    PcCase,
     PenTool,
+    Star,
 } from 'lucide-react';
 
 /**
@@ -182,15 +192,32 @@ export const ICON_REGISTRY = {
     tower: Box,
     box: Box,
 
-    // Desktops & Workstations
-    desktop: Server,
-    desktops: Server,
-    pc: Server,
+    /*
+     * Desktops & Workstations.
+     *
+     * A tower, not a rack. `Server` is a stack of rack units and belongs to
+     * the Server & Storage aisle; on a desktop it read as networking kit —
+     * and because every machine shape below pointed at this one key, all ten
+     * rows of the Desktop menu wore it, which is the failure this file's own
+     * header warns about.
+     */
+    desktop: PcCase,
+    desktops: PcCase,
+    pc: PcCase,
     server: Server,
-    workstation: Server,
-    workstations: Server,
-    gamingpc: Server,
-    rig: Server,
+    workstation: PcCase,
+    workstations: PcCase,
+    rig: PcCase,
+
+    // The shapes a desktop actually comes in, each its own thing.
+    gamingpc: Gamepad2,
+    aipc: BrainCircuit,
+    starpc: Star,
+    brandpc: Building2,
+    allinone: Monitor,
+    minipc: Box,
+    // The four Apple desktops are one family and read as one.
+    mac: Command,
 
     // Networking
     networking: Wifi,
@@ -266,11 +293,38 @@ export const ICON_REGISTRY = {
  * would show as a category drawing an icon the predicate said it did not have.
  */
 const KEYWORD_LIST_WITH_ICONS = [
+    /*
+     * The specific kind before the generic word, because the first match wins.
+     * Without these, every row under Laptop, Monitor and Camera matched the
+     * bare category name and the whole menu came out wearing one glyph.
+     */
+    ['laptop bag', Briefcase],
+    ['laptop accessor', ICON_REGISTRY.accessories],
+    ['gaming laptop', ICON_REGISTRY.gaming],
+    ['monitor arm', Wrench],
+    ['monitor brand', Building2],
+    ['gaming monitor', ICON_REGISTRY.gaming],
+    ['touch monitor', Hand],
+    ['portable monitor', Tablet],
+    ['curved monitor', Tv],
+    ['4k monitor', ICON_REGISTRY.monitor],
+    ['camera lens', Aperture],
+    ['camera accessor', ICON_REGISTRY.accessories],
+    ['camera tripod', Focus],
+    ['action camera', Focus],
+    ['video camera', Video],
+    ['handycam', Video],
+    ['dash cam', Car],
+    ['body camera', Video],
+    ['gimbal', Focus],
+    ['instant camera', ICON_REGISTRY.printer],
+    ['mirrorless', Aperture],
+
     ['laptop', ICON_REGISTRY.laptop],
     ['notebook', ICON_REGISTRY.laptop],
     ['macbook', ICON_REGISTRY.laptop],
     ['thinkpad', ICON_REGISTRY.laptop],
-    ['ultrabook', ICON_REGISTRY.laptop],
+    ['ultrabook', Sparkles],
     ['processor', ICON_REGISTRY.cpu],
     ['cpu', ICON_REGISTRY.cpu],
     ['intel', ICON_REGISTRY.cpu],
@@ -456,15 +510,15 @@ const KEYWORD_LIST_WITH_ICONS = [
 
     // Machine shapes, last: 'pc' is two letters and would otherwise swallow
     // anything containing them.
-    ['all-in-one', ICON_REGISTRY.desktop],
-    ['mini pc', ICON_REGISTRY.desktop],
-    ['imac', ICON_REGISTRY.desktop],
-    ['mac studio', ICON_REGISTRY.desktop],
-    ['mac mini', ICON_REGISTRY.desktop],
-    ['mac pro', ICON_REGISTRY.desktop],
-    ['ai pc', ICON_REGISTRY.desktop],
-    ['brand pc', ICON_REGISTRY.desktop],
-    ['star pc', ICON_REGISTRY.desktop],
+    ['all-in-one', ICON_REGISTRY.allinone],
+    ['mini pc', ICON_REGISTRY.minipc],
+    ['imac', ICON_REGISTRY.mac],
+    ['mac studio', ICON_REGISTRY.mac],
+    ['mac mini', ICON_REGISTRY.mac],
+    ['mac pro', ICON_REGISTRY.mac],
+    ['ai pc', ICON_REGISTRY.aipc],
+    ['brand pc', ICON_REGISTRY.brandpc],
+    ['star pc', ICON_REGISTRY.starpc],
     [' pc', ICON_REGISTRY.desktop],
 ];
 
