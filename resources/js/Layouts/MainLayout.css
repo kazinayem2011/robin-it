@@ -2352,7 +2352,32 @@
     align-items: center;
     gap: 8px;
     text-decoration: none;
+}
+
+/* The horizontal bar is one line by definition: a category that wrapped there
+   would push the whole row taller and shuffle every neighbour along. */
+.cat-nav-link {
     white-space: nowrap;
+}
+
+/*
+ * Inside a panel a long name takes a second line instead of running out of
+ * the box it sits in.
+ *
+ * The columns have a floor and no ceiling worth the name, so a row was as wide
+ * as the widest thing in it and anything longer simply overflowed — "Access
+ * Control Accessories" ran past the edge of its own menu.
+ *
+ * The cost is the one .cat-nav-all warns about below: grid rows are as tall as
+ * their tallest cell, so a name that takes two lines makes that row two lines
+ * tall in every column. A gap beside a neighbour is worth more than a label
+ * nobody can finish reading, and it only happens to the few names long enough
+ * to need it.
+ */
+.cat-nav-sublink,
+.cat-nav-brandlink {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 /*
