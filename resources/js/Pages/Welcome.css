@@ -378,19 +378,28 @@
 }
 
 .slider-dot {
+    /*
+     * The mark is 4px tall; the thing you press is not. Padding gives it a
+     * finger-sized box while the bar itself stays thin — background-clip keeps
+     * the padding transparent, and both must come after the `background`
+     * shorthand, which resets the clip.
+     */
     width: 32px;
     height: 4px;
+    box-sizing: content-box;
     background: rgba(255, 255, 255, 0.3);
+    background-clip: content-box;
+    padding: 16px 0;
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;
     overflow: hidden;
     position: relative;
-    padding: 0;
 }
 
 .slider-dot.dot-active {
     background: var(--primary);
+    background-clip: content-box;
     width: 48px;
 }
 
@@ -1135,6 +1144,15 @@
 
 .showrooms-content-left {
     padding: 40px;
+    /*
+     * A grid item is never narrower than its own contents unless it is told
+     * it may be. The widest branch pill — "Chattogram Agrabad Regional Hub
+     * (Chattogram)" — held this column 65px wider than the phone, and the
+     * card's overflow:hidden then cut the heading, the paragraph and the
+     * "Call" button off at the border rather than scrolling, which is why
+     * nothing caught it.
+     */
+    min-width: 0;
 }
 
 .showrooms-content-left h2 {
@@ -1172,6 +1190,8 @@
 .showroom-cta-row {
     display: flex;
     gap: 14px;
+    /* Two full-width calls to action do not sit side by side on a phone. */
+    flex-wrap: wrap;
 }
 
 .showrooms-graphic-right {
@@ -1410,7 +1430,53 @@
     }
 }
 
+/*
+ * Four columns whatever the screen, until now.
+ *
+ * On a phone that made each card 78px wide: the name broke after "100% Co",
+ * the price ran out past the border, "Sold out" spilled its own button, and
+ * the four hover controls stacked into a column down the middle of the text.
+ * The grid had no responsive rule at all — it is used here, on the wishlist
+ * and in the PC builder's component picker, so all three were the same.
+ */
+@media (max-width: 1200px) {
+    .standard-products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 640px) {
+    .standard-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    /*
+     * The flash bar carries a badge, a countdown and a "view all" button on
+     * one unwrappable line. On a phone there is room for about half of that:
+     * the seconds box was cut off by the card edge and the button was crushed
+     * to a 30px sliver of stacked letters. Each part gets its own line here.
+     */
+    .flash-sale-header-bar {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .flash-header-left-box {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .flash-sale-header-bar .btn {
+        flex-shrink: 0;
+    }
+
+    /* 40px of padding either side is 80 of the 358 a phone has. */
+    .showrooms-content-left {
+        padding: 24px 20px;
+    }
+
     .service-trust-grid {
         grid-template-columns: 1fr;
     }

@@ -179,8 +179,14 @@
  * borrows the row's shape.
  */
 .header-tool-bell .notif-trigger {
-    width: auto;
-    height: auto;
+    /*
+     * The border and box go, because the tool row draws its own; the size
+     * stays. `width: auto` collapsed this to the 18px icon inside it — the
+     * smallest thing in the header, on a row where every neighbour is
+     * finger-sized.
+     */
+    width: 36px;
+    height: 36px;
     background: none;
     border: 0;
     color: inherit;

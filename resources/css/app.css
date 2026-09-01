@@ -2015,6 +2015,12 @@ textarea.has-error:focus,
     letter-spacing: 0.5px;
     color: var(--gray-400);
     margin-bottom: 4px;
+    /* Two columns of cards on a phone leaves about 137px for this, and
+       "ROBINS COMPUTER" wants 145 — it was being cut off mid-letter at the
+       card edge rather than shortened. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .product-title {
@@ -2359,6 +2365,10 @@ textarea.admin-form-input {
 .password-toggle-btn {
     position: absolute;
     right: 12px;
+    /* Big enough to hit on a phone. The icon stays the size it was; this is
+       the area around it. */
+    min-width: 36px;
+    min-height: 36px;
     background: none;
     border: none;
     color: var(--gray-400);

@@ -48,6 +48,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* Two dates and the word between them, on one line at 326px. */
+    flex-wrap: wrap;
     font-size: 13px;
     color: var(--gray-400);
 }

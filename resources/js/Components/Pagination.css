@@ -39,6 +39,26 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    /*
+     * Seven page slots plus both arrows come to 378px, which is 20 more than
+     * a phone has — "next" was cut in half by the edge of the screen. It
+     * wraps rather than spilling, and the rule below usually saves it from
+     * having to.
+     */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+@media (max-width: 480px) {
+    .pagination-btns {
+        gap: 4px;
+    }
+
+    /* The box keeps its 34px, so the target stays thumb-sized; only the air
+       around the digits goes. */
+    .pagination-btn {
+        padding: 0 6px;
+    }
 }
 
 .pagination-btn {

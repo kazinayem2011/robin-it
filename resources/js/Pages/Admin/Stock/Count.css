@@ -32,11 +32,27 @@
     cursor: pointer;
 }
 
+/*
+ * Branch, search, scan and Save is one control more than a narrow card can
+ * hold: the four together need 741px and a portrait tablet has 656, so they
+ * ran off the right-hand edge. Every other header in the admin gets by
+ * without this because none of them carries four.
+ */
+.count-sheet-actions {
+    flex-wrap: wrap;
+}
+
 .count-sheet {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--bg-surface);
     overflow: hidden;
+    /*
+     * The count table is 448px wide and a phone gives it 278. `overflow:
+     * hidden` is here to keep the corners rounded, and it was also quietly
+     * cutting off the Counted column — the one column the screen exists for.
+     */
+    overflow-x: auto;
 }
 
 .count-table .count-num {

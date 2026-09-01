@@ -295,6 +295,10 @@
     align-items: center;
     gap: 6px;
     transition: color var(--transition-fast);
+    /* "Add to Wishlist" and "Add to Compare" sit under the buy button and
+       came out 16px tall — the two easiest things to miss on the page a
+       shopper spends longest on. */
+    min-height: 32px;
 }
 
 .btn-text:hover {

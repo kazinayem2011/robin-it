@@ -377,6 +377,9 @@
 .dash-kpi-icon {
     width: 44px;
     height: 44px;
+    /* Two tiles to a phone row is 142px each; without this the icon gave up
+       9px to the label beside it and drew itself as a squashed oval. */
+    flex-shrink: 0;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -403,6 +406,8 @@
 .dash-kpi-info {
     display: flex;
     flex-direction: column;
+    /* Lets the label wrap instead of pushing the icon out of shape. */
+    min-width: 0;
 }
 
 .dash-kpi-info span {

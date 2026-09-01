@@ -188,7 +188,7 @@ export default function StockCount({
                         </span>
                     </div>
 
-                    <div className="admin-header-actions">
+                    <div className="admin-header-actions count-sheet-actions">
                         {branch ? (
                             <span className="count-branch-fixed">{branch}</span>
                         ) : (
