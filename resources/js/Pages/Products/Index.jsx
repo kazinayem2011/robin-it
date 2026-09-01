@@ -20,7 +20,6 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
 import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
-import { scrollBehavior } from '../../utils/scroll';
 import { ArrowUpDown } from 'lucide-react';
 import './Index.css';
 
@@ -215,44 +214,6 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
             window.history.replaceState(window.history.state, '', next);
         }
     }, [page, sort, filterKey, activeFilters, defaultSort]);
-
-    /*
-     * A changed result set starts at the top of the grid. Without this the
-     * viewport stayed where the pagination bar had been, which on a shorter
-     * last page left the shopper looking at the footer.
-     *
-     * Filters and sorting count as much as paging does, and used not to: this
-     * watched `page` alone, so it fired only when narrowing happened to move
-     * you off a later page. Tick a brand while on page one — the ordinary
-     * case — and the grid reloaded silently somewhere above or below wherever
-     * you were standing.
-     */
-    const isFirstRender = useRef(true);
-
-    useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
-
-            return;
-        }
-
-        const results = document.getElementById('shop-results');
-
-        if (!results) return;
-
-        /*
-         * Only when the grid has been scrolled past. Somebody at the top of
-         * the page ticking a checkbox is already looking at the results;
-         * pulling the page down to hide the heading they just used would be a
-         * different annoyance from the one being fixed.
-         */
-        if (results.getBoundingClientRect().top < 0) {
-            results.scrollIntoView({
-                behavior: scrollBehavior(),
-                block: 'start',
-            });
-        }
-    }, [page, sort, filterKey]);
 
     /**
      * Narrowing always returns to page one: staying on page 4 of a result set
