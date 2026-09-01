@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Support\UploadedImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -47,9 +48,14 @@ class AvatarController extends Controller
         /** @var UploadedFile $file */
         $file = $validated['avatar'];
 
-        // Never reuse the client's filename: it can carry path traversal or a
-        // double extension such as "shell.php.jpg".
-        $name = Str::uuid()->toString().'.'.strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        // Named from the bytes, not from what the browser called the file.
+        // This endpoint is open to anyone with an account, so a stored name
+        // ending in .html was a page on the shop's own origin for the asking.
+        $name = UploadedImage::storageName($file, self::ALLOWED_MIMES);
+
+        if ($name === null) {
+            return back()->with('error', 'Pictures must be JPG, PNG or WebP.');
+        }
 
         $path = $file->storeAs(self::FOLDER, $name, 'public');
 

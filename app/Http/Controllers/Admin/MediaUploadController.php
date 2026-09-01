@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Support\UploadedImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -66,9 +67,17 @@ class MediaUploadController extends Controller
             return $refusal;
         }
 
-        // Never reuse the client's filename: it can carry path traversal or a
-        // double extension such as "shell.php.jpg".
-        $name = Str::uuid()->toString().'.'.strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        // Named from the bytes, not from what the browser called the file —
+        // see UploadedImage for what that was letting through.
+        $name = UploadedImage::storageName($file, self::ALLOWED_MIMES);
+
+        if ($name === null) {
+            return $this->errorResponse(
+                'Images must be JPG, PNG, WebP or GIF.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
 
         $path = $file->storeAs("uploads/{$folder}", $name, 'public');
 
