@@ -12,7 +12,6 @@ use App\Services\PcCompatibilityService;
 use App\Services\ProductGalleryService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
-use App\Support\RichText;
 use App\Support\SearchTerm;
 use App\Support\SlugFactory;
 use Illuminate\Http\JsonResponse;
@@ -159,8 +158,6 @@ class ProductController extends Controller
 
         $validated['slug'] = SlugFactory::unique(Product::class, $validated['name']);
         $validated['is_active'] = true;
-        $validated['description'] = RichText::clean($validated['description'] ?? null);
-        $validated['key_features'] = RichText::clean($validated['key_features'] ?? null);
 
         /*
          * Options are applied after the row exists, through the same service
@@ -215,14 +212,6 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $attributes = $request->productAttributes();
-
-        if (array_key_exists('description', $attributes)) {
-            $attributes['description'] = RichText::clean($attributes['description']);
-        }
-
-        if (array_key_exists('key_features', $attributes)) {
-            $attributes['key_features'] = RichText::clean($attributes['key_features']);
-        }
 
         $product->update($attributes);
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
@@ -78,6 +79,26 @@ class Product extends Model
      * The primary category: the one that gives this product its breadcrumb and
      * its canonical URL. Always also present in `categories()`.
      */
+    /**
+     * The two rich-text columns, stored cleaned.
+     *
+     * Both reach the product page through dangerouslySetInnerHTML. The admin
+     * controller cleaned them and nothing else did, so the rule held only for
+     * as long as every future write went through that one method — an import,
+     * a console command or a second endpoint would have stored whatever it was
+     * given. Here it cannot be gone around: what is in the column is what is
+     * safe to render.
+     */
+    public function setDescriptionAttribute(?string $value): void
+    {
+        $this->attributes['description'] = $value === null ? null : RichText::clean($value);
+    }
+
+    public function setKeyFeaturesAttribute(?string $value): void
+    {
+        $this->attributes['key_features'] = $value === null ? null : RichText::clean($value);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
