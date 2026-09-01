@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
-import EmptyState from '../../Components/EmptyState';
-import Pagination from '../../Components/Pagination';
+import DataTable from '../../Components/DataTable';
+import Modal from '../../Components/Modal';
 import FormInput from '../../Components/FormInput';
 import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
@@ -37,21 +37,31 @@ export default function AdminProductQuestions({
     counts = {},
 }) {
     const [busyId, setBusyId] = useState(null);
-    // Keyed by question id: several can be part-typed at once, and a single
-    // shared draft would put one person's answer under another's question.
-    const [drafts, setDrafts] = useState({});
+    /*
+     * The question being answered, and what has been typed for it.
+     *
+     * One at a time, because the form is a modal: a textarea per row put a
+     * three-line box inside a table cell, which made every row two hundred
+     * pixels tall and left the send button hanging below its own cell.
+     */
+    const [answering, setAnswering] = useState(null);
+    const [draft, setDraft] = useState('');
 
-    const rows = questions.data ?? [];
+    const openAnswer = (question) => {
+        setAnswering(question);
+        setDraft(question.answer ?? '');
+    };
 
-    const draftFor = (q) => drafts[q.id] ?? q.answer ?? '';
+    const closeAnswer = () => {
+        setAnswering(null);
+        setDraft('');
+    };
 
-    const setDraft = (id, value) =>
-        setDrafts((prev) => ({ ...prev, [id]: value }));
+    const submitAnswer = async () => {
+        const question = answering;
+        const answer = draft.trim();
 
-    const submitAnswer = async (question) => {
-        const answer = draftFor(question).trim();
-
-        if (answer.length < 2) {
+        if (!question || answer.length < 2) {
             toast.error('Write an answer first.');
             return;
         }
@@ -69,11 +79,7 @@ export default function AdminProductQuestions({
                 'Answer saved and published to the product page.',
                 'Question answered',
             );
-            setDrafts((prev) => {
-                const next = { ...prev };
-                delete next[question.id];
-                return next;
-            });
+            closeAnswer();
             router.reload({ only: ['questions', 'counts'] });
         } catch (err) {
             toast.error(err?.message || 'Could not save that answer.');
@@ -127,6 +133,120 @@ export default function AdminProductQuestions({
         }
     };
 
+    const columns = [
+        {
+            key: 'product',
+            header: 'Product',
+            render: (q) => (
+                <div className="aq-product">
+                    <strong>{q.product?.name || 'Removed product'}</strong>
+                    {q.product?.slug && (
+                        <a
+                            href={`/products/${q.product.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            View page
+                            <ExternalLink size={11} />
+                        </a>
+                    )}
+                </div>
+            ),
+        },
+        {
+            key: 'question',
+            header: 'Question',
+            render: (q) => (
+                <div className="aq-cell">
+                    {/* Clamped to two lines: a long question would otherwise
+                        set the height of its whole row. The modal shows it
+                        in full. */}
+                    <p className="aq-text">{q.question}</p>
+                    <span className="aq-meta">
+                        <UserRound size={11} />
+                        {q.name}
+                        <span aria-hidden="true">·</span>
+                        {q.created_at?.slice(0, 10)}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: 'answer',
+            header: 'Answer',
+            render: (q) =>
+                q.answer ? (
+                    <div className="aq-cell">
+                        <p className="aq-text is-answer">
+                            <CheckCircle2 size={12} />
+                            {q.answer}
+                        </p>
+                        {q.answered_by_name && (
+                            <span className="aq-meta">
+                                by {q.answered_by_name}
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    <span className="aq-awaiting">Not answered yet</span>
+                ),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (q) => (
+                <span
+                    className={`badge ${q.is_published ? 'badge-active' : 'badge-expired'}`}
+                >
+                    {q.is_published ? 'Published' : 'Hidden'}
+                </span>
+            ),
+        },
+        {
+            key: 'actions',
+            header: 'Actions',
+            align: 'right',
+            render: (q) => (
+                <div className="aq-actions">
+                    <Button
+                        size="sm"
+                        icon={Send}
+                        disabled={busyId === q.id}
+                        onClick={() => openAnswer(q)}
+                    >
+                        {q.answer ? 'Edit' : 'Answer'}
+                    </Button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        title={
+                            q.is_published
+                                ? 'Hide from the product page'
+                                : 'Publish to the product page'
+                        }
+                        disabled={busyId === q.id}
+                        onClick={() => setPublished(q, !q.is_published)}
+                    >
+                        {q.is_published ? (
+                            <EyeOff size={14} />
+                        ) : (
+                            <Eye size={14} />
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn aq-delete"
+                        title="Delete"
+                        disabled={busyId === q.id}
+                        onClick={() => remove(q)}
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <AdminLayout
             title="Product Questions"
@@ -164,173 +284,77 @@ export default function AdminProductQuestions({
                     ))}
                 </div>
 
-                {rows.length === 0 ? (
-                    <div className="admin-card">
-                        <EmptyState
-                            icon={MessageSquare}
-                            title="Nothing waiting"
-                            description="Questions shoppers ask on a product page arrive here for an answer."
-                        />
-                    </div>
-                ) : (
+                <DataTable
+                    title="Questions"
+                    subtitle={`${counts.unanswered ?? 0} awaiting an answer · ${counts.unpublished ?? 0} not published`}
+                    columns={columns}
+                    data={questions}
+                    emptyIcon={MessageSquare}
+                    emptyTitle="Nothing waiting"
+                    emptyDescription="Questions shoppers ask on a product page arrive here for an answer."
+                />
+            </div>
+
+            {/* The answer form, with room to write in. */}
+            <Modal
+                isOpen={Boolean(answering)}
+                onClose={closeAnswer}
+                title={
+                    answering?.answer
+                        ? 'Edit the answer'
+                        : 'Answer this question'
+                }
+                maxWidth="620px"
+            >
+                {answering && (
                     <>
-                        <p className="admin-field-hint aq-summary">
-                            {counts.unanswered ?? 0} awaiting an answer ·{' '}
-                            {counts.unpublished ?? 0} not published
+                        <div className="aq-modal-product">
+                            {answering.product?.name || 'Removed product'}
+                        </div>
+
+                        <blockquote className="aq-modal-question">
+                            {answering.question}
+                        </blockquote>
+
+                        <p className="aq-modal-asker">
+                            <UserRound size={12} />
+                            {answering.name}
+                            <span aria-hidden="true">·</span>
+                            {answering.created_at?.slice(0, 10)}
                         </p>
 
-                        <ul className="aq-list">
-                            {rows.map((q) => {
-                                const busy = busyId === q.id;
-                                const draft = draftFor(q);
-
-                                return (
-                                    <li key={q.id} className="aq-card">
-                                        <header className="aq-head">
-                                            <div className="aq-product">
-                                                <strong>
-                                                    {q.product?.name ||
-                                                        'Removed product'}
-                                                </strong>
-                                                {q.product?.slug && (
-                                                    <a
-                                                        href={`/products/${q.product.slug}`}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                    >
-                                                        View page
-                                                        <ExternalLink
-                                                            size={11}
-                                                        />
-                                                    </a>
-                                                )}
-                                            </div>
-
-                                            <span
-                                                className={`badge ${q.is_published ? 'badge-active' : 'badge-expired'}`}
-                                            >
-                                                {q.is_published
-                                                    ? 'Published'
-                                                    : 'Not published'}
-                                            </span>
-                                        </header>
-
-                                        <blockquote className="aq-question">
-                                            {q.question}
-                                        </blockquote>
-
-                                        <p className="aq-asker">
-                                            <UserRound size={12} />
-                                            {q.name}
-                                            <span aria-hidden="true">·</span>
-                                            {q.created_at?.slice(0, 10)}
-                                        </p>
-
-                                        {q.answer && !drafts[q.id] && (
-                                            <div className="aq-answered">
-                                                <CheckCircle2 size={13} />
-                                                <div>
-                                                    <p>{q.answer}</p>
-                                                    {q.answered_by_name && (
-                                                        <small>
-                                                            Answered by{' '}
-                                                            {q.answered_by_name}
-                                                        </small>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="aq-reply">
-                                            <FormInput
-                                                id={`answer-${q.id}`}
-                                                name={`answer-${q.id}`}
-                                                type="textarea"
-                                                rows={3}
-                                                label={
-                                                    q.answer
-                                                        ? 'Edit the answer'
-                                                        : 'Your answer'
-                                                }
-                                                value={draft}
-                                                onChange={(e) =>
-                                                    setDraft(
-                                                        q.id,
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Answer from the showroom…"
-                                                helperText="Answering publishes it on the product page."
-                                            />
-
-                                            <div className="aq-actions">
-                                                <Button
-                                                    icon={Send}
-                                                    loading={busy}
-                                                    disabled={
-                                                        busy ||
-                                                        draft.trim().length < 2
-                                                    }
-                                                    onClick={() =>
-                                                        submitAnswer(q)
-                                                    }
-                                                >
-                                                    {q.answer
-                                                        ? 'Update answer'
-                                                        : 'Answer & publish'}
-                                                </Button>
-
-                                                <Button
-                                                    variant="secondary"
-                                                    disabled={busy}
-                                                    icon={
-                                                        q.is_published
-                                                            ? EyeOff
-                                                            : Eye
-                                                    }
-                                                    onClick={() =>
-                                                        setPublished(
-                                                            q,
-                                                            !q.is_published,
-                                                        )
-                                                    }
-                                                >
-                                                    {q.is_published
-                                                        ? 'Hide'
-                                                        : 'Publish'}
-                                                </Button>
-
-                                                {/* Quiet, and on the far side:
-                                                    deleting is the one thing
-                                                    here that cannot be undone,
-                                                    so it should not sit under
-                                                    the thumb of somebody
-                                                    working through a queue. */}
-                                                <button
-                                                    type="button"
-                                                    className="aq-delete"
-                                                    disabled={busy}
-                                                    onClick={() => remove(q)}
-                                                >
-                                                    <Trash2 size={13} />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-
-                        <Pagination
-                            links={questions.links}
-                            from={questions.from}
-                            to={questions.to}
-                            total={questions.total}
+                        <FormInput
+                            id="question-answer"
+                            name="question-answer"
+                            type="textarea"
+                            rows={5}
+                            label="Your answer"
+                            required
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value)}
+                            placeholder="Answer from the showroom…"
+                            helperText="Saving publishes it on the product page."
+                            autoFocus
                         />
+
+                        <div className="admin-modal-actions">
+                            <Button variant="secondary" onClick={closeAnswer}>
+                                Cancel
+                            </Button>
+                            <Button
+                                icon={Send}
+                                loading={busyId === answering.id}
+                                disabled={draft.trim().length < 2}
+                                onClick={submitAnswer}
+                            >
+                                {answering.answer
+                                    ? 'Update answer'
+                                    : 'Answer & publish'}
+                            </Button>
+                        </div>
                     </>
                 )}
-            </div>
+            </Modal>
         </AdminLayout>
     );
 }
