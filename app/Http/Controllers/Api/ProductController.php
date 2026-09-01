@@ -30,6 +30,16 @@ class ProductController extends Controller
             'brand_id' => 'nullable|integer',
             'brand_ids' => 'nullable|array|max:40',
             'brand_ids.*' => 'integer',
+            /*
+             * The shelf's own questions, keyed by attribute slug:
+             * ['wi-fi-standard' => ['wi-fi-6', 'wi-fi-7']]. Capped so a
+             * hand-written address cannot ask for a thousand joins, and the
+             * values are matched against the table, so anything invented is
+             * simply a filter nothing carries.
+             */
+            'attributes' => 'nullable|array|max:20',
+            'attributes.*' => 'array|max:40',
+            'attributes.*.*' => 'string|max:80',
             'is_featured' => 'nullable|boolean',
             'in_stock' => 'nullable|boolean',
             'on_sale' => 'nullable|boolean',
@@ -115,6 +125,16 @@ class ProductController extends Controller
             'brand_id' => 'nullable|integer',
             'brand_ids' => 'nullable|array|max:40',
             'brand_ids.*' => 'integer',
+            /*
+             * The shelf's own questions, keyed by attribute slug:
+             * ['wi-fi-standard' => ['wi-fi-6', 'wi-fi-7']]. Capped so a
+             * hand-written address cannot ask for a thousand joins, and the
+             * values are matched against the table, so anything invented is
+             * simply a filter nothing carries.
+             */
+            'attributes' => 'nullable|array|max:20',
+            'attributes.*' => 'array|max:40',
+            'attributes.*.*' => 'string|max:80',
             'in_stock' => 'nullable|boolean',
             'on_sale' => 'nullable|boolean',
             'search' => 'nullable|string|max:120',

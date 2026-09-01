@@ -438,6 +438,43 @@
     flex-shrink: 0;
 }
 
+/* The label takes the room; the tally is pushed to the right-hand edge. */
+.plp-filter-check span {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/*
+ * How many products an option leaves. Shown so a shopper can see a dead end
+ * before clicking into one — an option that would return three results reads
+ * very differently from one that returns forty.
+ */
+.plp-filter-count {
+    flex-shrink: 0;
+    font-style: normal;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-500);
+}
+
+/* How many answers are ticked, on a group that is collapsed. */
+.plp-filter-tally {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    margin-left: 7px;
+    padding: 0 5px;
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    color: var(--white);
+    font-style: normal;
+    font-size: 10.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Collapsed behind a button on narrow screens, where a permanent sidebar
    would push the grid down the page. */
 .plp-filters-toggle {

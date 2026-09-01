@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -157,6 +159,29 @@ class ProductService
             $query->discounted();
         }
 
+        /*
+         * The shelf's own questions: Wi-Fi Standard, Panel Type, RAM.
+         *
+         * AND between attributes, OR within one — the rule every shop's
+         * sidebar follows. Ticking Wi-Fi 6 and Wi-Fi 7 widens the list;
+         * ticking Wi-Fi 6 and then Dual Band narrows it. A single whereIn
+         * across both would quietly turn the second into a widening too.
+         */
+        if (! empty($filters['attributes'])) {
+            foreach ((array) $filters['attributes'] as $attributeSlug => $valueSlugs) {
+                $valueSlugs = array_filter((array) $valueSlugs);
+
+                if ($valueSlugs === []) {
+                    continue;
+                }
+
+                $query->whereHas('attributeValues', function ($q) use ($attributeSlug, $valueSlugs) {
+                    $q->whereIn('attribute_values.slug', $valueSlugs)
+                        ->whereHas('attribute', fn ($a) => $a->where('slug', $attributeSlug));
+                });
+            }
+        }
+
         // Keyword Search
         if (! empty($filters['search'])) {
             $search = SearchTerm::escape(trim($filters['search']));
@@ -230,6 +255,7 @@ class ProductService
             'min_price' => (float) ($bounds->min_price ?? 0),
             'max_price' => (float) ($bounds->max_price ?? 0),
             'brands' => $brands,
+            'attributes' => $this->attributeFacets($scoped),
             'categories' => $this->categoryFacet($scoped),
             'total' => (clone $query)->reorder()->count(),
             'category' => $category ? [
@@ -858,6 +884,113 @@ class ProductService
                 'reason' => $entry['reason'],
             ]]
         ))->values();
+    }
+
+    /**
+     * The questions this shelf asks, and how many products give each answer.
+     *
+     * Only the attributes attached to the category being browsed, or to any of
+     * its ancestors — a shelf inherits the questions of the aisle it sits in,
+     * so Router's are declared once and every router brand below it gets them.
+     *
+     * Each attribute is counted with its own choices lifted, the same way the
+     * brand list is: narrowing the Wi-Fi Standard options to the standard
+     * already chosen would leave nothing else to tick.
+     *
+     * @return array<int, array{name:string, slug:string, unit:?string, input_type:string, values:array}>
+     */
+    private function attributeFacets(array $filters): array
+    {
+        $categoryIds = $this->attributeCategoryIds($filters);
+
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        $attributes = Attribute::query()
+            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
+            ->with('values')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        if ($attributes->isEmpty()) {
+            return [];
+        }
+
+        $chosen = (array) ($filters['attributes'] ?? []);
+        $facets = [];
+
+        foreach ($attributes as $attribute) {
+            // This attribute's own choices lifted; every other one still applied.
+            $scope = $filters;
+            $scope['attributes'] = array_diff_key($chosen, [$attribute->slug => true]);
+
+            $counts = $this->baseFilteredQuery($scope)
+                ->reorder()
+                ->join('attribute_value_product as avp', 'avp.product_id', '=', 'products.id')
+                ->whereIn('avp.attribute_value_id', $attribute->values->pluck('id'))
+                ->selectRaw('avp.attribute_value_id as value_id, COUNT(DISTINCT products.id) as total')
+                ->groupBy('avp.attribute_value_id')
+                ->pluck('total', 'value_id');
+
+            $values = $attribute->values
+                // An answer nothing gives is not a filter, it is a dead end.
+                ->filter(fn (AttributeValue $v) => ($counts[$v->id] ?? 0) > 0)
+                ->map(fn (AttributeValue $v) => [
+                    'label' => $v->label,
+                    'slug' => $v->slug,
+                    'count' => (int) $counts[$v->id],
+                ])
+                ->values()
+                ->all();
+
+            if ($values === []) {
+                continue;
+            }
+
+            $facets[] = [
+                'name' => $attribute->name,
+                'slug' => $attribute->slug,
+                'unit' => $attribute->unit,
+                'input_type' => $attribute->input_type,
+                'values' => $values,
+            ];
+        }
+
+        return $facets;
+    }
+
+    /**
+     * The category being browsed and everything above it, so an attribute
+     * declared on Router reaches Router > TP-Link.
+     *
+     * @return array<int, int>
+     */
+    private function attributeCategoryIds(array $filters): array
+    {
+        $category = null;
+
+        if (! empty($filters['category_slug'])) {
+            $category = Category::where('slug', $filters['category_slug'])->first(['id', 'parent_id']);
+        } elseif (! empty($filters['category_id'])) {
+            $category = Category::find((int) $filters['category_id'], ['id', 'parent_id']);
+        }
+
+        if (! $category) {
+            return [];
+        }
+
+        $ids = [];
+
+        while ($category) {
+            $ids[] = (int) $category->id;
+            $category = $category->parent_id
+                ? Category::find($category->parent_id, ['id', 'parent_id'])
+                : null;
+        }
+
+        return $ids;
     }
 
     /**

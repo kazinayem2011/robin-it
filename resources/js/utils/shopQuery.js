@@ -28,6 +28,26 @@ const SORTS = [
 
 const DEFAULT_SORT = 'latest';
 
+/*
+ * The shelf's own questions, as their own parameters.
+ *
+ * `?wi-fi-standard=wi-fi-6,wi-fi-7` rather than the numeric `?filter=837` the
+ * shops that do this usually produce: a search engine can read it, and so can
+ * whoever is sent the link. Anything else in the URL is left alone, so a
+ * parameter this listing does not know about cannot be mistaken for a filter.
+ */
+const RESERVED = new Set([
+    'min_price',
+    'max_price',
+    'brand_ids',
+    'in_stock',
+    'on_sale',
+    'sort',
+    'page',
+    'q',
+    'search',
+]);
+
 const toPositiveInt = (raw) => {
     const n = Number.parseInt(raw, 10);
 
@@ -63,6 +83,21 @@ export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
     if (params.get('in_stock') === '1') filters.in_stock = true;
     if (params.get('on_sale') === '1') filters.on_sale = true;
 
+    const attributes = {};
+
+    for (const [key, raw] of params.entries()) {
+        if (RESERVED.has(key)) continue;
+
+        const picked = raw
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean);
+
+        if (picked.length) attributes[key] = picked;
+    }
+
+    if (Object.keys(attributes).length) filters.attributes = attributes;
+
     const sort = params.get('sort');
 
     return {
@@ -95,6 +130,15 @@ export const buildShopSearch = ({
 
     if (filters.in_stock) params.set('in_stock', '1');
     if (filters.on_sale) params.set('on_sale', '1');
+
+    // Sorted, so the same selection always produces the same address — two
+    // shoppers ticking the same boxes in a different order share one link.
+    Object.entries(filters.attributes ?? {})
+        .filter(([, picked]) => Array.isArray(picked) && picked.length)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .forEach(([slug, picked]) => {
+            params.set(slug, [...picked].sort().join(','));
+        });
 
     // Only worth naming when it differs from what this listing does anyway.
     if (sort && sort !== defaultSort) params.set('sort', sort);

@@ -189,6 +189,17 @@ class Product extends Model
      * last — and insertion order is not that: editing one row would otherwise
      * move it to the bottom of the product page.
      */
+    /**
+     * The curated answers this product gives to its shelf's questions.
+     *
+     * Distinct from specifications(), which is the spec sheet: prose for
+     * somebody reading one product. These are values a filter can count.
+     */
+    public function attributeValues()
+    {
+        return $this->belongsToMany(AttributeValue::class, 'attribute_value_product');
+    }
+
     public function specifications()
     {
         return $this->hasMany(ProductSpecification::class)->inDisplayOrder();

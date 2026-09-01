@@ -149,3 +149,84 @@ describe('buildShopSearch', () => {
         expect(buildShopSearch()).toBe('');
     });
 });
+
+/**
+ * The shelf's own questions in the address.
+ *
+ * `?wi-fi-standard=wi-fi-6,wi-fi-7` rather than the numeric `?filter=837` the
+ * shops that do this usually produce — readable to a search engine, and to
+ * whoever is sent the link.
+ */
+describe('attribute filters in the URL', () => {
+    it('reads one attribute with several values', () => {
+        const { filters } = parseShopQuery('?wi-fi-standard=wi-fi-6,wi-fi-7');
+
+        expect(filters.attributes).toEqual({
+            'wi-fi-standard': ['wi-fi-6', 'wi-fi-7'],
+        });
+    });
+
+    it('reads several attributes at once', () => {
+        const { filters } = parseShopQuery(
+            '?wi-fi-standard=wi-fi-6&number-of-bands=dual-band',
+        );
+
+        expect(filters.attributes).toEqual({
+            'wi-fi-standard': ['wi-fi-6'],
+            'number-of-bands': ['dual-band'],
+        });
+    });
+
+    it('never mistakes a known parameter for an attribute', () => {
+        const { filters } = parseShopQuery('?in_stock=1&sort=name_asc&page=3');
+
+        expect(filters.attributes).toBeUndefined();
+    });
+
+    it('writes them back', () => {
+        const search = buildShopSearch({
+            filters: { attributes: { 'wi-fi-standard': ['wi-fi-6'] } },
+        });
+
+        expect(search).toBe('?wi-fi-standard=wi-fi-6');
+    });
+
+    it('round-trips', () => {
+        const filters = {
+            attributes: {
+                'wi-fi-standard': ['wi-fi-6', 'wi-fi-7'],
+                'number-of-bands': ['dual-band'],
+            },
+            in_stock: true,
+        };
+
+        const { filters: back } = parseShopQuery(buildShopSearch({ filters }));
+
+        expect(back.attributes).toEqual(filters.attributes);
+        expect(back.in_stock).toBe(true);
+    });
+
+    /* Two shoppers ticking the same boxes in a different order share one link. */
+    it('orders the address the same however it was ticked', () => {
+        const one = buildShopSearch({
+            filters: {
+                attributes: { zulu: ['b', 'a'], alpha: ['x'] },
+            },
+        });
+        const two = buildShopSearch({
+            filters: {
+                attributes: { alpha: ['x'], zulu: ['a', 'b'] },
+            },
+        });
+
+        expect(one).toBe(two);
+    });
+
+    it('leaves an emptied attribute out entirely', () => {
+        expect(
+            buildShopSearch({
+                filters: { attributes: { 'wi-fi-standard': [] } },
+            }),
+        ).toBe('');
+    });
+});

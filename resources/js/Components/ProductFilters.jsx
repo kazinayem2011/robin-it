@@ -163,6 +163,42 @@ export default function ProductFilters({
         return () => clearTimeout(timer);
     }, [minPrice, maxPrice, debounceMs]);
 
+    /*
+     * The questions this shelf asks — Wi-Fi Standard, Panel Type, RAM. They
+     * come from the server with the category, so the sidebar draws whatever a
+     * category declares and needs no code when a new one is defined.
+     */
+    const attributeFacets = useMemo(
+        () => facets?.attributes ?? [],
+        [facets?.attributes],
+    );
+
+    const chosenAttributes = useMemo(
+        () => value.attributes ?? {},
+        [value.attributes],
+    );
+
+    const toggleAttribute = (attributeSlug, valueSlug) => {
+        const current = chosenAttributes[attributeSlug] ?? [];
+        const next = current.includes(valueSlug)
+            ? current.filter((v) => v !== valueSlug)
+            : [...current, valueSlug];
+
+        const merged = { ...chosenAttributes };
+
+        if (next.length) {
+            merged[attributeSlug] = next;
+        } else {
+            // Dropped rather than left empty, so the address does not collect
+            // a trail of questions nobody answered.
+            delete merged[attributeSlug];
+        }
+
+        onChange?.({
+            attributes: Object.keys(merged).length ? merged : undefined,
+        });
+    };
+
     const toggleBrand = (id) => {
         const next = selectedBrands.includes(id)
             ? selectedBrands.filter((b) => b !== id)
@@ -176,7 +212,11 @@ export default function ProductFilters({
         (value.max_price ? 1 : 0) +
         selectedBrands.length +
         (value.in_stock ? 1 : 0) +
-        (value.on_sale ? 1 : 0);
+        (value.on_sale ? 1 : 0) +
+        Object.values(chosenAttributes).reduce(
+            (n, picked) => n + picked.length,
+            0,
+        );
 
     const clearAll = () => {
         setMinPrice('');
@@ -188,6 +228,7 @@ export default function ProductFilters({
             brand_ids: undefined,
             in_stock: undefined,
             on_sale: undefined,
+            attributes: undefined,
         });
     };
 
@@ -442,6 +483,73 @@ export default function ProductFilters({
                         )}
                     </section>
                 )}
+
+                {/*
+                 * Whatever the shelf declares, in the order it declares it.
+                 * A value nothing matches is not offered — the server drops
+                 * it — so every box here leads somewhere.
+                 */}
+                {!loading &&
+                    attributeFacets.map((attribute) => {
+                        const picked = chosenAttributes[attribute.slug] ?? [];
+                        const section = `attr:${attribute.slug}`;
+
+                        return (
+                            <section
+                                className="plp-filter-group"
+                                key={attribute.slug}
+                            >
+                                <button
+                                    type="button"
+                                    className="plp-filter-legend"
+                                    aria-expanded={!collapsed[section]}
+                                    onClick={() => toggleSection(section)}
+                                >
+                                    <h4>
+                                        {attribute.name}
+                                        {picked.length > 0 && (
+                                            <em className="plp-filter-tally">
+                                                {picked.length}
+                                            </em>
+                                        )}
+                                    </h4>
+                                    <ChevronDown size={15} />
+                                </button>
+
+                                {!collapsed[section] && (
+                                    <div className="plp-filter-options plp-filter-scroll">
+                                        {attribute.values.map((option) => (
+                                            <label
+                                                key={option.slug}
+                                                className="plp-filter-check"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="custom-checkbox-input"
+                                                    checked={picked.includes(
+                                                        option.slug,
+                                                    )}
+                                                    onChange={() =>
+                                                        toggleAttribute(
+                                                            attribute.slug,
+                                                            option.slug,
+                                                        )
+                                                    }
+                                                />
+                                                <span>{option.label}</span>
+                                                {/* How many it leaves, so a
+                                                    shopper can see a dead end
+                                                    before clicking into it. */}
+                                                <em className="plp-filter-count">
+                                                    {option.count}
+                                                </em>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        );
+                    })}
 
                 <section className="plp-filter-group">
                     <button

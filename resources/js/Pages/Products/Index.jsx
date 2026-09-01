@@ -91,7 +91,14 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                     ([, v]) =>
                         v !== undefined &&
                         v !== '' &&
-                        !(Array.isArray(v) && v.length === 0),
+                        !(Array.isArray(v) && v.length === 0) &&
+                        // The attribute map, once its last box is unticked.
+                        !(
+                            v !== null &&
+                            typeof v === 'object' &&
+                            !Array.isArray(v) &&
+                            Object.keys(v).length === 0
+                        ),
                 ),
             ),
         [filters],
