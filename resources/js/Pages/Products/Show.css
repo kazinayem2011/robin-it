@@ -1106,72 +1106,168 @@
 }
 
 /* Questions */
+.pdp-questions-heading {
+    margin: 0 0 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
 .pdp-question-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 20px;
+    margin: 0 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 .pdp-question {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    padding: 16px 18px;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+}
+
+/*
+ * Marker in its own column. Inline, a question that wrapped ran back under
+ * the badge and the second line started further left than the first.
+ */
+.pdp-qa-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.pdp-qa-row.is-answer {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.pdp-qa-body {
+    min-width: 0;
 }
 
 .pdp-q-marker,
 .pdp-a-marker {
     display: inline-grid;
     place-items: center;
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
+    width: 22px;
+    height: 22px;
     border-radius: var(--radius-full);
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--white);
 }
 
 .pdp-q-marker {
-    background: var(--primary-color, #c1121f);
+    background: var(--primary);
 }
 
 .pdp-a-marker {
-    background: #2e6b4f;
+    background: var(--success);
 }
 
 .pdp-question-text {
-    font-weight: 600;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
+    font-weight: 700;
+    color: var(--dark-900);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 .pdp-answer-text {
-    margin: 0 0 6px;
-}
-
-.pdp-answer-pending {
-    margin: 0 0 6px;
-    font-size: 0.85rem;
-    opacity: 0.65;
+    margin: 0 0 4px;
+    color: var(--dark-700);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 .pdp-question-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 0.75rem;
-    opacity: 0.6;
+    color: var(--gray-500);
+}
+
+/* A pill, not faded text: it says the shop has seen the question. */
+.pdp-answer-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 12px 0 0 32px;
+    padding: 3px 10px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: var(--bg-surface);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-full);
 }
 
 .pdp-questions-empty {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 18px;
-    opacity: 0.7;
+    gap: 14px;
+    padding: 22px 20px;
+    margin-bottom: 24px;
+    color: var(--gray-500);
+    background: var(--bg-surface-subtle);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
 }
 
+.pdp-questions-empty strong {
+    display: block;
+    color: var(--dark-900);
+    margin-bottom: 2px;
+}
+
+.pdp-questions-empty p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+/*
+ * A card rather than a stray form. It used to be capped at 560px inside a
+ * container twice that, so the fields sat in the left half with nothing
+ * beside them and the section looked half-rendered.
+ */
 .pdp-question-form {
-    max-width: 560px;
+    padding: 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    max-width: 720px;
 }
 
 .pdp-question-form h4 {
-    margin: 0 0 10px;
+    margin: 0 0 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.pdp-asking-as {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    font-size: 0.84rem;
+    color: var(--gray-600);
+}
+
+.pdp-asking-as strong {
+    color: var(--dark-900);
+}
+
+@media (max-width: 640px) {
+    .pdp-answer-pending {
+        margin-left: 0;
+    }
 }
 
 /* Bulk pricing tiers. */

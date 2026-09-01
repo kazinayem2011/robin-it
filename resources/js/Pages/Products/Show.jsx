@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import {
     productService,
@@ -64,6 +64,10 @@ const groupSpecifications = (specifications) => {
 };
 
 export default function ProductDetails(props) {
+    /* Shared by Inertia on every page, so a signed-in shopper is not asked
+       for a name the shop already has. */
+    const { auth } = usePage().props;
+
     const productSlug =
         props.productSlug ||
         props.slug ||
@@ -454,12 +458,19 @@ export default function ProductDetails(props) {
                             <h1 className="pdp-title">{product.name}</h1>
 
                             <div className="pdp-meta">
-                                <div className="meta-item">
-                                    <span className="meta-label">Brand:</span>
-                                    <span className="meta-value">
-                                        {product.brand?.name || 'N/A'}
-                                    </span>
-                                </div>
+                                {/* Only when there is one. "Brand: N/A" is a
+                                    row that answers nothing and pushes the two
+                                    that do along. */}
+                                {product.brand?.name && (
+                                    <div className="meta-item">
+                                        <span className="meta-label">
+                                            Brand:
+                                        </span>
+                                        <span className="meta-value">
+                                            {product.brand.name}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="meta-item">
                                     <span className="meta-label">Status:</span>
                                     <span className="meta-value stock-status">
@@ -905,6 +916,7 @@ export default function ProductDetails(props) {
                                     slug={productSlug}
                                     questions={questions}
                                     onAsked={loadQuestions}
+                                    askingAs={auth?.user?.name || ''}
                                 />
                             )}
 

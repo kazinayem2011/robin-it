@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from './Button';
 import FormInput from './FormInput';
 import { toast } from './Toast';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Clock, UserRound } from 'lucide-react';
 
 /**
  * Questions a shopper asks before buying.
@@ -11,11 +11,23 @@ import { MessageSquare } from 'lucide-react';
  * already decided. A question is the thing standing between someone and a
  * purchase, so the form is short and does not require an account — asking for
  * one here loses the question and the sale with it.
+ *
+ * A signed-in shopper is not asked their name: the server already falls back to
+ * the account, and a field labelled "Optional if you are signed in" left it to
+ * the reader to work out whether they were.
  */
-export default function ProductQuestions({ slug, questions = [], onAsked }) {
+export default function ProductQuestions({
+    slug,
+    questions = [],
+    onAsked,
+    askingAs = '',
+}) {
     const [question, setQuestion] = useState('');
     const [name, setName] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    const signedIn = Boolean(askingAs);
+    const tooShort = question.trim().length > 0 && question.trim().length < 10;
 
     const submit = async (e) => {
         e.preventDefault();
@@ -67,64 +79,122 @@ export default function ProductQuestions({ slug, questions = [], onAsked }) {
     return (
         <div className="pdp-questions">
             {questions.length > 0 ? (
-                <ul className="pdp-question-list">
-                    {questions.map((q) => (
-                        <li key={q.id} className="pdp-question">
-                            <p className="pdp-question-text">
-                                <span className="pdp-q-marker">Q</span>
-                                {q.question}
-                            </p>
-                            {q.answer ? (
-                                <p className="pdp-answer-text">
-                                    <span className="pdp-a-marker">A</span>
-                                    {q.answer}
-                                </p>
-                            ) : (
-                                /* Shown rather than hidden: "asked, not yet
-                                   answered" is information a shopper can act
-                                   on, and hiding it makes the shop look as
-                                   though nobody has ever asked anything. */
-                                <p className="pdp-answer-pending">
-                                    Awaiting an answer from our team.
-                                </p>
-                            )}
-                            <span className="pdp-question-meta">
-                                {q.name} · {q.asked_at}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
+                <>
+                    <h4 className="pdp-questions-heading">
+                        {questions.length} question
+                        {questions.length === 1 ? '' : 's'} about this product
+                    </h4>
+
+                    <ul className="pdp-question-list">
+                        {questions.map((q) => (
+                            <li key={q.id} className="pdp-question">
+                                {/* Marker in its own column: inline, a wrapped
+                                    question ran back underneath the badge and
+                                    the two lines did not line up. */}
+                                <div className="pdp-qa-row">
+                                    <span className="pdp-q-marker">Q</span>
+                                    <div className="pdp-qa-body">
+                                        <p className="pdp-question-text">
+                                            {q.question}
+                                        </p>
+                                        <span className="pdp-question-meta">
+                                            <UserRound size={12} />
+                                            {q.name}
+                                            <span aria-hidden="true">·</span>
+                                            {q.asked_at}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {q.answer ? (
+                                    <div className="pdp-qa-row is-answer">
+                                        <span className="pdp-a-marker">A</span>
+                                        <div className="pdp-qa-body">
+                                            <p className="pdp-answer-text">
+                                                {q.answer}
+                                            </p>
+                                            <span className="pdp-question-meta">
+                                                Robin&apos;s Computer
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Shown rather than hidden: "asked, not yet
+                                       answered" is information a shopper can
+                                       act on, and hiding it makes the shop look
+                                       as though nobody has ever asked. */
+                                    <span className="pdp-answer-pending">
+                                        <Clock size={12} />
+                                        Awaiting an answer from our team
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </>
             ) : (
                 <div className="pdp-questions-empty">
-                    <MessageSquare size={22} />
-                    <p>
-                        No questions yet. Ask the first one — we answer from the
-                        showroom.
-                    </p>
+                    <MessageSquare size={26} />
+                    <div>
+                        <strong>No questions yet</strong>
+                        <p>
+                            Ask the first one — we answer from the showroom,
+                            usually the same day.
+                        </p>
+                    </div>
                 </div>
             )}
 
             <form className="pdp-question-form" onSubmit={submit}>
                 <h4>Ask about this product</h4>
+
                 <FormInput
                     id="question"
                     name="question"
                     type="textarea"
                     rows={3}
                     label="Your question"
+                    required
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="Does this take a second SSD?"
+                    error={
+                        tooShort
+                            ? 'A few more words, so we can answer it properly.'
+                            : ''
+                    }
+                    helperText={
+                        tooShort
+                            ? ''
+                            : 'Answered by the showroom, then published here with the answer.'
+                    }
                 />
-                <FormInput
-                    id="asker_name"
-                    name="asker_name"
-                    label="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Optional if you are signed in"
-                />
-                <Button type="submit" loading={submitting}>
+
+                {signedIn ? (
+                    /* Named rather than asked for. The server uses the account
+                       name when none is sent, so a field here only invites
+                       somebody to contradict it. */
+                    <p className="pdp-asking-as">
+                        <UserRound size={14} />
+                        Asking as <strong>{askingAs}</strong>
+                    </p>
+                ) : (
+                    <FormInput
+                        id="asker_name"
+                        name="asker_name"
+                        label="Your name"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="So we know who we are answering"
+                    />
+                )}
+
+                <Button
+                    type="submit"
+                    loading={submitting}
+                    disabled={question.trim().length < 10}
+                >
                     Send question
                 </Button>
             </form>
