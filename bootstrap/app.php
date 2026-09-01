@@ -5,6 +5,7 @@ use App\Exceptions\StorefrontException;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\EnsureAbility;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecurityHeaders;
 use App\Support\ApiEnvelope;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -27,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Global rather than per-group: an API response and a printed invoice
+        // want these as much as a storefront page does.
+        $middleware->append(SecurityHeaders::class);
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

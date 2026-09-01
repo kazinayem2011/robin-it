@@ -1,3 +1,14 @@
+# Sent by Apache rather than by PHP, so that everything under /storage — the
+# uploaded product shots and avatars, served straight off the disk without the
+# framework ever running — is covered too. App responses get the same three
+# from App\Http\Middleware\SecurityHeaders.
+<IfModule mod_headers.c>
+    # Honour the declared Content-Type instead of guessing from content.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
