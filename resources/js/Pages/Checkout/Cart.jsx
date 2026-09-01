@@ -4,6 +4,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService } from '../../services';
 
 import ProductImage from '../../Components/ProductImage';
+import ProductSuggestions from '../../Components/ProductSuggestions';
 import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
@@ -18,6 +19,10 @@ export default function Cart() {
     const [loading, setLoading] = useState(true);
     const [busyItemId, setBusyItemId] = useState(null);
     const [notice, setNotice] = useState(null);
+    /* Worked out from what is in the cart. Fetched once on load rather than
+       with every quantity change — the row need not twitch while somebody
+       adjusts a number. */
+    const [suggestions, setSuggestions] = useState([]);
 
     const fetchCart = async () => {
         setLoading(true);
@@ -31,6 +36,16 @@ export default function Cart() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        cartService
+            .getSuggestions()
+            .then(setSuggestions)
+            .catch(() => {
+                /* A suggestion nobody asked for is not worth an error over
+                   the cart somebody is trying to check out. */
+            });
+    }, []);
 
     useEffect(() => {
         fetchCart();
@@ -289,6 +304,12 @@ export default function Cart() {
                         </div>
                     </div>
                 </div>
+
+                <ProductSuggestions
+                    products={suggestions}
+                    title="You may also like"
+                    className="cart-suggestions"
+                />
             </div>
         </>
     );

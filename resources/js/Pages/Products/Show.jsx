@@ -8,6 +8,7 @@ import {
     reviewService,
 } from '@/services';
 import BackInStockForm from '../../Components/BackInStockForm';
+import ProductSuggestions from '../../Components/ProductSuggestions';
 import BranchAvailability from '../../Components/BranchAvailability';
 import Button from '../../Components/Button';
 import CountdownTimer from '../../Components/CountdownTimer';
@@ -830,34 +831,7 @@ export default function ProductDetails(props) {
                      * the shop's twelve hundred products — so a shopper
                      * looking at a mouse was never offered another mouse.
                      */}
-                    {similar.length > 0 && (
-                        <section className="pdp-related">
-                            <h3>Similar Products</h3>
-                            <div className="pdp-related-grid">
-                                {similar.map((item) => (
-                                    <Link
-                                        key={item.id}
-                                        href={`/products/${item.slug}`}
-                                        className="pdp-related-item"
-                                    >
-                                        <ProductImage
-                                            product={item}
-                                            className="pdp-related-img"
-                                        />
-                                        <span className="pdp-related-name">
-                                            {item.name}
-                                        </span>
-                                        <span className="pdp-related-price">
-                                            {formatBdt(
-                                                item.effective_price ??
-                                                    item.price,
-                                            )}
-                                        </span>
-                                    </Link>
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                    <ProductSuggestions products={similar} />
 
                     {/* The question people actually type into Google, answered
                         on the page rather than left to a snippet generator.

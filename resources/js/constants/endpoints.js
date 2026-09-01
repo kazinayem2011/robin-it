@@ -45,6 +45,8 @@ export const API_ENDPOINTS = {
     CART: {
         BASE: '/cart',
         ITEM: (itemId) => `/cart/${itemId}`,
+        /* What else to show, worked out from what is already in the cart. */
+        SUGGESTIONS: '/cart/suggestions',
     },
 
     // Checkout & Order API

@@ -511,6 +511,35 @@ class ProductService
     }
 
     /**
+     * What else to show somebody with a cart in front of them.
+     *
+     * Built from every line in the cart rather than just the last one added,
+     * because a cart of a keyboard and a mouse says more about what somebody
+     * is doing than either alone. Anything already in the cart is dropped —
+     * suggesting what they have chosen is the one thing that reads as broken.
+     *
+     * @param  array<int, int>  $productIds  what is already in the cart
+     * @return Collection<int, Product>
+     */
+    public function similarToCart(array $productIds, int $limit = 4): Collection
+    {
+        $inCart = array_values(array_unique(array_filter($productIds)));
+
+        if ($inCart === []) {
+            return collect();
+        }
+
+        $products = Product::active()->whereKey($inCart)->get();
+
+        return $products
+            ->flatMap(fn (Product $product) => $this->similarProducts($product, $limit))
+            ->unique('id')
+            ->reject(fn (Product $suggestion) => in_array($suggestion->id, $inCart, true))
+            ->take($limit)
+            ->values();
+    }
+
+    /**
      * The products nearest this one in price, on the given shelves.
      *
      * @param  array<int, int>  $categoryIds

@@ -156,6 +156,7 @@ Route::middleware('throttle:submissions')->group(function () {
 */
 Route::middleware(['web', 'throttle:api'])->group(function () {
     Route::get(ApiEndpoints::CART, [CartController::class, 'index']);
+    Route::get(ApiEndpoints::CART_SUGGESTIONS, [CartController::class, 'suggestions']);
     Route::post(ApiEndpoints::CART, [CartController::class, 'store']);
     Route::patch(ApiEndpoints::CART_ITEM, [CartController::class, 'update']);
     Route::delete(ApiEndpoints::CART_ITEM, [CartController::class, 'destroy']);

@@ -59,6 +59,9 @@ class ApiEndpoints
 
     public const CART_ITEM = 'cart/{itemId}';
 
+    /* What else to show somebody with a cart in front of them. */
+    public const CART_SUGGESTIONS = 'cart/suggestions';
+
     // Checkout
     public const CHECKOUT = 'checkout';
 

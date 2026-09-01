@@ -4,6 +4,7 @@ namespace Tests\Feature\Catalog;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -178,5 +179,74 @@ class SimilarProductsTest extends TestCase
 
         $this->assertTrue($loaded->relationLoaded('similarProducts'));
         $this->assertSame('MX Anywhere', $loaded->similarProducts->first()->name);
+    }
+
+    // ─────────────────────────────────────────────────────── from a whole cart
+
+    /**
+     * Built from every line, not just the last thing added: a cart holding a
+     * keyboard and a mouse says more about what somebody is doing than either
+     * alone.
+     */
+    public function test_a_cart_draws_on_all_of_its_lines(): void
+    {
+        $mice = $this->category('Mouse');
+        $boards = $this->category('Keyboard');
+
+        $mouse = $this->product($mice, 'MX Master', 12000);
+        $board = $this->product($boards, 'MX Keys', 14000);
+        $this->product($mice, 'MX Anywhere', 11000);
+        $this->product($boards, 'K380', 5000);
+
+        $names = $this->service()->similarToCart([$mouse->id, $board->id])->pluck('name');
+
+        $this->assertContains('MX Anywhere', $names);
+        $this->assertContains('K380', $names);
+    }
+
+    /** Suggesting what somebody has already chosen is the one thing that reads as broken. */
+    public function test_it_never_suggests_what_is_already_in_the_cart(): void
+    {
+        $mice = $this->category('Mouse');
+        $mouse = $this->product($mice, 'MX Master', 12000);
+        $other = $this->product($mice, 'MX Anywhere', 11000);
+
+        $names = $this->service()->similarToCart([$mouse->id, $other->id])->pluck('name');
+
+        $this->assertNotContains('MX Master', $names);
+        $this->assertNotContains('MX Anywhere', $names);
+    }
+
+    public function test_an_empty_cart_suggests_nothing(): void
+    {
+        $this->assertCount(0, $this->service()->similarToCart([]));
+    }
+
+    public function test_the_cart_endpoint_returns_them(): void
+    {
+        $mice = $this->category('Mouse');
+        $mouse = $this->product($mice, 'MX Master', 12000);
+        $this->product($mice, 'MX Anywhere', 11000);
+
+        // Signed in, so the cart is keyed to the account rather than to a
+        // session id that each test request would otherwise regenerate.
+        $shopper = User::factory()->create();
+
+        $this->actingAs($shopper)
+            ->postJson('/api/cart', ['product_id' => $mouse->id, 'quantity' => 1])
+            ->assertOk();
+
+        $data = $this->actingAs($shopper)
+            ->getJson('/api/cart/suggestions')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertCount(1, $data);
+        $this->assertSame('MX Anywhere', $data[0]['name']);
+    }
+
+    public function test_the_endpoint_is_empty_for_a_cart_that_does_not_exist(): void
+    {
+        $this->getJson('/api/cart/suggestions')->assertOk()->assertJsonPath('data', []);
     }
 }

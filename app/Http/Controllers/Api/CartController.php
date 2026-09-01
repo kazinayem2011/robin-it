@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Http\Controllers\Controller;
 use App\Services\CartService;
+use App\Services\ProductService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,27 @@ class CartController extends Controller
             // so the cart page can warn before the customer reaches checkout.
             'issues' => $cart->exists ? $this->cartService->findUnavailableItems($cart) : [],
         ], 'Cart fetched successfully');
+    }
+
+    /**
+     * What else to show, given what is already in the cart.
+     *
+     * Its own request rather than part of the cart payload: the cart is
+     * fetched on every quantity change, and working out suggestions on each of
+     * those is a query nobody asked for.
+     */
+    public function suggestions(Request $request, ProductService $products): JsonResponse
+    {
+        $cart = $this->cartService->findCart(Auth::id(), $request->session()->getId());
+
+        $ids = $cart
+            ? $cart->items()->pluck('product_id')->all()
+            : [];
+
+        return $this->successResponse(
+            $products->similarToCart($ids)->values(),
+            'Suggestions fetched successfully'
+        );
     }
 
     public function store(Request $request): JsonResponse

@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance';
 import { API_ENDPOINTS } from '../constants/endpoints';
+import { listFrom } from '../utils/apiPayload';
 
 /**
  * Cart API Service (SSOT)
@@ -10,6 +11,21 @@ export const cartService = {
      * Get active cart with items, server-calculated totals, and any stock issues.
      * @returns {Promise<{id: ?number, items: Array, totals: Object, issues: Array}>}
      */
+    /**
+     * Other products worth a look, given what is in the cart.
+     *
+     * Its own call rather than part of getCart: the cart is refetched on every
+     * quantity change, and recomputing suggestions on each of those is work
+     * nobody asked for.
+     */
+    async getSuggestions() {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.CART.SUGGESTIONS,
+        );
+
+        return listFrom(response);
+    },
+
     async getCart() {
         const response = await axiosInstance.get(API_ENDPOINTS.CART.BASE);
         const payload = response?.data || {};
