@@ -375,6 +375,18 @@ class ApiEndpoints
 
     public const ADMIN_MEDIA = 'media';
 
+    /* The bell. Not admin-only: a customer is told about their own order. */
+    public const NOTIFICATIONS = 'notifications';
+
+    /*
+     * `notification`, not `id`: route keys named id are constrained to digits
+     * application-wide, and a notification's key is a UUID — so this 404'd
+     * before it reached the controller.
+     */
+    public const NOTIFICATION_READ = 'notifications/{notification}/read';
+
+    public const NOTIFICATIONS_READ_ALL = 'notifications/read-all';
+
     public const ADMIN_SETTINGS_TEST_EMAIL = 'settings/test-email';
 
     public const ADMIN_QUESTIONS = 'questions';

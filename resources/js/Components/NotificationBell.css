@@ -1,0 +1,191 @@
+/* The bell, in the admin topbar and the customer's account header. */
+
+.notif {
+    position: relative;
+}
+
+.notif-trigger {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    color: var(--gray-600);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.notif-trigger:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Sits on the rim rather than inside, so a two-digit count does not squash
+   the bell it belongs to. */
+.notif-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: grid;
+    place-items: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--white);
+    background: var(--primary);
+    border: 2px solid var(--bg-surface);
+    border-radius: var(--radius-full);
+    font-variant-numeric: tabular-nums;
+}
+
+.notif-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg, 0 12px 32px rgba(15, 23, 42, 0.14));
+    z-index: 60;
+    overflow: hidden;
+}
+
+.notif-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.86rem;
+    color: var(--dark-900);
+}
+
+.notif-head button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.notif-empty {
+    margin: 0;
+    padding: 26px 14px;
+    text-align: center;
+    font-size: 0.84rem;
+    color: var(--gray-400);
+}
+
+.notif-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    /* Ten or so, then it scrolls: a panel taller than the window has its last
+       item off the bottom of the screen with no way to reach it. */
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.notif-item:hover {
+    background: var(--bg-surface-subtle);
+}
+
+/* Unread reads as unread without colour alone carrying it: the dot is a
+   second signal for anyone who cannot tell the two backgrounds apart. */
+.notif-item.is-unread {
+    background: var(--primary-light);
+}
+
+.notif-item.is-unread::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    width: 6px;
+    height: 6px;
+    margin-top: 6px;
+    background: var(--primary);
+    border-radius: var(--radius-full);
+}
+
+.notif-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    color: var(--gray-600);
+    background: var(--bg-surface-subtle);
+    border-radius: var(--radius-sm);
+}
+
+.notif-item.is-unread .notif-icon {
+    color: var(--primary);
+}
+
+.notif-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.notif-text strong {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dark-900);
+    overflow-wrap: anywhere;
+}
+
+.notif-text span {
+    font-size: 0.78rem;
+    color: var(--gray-600);
+    overflow-wrap: anywhere;
+}
+
+.notif-text em {
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--gray-400);
+}
+
+/*
+ * In the storefront header the bell sits in the tool row beside Compare and
+ * Wishlist, which stack an icon over a label — so it loses its own border and
+ * borrows the row's shape.
+ */
+.header-tool-bell .notif-trigger {
+    width: auto;
+    height: auto;
+    background: none;
+    border: 0;
+    color: inherit;
+}
+
+.header-tool-bell .notif-trigger:hover {
+    border: 0;
+}

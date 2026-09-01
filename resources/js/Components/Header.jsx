@@ -13,6 +13,7 @@ import {
     LayoutDashboard,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+import NotificationBell from './NotificationBell';
 import { SearchBar } from './SearchBar';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
@@ -287,6 +288,16 @@ export const Header = () => {
                             </div>
                             <span className="tool-label">Compare</span>
                         </Link>
+
+                        {/* A shopper's own bell: how they hear that their
+                            order has shipped without refreshing the page. Only
+                            when signed in — there is nothing to tell a guest. */}
+                        {auth.user && (
+                            <div className="header-tool-btn header-tool-bell">
+                                <NotificationBell userId={auth.user.id} />
+                                <span className="tool-label">Alerts</span>
+                            </div>
+                        )}
 
                         {/* Wishlist */}
                         <Link

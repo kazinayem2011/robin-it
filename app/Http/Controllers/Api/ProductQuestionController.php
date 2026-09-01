@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductQuestion;
+use App\Services\ShopNotifier;
 use App\Support\ApiEnvelope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,6 +72,10 @@ class ProductQuestionController extends Controller
             // default is "not yet".
             'is_published' => false,
         ]);
+
+        // Held for moderation, so it appears nowhere until somebody looks —
+        // which is exactly why somebody has to be told it arrived.
+        app(ShopNotifier::class)->questionAsked($question->load('product:id,name'));
 
         return ApiEnvelope::success(
             ['id' => $question->id],

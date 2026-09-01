@@ -34,6 +34,7 @@ class OrderService
         protected CartService $cartService,
         protected StockService $stock,
         protected CourierDriverRegistry $couriers,
+        protected ShopNotifier $notifier,
     ) {}
 
     /**
@@ -157,6 +158,10 @@ class OrderService
         // Outside the transaction: a slow mail server must never hold table locks
         // open, and must never roll back an order that was otherwise successful.
         $this->sendConfirmationEmail($order, $addressData);
+
+        // Same reasoning: whoever handles orders is told, and a notification
+        // that fails to send must not undo the sale.
+        $this->notifier->orderPlaced($order);
 
         return $order;
     }
@@ -528,6 +533,10 @@ class OrderService
             $fresh->update(['status' => $status]);
             $order->setRawAttributes($fresh->getAttributes(), true);
         });
+
+        // After the commit: the customer is told about a status that is
+        // actually saved, never one a failed transaction rolled back.
+        $this->notifier->orderStatusChanged($order, $status);
 
         return $order;
     }

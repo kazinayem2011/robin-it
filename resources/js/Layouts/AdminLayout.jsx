@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import ToastContainer from '../Components/Toast';
+import NotificationBell from '../Components/NotificationBell';
 import { useFlashToasts } from '../hooks';
 import {
     LayoutDashboard,
@@ -482,6 +483,8 @@ export default function AdminLayout({
                     </div>
 
                     <div className="admin-topbar-actions">
+                        <NotificationBell userId={user.id} />
+
                         <Link
                             href={ROUTES.HOME}
                             className="admin-live-store-btn"

@@ -46,6 +46,7 @@ use App\Http\Controllers\Api\StockNotificationController;
 use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\WarrantyController;
 use App\Http\Controllers\ComparisonController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Http\Request;
@@ -197,6 +198,15 @@ Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
     Route::get(ApiEndpoints::WISHLIST, [WishlistController::class, 'index']);
     Route::post(ApiEndpoints::WISHLIST, [WishlistController::class, 'store']);
     Route::delete(ApiEndpoints::WISHLIST_ITEM, [WishlistController::class, 'destroy']);
+
+    /*
+     * The bell. Signed-in rather than admin-only: a customer is told about
+     * their own order, and the rows are scoped by the relation, so there is no
+     * id here that could name somebody else's.
+     */
+    Route::get(ApiEndpoints::NOTIFICATIONS, [NotificationController::class, 'index']);
+    Route::post(ApiEndpoints::NOTIFICATION_READ, [NotificationController::class, 'markRead']);
+    Route::post(ApiEndpoints::NOTIFICATIONS_READ_ALL, [NotificationController::class, 'markAllRead']);
 });
 
 /*

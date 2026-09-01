@@ -15,9 +15,11 @@ use Illuminate\Support\Facades\Mail;
  */
 class ContactService
 {
+    public function __construct(protected ShopNotifier $notifier) {}
+
     public function record(array $data, ?string $ip = null): ContactMessage
     {
-        return ContactMessage::create([
+        $message = ContactMessage::create([
             'name' => $data['name'],
             'email' => mb_strtolower(trim($data['email'])),
             'phone' => $data['phone'] ?? null,
@@ -26,6 +28,10 @@ class ContactService
             'status' => ContactMessage::STATUS_NEW,
             'ip_address' => $ip,
         ]);
+
+        $this->notifier->contactMessage($message->id, $message->name, $message->subject);
+
+        return $message;
     }
 
     /**

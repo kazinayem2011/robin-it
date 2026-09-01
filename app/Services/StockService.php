@@ -158,6 +158,22 @@ class StockService
                 NotifyBackInStock::dispatch($product->id, $variant?->id)->afterCommit();
             }
 
+            /*
+             * Falling to the reorder level tells whoever buys stock, once.
+             *
+             * On the crossing, not on the state: a shelf that sits below its
+             * level all week would otherwise send a message every time
+             * anything moved, and a bell that rings hourly is a bell nobody
+             * reads. After commit, so nobody is told about a movement that
+             * then rolled back.
+             */
+            $level = $product->reorderLevel();
+
+            if ($level > 0 && $current > $level && $balanceAfter <= $level) {
+                DB::afterCommit(fn () => app(ShopNotifier::class)
+                    ->stockRanLow($product, $variant, $balanceAfter));
+            }
+
             return $movement;
         });
     }

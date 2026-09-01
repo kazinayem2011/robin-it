@@ -53,6 +53,12 @@ export const API_ENDPOINTS = {
     },
 
     // Wishlist API
+    /* The bell. Signed-in rather than admin-only: a customer is told about
+       their own order. */
+    NOTIFICATIONS: '/notifications',
+    NOTIFICATION_READ: (id) => `/notifications/${id}/read`,
+    NOTIFICATIONS_READ_ALL: '/notifications/read-all',
+
     WISHLIST: {
         BASE: '/wishlist',
         ITEM: (productId) => `/wishlist/${productId}`,
