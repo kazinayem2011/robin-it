@@ -53,14 +53,16 @@ abstract class ShopNotification extends Notification
         return new BroadcastMessage($this->payload($notifiable));
     }
 
-    /**
-     * The event name the browser listens for.
+    /*
+     * broadcastType() is left alone on purpose.
      *
-     * Fixed rather than per-class, so one handler in the front end covers
-     * every kind and a new notification needs no client change.
+     * It does not name the event — broadcastAs() does that, and for a
+     * notification it is always BroadcastNotificationCreated, which is what
+     * Echo's .notification() helper subscribes to. broadcastType() only sets
+     * the `type` field inside the payload, and the class name Laravel puts
+     * there by default says more than a fixed string of ours would.
+     *
+     * The bell reads `kind` from the payload below rather than either, so it
+     * does not depend on this at all.
      */
-    public function broadcastType(): string
-    {
-        return 'shop.notification';
-    }
 }

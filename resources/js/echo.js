@@ -35,6 +35,11 @@ export const initEcho = () => {
         authEndpoint: '/broadcasting/auth',
     });
 
+    // On window as well, the way Laravel's own scaffolding does it: without a
+    // handle there is no way to ask, from a console or a test, whether the
+    // socket is connected and what it is listening to.
+    window.Echo = echo;
+
     return echo;
 };
 
