@@ -852,7 +852,19 @@ export default function ProductDetails(props) {
                         <p>
                             The latest price of {product.name} in Bangladesh is{' '}
                             {formatBdt(
-                                product.effective_price ?? product.price,
+                                selectedVariant?.effective_price ??
+                                    product.effective_price ??
+                                    product.price,
+                            )}
+                            {selectedVariant && (
+                                <>
+                                    {' '}
+                                    for the{' '}
+                                    {Object.values(
+                                        selectedVariant.options || {},
+                                    ).join(' / ')}{' '}
+                                    option
+                                </>
                             )}
                             . You can buy it at the best price from our website
                             or visit any of our showrooms.
@@ -938,9 +950,16 @@ export default function ProductDetails(props) {
                                         </table>
                                     ) : (
                                         <p>
-                                            Standard official specifications
-                                            apply. Contact support for
-                                            datasheet.
+                                            {/* Says what is true. It used to
+                                                read "Standard official
+                                                specifications apply", which
+                                                claims a spec sheet exists and
+                                                sends the reader looking for
+                                                one that was never entered. */}
+                                            We have not published a
+                                            specification sheet for this product
+                                            yet. Ask us and we will confirm any
+                                            detail you need.
                                         </p>
                                     )}
                                 </div>
