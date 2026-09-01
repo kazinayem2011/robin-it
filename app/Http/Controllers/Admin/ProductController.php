@@ -8,7 +8,6 @@ use App\Http\Requests\Admin\ProductUpdateRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\StockMovement;
 use App\Services\PcCompatibilityService;
 use App\Services\ProductGalleryService;
 use App\Services\ProductVariantService;
@@ -177,28 +176,10 @@ class ProductController extends Controller
 
         unset($validated['has_variants'], $validated['variant_attributes'], $validated['variants']);
 
-        /*
-         * A product sold in options has no shelf of its own — its stock is the
-         * sum of the options'. So the opening quantity is read per option and
-         * the product row starts at nothing.
-         */
-        $opening = $wantsVariants
-            ? 0
-            : (int) ($validated['stock_quantity'] ?? 0);
-
-        if ($wantsVariants) {
-            $validated['stock_quantity'] = 0;
-        }
+        // Every product starts empty. Stock arrives under Purchasing.
+        $validated['stock_quantity'] = 0;
 
         $product = Product::create($validated);
-
-        // The one moment an absolute quantity is legitimate: stock already on the
-        // shelf when the product is first entered. It is written to the ledger as
-        // an opening balance, and from here on only purchases, sales, returns and
-        // audited adjustments can move it.
-        if ($opening > 0) {
-            $this->stock->recordOpeningBalance($product, null, $opening, $request->user()?->id);
-        }
 
         /*
          * The options editor is on the create form, so a shopkeeper entering a
@@ -280,11 +261,9 @@ class ProductController extends Controller
     /**
      * Turn a freshly created product into one sold in options.
      *
-     * The switch happens while the row is still pristine, because the service
-     * refuses to restructure a product that has stock recorded against it —
-     * and an opening balance written first is exactly that. So the options are
-     * made empty, and each one's opening quantity is posted afterwards as its
-     * own balance, the same shape a single product's opening stock takes.
+     * Made empty, always. The options describe what the product is sold as;
+     * what is on the shelf against each of them arrives under Purchasing, from
+     * a supplier or from the opening-balance source.
      *
      * @param  array<int, string>  $attributes
      * @param  array<int, array<string, mixed>>  $definitions
@@ -297,20 +276,6 @@ class ProductController extends Controller
         );
 
         $this->variants->convertToVariants($product, $attributes, $empty, $userId);
-
-        $variants = $product->refresh()->variants()->orderBy('position')->get();
-
-        foreach (array_values($definitions) as $position => $definition) {
-            $opening = (int) ($definition['opening_stock'] ?? 0);
-            $variant = $variants[$position] ?? null;
-
-            if ($opening > 0 && $variant) {
-                $this->stock->record($product, $variant, $opening, StockMovement::OPENING, [
-                    'note' => 'Stock already on the shelf when this option was entered',
-                    'user_id' => $userId,
-                ]);
-            }
-        }
     }
 
     /**

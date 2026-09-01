@@ -223,6 +223,16 @@ class StockService
         return DB::transaction(function () use ($header, $lines, $userId) {
             $supplier = $this->resolveSupplier($header);
 
+            /*
+             * An opening balance is received like a delivery — same screen,
+             * same paperwork, same cost against it — but it is not a purchase
+             * and must not read as one in the ledger, in the supplier's
+             * history or in what the shop spent this month.
+             */
+            $movementType = $supplier?->isOpeningBalance()
+                ? StockMovement::OPENING
+                : StockMovement::PURCHASE;
+
             $receipt = StockReceipt::create([
                 'reference' => $header['reference'] ?? $this->generateReceiptReference(),
                 'supplier_id' => $supplier?->id,
@@ -255,7 +265,7 @@ class StockService
                     'unit_cost' => $unitCost,
                 ]);
 
-                $this->record($product, $variant, $quantity, StockMovement::PURCHASE, [
+                $this->record($product, $variant, $quantity, $movementType, [
                     'reference' => $receipt,
                     'store_id' => $header['store_id'] ?? null,
                     'unit_cost' => $unitCost,

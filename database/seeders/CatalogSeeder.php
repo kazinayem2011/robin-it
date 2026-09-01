@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductSpecification;
+use App\Models\Supplier;
 use App\Services\StockService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;
@@ -666,14 +667,15 @@ class CatalogSeeder extends Seeder
             'is_primary' => true,
         ]);
 
-        app(StockService::class)->recordOpeningBalance(
-            $product,
-            null,
-            (int) $data['stock'],
-            null,
-            'Seeded opening balance — replace with a real delivery',
-        );
-        $product->update(['stock_quantity' => (int) $data['stock']]);
+        // Received from the opening-balance source, the same way a real
+        // shop enters what it already holds — one path in, and a receipt
+        // behind every unit.
+        if ((int) $data['stock'] > 0) {
+            app(StockService::class)->receive(
+                ['supplier_id' => Supplier::openingBalance()->id, 'note' => 'Seeded shelf — replace with a real delivery'],
+                [['product_id' => $product->id, 'quantity' => (int) $data['stock']]],
+            );
+        }
 
         foreach ($data['specs'] as $name => $value) {
             ProductSpecification::create([

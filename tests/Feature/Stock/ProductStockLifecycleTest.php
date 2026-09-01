@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Services\OrderService;
 use App\Services\StockService;
@@ -81,6 +82,21 @@ class ProductStockLifecycleTest extends TestCase
         }
     }
 
+    /** Stock the shop already held, received the way it now must be. */
+    private function openWith(Product $product, int $qty, ?int $variantId = null): void
+    {
+        $line = ['product_id' => $product->id, 'quantity' => $qty];
+
+        if ($variantId) {
+            $line['product_variant_id'] = $variantId;
+        }
+
+        $this->stock()->receive(
+            ['supplier_id' => Supplier::openingBalance()->id],
+            [$line],
+        );
+    }
+
     private function placeOrder(User $customer, Product $product, int $qty, ?int $variantId = null): Order
     {
         $payload = ['product_id' => $product->id, 'quantity' => $qty];
@@ -106,17 +122,20 @@ class ProductStockLifecycleTest extends TestCase
         $admin = $this->admin();
         $customer = User::factory()->create();
 
-        // 1. entered with five already on the shelf
+        // 1. entered — describing the product puts nothing on a shelf
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'Corsair Vengeance 16GB',
             'category_id' => $this->category()->id,
             'price' => 10500,
-            'stock_quantity' => 5,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'Corsair Vengeance 16GB');
-        $this->assertSame(5, $product->stock_quantity);
-        $this->assertReconciles($product, 'creation with an opening balance');
+        $this->assertSame(0, $product->stock_quantity);
+
+        // ...and the five already on the shelf are received from the opening source
+        $this->openWith($product, 5);
+        $this->assertSame(5, $product->fresh()->stock_quantity);
+        $this->assertReconciles($product, 'an opening balance received');
 
         // 2. the product is edited — a price change must not touch the shelf
         $this->actingAs($admin)
@@ -189,9 +208,9 @@ class ProductStockLifecycleTest extends TestCase
             'variant_attributes' => ['Capacity'],
             'variants' => [
                 ['name' => '16GB', 'options' => ['Capacity' => '16GB'], 'sku' => 'CV-16',
-                    'price' => 10500, 'is_active' => true, 'opening_stock' => 4],
+                    'price' => 10500, 'is_active' => true],
                 ['name' => '32GB', 'options' => ['Capacity' => '32GB'], 'sku' => 'CV-32',
-                    'price' => 18900, 'is_active' => true, 'opening_stock' => 2],
+                    'price' => 18900, 'is_active' => true],
             ],
         ])->assertCreated();
 
@@ -199,9 +218,16 @@ class ProductStockLifecycleTest extends TestCase
         $small = ProductVariant::firstWhere('sku', 'CV-16');
         $large = ProductVariant::firstWhere('sku', 'CV-32');
 
+        $this->assertSame(0, $product->stock_quantity);
+
+        // what is already held, received against each option
+        $this->openWith($product, 4, $small->id);
+        $this->openWith($product, 2, $large->id);
+        $product->refresh();
+
         $this->assertSame(6, $product->stock_quantity);
-        $this->assertSame([4, 2], [$small->stock_quantity, $large->stock_quantity]);
-        $this->assertReconciles($product, 'creation with per-option opening balances');
+        $this->assertSame([4, 2], [$small->fresh()->stock_quantity, $large->fresh()->stock_quantity]);
+        $this->assertReconciles($product, 'opening balances received per option');
 
         // 2. editing the product leaves every option alone
         $this->actingAs($admin)
@@ -261,10 +287,11 @@ class ProductStockLifecycleTest extends TestCase
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'Kingston Fury', 'category_id' => $this->category()->id,
-            'price' => 8000, 'stock_quantity' => 2,
+            'price' => 8000,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'Kingston Fury');
+        $this->openWith($product, 2);
 
         foreach ([3, 4] as $qty) {
             $this->stock()->receive([], [['product_id' => $product->id, 'quantity' => $qty]], $admin->id);
@@ -281,10 +308,11 @@ class ProductStockLifecycleTest extends TestCase
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'TeamGroup Elite', 'category_id' => $this->category()->id,
-            'price' => 6000, 'stock_quantity' => 1,
+            'price' => 6000,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'TeamGroup Elite');
+        $this->openWith($product, 1);
 
         $this->expectException(StorefrontException::class);
         $this->stock()->adjust($product, null, -5, 'damaged', 'Dropped the box', $admin->id);
@@ -306,10 +334,11 @@ class ProductStockLifecycleTest extends TestCase
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'Crucial Pro 32GB', 'category_id' => $this->category()->id,
-            'price' => 15000, 'stock_quantity' => 5,
+            'price' => 15000,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'Crucial Pro 32GB');
+        $this->openWith($product, 5);
 
         // Counted the shelf: there are eight, not five.
         $this->actingAs($admin)->postJson('/api/admin/stock/adjust', [
@@ -359,10 +388,11 @@ class ProductStockLifecycleTest extends TestCase
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'ADATA XPG 16GB', 'category_id' => $this->category()->id,
-            'price' => 9000, 'stock_quantity' => 5,
+            'price' => 9000,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'ADATA XPG 16GB');
+        $this->openWith($product, 5);
 
         $this->actingAs($admin)->postJson('/api/admin/stock/count', [
             'store_id' => $store->id,
@@ -374,19 +404,20 @@ class ProductStockLifecycleTest extends TestCase
     }
 
     /**
-     * An opening balance is written once. Re-entering the same product is a
-     * second product, so there is no path that quietly doubles a shelf.
+     * An edit does not repeat a delivery. The opening balance was received
+     * once, and saving the product afterwards leaves it at that.
      */
-    public function test_the_opening_balance_is_written_once(): void
+    public function test_an_edit_does_not_repeat_the_opening_delivery(): void
     {
         $admin = $this->admin();
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
             'name' => 'Patriot Viper', 'category_id' => $this->category()->id,
-            'price' => 7000, 'stock_quantity' => 4,
+            'price' => 7000,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'Patriot Viper');
+        $this->openWith($product, 4);
 
         $this->actingAs($admin)
             ->patchJson("/api/admin/products/{$product->id}", ['price' => 6800])

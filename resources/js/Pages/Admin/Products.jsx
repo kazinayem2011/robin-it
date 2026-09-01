@@ -37,18 +37,16 @@ import { ROUTES } from '@/constants/endpoints';
  * Shape the form values for the API.
  *
  * Blank numeric strings are dropped rather than sent as '', and `opening_stock`
- * is included only where the form actually offers it: splitting an existing
- * product's shelf across new options, or entering a product the shop already
- * holds. On an option that exists it is never sent — that stock moves through
- * deliveries, orders and recorded adjustments.
+ * is sent only while splitting an existing product's shelf across new options,
+ * where it allocates stock that is already there. No quantity is ever sent for
+ * a new product or an existing option: stock enters under Purchasing.
  */
 export const buildProductPayload = (values, editingProduct) => {
     const { variants, has_variants: hasVariants, ...rest } = values;
 
-    // The stock field only exists when creating; an edit must never carry one.
-    if (editingProduct) {
-        delete rest.stock_quantity;
-    }
+    // A quantity never leaves this form, creating or editing. Stock enters the
+    // shop under Purchasing and nowhere else.
+    delete rest.stock_quantity;
 
     // Not a stock value — the level at which to buy more — so it is editable
     // at any time.
@@ -165,12 +163,12 @@ export const buildProductPayload = (values, editingProduct) => {
             };
 
             /*
-             * Also on a new product, where the form offers the same field per
-             * option — a shop entering something it already has on the shelf.
-             * Sent only where it can be typed: leaving it out here while the
-             * input was on screen meant the quantity was taken and dropped.
+             * Only when splitting an existing product's shelf across new
+             * options. It is an allocation of stock that is already there —
+             * the numbers must sum to what is on hand — never a way to add
+             * any, which is what Purchasing is for.
              */
-            if (isConverting || !editingProduct) {
+            if (isConverting) {
                 line.opening_stock = Number(variant.opening_stock) || 0;
             }
 
@@ -210,7 +208,6 @@ export default function Products({
             brand_id: '',
             price: '',
             discount_price: '',
-            stock_quantity: 0,
             short_description: '',
             description: '',
             warranty_months: '',
@@ -342,7 +339,6 @@ export default function Products({
                 brand_id: '',
                 price: '',
                 discount_price: '',
-                stock_quantity: 0,
                 short_description: '',
                 description: '',
                 warranty_months: '',
@@ -969,12 +965,20 @@ export default function Products({
                             </>
                         )}
 
-                        {editingProduct ? (
-                            <div className="auth-form-group">
-                                <label className="auth-label">Stock</label>
-                                <div className="admin-stock-readonly">
-                                    <span className="admin-stock-readonly-qty">
-                                        {editingProduct.has_variants
+                        {/*
+                         * Stock is shown, never typed — on a new product as
+                         * much as an existing one. What is on the shelf
+                         * arrives under Purchasing: from a supplier, or from
+                         * the "Opening balance" source for goods the shop
+                         * already held. One way in is the only way the ledger
+                         * can be trusted.
+                         */}
+                        <div className="auth-form-group">
+                            <label className="auth-label">Stock</label>
+                            <div className="admin-stock-readonly">
+                                <span className="admin-stock-readonly-qty">
+                                    {editingProduct
+                                        ? editingProduct.has_variants
                                             ? `${editingProduct.stock_quantity} across ${
                                                   (
                                                       editingProduct.variants ||
@@ -982,53 +986,24 @@ export default function Products({
                                                   ).filter((v) => v.is_active)
                                                       .length
                                               } option(s)`
-                                            : `${editingProduct.stock_quantity} on hand`}
-                                    </span>
-                                    <Link
-                                        href={ROUTES.ADMIN_STOCK}
-                                        className="admin-stock-readonly-link"
-                                    >
-                                        Receive or adjust
-                                    </Link>
-                                </div>
-                                <span className="admin-field-hint">
-                                    Changed by deliveries, orders and recorded
-                                    adjustments — never edited here.
+                                            : `${editingProduct.stock_quantity} on hand`
+                                        : 'None yet'}
                                 </span>
+                                <Link
+                                    href={ROUTES.ADMIN_STOCK}
+                                    className="admin-stock-readonly-link"
+                                >
+                                    {editingProduct
+                                        ? 'Receive or adjust'
+                                        : 'Receive stock'}
+                                </Link>
                             </div>
-                        ) : formik.values.has_variants ? (
-                            /* A product sold in options has no shelf of its
-                               own — its stock is the sum of the options'. A
-                               number typed here would be ignored, so it is not
-                               offered. */
-                            <div className="auth-form-group">
-                                <label className="auth-label">Stock</label>
-                                <div className="admin-stock-readonly">
-                                    <span className="admin-stock-readonly-qty">
-                                        Per option
-                                    </span>
-                                </div>
-                                <span className="admin-field-hint">
-                                    Enter what is on the shelf against each
-                                    option below.
-                                </span>
-                            </div>
-                        ) : (
-                            <FormInput
-                                id="stock_quantity"
-                                name="stock_quantity"
-                                label="Opening stock"
-                                type="number"
-                                value={formik.values.stock_quantity}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                error={
-                                    formik.touched.stock_quantity &&
-                                    formik.errors.stock_quantity
-                                }
-                                helperText="Only stock already on the shelf. Leave at 0 if it is arriving on a purchase order — deliveries are recorded under Purchasing."
-                            />
-                        )}
+                            <span className="admin-field-hint">
+                                {editingProduct
+                                    ? 'Changed by deliveries, orders and recorded adjustments — never edited here.'
+                                    : 'Save the product first, then receive what you hold against the "Opening balance" source.'}
+                            </span>
+                        </div>
                     </div>
 
                     <VariantEditor

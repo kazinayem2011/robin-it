@@ -84,36 +84,20 @@ class VariantProductCreationTest extends TestCase
     }
 
     /**
-     * Opening stock is read per option, because a product sold in options has
-     * no shelf of its own — its total is the sum of theirs.
+     * A new product's options start empty, whatever is sent.
+     *
+     * Stock the shop already holds is received under Purchasing from the
+     * "Opening balance" source — one way in, with a document behind it.
      */
-    public function test_opening_stock_is_taken_per_option(): void
+    public function test_the_options_of_a_new_product_start_empty(): void
     {
         $this->actingAs($this->admin())
             ->postJson('/api/admin/products', $this->payload([
+                'stock_quantity' => 9,
                 'variants' => [
                     ['name' => '16GB', 'options' => ['Capacity' => '16GB'], 'sku' => 'CV-16', 'is_active' => true, 'opening_stock' => 3],
                     ['name' => '32GB', 'options' => ['Capacity' => '32GB'], 'sku' => 'CV-32', 'is_active' => true, 'opening_stock' => 2],
                 ],
-            ]))
-            ->assertCreated();
-
-        $product = Product::firstWhere('name', 'Corsair Vengeance DDR5');
-
-        $this->assertSame([3, 2], $product->variants()->orderBy('position')->pluck('stock_quantity')->all());
-        $this->assertSame(5, $product->fresh()->stock_quantity);
-    }
-
-    /**
-     * A quantity typed against the product itself is not stock for the
-     * options — it is ignored rather than duplicated onto them, and the
-     * product starts empty.
-     */
-    public function test_a_product_level_quantity_is_not_applied_to_an_option_product(): void
-    {
-        $this->actingAs($this->admin())
-            ->postJson('/api/admin/products', $this->payload([
-                'stock_quantity' => 5,
             ]))
             ->assertCreated();
 
@@ -149,11 +133,8 @@ class VariantProductCreationTest extends TestCase
         $this->assertSame('/img/16gb-front.jpg', $variant->image_url);
     }
 
-    /**
-     * An opening quantity leaves a movement behind it, so the stock screen can
-     * say where the units came from rather than showing a number nobody bought.
-     */
-    public function test_an_opening_quantity_leaves_a_ledger_entry(): void
+    /** Creating a product writes nothing to the ledger at all. */
+    public function test_creating_a_product_writes_no_movement(): void
     {
         $this->actingAs($this->admin())
             ->postJson('/api/admin/products', $this->payload([
@@ -161,18 +142,6 @@ class VariantProductCreationTest extends TestCase
                     ['name' => '16GB', 'options' => ['Capacity' => '16GB'], 'sku' => 'CV-16', 'is_active' => true, 'opening_stock' => 4],
                 ],
             ]))
-            ->assertCreated();
-
-        $variant = Product::firstWhere('name', 'Corsair Vengeance DDR5')->variants()->sole();
-
-        $this->assertSame(StockMovement::OPENING, StockMovement::where('product_variant_id', $variant->id)->sole()->type);
-    }
-
-    /** Options with no stock get no movement — a delivery of nothing is not a record. */
-    public function test_an_option_with_no_stock_gets_no_movement(): void
-    {
-        $this->actingAs($this->admin())
-            ->postJson('/api/admin/products', $this->payload())
             ->assertCreated();
 
         $product = Product::firstWhere('name', 'Corsair Vengeance DDR5');

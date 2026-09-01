@@ -6,9 +6,9 @@ import { buildProductPayload } from '../Products';
  *
  * This builder names every field it sends, which makes a new field on the form
  * invisible until it is added here — and the form still takes the value, so
- * nothing looks wrong. It has happened twice: an option's photos reordered on
- * screen while the rows never moved, and an opening quantity was typed against
- * each option of a new product and silently dropped.
+ * nothing looks wrong. It happened twice before the form stopped taking a
+ * quantity at all: an option's photos reordered on screen while the rows never
+ * moved, and an opening quantity typed against each option and dropped.
  */
 const base = {
     name: 'Corsair Vengeance',
@@ -59,16 +59,27 @@ describe('buildProductPayload', () => {
         expect(out.variants[0].sku).toBe('CV-16');
     });
 
-    /** The bug: the field is on the create form and was never sent. */
-    it('sends an opening quantity typed against an option of a new product', () => {
+    /**
+     * A new product carries no quantity at all, for the product or for any of
+     * its options. Stock enters under Purchasing, from a supplier or from the
+     * opening-balance source.
+     */
+    it('sends no quantity for a new product', () => {
         const out = buildProductPayload(
-            { ...base, has_variants: true, variants: [option()] },
+            {
+                ...base,
+                stock_quantity: 9,
+                has_variants: true,
+                variants: [option()],
+            },
             null,
         );
 
-        expect(out.variants[0].opening_stock).toBe(4);
+        expect(out).not.toHaveProperty('stock_quantity');
+        expect(out.variants[0]).not.toHaveProperty('opening_stock');
     });
 
+    /** The one case it is still sent: allocating a shelf that already exists. */
     it('sends it when splitting an existing product into options', () => {
         const out = buildProductPayload(
             { ...base, has_variants: true, variants: [option()] },

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Services\StockService;
 use Illuminate\Database\Seeder;
 
@@ -188,14 +189,10 @@ class ReferenceProductSeeder extends Seeder
         // Idempotent: the seeder is re-runnable, and a second opening balance
         // on the same product would be a quantity nobody delivered.
         if (! $product->stockMovements()->exists()) {
-            app(StockService::class)->recordOpeningBalance(
-                $product,
-                null,
-                5,
-                null,
-                'Seeded opening balance — replace with a real delivery',
+            app(StockService::class)->receive(
+                ['supplier_id' => Supplier::openingBalance()->id, 'note' => 'Seeded shelf — replace with a real delivery'],
+                [['product_id' => $product->id, 'quantity' => 5]],
             );
-            $product->update(['stock_quantity' => 5]);
         }
 
         $this->command?->info(sprintf(

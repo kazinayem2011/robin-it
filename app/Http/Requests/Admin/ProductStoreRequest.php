@@ -24,14 +24,15 @@ class ProductStoreRequest extends AdminRequest
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
             /*
-             * Optional, and zero by default. Stock normally arrives on a
-             * purchase order and is received under Purchasing, which writes the
-             * ledger entry; this field is only for units already on the shelf
-             * when a product is first entered. Requiring it invited a guess,
-             * and a guessed opening balance is an audited movement that never
-             * happened.
+             * No quantity. A product is a description of a thing; what is on
+             * the shelf is a separate fact with its own paperwork.
+             *
+             * Stock already held when a product is first entered is received
+             * under Purchasing from the "Opening balance" source — the same
+             * screen as a delivery, with a cost against it and a receipt to
+             * look up. That leaves one way for stock to enter the shop, which
+             * is the only way the ledger can be trusted.
              */
-            'stock_quantity' => 'nullable|integer|min:0',
             'short_description' => 'nullable|string|max:500',
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',

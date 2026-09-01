@@ -13,8 +13,20 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Supplier extends Model
 {
+    /** Someone the shop buys from. */
+    public const TRADE = 'trade';
+
+    /**
+     * The standing source for stock that was already on the shelf when the
+     * shop started keeping books. Exactly one of these exists, it is not
+     * somebody to ring about a faulty batch, and it cannot be deleted —
+     * removing it would orphan the deliveries that account for the opening
+     * shelf of every product in the shop.
+     */
+    public const OPENING = 'opening';
+
     protected $fillable = [
-        'name', 'contact_name', 'phone', 'email', 'address', 'note', 'is_active',
+        'name', 'kind', 'contact_name', 'phone', 'email', 'address', 'note', 'is_active',
     ];
 
     protected $casts = [
@@ -29,6 +41,30 @@ class Supplier extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /** Real suppliers — what a purchase order may be written to. */
+    public function scopeTrade($query)
+    {
+        return $query->where('kind', self::TRADE);
+    }
+
+    /** The opening-balance source, made if a migration has not already. */
+    public static function openingBalance(): self
+    {
+        return static::firstOrCreate(
+            ['kind' => self::OPENING],
+            [
+                'name' => 'Opening balance',
+                'note' => 'Stock already on the shelf when the shop started keeping books. Not a supplier.',
+                'is_active' => true,
+            ]
+        );
+    }
+
+    public function isOpeningBalance(): bool
+    {
+        return $this->kind === self::OPENING;
     }
 
     /** Total units ever received from this supplier. */

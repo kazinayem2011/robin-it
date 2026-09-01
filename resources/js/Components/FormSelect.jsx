@@ -13,6 +13,7 @@ export const FormSelect = ({
     options = [],
     placeholder = '',
     error = '',
+    helperText = '',
     required = false,
     disabled = false,
     className = '',
@@ -62,8 +63,18 @@ export const FormSelect = ({
                     : children}
             </select>
 
-            {fieldError && (
+            {/*
+             * A hint under the field, the same as FormInput's. Without the
+             * prop declared here it fell through to ...props and was spread
+             * onto the <select>, where React dropped it as an unknown
+             * attribute — written and never seen.
+             */}
+            {fieldError ? (
                 <span className="auth-field-error">{fieldError}</span>
+            ) : (
+                helperText && (
+                    <span className="auth-field-hint">{helperText}</span>
+                )
             )}
         </div>
     );

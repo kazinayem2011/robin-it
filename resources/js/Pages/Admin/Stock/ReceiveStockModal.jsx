@@ -160,6 +160,13 @@ export default function ReceiveStockModal({
         return { qty, cost };
     }, [lines]);
 
+    /* The chosen source is not a supplier but the opening-balance entry. */
+    const openingSelected = suppliers.some(
+        (s) =>
+            String(s.id) === String(formik.values.supplier_id) &&
+            s.kind === 'opening',
+    );
+
     const lineError =
         typeof formik.errors.lines === 'string' && formik.submitCount > 0
             ? formik.errors.lines
@@ -197,10 +204,15 @@ export default function ReceiveStockModal({
         >
             <form onSubmit={formik.handleSubmit} noValidate>
                 <div className="admin-grid-3col">
-                    {/* Suppliers are maintained in their own section; this
-                        only picks one. */}
+                    {/*
+                     * Suppliers are maintained in their own section; this only
+                     * picks one. The last entry is not a supplier at all — it
+                     * is the source for stock the shop already held when it
+                     * started keeping books, which used to be typed onto the
+                     * product form instead and left no paperwork behind it.
+                     */}
                     <FormSelect
-                        label="Supplier"
+                        label="Source"
                         name="supplier_id"
                         formik={formik}
                         placeholder={
@@ -210,8 +222,16 @@ export default function ReceiveStockModal({
                         }
                         options={suppliers.map((s) => ({
                             value: String(s.id),
-                            label: s.name,
+                            label:
+                                s.kind === 'opening'
+                                    ? `${s.name} — stock you already held`
+                                    : s.name,
                         }))}
+                        helperText={
+                            openingSelected
+                                ? 'Recorded as an opening balance, not a purchase.'
+                                : ''
+                        }
                     />
 
                     <FormInput

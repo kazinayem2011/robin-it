@@ -98,7 +98,8 @@ class SupplierTest extends TestCase
         );
 
         $this->assertSame($existing->id, $receipt->supplier_id, 'a duplicate supplier was created');
-        $this->assertSame(1, Supplier::count());
+        // The opening-balance source is seeded and is not a supplier.
+        $this->assertSame(1, Supplier::trade()->count());
     }
 
     /**

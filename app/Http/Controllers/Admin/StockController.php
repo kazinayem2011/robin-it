@@ -77,7 +77,15 @@ class StockController extends Controller
             'summary' => $this->summary($storeId),
             // The delivery form fetches the supplier list from its own
             // endpoint; suppliers are managed in their own section.
-            'suppliers' => Supplier::active()->orderBy('name')->get(['id', 'name']),
+            /*
+             * Kind travels too: one of these is not a supplier but the standing
+             * "Opening balance" source, and the delivery form says so rather
+             * than listing it among the companies the shop buys from.
+             */
+            'suppliers' => Supplier::active()
+                ->orderByRaw("CASE WHEN kind = 'opening' THEN 1 ELSE 0 END")
+                ->orderBy('name')
+                ->get(['id', 'name', 'kind']),
         ]);
     }
 

@@ -126,25 +126,27 @@ class StockLedgerTest extends TestCase
         $this->assertSame(6, $product->fresh()->stock_quantity, 'the form moved stock');
     }
 
-    public function test_creating_a_product_records_its_opening_balance(): void
+    /**
+     * Entering a product describes a thing; it does not put one on a shelf.
+     * Stock the shop already holds is received from the "Opening balance"
+     * source under Purchasing, like any other delivery.
+     */
+    public function test_creating_a_product_leaves_the_shelf_empty(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $category = Category::firstOrCreate(['slug' => 'gpu'], ['name' => 'GPU', 'is_active' => true]);
+        $category = Category::firstOrCreate(['slug' => 'cpu'], ['name' => 'CPU', 'is_active' => true]);
 
         $this->actingAs($admin)->postJson('/api/admin/products', [
+            'name' => 'Ryzen 9 7950X',
             'category_id' => $category->id,
-            'name' => 'RTX 4070 Super',
-            'price' => 82000,
+            'price' => 62000,
             'stock_quantity' => 7,
-        ])->assertStatus(201);
+        ])->assertCreated();
 
-        $product = Product::where('name', 'RTX 4070 Super')->sole();
+        $product = Product::firstWhere('name', 'Ryzen 9 7950X');
 
-        $this->assertSame(7, $product->stock_quantity);
-
-        $opening = StockMovement::where('product_id', $product->id)->sole();
-        $this->assertSame(StockMovement::OPENING, $opening->type);
-        $this->assertSame(7, $opening->balance_after);
+        $this->assertSame(0, $product->stock_quantity);
+        $this->assertSame(0, StockMovement::where('product_id', $product->id)->count());
     }
 
     public function test_only_an_admin_can_move_stock(): void
