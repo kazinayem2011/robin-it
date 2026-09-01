@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
+use App\Models\Store;
 use App\Models\User;
 use App\Services\OrderService;
 use App\Services\StockService;
@@ -287,5 +288,115 @@ class ProductStockLifecycleTest extends TestCase
 
         $this->expectException(StorefrontException::class);
         $this->stock()->adjust($product, null, -5, 'damaged', 'Dropped the box', $admin->id);
+    }
+
+    // ───────────────────────────── correcting a figure that was entered wrong
+
+    /**
+     * A miscount is not a delivery.
+     *
+     * Entering the opening stock wrong is an ordinary mistake — five typed
+     * where there are eight — and correcting it must not require inventing a
+     * purchase that never happened. An adjustment does it, in either
+     * direction, and says why on the ledger.
+     */
+    public function test_a_wrong_opening_figure_is_corrected_by_adjustment_not_a_purchase(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/api/admin/products', [
+            'name' => 'Crucial Pro 32GB', 'category_id' => $this->category()->id,
+            'price' => 15000, 'stock_quantity' => 5,
+        ])->assertCreated();
+
+        $product = Product::firstWhere('name', 'Crucial Pro 32GB');
+
+        // Counted the shelf: there are eight, not five.
+        $this->actingAs($admin)->postJson('/api/admin/stock/adjust', [
+            'product_id' => $product->id,
+            'quantity' => 3,
+            'reason' => 'stock_take',
+            'note' => 'Recount after entering the product',
+        ])->assertOk();
+
+        $this->assertSame(8, $product->fresh()->stock_quantity);
+        $this->assertReconciles($product, 'an upward correction');
+
+        // And the other way, for a figure entered too high.
+        $this->actingAs($admin)->postJson('/api/admin/stock/adjust', [
+            'product_id' => $product->id,
+            'quantity' => -2,
+            'reason' => 'stock_take',
+            'note' => 'Two were already sold at the counter',
+        ])->assertOk();
+
+        $this->assertSame(6, $product->fresh()->stock_quantity);
+        $this->assertReconciles($product, 'a downward correction');
+
+        // No purchase was invented to do it.
+        $this->assertSame(
+            0,
+            StockMovement::where('product_id', $product->id)
+                ->where('type', StockMovement::PURCHASE)->count()
+        );
+        $this->assertSame(
+            'stock_take',
+            StockMovement::where('product_id', $product->id)
+                ->where('type', StockMovement::ADJUSTMENT)->first()->reason
+        );
+    }
+
+    /** The same correction through the count sheet, which is the usual route. */
+    public function test_a_count_sheet_corrects_the_figure_too(): void
+    {
+        $admin = $this->admin();
+        $store = Store::create([
+            'name' => 'Flagship', 'branch_type' => 'Showroom', 'city' => 'Dhaka',
+            'address' => 'Elephant Road', 'phone' => '+880 1700-000000',
+            'opening_hours' => '10-8', 'holds_stock' => true,
+            'fulfils_online' => true, 'is_active' => true,
+        ]);
+
+        $this->actingAs($admin)->postJson('/api/admin/products', [
+            'name' => 'ADATA XPG 16GB', 'category_id' => $this->category()->id,
+            'price' => 9000, 'stock_quantity' => 5,
+        ])->assertCreated();
+
+        $product = Product::firstWhere('name', 'ADATA XPG 16GB');
+
+        $this->actingAs($admin)->postJson('/api/admin/stock/count', [
+            'store_id' => $store->id,
+            'lines' => [['product_id' => $product->id, 'counted_quantity' => 8]],
+        ])->assertStatus(201);
+
+        $this->assertSame(8, $product->fresh()->stock_quantity);
+        $this->assertReconciles($product, 'a stock take');
+    }
+
+    /**
+     * An opening balance is written once. Re-entering the same product is a
+     * second product, so there is no path that quietly doubles a shelf.
+     */
+    public function test_the_opening_balance_is_written_once(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->postJson('/api/admin/products', [
+            'name' => 'Patriot Viper', 'category_id' => $this->category()->id,
+            'price' => 7000, 'stock_quantity' => 4,
+        ])->assertCreated();
+
+        $product = Product::firstWhere('name', 'Patriot Viper');
+
+        $this->actingAs($admin)
+            ->patchJson("/api/admin/products/{$product->id}", ['price' => 6800])
+            ->assertOk();
+
+        $this->assertSame(
+            1,
+            StockMovement::where('product_id', $product->id)
+                ->where('type', StockMovement::OPENING)->count()
+        );
+        $this->assertSame(4, $product->fresh()->stock_quantity);
     }
 }
