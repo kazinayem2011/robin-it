@@ -21,13 +21,23 @@ const schema = Yup.object().shape({
 export default function BackInStockForm({
     productId,
     variantId = null,
-    defaultEmail = '',
+    /*
+     * The address on the shopper's account, when they are signed in.
+     *
+     * Having one settles both the value and the field: there is nothing to ask
+     * and nothing to get wrong, so it is filled in and locked. An account with
+     * no address on it — which registration does not currently allow, but the
+     * form should not assume — falls back to an empty box to type into.
+     */
+    accountEmail = '',
 }) {
     const [done, setDone] = useState(false);
     const [waiting, setWaiting] = useState(0);
 
+    const locked = Boolean(accountEmail);
+
     const formik = useFormik({
-        initialValues: { email: defaultEmail },
+        initialValues: { email: accountEmail },
         validationSchema: schema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             try {
@@ -92,8 +102,9 @@ export default function BackInStockForm({
                 <div>
                     <strong>Out of stock</strong>
                     <span>
-                        Leave your email and we&rsquo;ll tell you when it
-                        returns.
+                        {locked
+                            ? 'We\u2019ll email you the moment it returns.'
+                            : 'Leave your email and we\u2019ll tell you when it returns.'}
                         {waiting > 0 && ` ${waiting} already waiting.`}
                     </span>
                 </div>
@@ -108,6 +119,8 @@ export default function BackInStockForm({
                     onBlur={formik.handleBlur}
                     placeholder="you@example.com"
                     aria-label="Email address"
+                    disabled={locked}
+                    title={locked ? 'The address on your account' : undefined}
                     className={
                         formik.touched.email && formik.errors.email
                             ? 'has-error'

@@ -2410,18 +2410,29 @@
    grid rather than CSS `columns`, which fragments a box across a column break
    and would split a link's icon from its label. */
 .cat-nav-drop {
+    /*
+     * One floor, used twice.
+     *
+     * The column floor and the panel floor were separate numbers — 190px of
+     * column inside a panel that insisted on 250 — so a menu with a single
+     * column, which is most of them, drew its rows 190px wide and then held
+     * 59px of empty white to the right of every chevron. Naming it once means
+     * the panel can never again be wider than the thing inside it.
+     */
+    --cat-nav-column: 230px;
+
     display: none;
     grid-auto-flow: column;
     grid-template-rows: repeat(12, min-content);
     /* A floor under each column, so a column of short brand names is not
        markedly narrower than its neighbour. max-content above it, so a long
        name still gets the width it needs rather than wrapping. */
-    grid-auto-columns: minmax(190px, max-content);
+    grid-auto-columns: minmax(var(--cat-nav-column), max-content);
     position: absolute;
     top: 100%;
     left: 0;
     z-index: 60;
-    min-width: 250px;
+    min-width: var(--cat-nav-column);
     margin: 0;
     padding: 6px 0;
     list-style: none;

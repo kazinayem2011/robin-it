@@ -814,7 +814,7 @@ export default function ProductDetails(props) {
                                 <BackInStockForm
                                     productId={product.id}
                                     variantId={selectedVariant?.id ?? null}
-                                    defaultEmail={auth?.user?.email ?? ''}
+                                    accountEmail={auth?.user?.email ?? ''}
                                 />
                             )}
 

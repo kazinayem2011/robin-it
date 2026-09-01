@@ -7,6 +7,7 @@ import {
     Cpu,
     Laptop,
     Monitor,
+    MonitorSpeaker,
     HardDrive,
     MemoryStick,
     Zap,
@@ -201,12 +202,19 @@ export const ICON_REGISTRY = {
      * rows of the Desktop menu wore it, which is the failure this file's own
      * header warns about.
      */
-    desktop: PcCase,
-    desktops: PcCase,
-    pc: PcCase,
+    /*
+     * A screen beside a tower — the two things a desktop is, and the only
+     * glyph here that says "desktop" rather than "a box". `Server` was a rack
+     * stack, `PcCase` the tower alone and `Computer` two stacked boxes; all
+     * three read as something else at 16px next to the plain screen the
+     * Monitor aisle wears.
+     */
+    desktop: MonitorSpeaker,
+    desktops: MonitorSpeaker,
+    pc: MonitorSpeaker,
     server: Server,
-    workstation: PcCase,
-    workstations: PcCase,
+    workstation: MonitorSpeaker,
+    workstations: MonitorSpeaker,
     rig: PcCase,
 
     // The shapes a desktop actually comes in, each its own thing.
