@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
 import Button from '../../../Components/Button';
 import FormInput from '../../../Components/FormInput';
 import FormSelect from '../../../Components/FormSelect';
 import Modal from '../../../Components/Modal';
 import SearchableSelect from '../../../Components/SearchableSelect';
+import { listFrom } from '../../../utils/apiPayload';
 import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
 import { adminStockReceiptSchema } from '../../../validations';
@@ -96,24 +97,32 @@ export default function ReceiveStockModal({
         },
     });
 
+    /*
+     * The list of things that can be received.
+     *
+     * `res` is the API envelope, not the array — every other screen that reads
+     * this endpoint unwraps `res.data`, and this one did not, so the picker
+     * held nothing and no stock could be received through it at all.
+     *
+     * Searched server-side for the same reason the other screens do: the
+     * endpoint returns fifty products of the shop's twelve hundred, so
+     * filtering what has already arrived can never reach the rest.
+     */
+    const loadUnits = useCallback(async (term = '') => {
+        try {
+            const res = await adminService.getStockUnits(
+                term ? { search: term } : {},
+            );
+            setUnits(listFrom(res));
+        } catch {
+            toast.error('Could not load the product list.');
+            setUnits([]);
+        }
+    }, []);
+
     useEffect(() => {
-        if (!isOpen) return;
-
-        let cancelled = false;
-
-        adminService
-            .getStockUnits()
-            .then((res) => {
-                if (!cancelled) setUnits(Array.isArray(res) ? res : []);
-            })
-            .catch(() => {
-                if (!cancelled) toast.error('Could not load the product list.');
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [isOpen]);
+        if (isOpen) loadUnits();
+    }, [isOpen, loadUnits]);
 
     // A variant product can only be received into one of its options, since
     // that is where its stock lives.
@@ -255,6 +264,7 @@ export default function ReceiveStockModal({
                         <div className="admin-receive-line" key={line.key}>
                             <div className="admin-receive-line-product">
                                 <SearchableSelect
+                                    onSearch={loadUnits}
                                     label="Product"
                                     value={line.unit}
                                     onChange={(e) =>

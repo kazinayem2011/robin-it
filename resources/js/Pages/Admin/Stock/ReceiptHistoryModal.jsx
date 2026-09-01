@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import Modal from '../../../Components/Modal';
+import { listFrom } from '../../../utils/apiPayload';
 import { TableSkeleton } from '../../../Components/Skeleton';
 import { adminService } from '../../../services';
 import { formatBdt } from '../../../utils/formatters';
@@ -25,7 +26,7 @@ export default function ReceiptHistoryModal({ isOpen, onClose }) {
             .getStockReceipts()
             .then((res) => {
                 if (cancelled) return;
-                setState({ loading: false, receipts: res?.data || [] });
+                setState({ loading: false, receipts: listFrom(res) });
             })
             .catch(() => {
                 if (!cancelled) setState({ loading: false, receipts: [] });

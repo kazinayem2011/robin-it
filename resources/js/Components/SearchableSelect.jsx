@@ -18,6 +18,12 @@ export default function SearchableSelect({
     options = [],
     placeholder = 'Choose…',
     searchPlaceholder = 'Type to search…',
+    /*
+     * Given, the caller does the searching and this stops filtering what it
+     * was handed. A list capped server-side — the stock picker is fifty of a
+     * thousand products — cannot be narrowed by filtering the fifty.
+     */
+    onSearch = null,
     emptyText = 'Nothing matches that.',
     disabled = false,
     debounceMs = 200,
@@ -62,24 +68,32 @@ export default function SearchableSelect({
         else setTerm('');
     }, [open]);
 
+    // Ask the caller for a new list when the term settles, rather than
+    // filtering the one already in hand.
+    useEffect(() => {
+        if (onSearch) onSearch(debounced.trim());
+    }, [debounced, onSearch]);
+
     const filtered = useMemo(() => {
         const needle = debounced.trim().toLowerCase();
-        const matches = needle
-            ? options.filter((o) => o.label.toLowerCase().includes(needle))
-            : options;
+        const matches =
+            needle && !onSearch
+                ? options.filter((o) => o.label.toLowerCase().includes(needle))
+                : options;
 
         return matches.slice(0, maxVisible);
-    }, [options, debounced, maxVisible]);
+    }, [options, debounced, maxVisible, onSearch]);
 
     const hiddenCount = useMemo(() => {
         const needle = debounced.trim().toLowerCase();
-        const total = needle
-            ? options.filter((o) => o.label.toLowerCase().includes(needle))
-                  .length
-            : options.length;
+        const total =
+            needle && !onSearch
+                ? options.filter((o) => o.label.toLowerCase().includes(needle))
+                      .length
+                : options.length;
 
         return Math.max(0, total - filtered.length);
-    }, [options, debounced, filtered.length]);
+    }, [options, debounced, filtered.length, onSearch]);
 
     useEffect(() => setHighlighted(0), [debounced]);
 

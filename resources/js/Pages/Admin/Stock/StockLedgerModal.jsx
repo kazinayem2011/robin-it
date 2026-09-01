@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Modal from '../../../Components/Modal';
+import { listFrom, payloadFrom } from '../../../utils/apiPayload';
 import { TableSkeleton } from '../../../Components/Skeleton';
 import { adminService } from '../../../services';
 
@@ -38,10 +39,12 @@ export default function StockLedgerModal({ target, onClose }) {
             )
             .then((res) => {
                 if (cancelled) return;
+                const payload = payloadFrom(res);
+
                 setState({
                     loading: false,
-                    movements: res?.movements?.data || [],
-                    integrity: res?.integrity || null,
+                    movements: listFrom({ data: payload.movements }),
+                    integrity: payload.integrity || null,
                 });
             })
             .catch(() => {
