@@ -52,8 +52,19 @@ class CartController extends Controller
             ? $cart->items()->pluck('product_id')->all()
             : [];
 
+        $suggestions = $products->similarToCart($ids);
+
+        /*
+         * An empty cart has nothing to be similar to, and it is the page that
+         * most needs somewhere to go — otherwise it is a dead end with a
+         * "continue shopping" link and no shopping on it.
+         */
+        if ($suggestions->isEmpty()) {
+            $suggestions = $products->getFeaturedProducts('all', 4);
+        }
+
         return $this->successResponse(
-            $products->similarToCart($ids)->values(),
+            $suggestions->values(),
             'Suggestions fetched successfully'
         );
     }

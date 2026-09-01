@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\AddressBook;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -26,6 +27,8 @@ use Inertia\Response;
  */
 class StorefrontPageController extends Controller
 {
+    public function __construct(private readonly ProductService $products) {}
+
     public function home(): Response
     {
         return Inertia::render('Welcome', [
@@ -72,7 +75,30 @@ class StorefrontPageController extends Controller
 
     public function orderSuccess(Request $request): Response
     {
-        return Inertia::render('Checkout/Success', ['orderNumber' => $request->query('order')]);
+        $number = $request->query('order');
+
+        /*
+         * What else they might want, worked out from what they just bought.
+         *
+         * Server-side rather than a fetch: this page is often the last one
+         * somebody sees, and a row that arrives after they have gone is a row
+         * nobody saw. Falls back to what is popular when the order cannot be
+         * found, which is the case for anyone who lands here with a stale link.
+         */
+        $bought = $number
+            ? Order::where('order_number', $number)->first()?->items->pluck('product_id')->all()
+            : [];
+
+        $suggestions = $this->products->similarToCart($bought ?? []);
+
+        if ($suggestions->isEmpty()) {
+            $suggestions = $this->products->getFeaturedProducts('all', 4);
+        }
+
+        return Inertia::render('Checkout/Success', [
+            'orderNumber' => $number,
+            'suggestions' => $suggestions->values(),
+        ]);
     }
 
     public function pcBuilder(): Response

@@ -110,6 +110,16 @@ export default function Cart() {
                         Continue Shopping
                     </Link>
                 </div>
+
+                {/* An empty cart was a dead end: a line of apology and a link
+                    away from the page. Somewhere to go beats being told to go
+                    somewhere. */}
+                <div className="checkout-container container">
+                    <ProductSuggestions
+                        products={suggestions}
+                        title="Popular right now"
+                    />
+                </div>
             </>
         );
     }

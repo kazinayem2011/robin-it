@@ -1,58 +1,36 @@
 /*
  * A row of other products worth looking at.
  *
- * These rules used to sit in the product page's stylesheet, which only that
- * page imports — so the moment the cart drew the same component it came out
- * unstyled. They travel with the component now.
- *
- * The class names keep their pdp- prefix: renaming them would have touched
- * markup that works, for no gain a reader would notice.
+ * The cards are the shop's own, so this only lays them out and spaces the
+ * section — everything about how a product looks stays in ProductCard, where
+ * the rest of the site gets it from.
  */
 
-.pdp-related {
-    margin: 28px 0;
+.product-suggestions {
+    margin: 32px 0;
 }
 
-.pdp-related-grid {
+.product-suggestions-title {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--dark-900);
+    font-family: var(--font-heading);
+}
+
+/*
+ * Matches the shop's own grid so a suggestion is the same size as the card it
+ * was suggested from — a narrower one reads as a lesser product.
+ */
+.product-suggestions-grid {
     display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    margin-top: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
 }
 
-.pdp-related-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px;
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    color: inherit;
-}
-
-.pdp-related-item:hover {
-    border-color: var(--primary-color, #c1121f);
-}
-
-.pdp-related-img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: contain;
-}
-
-.pdp-related-name {
-    font-size: 0.82rem;
-    line-height: 1.35;
-    /* Two lines then ellipsis: product names here run to fifteen words and an
-       untruncated one pushes the price out of the card. */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.pdp-related-price {
-    font-weight: 700;
-    color: var(--primary-color, #c1121f);
+@media (max-width: 520px) {
+    .product-suggestions-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
 }

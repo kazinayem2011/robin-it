@@ -62,6 +62,9 @@ class ApiEndpoints
     /* What else to show somebody with a cart in front of them. */
     public const CART_SUGGESTIONS = 'cart/suggestions';
 
+    /* And for the saved list, which has the same question to answer. */
+    public const WISHLIST_SUGGESTIONS = 'wishlist/suggestions';
+
     // Checkout
     public const CHECKOUT = 'checkout';
 

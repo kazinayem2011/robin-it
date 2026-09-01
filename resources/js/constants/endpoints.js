@@ -64,6 +64,8 @@ export const API_ENDPOINTS = {
     WISHLIST: {
         BASE: '/wishlist',
         ITEM: (productId) => `/wishlist/${productId}`,
+        /* Other products worth a look, given what is saved. */
+        SUGGESTIONS: '/wishlist/suggestions',
     },
 
     // Comparison API

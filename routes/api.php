@@ -197,6 +197,7 @@ Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
 
     // Wishlist
     Route::get(ApiEndpoints::WISHLIST, [WishlistController::class, 'index']);
+    Route::get(ApiEndpoints::WISHLIST_SUGGESTIONS, [WishlistController::class, 'suggestions']);
     Route::post(ApiEndpoints::WISHLIST, [WishlistController::class, 'store']);
     Route::delete(ApiEndpoints::WISHLIST_ITEM, [WishlistController::class, 'destroy']);
 

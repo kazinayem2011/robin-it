@@ -2,8 +2,9 @@ import { Head, Link } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import { ROUTES } from '../../constants/endpoints';
 import './Checkout.css';
+import ProductSuggestions from '../../Components/ProductSuggestions';
 
-export default function Success({ orderNumber }) {
+export default function Success({ orderNumber, suggestions = [] }) {
     return (
         <>
             <Head title="Order Successful - StarTech Clone" />
@@ -50,6 +51,11 @@ export default function Success({ orderNumber }) {
                         Track Order
                     </Link>
                 </div>
+                <ProductSuggestions
+                    products={suggestions}
+                    title="You might like these too"
+                    className="order-success-suggestions"
+                />
             </div>
         </>
     );

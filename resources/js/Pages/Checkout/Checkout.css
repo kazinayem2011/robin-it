@@ -653,11 +653,8 @@
 }
 
 /*
- * The suggestions row under the cart.
- *
- * It borrows the product page's .pdp-related markup, which is styled over
- * there — this only gives it room to breathe below the totals, and a rule to
- * separate it from the cart it is suggesting against.
+ * The suggestions row under the cart. Its own layout comes with the component;
+ * this only separates it from the cart it is suggesting against.
  */
 .cart-suggestions {
     margin-top: 32px;

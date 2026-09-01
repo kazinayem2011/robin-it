@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance';
 import { API_ENDPOINTS } from '../constants/endpoints';
+import { listFrom } from '../utils/apiPayload';
 
 /**
  * Wishlist API Service (SSOT)
@@ -9,6 +10,15 @@ export const wishlistService = {
     async getWishlist() {
         const response = await axiosInstance.get(API_ENDPOINTS.WISHLIST.BASE);
         return response?.data || response;
+    },
+
+    /** Other products worth a look, given what is saved. */
+    async getSuggestions() {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.WISHLIST.SUGGESTIONS,
+        );
+
+        return listFrom(response);
     },
 
     async addToWishlist(productId) {

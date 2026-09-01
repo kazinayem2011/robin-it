@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Wishlist;
+use App\Services\ProductService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,5 +42,27 @@ class WishlistController extends Controller
             ->delete();
 
         return $this->successResponse(null, 'Removed from wishlist');
+    }
+
+    /**
+     * What else to show somebody looking at their saved list.
+     *
+     * Built from what they have saved, because a wishlist is a statement of
+     * taste — and falling back to what is popular when it is empty, since an
+     * empty wishlist is otherwise a page with nothing on it at all.
+     */
+    public function suggestions(Request $request, ProductService $products): JsonResponse
+    {
+        $saved = Wishlist::where('user_id', $request->user()->id)
+            ->pluck('product_id')
+            ->all();
+
+        $suggestions = $products->similarToCart($saved);
+
+        if ($suggestions->isEmpty()) {
+            $suggestions = $products->getFeaturedProducts('all', 4);
+        }
+
+        return $this->successResponse($suggestions->values(), 'Suggestions fetched successfully');
     }
 }

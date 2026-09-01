@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import Button from '../../Components/Button';
 import EmptyState from '../../Components/EmptyState';
+import ProductSuggestions from '../../Components/ProductSuggestions';
 import ProductImage from '../../Components/ProductImage';
 import { CardGridSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
@@ -15,9 +16,22 @@ import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import './Wishlist.css';
 
 export default function Wishlist() {
+    /* What else they might like, from what they have saved — and what is
+       popular when they have saved nothing, so an empty wishlist is not an
+       empty page. */
+    const [suggestions, setSuggestions] = useState([]);
     const [wishlist, setWishlist] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
+
+    useEffect(() => {
+        wishlistService
+            .getSuggestions()
+            .then(setSuggestions)
+            .catch(() => {
+                /* Not worth an error over the list somebody came here for. */
+            });
+    }, []);
 
     useEffect(() => {
         loadWishlist();
@@ -179,6 +193,10 @@ export default function Wishlist() {
                         })}
                     </div>
                 )}
+                <ProductSuggestions
+                    products={suggestions}
+                    title="You may also like"
+                />
             </div>
         </>
     );

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /**
@@ -248,5 +249,79 @@ class SimilarProductsTest extends TestCase
     public function test_the_endpoint_is_empty_for_a_cart_that_does_not_exist(): void
     {
         $this->getJson('/api/cart/suggestions')->assertOk()->assertJsonPath('data', []);
+    }
+
+    // ───────────────────────────────────── the other places they are shown
+
+    /**
+     * An empty cart has nothing to be similar to, and it is the page that most
+     * needs somewhere to go — otherwise it is a dead end with a "continue
+     * shopping" link and no shopping on it.
+     */
+    public function test_an_empty_cart_falls_back_to_what_is_popular(): void
+    {
+        $this->product($this->category('Mouse'), 'MX Master', 12000);
+
+        $data = $this->actingAs(User::factory()->create())
+            ->getJson('/api/cart/suggestions')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertNotEmpty($data);
+    }
+
+    public function test_the_wishlist_suggests_from_what_is_saved(): void
+    {
+        $mice = $this->category('Mouse');
+        $saved = $this->product($mice, 'MX Master', 12000);
+        $this->product($mice, 'MX Anywhere', 11000);
+
+        $shopper = User::factory()->create();
+
+        $this->actingAs($shopper)
+            ->postJson('/api/wishlist', ['product_id' => $saved->id])
+            ->assertSuccessful();
+
+        $data = $this->actingAs($shopper)
+            ->getJson('/api/wishlist/suggestions')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame('MX Anywhere', $data[0]['name']);
+    }
+
+    public function test_an_empty_wishlist_falls_back_to_what_is_popular(): void
+    {
+        $this->product($this->category('Mouse'), 'MX Master', 12000);
+
+        $data = $this->actingAs(User::factory()->create())
+            ->getJson('/api/wishlist/suggestions')
+            ->assertOk()
+            ->json('data');
+
+        $this->assertNotEmpty($data);
+    }
+
+    public function test_a_guest_cannot_read_a_wishlist_suggestion(): void
+    {
+        $this->getJson('/api/wishlist/suggestions')->assertUnauthorized();
+    }
+
+    /**
+     * Server-side on the success page rather than fetched: it is often the
+     * last page somebody sees, and a row that arrives after they have gone is
+     * a row nobody saw.
+     */
+    public function test_the_order_success_page_carries_suggestions(): void
+    {
+        $this->product($this->category('Mouse'), 'MX Master', 12000);
+
+        $this->get('/order/success?order=NOPE')
+            ->assertOk()
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->component('Checkout/Success')
+                    ->has('suggestions')
+            );
     }
 }
