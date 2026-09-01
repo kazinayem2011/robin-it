@@ -245,4 +245,47 @@ class ShopNotificationTest extends TestCase
 
         Notification::assertSentTo($customer, OrderStatusChanged::class);
     }
+
+    // ──────────────────────────────────────────────── the links have to land
+
+    /**
+     * Every notification carries somewhere to go, and it has to be a route
+     * that exists.
+     *
+     * The customer's pointed at /orders/{number}, which is not a page they
+     * have — only /orders/{id}/invoice is. Every "your order has shipped"
+     * notification led to a 404, and nothing tested the URL because a string
+     * in a payload looks fine until somebody clicks it.
+     */
+    public function test_the_customers_notification_links_to_a_page_that_exists(): void
+    {
+        $customer = User::factory()->create();
+        $order = $this->order($customer);
+
+        $url = (new OrderStatusChanged($order, 'shipped'))->payload($customer)['url'];
+
+        $this->assertSame('/track/'.$order->order_number, $url);
+
+        $this->actingAs($customer)->get($url)->assertOk();
+    }
+
+    /** The same for the four the shop gets. */
+    public function test_the_staff_notifications_link_to_pages_that_exist(): void
+    {
+        $admin = $this->staff('admin');
+        $product = $this->product(0, 5);
+
+        $urls = [
+            (new OrderPlaced($this->order()))->payload($admin)['url'],
+            (new ProductQuestionAsked(
+                $product->questions()->create(['name' => 'Rakib', 'question' => 'Does it come with a receiver?'])
+            ))->payload($admin)['url'],
+            (new ContactMessageReceived(1, 'Nusrat', 'Delivery to Sylhet?'))->payload($admin)['url'],
+            (new StockRanLow($product, null, 2))->payload($admin)['url'],
+        ];
+
+        foreach ($urls as $url) {
+            $this->actingAs($admin)->get($url)->assertOk();
+        }
+    }
 }

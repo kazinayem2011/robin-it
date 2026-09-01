@@ -32,7 +32,12 @@ class OrderStatusChanged extends ShopNotification
             'kind' => 'order.status',
             'title' => 'Order '.$this->order->order_number.' is '.$this->status,
             'body' => self::WORDING[$this->status] ?? 'The status of your order has changed.',
-            'url' => '/orders/'.$this->order->order_number,
+            /*
+             * The tracking page, which is the customer-facing view of one
+             * order. /orders/{number} is not a route they have — it 404'd, so
+             * every one of these notifications led nowhere.
+             */
+            'url' => '/track/'.$this->order->order_number,
             'icon' => 'order',
         ];
     }
