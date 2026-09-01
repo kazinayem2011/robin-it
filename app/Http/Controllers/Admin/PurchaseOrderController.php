@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
@@ -56,6 +57,7 @@ class PurchaseOrderController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $this->validated($request);
+        $data['store_id'] = BranchScope::narrow($request->user(), $data['store_id'] ?? null);
 
         $order = $this->orders->save(
             null,
@@ -71,7 +73,13 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $order = PurchaseOrder::findOrFail($id);
+
+        if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
+            return $refusal;
+        }
+
         $data = $this->validated($request);
+        $data['store_id'] = BranchScope::narrow($request->user(), $data['store_id'] ?? null);
 
         $order = $this->orders->save(
             $order,
@@ -84,16 +92,28 @@ class PurchaseOrderController extends Controller
         return $this->successResponse($order, "{$order->reference} updated.");
     }
 
-    public function send(int $id): JsonResponse
+    public function send(Request $request, int $id): JsonResponse
     {
-        $order = $this->orders->send(PurchaseOrder::findOrFail($id));
+        $order = PurchaseOrder::findOrFail($id);
+
+        if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
+            return $refusal;
+        }
+
+        $order = $this->orders->send($order);
 
         return $this->successResponse($order, "{$order->reference} is now with {$order->supplier_name}.");
     }
 
-    public function cancel(int $id): JsonResponse
+    public function cancel(Request $request, int $id): JsonResponse
     {
-        $order = $this->orders->cancel(PurchaseOrder::findOrFail($id));
+        $order = PurchaseOrder::findOrFail($id);
+
+        if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
+            return $refusal;
+        }
+
+        $order = $this->orders->cancel($order);
 
         return $this->successResponse($order, "{$order->reference} cancelled.");
     }
@@ -102,6 +122,10 @@ class PurchaseOrderController extends Controller
     public function receive(Request $request, int $id): JsonResponse
     {
         $order = PurchaseOrder::findOrFail($id);
+
+        if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
+            return $refusal;
+        }
 
         $data = $request->validate([
             'store_id' => 'nullable|integer|exists:stores,id',
@@ -114,6 +138,14 @@ class PurchaseOrderController extends Controller
             'lines.*.unit_cost' => 'nullable|numeric|min:0',
         ]);
 
+        // Where the units actually land. Narrowed as well as checked, because
+        // this is the line that writes a balance.
+        $data['store_id'] = BranchScope::narrow($request->user(), $data['store_id'] ?? null);
+
+        if ($refusal = $this->refuseOtherBranch($request, $data['store_id'])) {
+            return $refusal;
+        }
+
         $receipt = $this->orders->receive($order, $request->user(), $data['lines'], $data);
         $order->refresh();
 
@@ -122,6 +154,35 @@ class PurchaseOrderController extends Controller
             $order->outstanding > 0
                 ? "Received. {$order->outstanding} still outstanding on {$order->reference}."
                 : "{$order->reference} is complete."
+        );
+    }
+
+    /**
+     * Refuse an order that belongs to a branch this person does not work at.
+     *
+     * BranchScope was written for exactly this and StockController calls it on
+     * every write; purchase orders never did, so a storekeeper confined to one
+     * branch could raise an order against another, send it, and receive the
+     * goods into shelves they have nothing to do with.
+     *
+     * Naming no branch is not naming someone else's: an order with none is the
+     * shop's, and BranchScope::narrow decides where a confined buyer's own
+     * goods land.
+     */
+    private function refuseOtherBranch(Request $request, ?int $storeId): ?JsonResponse
+    {
+        if ($storeId === null || BranchScope::allows($request->user(), $storeId)) {
+            return null;
+        }
+
+        $branch = BranchScope::name($request->user());
+
+        return $this->errorResponse(
+            $branch
+                ? "You can only work on purchase orders for {$branch}."
+                : 'You cannot work on purchase orders for that branch.',
+            403,
+            ApiCode::FORBIDDEN
         );
     }
 
