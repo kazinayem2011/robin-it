@@ -5,9 +5,8 @@ import {
     productService,
     cartService,
     compareService,
-    wishlistService,
     reviewService,
-} from '../../services';
+} from '@/services';
 import BackInStockForm from '../../Components/BackInStockForm';
 import BranchAvailability from '../../Components/BranchAvailability';
 import Button from '../../Components/Button';
@@ -24,6 +23,7 @@ import { ProductDetailSkeleton } from '../../Components/Skeleton';
 import Tabs from '../../Components/Tabs';
 import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
+import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -67,6 +67,14 @@ export default function ProductDetails(props) {
     /* Shared by Inertia on every page, so a signed-in shopper is not asked
        for a name the shop already has. */
     const { auth } = usePage().props;
+
+    /*
+     * The shared hook, not a handler of this page's own. It loads what is
+     * already saved, so a returning customer sees a filled heart instead of an
+     * empty one, and it keeps the header count in step. The page used to
+     * toggle and show a toast while the button itself never changed.
+     */
+    const { wishlistIds, toggleWishlist, pendingId } = useWishlist();
 
     const productSlug =
         props.productSlug ||
@@ -272,28 +280,6 @@ export default function ProductDetails(props) {
         }
     };
 
-    const handleToggleWishlist = async () => {
-        try {
-            const { wishlisted, items } = await wishlistService.toggleWishlist(
-                product.id,
-            );
-            useAppStore.getState().setWishlistCount(items.length);
-            toast.success(
-                wishlisted
-                    ? `Saved "${product.name}" to your wishlist.`
-                    : `Removed "${product.name}" from your wishlist.`,
-                'Wishlist Updated',
-            );
-        } catch (err) {
-            console.error('Failed to toggle wishlist', err);
-            toast.error(
-                err?.message ||
-                    'Please sign in to save products to your wishlist.',
-                'Wishlist',
-            );
-        }
-    };
-
     const handleAddToCompare = async () => {
         try {
             await compareService.addToComparison(product);
@@ -334,6 +320,8 @@ export default function ProductDetails(props) {
             </>
         );
     }
+
+    const isWishlisted = wishlistIds.includes(product.id);
 
     const productImages =
         product.images && product.images.length > 0
@@ -803,10 +791,22 @@ export default function ProductDetails(props) {
                             <div className="pdp-secondary-actions">
                                 <button
                                     type="button"
-                                    className="btn-text"
-                                    onClick={handleToggleWishlist}
+                                    className={`btn-text ${isWishlisted ? 'is-saved' : ''}`}
+                                    onClick={() => toggleWishlist(product.id)}
+                                    disabled={pendingId === product.id}
+                                    aria-pressed={isWishlisted}
                                 >
-                                    <Heart size={15} /> Add to Wishlist
+                                    <Heart
+                                        size={15}
+                                        fill={
+                                            isWishlisted
+                                                ? 'currentColor'
+                                                : 'none'
+                                        }
+                                    />
+                                    {isWishlisted
+                                        ? 'Saved to Wishlist'
+                                        : 'Add to Wishlist'}
                                 </button>
                                 <button
                                     type="button"

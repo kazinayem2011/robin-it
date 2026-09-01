@@ -2,12 +2,23 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
-import DataTable from '../../Components/DataTable';
+import EmptyState from '../../Components/EmptyState';
+import Pagination from '../../Components/Pagination';
 import FormInput from '../../Components/FormInput';
 import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
 import axiosInstance from '../../services/axiosInstance';
-import { MessageSquare, Send, Eye, EyeOff, Trash2 } from 'lucide-react';
+import './ProductQuestions.css';
+import {
+    MessageSquare,
+    Send,
+    Eye,
+    EyeOff,
+    Trash2,
+    ExternalLink,
+    UserRound,
+    CheckCircle2,
+} from 'lucide-react';
 
 /*
  * Unanswered first, because an unanswered question is a shopper still deciding
@@ -29,6 +40,8 @@ export default function AdminProductQuestions({
     // Keyed by question id: several can be part-typed at once, and a single
     // shared draft would put one person's answer under another's question.
     const [drafts, setDrafts] = useState({});
+
+    const rows = questions.data ?? [];
 
     const draftFor = (q) => drafts[q.id] ?? q.answer ?? '';
 
@@ -114,108 +127,6 @@ export default function AdminProductQuestions({
         }
     };
 
-    const columns = [
-        {
-            key: 'product',
-            header: 'Product',
-            render: (q) => (
-                <div className="admin-question-product">
-                    <span className="font-semibold text-sm">
-                        {q.product?.name || 'Removed product'}
-                    </span>
-                    {q.product?.slug && (
-                        <a
-                            href={`/products/${q.product.slug}`}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            View page
-                        </a>
-                    )}
-                </div>
-            ),
-        },
-        {
-            key: 'question',
-            header: 'Question',
-            render: (q) => (
-                <div className="admin-question-cell">
-                    <p>{q.question}</p>
-                    <small>
-                        {q.name} · {q.created_at?.slice(0, 10)}
-                    </small>
-                </div>
-            ),
-        },
-        {
-            key: 'answer',
-            header: 'Answer',
-            render: (q) => (
-                <div className="admin-question-answer">
-                    <FormInput
-                        id={`answer-${q.id}`}
-                        name={`answer-${q.id}`}
-                        type="textarea"
-                        rows={3}
-                        value={draftFor(q)}
-                        onChange={(e) => setDraft(q.id, e.target.value)}
-                        placeholder="Answer from the showroom…"
-                    />
-                    <Button
-                        size="sm"
-                        icon={Send}
-                        disabled={busyId === q.id}
-                        onClick={() => submitAnswer(q)}
-                    >
-                        {q.answer ? 'Update answer' : 'Answer & publish'}
-                    </Button>
-                    {q.answered_by_name && (
-                        <small className="admin-question-answered-by">
-                            Answered by {q.answered_by_name}
-                        </small>
-                    )}
-                </div>
-            ),
-        },
-        {
-            key: 'status',
-            header: 'Status',
-            render: (q) => (
-                <span
-                    className={`badge ${q.is_published ? 'badge-new' : 'badge-hot'}`}
-                >
-                    {q.is_published ? 'Published' : 'Hidden'}
-                </span>
-            ),
-        },
-        {
-            key: 'actions',
-            header: 'Actions',
-            render: (q) => (
-                <div className="admin-question-actions">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={busyId === q.id}
-                        icon={q.is_published ? EyeOff : Eye}
-                        onClick={() => setPublished(q, !q.is_published)}
-                    >
-                        {q.is_published ? 'Hide' : 'Publish'}
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        disabled={busyId === q.id}
-                        icon={Trash2}
-                        onClick={() => remove(q)}
-                    >
-                        Delete
-                    </Button>
-                </div>
-            ),
-        },
-    ];
-
     return (
         <AdminLayout
             title="Product Questions"
@@ -253,15 +164,172 @@ export default function AdminProductQuestions({
                     ))}
                 </div>
 
-                <DataTable
-                    title="Questions"
-                    subtitle={`${counts.unanswered ?? 0} awaiting an answer · ${counts.unpublished ?? 0} not published`}
-                    columns={columns}
-                    data={questions}
-                    emptyIcon={MessageSquare}
-                    emptyTitle="No questions yet"
-                    emptyDescription="Questions shoppers ask on a product page arrive here for an answer."
-                />
+                {rows.length === 0 ? (
+                    <div className="admin-card">
+                        <EmptyState
+                            icon={MessageSquare}
+                            title="Nothing waiting"
+                            description="Questions shoppers ask on a product page arrive here for an answer."
+                        />
+                    </div>
+                ) : (
+                    <>
+                        <p className="admin-field-hint aq-summary">
+                            {counts.unanswered ?? 0} awaiting an answer ·{' '}
+                            {counts.unpublished ?? 0} not published
+                        </p>
+
+                        <ul className="aq-list">
+                            {rows.map((q) => {
+                                const busy = busyId === q.id;
+                                const draft = draftFor(q);
+
+                                return (
+                                    <li key={q.id} className="aq-card">
+                                        <header className="aq-head">
+                                            <div className="aq-product">
+                                                <strong>
+                                                    {q.product?.name ||
+                                                        'Removed product'}
+                                                </strong>
+                                                {q.product?.slug && (
+                                                    <a
+                                                        href={`/products/${q.product.slug}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        View page
+                                                        <ExternalLink
+                                                            size={11}
+                                                        />
+                                                    </a>
+                                                )}
+                                            </div>
+
+                                            <span
+                                                className={`badge ${q.is_published ? 'badge-active' : 'badge-expired'}`}
+                                            >
+                                                {q.is_published
+                                                    ? 'Published'
+                                                    : 'Not published'}
+                                            </span>
+                                        </header>
+
+                                        <blockquote className="aq-question">
+                                            {q.question}
+                                        </blockquote>
+
+                                        <p className="aq-asker">
+                                            <UserRound size={12} />
+                                            {q.name}
+                                            <span aria-hidden="true">·</span>
+                                            {q.created_at?.slice(0, 10)}
+                                        </p>
+
+                                        {q.answer && !drafts[q.id] && (
+                                            <div className="aq-answered">
+                                                <CheckCircle2 size={13} />
+                                                <div>
+                                                    <p>{q.answer}</p>
+                                                    {q.answered_by_name && (
+                                                        <small>
+                                                            Answered by{' '}
+                                                            {q.answered_by_name}
+                                                        </small>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="aq-reply">
+                                            <FormInput
+                                                id={`answer-${q.id}`}
+                                                name={`answer-${q.id}`}
+                                                type="textarea"
+                                                rows={3}
+                                                label={
+                                                    q.answer
+                                                        ? 'Edit the answer'
+                                                        : 'Your answer'
+                                                }
+                                                value={draft}
+                                                onChange={(e) =>
+                                                    setDraft(
+                                                        q.id,
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Answer from the showroom…"
+                                                helperText="Answering publishes it on the product page."
+                                            />
+
+                                            <div className="aq-actions">
+                                                <Button
+                                                    icon={Send}
+                                                    loading={busy}
+                                                    disabled={
+                                                        busy ||
+                                                        draft.trim().length < 2
+                                                    }
+                                                    onClick={() =>
+                                                        submitAnswer(q)
+                                                    }
+                                                >
+                                                    {q.answer
+                                                        ? 'Update answer'
+                                                        : 'Answer & publish'}
+                                                </Button>
+
+                                                <Button
+                                                    variant="secondary"
+                                                    disabled={busy}
+                                                    icon={
+                                                        q.is_published
+                                                            ? EyeOff
+                                                            : Eye
+                                                    }
+                                                    onClick={() =>
+                                                        setPublished(
+                                                            q,
+                                                            !q.is_published,
+                                                        )
+                                                    }
+                                                >
+                                                    {q.is_published
+                                                        ? 'Hide'
+                                                        : 'Publish'}
+                                                </Button>
+
+                                                {/* Quiet, and on the far side:
+                                                    deleting is the one thing
+                                                    here that cannot be undone,
+                                                    so it should not sit under
+                                                    the thumb of somebody
+                                                    working through a queue. */}
+                                                <button
+                                                    type="button"
+                                                    className="aq-delete"
+                                                    disabled={busy}
+                                                    onClick={() => remove(q)}
+                                                >
+                                                    <Trash2 size={13} />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+
+                        <Pagination
+                            links={questions.links}
+                            from={questions.from}
+                            to={questions.to}
+                            total={questions.total}
+                        />
+                    </>
+                )}
             </div>
         </AdminLayout>
     );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { wishlistService } from '../services';
+import useAppStore from '../store/useAppStore';
 import { toast } from '../Components/Toast';
 import { ROUTES } from '../constants/endpoints';
 
@@ -32,11 +33,13 @@ export const useWishlist = () => {
             .then((items) => {
                 if (cancelled) return;
 
-                setWishlistIds(
-                    (items || [])
-                        .map((entry) => entry.product_id)
-                        .filter(Boolean),
-                );
+                const ids = (items || [])
+                    .map((entry) => entry.product_id)
+                    .filter(Boolean);
+
+                setWishlistIds(ids);
+                // The header badge reads this, so it has to move with the list.
+                useAppStore.getState().setWishlistCount(ids.length);
             })
             .catch(() => {
                 // A failed read should leave the hearts empty rather than break
@@ -77,11 +80,12 @@ export const useWishlist = () => {
             try {
                 const result = await wishlistService.toggleWishlist(productId);
 
-                setWishlistIds(
-                    (result?.items || [])
-                        .map((entry) => entry.product_id)
-                        .filter(Boolean),
-                );
+                const ids = (result?.items || [])
+                    .map((entry) => entry.product_id)
+                    .filter(Boolean);
+
+                setWishlistIds(ids);
+                useAppStore.getState().setWishlistCount(ids.length);
 
                 toast.success(
                     result?.wishlisted
