@@ -37,10 +37,12 @@ import { ROUTES } from '@/constants/endpoints';
  * Shape the form values for the API.
  *
  * Blank numeric strings are dropped rather than sent as '', and `opening_stock`
- * is only included when a single product is actually being split into options —
- * it is an allocation of the existing shelf, never an instruction to add stock.
+ * is included only where the form actually offers it: splitting an existing
+ * product's shelf across new options, or entering a product the shop already
+ * holds. On an option that exists it is never sent — that stock moves through
+ * deliveries, orders and recorded adjustments.
  */
-const buildProductPayload = (values, editingProduct) => {
+export const buildProductPayload = (values, editingProduct) => {
     const { variants, has_variants: hasVariants, ...rest } = values;
 
     // The stock field only exists when creating; an edit must never carry one.
@@ -162,7 +164,13 @@ const buildProductPayload = (values, editingProduct) => {
                 is_active: variant.is_active !== false,
             };
 
-            if (isConverting) {
+            /*
+             * Also on a new product, where the form offers the same field per
+             * option — a shop entering something it already has on the shelf.
+             * Sent only where it can be typed: leaving it out here while the
+             * input was on screen meant the quantity was taken and dropped.
+             */
+            if (isConverting || !editingProduct) {
                 line.opening_stock = Number(variant.opening_stock) || 0;
             }
 
