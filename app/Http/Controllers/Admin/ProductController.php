@@ -41,6 +41,7 @@ class ProductController extends Controller
         // instead turned this page into 61 queries for 20 rows.
         $query = Product::with([
             'category.parent.parent', 'categories:id', 'brand', 'images', 'specifications',
+            'attributeValues:id',
             // variants.images so the edit form can show each option's own
             // photos without a second request per row.
             'variants', 'variants.images',
@@ -197,6 +198,7 @@ class ProductController extends Controller
         $this->gallery->syncProduct($product, $this->galleryFrom($validated));
 
         $this->syncSpecifications($product, $validated['specifications'] ?? null);
+        $this->syncAttributeValues($product, $validated['attribute_value_ids'] ?? null);
         $product->syncCategories($validated['category_ids'] ?? []);
         $this->syncRelated($product, $validated['related_product_ids'] ?? null);
         $this->syncQuantityDiscounts($product, $validated['quantity_discounts'] ?? null);
@@ -220,6 +222,10 @@ class ProductController extends Controller
         // validated(), not $attributes: productAttributes() strips this out, and
         // an empty array here is the instruction to clear the spec sheet, which
         // a null-filtering pick would silently discard.
+        if ($request->has('attribute_value_ids')) {
+            $this->syncAttributeValues($product, $request->validated()['attribute_value_ids'] ?? []);
+        }
+
         if ($request->has('specifications')) {
             $this->syncSpecifications($product, $request->validated()['specifications'] ?? []);
         }
@@ -357,6 +363,22 @@ class ProductController extends Controller
      *
      * @param  array<int, array{group?: ?string, name?: ?string, value?: ?string}>|null  $rows
      */
+    /**
+     * The answers this product gives, replacing whatever it gave before.
+     *
+     * Absent means "not mentioned" and changes nothing — editing a price must
+     * not strip a product of its filters. An empty array is an instruction:
+     * the admin unticked the last box.
+     */
+    private function syncAttributeValues(Product $product, ?array $valueIds): void
+    {
+        if ($valueIds === null) {
+            return;
+        }
+
+        $product->attributeValues()->sync(array_unique(array_map('intval', $valueIds)));
+    }
+
     private function syncSpecifications(Product $product, ?array $rows): void
     {
         if ($rows === null) {

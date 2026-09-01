@@ -233,6 +233,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
 
         // Before the {id} route, or "search" is read as an id.
         Route::get(ApiEndpoints::ADMIN_CATEGORIES_SEARCH, [AdminCategoryController::class, 'search'])->middleware('can:catalogue');
+        Route::get(ApiEndpoints::ADMIN_CATEGORY_ATTRIBUTES, [AdminCategoryController::class, 'attributes'])->middleware('can:catalogue');
         Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store'])->middleware('can:catalogue');
         Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update'])->middleware('can:catalogue');
         Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy'])->middleware('can:catalogue');

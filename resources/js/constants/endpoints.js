@@ -176,6 +176,9 @@ export const API_ENDPOINTS = {
         REVIEWS: '/admin/reviews',
         BRANDS: '/admin/brands',
         CATEGORY_SEARCH: '/admin/categories/search',
+        // {id} is replaced by the caller; the product form asks a category
+        // which questions it wants answered about its products.
+        CATEGORY_ATTRIBUTES: '/admin/categories/{id}/attributes',
         BRAND_ITEM: (id) => `/admin/brands/${id}`,
         QUESTIONS: '/admin/questions',
         QUESTION_ANSWER: (id) => `/admin/questions/${id}/answer`,

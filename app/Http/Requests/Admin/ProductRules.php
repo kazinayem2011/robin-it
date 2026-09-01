@@ -183,6 +183,15 @@ class ProductRules
             'related_product_ids' => 'nullable|array|max:12',
             'related_product_ids.*' => 'integer|exists:products,id',
 
+            /*
+             * The curated answers this product gives to its shelf's questions,
+             * as attribute_value ids. Sent whole and replacing what is stored,
+             * like specifications: an answer the admin unticked is one that is
+             * meant to go.
+             */
+            'attribute_value_ids' => 'nullable|array|max:120',
+            'attribute_value_ids.*' => 'integer|exists:attribute_values,id',
+
             'specifications' => 'nullable|array|max:200',
             'specifications.*.group' => 'nullable|string|max:80',
             'specifications.*.name' => 'required_with:specifications.*.value|nullable|string|max:120',

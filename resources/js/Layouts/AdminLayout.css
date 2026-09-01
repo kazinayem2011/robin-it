@@ -4421,3 +4421,71 @@ a.admin-card:hover,
         justify-content: center;
     }
 }
+
+/* ── Product filters (attribute answers) ───────────────────────────────────
+ *
+ * Chips rather than a column of checkboxes: a shelf can ask six questions with
+ * fifteen answers between them, and six stacked lists is a form nobody reaches
+ * the bottom of. Ticked is filled, so what a product claims can be read at a
+ * glance while scrolling past.
+ */
+.admin-attr-editor {
+    margin-bottom: 18px;
+}
+
+.admin-attr-group {
+    margin-bottom: 14px;
+}
+
+.admin-attr-legend {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--dark-800);
+    margin-bottom: 7px;
+}
+
+.admin-attr-hint {
+    margin-left: 8px;
+    font-style: normal;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-400);
+}
+
+.admin-attr-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.admin-attr-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    font-size: 0.79rem;
+    color: var(--dark-800);
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-fast);
+}
+
+.admin-attr-chip:hover {
+    border-color: var(--gray-400);
+}
+
+.admin-attr-chip.is-on {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* The box itself is redundant once the chip fills in, and crowds the label. */
+.admin-attr-chip input {
+    display: none;
+}

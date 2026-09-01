@@ -332,6 +332,9 @@ class ApiEndpoints
 
     public const ADMIN_CATEGORIES_SEARCH = 'categories/search';
 
+    /** The questions a category asks about its products, for the product form. */
+    public const ADMIN_CATEGORY_ATTRIBUTES = 'categories/{id}/attributes';
+
     public const ADMIN_BRANDS = 'brands';
 
     public const ADMIN_BRANDS_ITEM = 'brands/{id}';

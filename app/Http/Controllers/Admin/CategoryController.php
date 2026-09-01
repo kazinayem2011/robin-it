@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
+use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
 use App\Support\SearchTerm;
@@ -143,6 +144,50 @@ class CategoryController extends Controller
      * Cable" is a real child of both Mobile Accessories and Cable, and a bare
      * name cannot tell a shopkeeper which one they are filing a product under.
      */
+    /**
+     * The questions this category asks about a product, inherited from above.
+     *
+     * The product form draws whatever comes back, so a shelf that gains a new
+     * attribute gains the field with no code — and a category that declares
+     * none simply has no section.
+     */
+    public function attributes(int $id): JsonResponse
+    {
+        $ids = [];
+
+        for ($node = Category::find($id, ['id', 'parent_id']); $node; $node = $node->parent_id
+            ? Category::find($node->parent_id, ['id', 'parent_id'])
+            : null) {
+            $ids[] = $node->id;
+        }
+
+        if ($ids === []) {
+            return $this->successResponse([]);
+        }
+
+        $attributes = Attribute::query()
+            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $ids))
+            ->with('values')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Attribute $a) => [
+                'id' => $a->id,
+                'name' => $a->name,
+                'slug' => $a->slug,
+                'unit' => $a->unit,
+                'input_type' => $a->input_type,
+                'values' => $a->values->map(fn ($v) => [
+                    'id' => $v->id,
+                    'label' => $v->label,
+                ])->all(),
+            ])
+            ->values()
+            ->all();
+
+        return $this->successResponse($attributes);
+    }
+
     public function search(Request $request): JsonResponse
     {
         $term = trim((string) $request->query('q', ''));

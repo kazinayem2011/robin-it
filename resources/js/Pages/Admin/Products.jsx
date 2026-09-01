@@ -26,6 +26,7 @@ import { formatBdt } from '@/utils/formatters';
 import siteConfig from '@/constants/siteConfig';
 import VariantEditor from './Components/VariantEditor';
 import SpecificationEditor from './Components/SpecificationEditor';
+import AttributeEditor from './Components/AttributeEditor';
 import ProductDetailsModal from './Components/ProductDetailsModal';
 import ImageGalleryEditor from '@/Components/ImageGalleryEditor';
 import CategoryPicker from '@/Components/CategoryPicker';
@@ -112,6 +113,10 @@ export const buildProductPayload = (values, editingProduct) => {
             alt_text: img.alt_text || null,
             is_primary: Boolean(img.is_primary),
         }));
+
+    // Named explicitly, like every other field: this builder is an allowlist,
+    // so anything not mentioned here never reaches the server.
+    rest.attribute_value_ids = (rest.attribute_value_ids || []).map(Number);
 
     rest.specifications = (rest.specifications || [])
         .filter((spec) => spec.name?.trim() && spec.value?.trim())
@@ -228,6 +233,7 @@ export default function Products({
             meta_description: '',
             meta_keyword: '',
             specifications: [],
+            attribute_value_ids: [],
             image_path: '',
             images: [],
             is_featured: false,
@@ -359,6 +365,7 @@ export default function Products({
                 meta_description: '',
                 meta_keyword: '',
                 specifications: [],
+                attribute_value_ids: [],
                 image_path: '',
                 images: [],
                 is_featured: false,
@@ -420,6 +427,9 @@ export default function Products({
                 meta_keyword: p.meta_keyword || '',
                 // Server rows have no `key`; the editor needs one that survives
                 // re-renders, so give each an identity as it is loaded in.
+                attribute_value_ids: (p.attribute_values || []).map(
+                    (v) => v.id,
+                ),
                 specifications: (p.specifications || []).map((spec, i) => ({
                     key: `spec-${spec.id ?? i}`,
                     group: spec.group || '',
@@ -1208,6 +1218,8 @@ export default function Products({
                         checked={formik.values.emi_available}
                         onChange={formik.handleChange}
                     />
+
+                    <AttributeEditor formik={formik} />
 
                     <SpecificationEditor formik={formik} />
 
