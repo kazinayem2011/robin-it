@@ -1,9 +1,9 @@
 import React from 'react';
+import AppleLogo from '../Components/Icons/AppleLogo';
 import {
     BrainCircuit,
     Briefcase,
     Building2,
-    Command,
     Cpu,
     Laptop,
     Monitor,
@@ -71,7 +71,7 @@ export const ICON_REGISTRY = {
      * glyph is a menu where the glyph means nothing.
      */
     tablet: Tablet,
-    ipad: Tablet,
+    ipad: AppleLogo,
     watch: Watch,
     smartwatch: Watch,
     smartband: Watch,
@@ -112,7 +112,7 @@ export const ICON_REGISTRY = {
     earbud: Headphones,
     drone: Camera,
     drones: Camera,
-    iphone: Smartphone,
+    iphone: AppleLogo,
     // Processors & Components
     cpu: Cpu,
     processor: Cpu,
@@ -131,7 +131,7 @@ export const ICON_REGISTRY = {
     notebooks: Laptop,
     ultrabook: Laptop,
     ultrabooks: Laptop,
-    macbook: Laptop,
+    macbook: AppleLogo,
     thinkpad: Laptop,
 
     // Monitors & Displays
@@ -224,8 +224,11 @@ export const ICON_REGISTRY = {
     brandpc: Building2,
     allinone: Monitor,
     minipc: Box,
-    // The four Apple desktops are one family and read as one.
-    mac: Command,
+    // The Apple machines are one family and wear the maker's own mark. ⌘ was
+    // standing in for it, which is a key on the keyboard, not the maker.
+    mac: AppleLogo,
+    apple: AppleLogo,
+    imac: AppleLogo,
 
     // Networking
     networking: Wifi,
@@ -302,6 +305,25 @@ export const ICON_REGISTRY = {
  */
 const KEYWORD_LIST_WITH_ICONS = [
     /*
+     * Apple first, and above every shape below it.
+     *
+     * A MacBook is a laptop and an iPad is a tablet, so the shape rules had
+     * them — but in the Laptop menu every row is already a laptop, and the
+     * glyph that tells a shopper something there is whose it is. Whole words
+     * throughout, so this cannot reach into another maker's name.
+     */
+    ['apple', ICON_REGISTRY.mac],
+    ['macbook', ICON_REGISTRY.mac],
+    ['imac', ICON_REGISTRY.mac],
+    ['ipad', ICON_REGISTRY.mac],
+    ['iphone', ICON_REGISTRY.mac],
+    ['ipod', ICON_REGISTRY.mac],
+    ['airpods', ICON_REGISTRY.mac],
+    ['mac studio', ICON_REGISTRY.mac],
+    ['mac mini', ICON_REGISTRY.mac],
+    ['mac pro', ICON_REGISTRY.mac],
+
+    /*
      * The specific kind before the generic word, because the first match wins.
      * Without these, every row under Laptop, Monitor and Camera matched the
      * bare category name and the whole menu came out wearing one glyph.
@@ -330,7 +352,6 @@ const KEYWORD_LIST_WITH_ICONS = [
 
     ['laptop', ICON_REGISTRY.laptop],
     ['notebook', ICON_REGISTRY.laptop],
-    ['macbook', ICON_REGISTRY.laptop],
     ['thinkpad', ICON_REGISTRY.laptop],
     ['ultrabook', Sparkles],
     ['processor', ICON_REGISTRY.cpu],
@@ -396,7 +417,6 @@ const KEYWORD_LIST_WITH_ICONS = [
     ['graphics tablet', ICON_REGISTRY.stylus],
     ['stylus', ICON_REGISTRY.stylus],
     ['tablet', ICON_REGISTRY.tablet],
-    ['ipad', ICON_REGISTRY.tablet],
 
     ['smart watch', ICON_REGISTRY.watch],
     ['smartwatch', ICON_REGISTRY.watch],

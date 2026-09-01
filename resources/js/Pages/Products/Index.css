@@ -148,11 +148,11 @@
     grid-template-columns: 250px minmax(0, 1fr);
     gap: 28px;
     /*
-     * Not align-items: start. That shrinks each column to its own content, so
-     * the filter panel's containing block was exactly as tall as the panel and
-     * the sticky inside it had nowhere to travel — it scrolled away with the
-     * page instead of following it.
+     * align-items: start, now that the panel does not follow the page. Without
+     * it the filter column is stretched to the height of the results beside
+     * it, which draws its border all the way down past the last filter.
      */
+    align-items: start;
 }
 
 .plp-filters {
@@ -164,8 +164,7 @@
 }
 
 .plp-filters-body {
-    position: sticky;
-    top: calc(var(--site-chrome-h, 142px) + 16px);
+    /* Scrolls with the page. It used to follow it, pinned below the header. */
     padding: 18px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
