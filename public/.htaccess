@@ -2,11 +2,44 @@
 # uploaded product shots and avatars, served straight off the disk without the
 # framework ever running — is covered too. App responses get the same three
 # from App\Http\Middleware\SecurityHeaders.
+# Compress what the server does not.
+#
+# This host runs LiteSpeed, which compresses text/html from its own MIME list
+# and leaves application/json alone — so every API response went over the wire
+# raw. The mega menu is the worst of it: 132 KB of JSON, fetched on every full
+# page load, over a link with a 250 ms round trip. Gzipped it is 19 KB.
+#
+# Done in PHP rather than the web server because LiteSpeed ignores
+# AddOutputFilterByType, and its own MIME list is not reachable from here.
+# The cost is that HTML is then gzipped by PHP instead of brotli'd by
+# LiteSpeed: measured at 18,215 bytes against 17,985, which is 230 bytes to
+# save 113,000.
+<IfModule LiteSpeed>
+    php_flag zlib.output_compression On
+</IfModule>
+
+# The same intent for a plain Apache, where these modules do the work instead.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json application/ld+json image/svg+xml
+</IfModule>
+
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS application/json application/ld+json image/svg+xml
+</IfModule>
+
 <IfModule mod_headers.c>
     # Honour the declared Content-Type instead of guessing from content.
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Vite writes a content hash into every asset filename, so a given name's
+    # contents can never change: the browser may keep it and never ask again.
+    # Deliberately matched on the hash rather than the extension — an
+    # unhashed /images/banner.jpg would be wrong to freeze for a year.
+    <FilesMatch "-[A-Za-z0-9_-]{8,}\.(js|css|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>
