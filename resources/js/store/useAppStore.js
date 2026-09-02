@@ -91,6 +91,25 @@ const useAppStore = create((set, get) => ({
             ),
         })),
     clearPcBuilder: () => set({ pcBuilderItems: [] }),
+
+    /*
+     * Choosing an option without leaving the aisle.
+     *
+     * A product sold by option cannot be added from a card — the server needs
+     * to know which one — and the card used to answer that by navigating to
+     * the product page, which loses the shopper's place in a list they were
+     * halfway through. The picker is opened here instead: state rather than a
+     * prop, because every card on every page raises it and there is one modal
+     * mounted in the layout to answer.
+     *
+     * `thenCheckout` carries the difference between the cart icon and Buy Now,
+     * which is only knowable at the moment of the click.
+     */
+    variantPicker: { slug: null, name: null, thenCheckout: false },
+    openVariantPicker: ({ slug, name, thenCheckout = false }) =>
+        set({ variantPicker: { slug, name, thenCheckout } }),
+    closeVariantPicker: () =>
+        set({ variantPicker: { slug: null, name: null, thenCheckout: false } }),
 }));
 
 export default useAppStore;

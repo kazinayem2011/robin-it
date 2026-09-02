@@ -80,8 +80,8 @@ export const ProductCard = ({
      * the other thing: it adds and takes the shopper to checkout. The label was
      * "Buy" once before while only adding to the cart, which reads as going to
      * checkout and does not — so this only navigates when the product actually
-     * reached the cart. A product with options routes to its own page instead,
-     * because it cannot be bought without choosing one.
+     * reached the cart. A product with options raises the picker first, and
+     * that carries on to checkout once one has been chosen.
      */
     const handleBuyNow = async (e) => {
         e.preventDefault();
@@ -92,7 +92,15 @@ export const ProductCard = ({
         setBuying(true);
 
         try {
-            const added = await Promise.resolve(onAddToCart(product));
+            /*
+             * A product with options returns false here and opens the picker
+             * instead — nothing is in the cart yet, so there is nowhere to go.
+             * The flag tells the picker that checkout is where this was
+             * heading, so it can finish the journey once an option is chosen.
+             */
+            const added = await Promise.resolve(
+                onAddToCart(product, { thenCheckout: true }),
+            );
 
             if (added) router.visit(ROUTES.CHECKOUT);
         } finally {
@@ -134,8 +142,8 @@ export const ProductCard = ({
         setShowQuickView(true);
     };
 
-    // A product with options cannot be added blind — the handler sends those
-    // to the detail page, so the control should not promise a cart either.
+    // A product with options cannot be added blind — the handler raises a
+    // picker for those, so the control asks rather than promising a cart.
     const hasOptions = Boolean(product.has_variants ?? product.hasVariants);
 
     /*

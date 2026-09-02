@@ -2,6 +2,7 @@ import React from 'react';
 import Header from '../Components/Header';
 import Footer from '../Components/Footer';
 import ToastContainer from '../Components/Toast';
+import VariantPickerModal from '../Components/VariantPickerModal';
 import { useFlashToasts } from '../hooks';
 import './MainLayout.css';
 
@@ -23,6 +24,12 @@ export default function MainLayout({ children }) {
 
             {/* Modular Site Footer (Trust badges, 5-col navigation, newsletter, copyright) */}
             <Footer />
+
+            {/*
+             * Raised from any product card on any page, so it is mounted once
+             * here rather than copied into each list that renders cards.
+             */}
+            <VariantPickerModal />
 
             {/* Global Toast Notifications (SSOT) */}
             <ToastContainer />

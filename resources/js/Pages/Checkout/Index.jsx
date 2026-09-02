@@ -10,6 +10,7 @@ import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
 import { checkoutSchema } from '../../validations';
 import { formatBdt } from '../../utils/formatters';
+import { boundsFor as cartBounds } from '../../utils/cartBounds';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -58,6 +59,57 @@ export default function Checkout({
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [applyingCoupon, setApplyingCoupon] = useState(false);
     const [checkoutBlocker, setCheckoutBlocker] = useState(null);
+    const [busyItemId, setBusyItemId] = useState(null);
+
+    /* The same rules the cart page and the server apply. */
+    const boundsFor = (item) => cartBounds(item, cart);
+
+    /*
+     * Change a quantity without going back to the cart.
+     *
+     * The summary said "Qty: 2" and offered nothing, so spotting the wrong
+     * number at the last step meant leaving checkout, fixing it, and finding
+     * the way forward again — with the delivery details typed in the meantime
+     * left behind.
+     *
+     * The new number shows at once and the server settles the totals, which is
+     * how the cart page behaves; the two lists are the same list.
+     */
+    const changeQuantity = async (item, delta) => {
+        const { min, max } = boundsFor(item);
+        const next = item.quantity + delta;
+
+        if (next < min || next > max) return;
+
+        setBusyItemId(item.id);
+
+        setCart((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      items: prev.items.map((line) =>
+                          line.id === item.id
+                              ? { ...line, quantity: next }
+                              : line,
+                      ),
+                  }
+                : prev,
+        );
+
+        try {
+            await cartService.updateItemQuantity(item.id, next);
+            setCart(await cartService.getCart());
+            useAppStore.getState().fetchCartCount();
+        } catch (error) {
+            toast.error(
+                error?.message || 'We could not update that quantity.',
+            );
+            // Put the line back to whatever the cart actually holds.
+            setCart(await cartService.getCart());
+        } finally {
+            setBusyItemId(null);
+        }
+    };
 
     const formik = useFormik({
         initialValues: {
@@ -531,8 +583,62 @@ export default function Checkout({
                                                         ? ` (${item.variant.name})`
                                                         : ''}
                                                 </span>
-                                                <span className="item-qty">
-                                                    Qty: {item.quantity}
+
+                                                {/*
+                                                 * Changeable here. It used to
+                                                 * read "Qty: 2" and nothing
+                                                 * else, so noticing the wrong
+                                                 * number at the last step meant
+                                                 * going back to the cart and
+                                                 * finding your way forward
+                                                 * again.
+                                                 */}
+                                                <span className="item-qty-control">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            changeQuantity(
+                                                                item,
+                                                                -1,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            busyItemId ===
+                                                                item.id ||
+                                                            item.quantity <=
+                                                                boundsFor(item)
+                                                                    .min
+                                                        }
+                                                        aria-label={`Fewer of ${item.product.name}`}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <span>{item.quantity}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            changeQuantity(
+                                                                item,
+                                                                1,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            busyItemId ===
+                                                                item.id ||
+                                                            item.quantity >=
+                                                                boundsFor(item)
+                                                                    .max
+                                                        }
+                                                        title={
+                                                            item.quantity >=
+                                                            boundsFor(item).max
+                                                                ? `Only ${boundsFor(item).max} available`
+                                                                : undefined
+                                                        }
+                                                        aria-label={`More of ${item.product.name}`}
+                                                    >
+                                                        +
+                                                    </button>
                                                 </span>
                                             </div>
                                             <div className="item-price">

@@ -17,13 +17,37 @@ import { ROUTES } from '../constants/endpoints';
  * between a successful add and one that was refused.
  */
 export const useAddToCart = () => {
-    return useCallback(async (product) => {
+    return useCallback(async (product, { thenCheckout = false } = {}) => {
         if (!product) return false;
 
-        // A product sold by option cannot be added from a card; the shopper has
-        // to pick one first.
+        /*
+         * A product sold by option cannot be added from a card — the server
+         * needs to know which option — so the shopper is asked, in a modal over
+         * the list they are reading.
+         *
+         * This used to navigate to the product page instead, which answered the
+         * question by abandoning what they were doing: on a shop page eight
+         * rows down, choosing 16GB meant losing the filters, the scroll and the
+         * page they were on.
+         *
+         * Still returns false. Nothing has reached the cart yet, and the picker
+         * takes over from here — including going on to checkout when that is
+         * what was asked for.
+         */
         if (product.has_variants ?? product.hasVariants) {
-            router.visit(ROUTES.PRODUCT_DETAIL(product.slug));
+            if (!product.slug) {
+                // Nothing to open a picker with; the old behaviour is still
+                // better than a dead click.
+                router.visit(ROUTES.PRODUCT_DETAIL(product.slug));
+
+                return false;
+            }
+
+            useAppStore.getState().openVariantPicker({
+                slug: product.slug,
+                name: product.name,
+                thenCheckout,
+            });
 
             return false;
         }

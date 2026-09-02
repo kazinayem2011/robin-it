@@ -729,3 +729,53 @@
     font-weight: 600;
     color: var(--success, #16a34a);
 }
+
+/* ---------------------------------------------------------------------------
+ * Changing a quantity in the order summary.
+ *
+ * The summary read "Qty: 2" and offered nothing, so noticing the wrong number
+ * at the last step meant leaving checkout, fixing it in the cart, and typing
+ * the delivery details again. Small and quiet: this is a correction, not the
+ * main business of the page.
+ * ------------------------------------------------------------------------- */
+.item-qty-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.item-qty-control button {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-sm, 5px);
+    background: var(--white, #fff);
+    color: var(--dark-900, #0f172a);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--transition-fast, 0.15s);
+}
+
+.item-qty-control button:hover:not(:disabled) {
+    border-color: var(--primary, #d12127);
+    color: var(--primary, #d12127);
+}
+
+.item-qty-control button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.item-qty-control > span {
+    min-width: 26px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--gray-700, #334155);
+    font-variant-numeric: tabular-nums;
+}

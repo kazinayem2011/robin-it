@@ -8,6 +8,7 @@ import ProductSuggestions from '../../Components/ProductSuggestions';
 import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
+import { boundsFor as cartBounds } from '../../utils/cartBounds';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Trash2, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -57,27 +58,8 @@ export default function Cart() {
         fetchCart(true);
     }, []);
 
-    /*
-     * What this line is allowed to hold, by the same rules the server applies
-     * in CartService::updateItemQuantity(): never more than is in stock, never
-     * more than the per-item cap, never below the product's minimum order.
-     *
-     * Worked out here so the buttons stop at the limit. They did not before —
-     * only "a request is in flight" disabled them — so "+" past the last unit
-     * in stock was a request the server was always going to refuse, and with
-     * the quantity now updating on the spot the refusal showed as the number
-     * going up and snapping back.
-     */
-    const boundsFor = (item) => {
-        const stock =
-            item.variant?.stock_quantity ?? item.product?.stock_quantity ?? null;
-        const cap = cart?.max_quantity_per_item ?? 20;
-
-        return {
-            min: Math.max(1, Number(item.product?.min_order_quantity) || 1),
-            max: stock === null ? cap : Math.min(Number(stock), cap),
-        };
-    };
+    /* Shared with the checkout summary, which offers the same buttons. */
+    const boundsFor = (item) => cartBounds(item, cart);
 
     const updateQuantity = async (itemId, currentQty, delta) => {
         const item = cart?.items?.find((i) => i.id === itemId);
