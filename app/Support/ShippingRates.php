@@ -18,17 +18,26 @@ class ShippingRates
     /** Used when the shop has not set a rate, matching the previous constant. */
     public const DEFAULT_FEE = 60.0;
 
+    public const ZONE_INSIDE_DHAKA = 'inside_dhaka';
+
+    public const ZONE_OUTSIDE_DHAKA = 'outside_dhaka';
+
+    public const ZONES = [self::ZONE_INSIDE_DHAKA, self::ZONE_OUTSIDE_DHAKA];
+
     /**
      * The fee for one order.
      *
-     * @param  string|null  $city  the delivery city, when it is known; the cart
-     *                             page has no address yet and is quoted the
+     * @param  string|null  $city  the delivery city, for orders and addresses
+     *                             saved before the zone was asked for; the cart
+     *                             page has no address at all and is quoted the
      *                             inside-Dhaka rate
      * @param  float  $subtotal  goods total, before any coupon — a promo code
      *                           should not cost the customer their free
      *                           delivery
+     * @param  string|null  $zone  what the customer chose, which beats anything
+     *                             inferred from prose
      */
-    public static function feeFor(?string $city, float $subtotal): float
+    public static function feeFor(?string $city, float $subtotal, ?string $zone = null): float
     {
         if ($subtotal <= 0) {
             return 0.0;
@@ -38,6 +47,17 @@ class ShippingRates
 
         if ($threshold !== null && $subtotal >= $threshold) {
             return 0.0;
+        }
+
+        /*
+         * A stated zone settles it. Reading the city is a guess that was only
+         * ever reliable while the city had a field of its own, and is now the
+         * fallback for orders and addresses recorded before this was asked.
+         */
+        if (in_array($zone, self::ZONES, true)) {
+            return $zone === self::ZONE_INSIDE_DHAKA
+                ? self::insideDhaka()
+                : self::outsideDhaka();
         }
 
         /*
@@ -52,6 +72,26 @@ class ShippingRates
         }
 
         return self::isInsideDhaka($city) ? self::insideDhaka() : self::outsideDhaka();
+    }
+
+    /**
+     * The rate for each zone, for a page that wants to show both before the
+     * customer has chosen.
+     *
+     * @return array<string, float>
+     */
+    public static function byZone(): array
+    {
+        return [
+            self::ZONE_INSIDE_DHAKA => self::insideDhaka(),
+            self::ZONE_OUTSIDE_DHAKA => self::outsideDhaka(),
+        ];
+    }
+
+    /** Whatever was given, if it is a zone this shop knows; otherwise null. */
+    public static function normaliseZone(?string $zone): ?string
+    {
+        return in_array($zone, self::ZONES, true) ? $zone : null;
     }
 
     public static function insideDhaka(): float

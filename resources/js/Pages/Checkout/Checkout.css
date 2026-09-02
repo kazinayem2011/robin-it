@@ -661,3 +661,71 @@
     padding-top: 28px;
     border-top: 1px solid var(--border-light);
 }
+
+/* ---------------------------------------------------------------------------
+ * Inside Dhaka or outside it.
+ *
+ * A choice rather than something read off the address: delivery is priced by
+ * zone, and searching a line somebody wrote for the word "Dhaka" charges
+ * "Dhaka Road, Feni" the local rate. Each option carries its own price so the
+ * choice and its cost are one decision.
+ * ------------------------------------------------------------------------- */
+.delivery-zone-choice {
+    display: grid;
+    /* Two across where there is room, stacked on a phone, without a query. */
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: 10px;
+}
+
+.delivery-zone-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+    cursor: pointer;
+    background: var(--white, #fff);
+    transition:
+        border-color var(--transition-fast, 0.15s),
+        background var(--transition-fast, 0.15s);
+}
+
+.delivery-zone-option:hover {
+    border-color: var(--primary, #d12127);
+}
+
+.delivery-zone-option.is-chosen {
+    border-color: var(--primary, #d12127);
+    background: var(--primary-light, #fef2f2);
+}
+
+.delivery-zone-option input {
+    /* The whole card is the target; the radio only has to stay reachable by
+       keyboard and readable by a screen reader. */
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.delivery-zone-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--dark-900, #0f172a);
+}
+
+/* Pushed to the far edge so the two prices line up down the column. */
+.delivery-zone-fee {
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary, #d12127);
+    font-variant-numeric: tabular-nums;
+}
+
+.delivery-zone-note {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--success, #16a34a);
+}

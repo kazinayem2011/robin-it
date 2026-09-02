@@ -227,7 +227,13 @@ class CartService
      *                             the inside-Dhaka rate; checkout knows and
      *                             charges accordingly.
      */
-    public function calculateTotals(Cart $cart, float $discount = 0.0, ?string $city = null): array
+    /**
+     * @param  string|null  $city  kept for orders and addresses saved before
+     *                             the zone was asked for
+     * @param  string|null  $zone  what the customer chose at checkout, which
+     *                             decides the rate outright
+     */
+    public function calculateTotals(Cart $cart, float $discount = 0.0, ?string $city = null, ?string $zone = null): array
     {
         $cart->loadMissing('items.product', 'items.variant');
 
@@ -260,7 +266,7 @@ class CartService
         $vatAddedOnTop = $vat > 0 && ! VatRules::pricesIncludeVat();
         // Measured against the goods total before the coupon: a promo code
         // should not cost the customer their free delivery.
-        $shipping = ShippingRates::feeFor($city, $subtotal);
+        $shipping = ShippingRates::feeFor($city, $subtotal, $zone);
 
         return [
             'subtotal' => $subtotal,

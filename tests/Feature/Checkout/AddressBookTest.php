@@ -243,8 +243,31 @@ class AddressBookTest extends TestCase
         $user = $this->customer();
 
         $this->assertNull(AddressBook::remember($user, ['street_address' => '  ', 'city' => 'Dhaka']));
-        $this->assertNull(AddressBook::remember($user, ['street_address' => 'House 1', 'city' => '']));
+        $this->assertNull(AddressBook::remember($user, ['street_address' => '', 'address' => '   ']));
         $this->assertSame(0, Address::count());
+    }
+
+    /**
+     * A missing city no longer stops an address being kept.
+     *
+     * It used to, and rightly, while the form asked for the city in a box of
+     * its own. The form now asks for the address as one line and for the
+     * delivery zone outright, so nothing collects a city — and refusing to
+     * remember an address without one would have quietly emptied the address
+     * book from the day that form shipped.
+     */
+    public function test_an_address_without_a_city_is_still_kept(): void
+    {
+        $user = $this->customer();
+
+        $address = AddressBook::remember($user, [
+            'address' => 'House 12, Road 5, Dhanmondi',
+            'delivery_zone' => 'inside_dhaka',
+        ]);
+
+        $this->assertNotNull($address);
+        $this->assertSame('House 12, Road 5, Dhanmondi', $address->street_address);
+        $this->assertSame('inside_dhaka', $address->delivery_zone);
     }
 
     /** @depends test_placing_an_order_keeps_the_address */

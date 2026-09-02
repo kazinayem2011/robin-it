@@ -20,15 +20,27 @@ export const checkoutSchema = Yup.object().shape({
                 return bdPhoneRegex.test(value.trim().replace(/[\s-]/g, ''));
             },
         ),
-    city: Yup.string()
-        .required('City / District is required')
-        .min(2, 'City must be at least 2 characters'),
-    zone: Yup.string().nullable(),
-    street_address: Yup.string()
-        .required('Detailed street address is required')
+    /*
+     * One line, and the zone said outright.
+     *
+     * This used to be a city, an optional area and a street, with delivery
+     * priced by searching the city for the word "dhaka". That worked only while
+     * the city had a box of its own — against a single line it would charge
+     * "Dhaka Road, Feni" the inside-Dhaka rate. So the customer states the zone
+     * and writes the address however they like.
+     */
+    address: Yup.string()
+        .required('Delivery address is required')
         .min(
-            5,
-            'Please provide full house, road, and area details (min. 5 chars)',
+            10,
+            'Please give the full address — house, road, area and district',
+        )
+        .max(500, 'Address is too long'),
+    delivery_zone: Yup.string()
+        .required('Choose whether delivery is inside or outside Dhaka')
+        .oneOf(
+            ['inside_dhaka', 'outside_dhaka'],
+            'Choose whether delivery is inside or outside Dhaka',
         ),
     payment: Yup.string().default('cod'),
 });

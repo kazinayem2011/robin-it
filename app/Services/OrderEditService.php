@@ -314,7 +314,13 @@ class OrderEditService
         $goods = round($subtotal - $discount, 2);
         $vat = VatRules::on($goods);
         $addedOnTop = $vat > 0 && ! VatRules::pricesIncludeVat();
-        $shipping = ShippingRates::feeFor($order->shipping_address['city'] ?? null, $subtotal);
+        $shipping = ShippingRates::feeFor(
+            $order->shipping_address['city'] ?? null,
+            $subtotal,
+            // The zone the customer chose, so re-pricing an edit reaches
+            // the same answer they were originally charged.
+            $order->shipping_address['delivery_zone'] ?? null,
+        );
 
         $order->forceFill([
             'subtotal' => $subtotal,

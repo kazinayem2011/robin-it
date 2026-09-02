@@ -22,6 +22,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\Courier\CourierDriverRegistry;
 use App\Support\BrandDetails;
+use App\Support\ShippingRates;
 use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -83,7 +84,12 @@ class OrderService
 
             // The delivery city decides the rate; the cart page quoted the
             // inside-Dhaka one because it had no address to go on yet.
-            $totals = $this->cartService->calculateTotals($cart, $discount, $addressData['city'] ?? null);
+            $totals = $this->cartService->calculateTotals(
+                $cart,
+                $discount,
+                $addressData['city'] ?? null,
+                ShippingRates::normaliseZone($addressData['delivery_zone'] ?? null),
+            );
 
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
@@ -115,6 +121,14 @@ class OrderService
                     'street_address' => $addressData['street_address'],
                     'city' => $addressData['city'],
                     'zone' => $addressData['zone'] ?? null,
+                    /*
+                     * What the customer said the destination is, kept on the
+                     * order so re-pricing an edit later reaches the same answer
+                     * the customer was charged. Reading the city again would
+                     * re-guess it, and a guess that changes after the fact is
+                     * worse than no guess at all.
+                     */
+                    'delivery_zone' => ShippingRates::normaliseZone($addressData['delivery_zone'] ?? null),
                 ],
             ]);
 

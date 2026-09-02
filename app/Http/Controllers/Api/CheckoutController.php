@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Services\AddressBook;
 use App\Services\CartService;
 use App\Services\OrderService;
+use App\Support\ShippingRates;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,11 +28,27 @@ class CheckoutController extends Controller
         // The rules judge the number, not its punctuation.
         PhoneHelper::canonicalise($request, 'phone');
 
+        /*
+         * The delivery address is one line and a zone.
+         *
+         * It used to be a street, a city and an optional area, and the city was
+         * then searched for the word "dhaka" to decide what delivery cost. That
+         * only ever worked because the city had a box of its own; asking for
+         * the address as one line and still guessing from it would charge
+         * "Dhaka Road, Chittagong" the local rate. So the customer says which
+         * zone they are in, and the address itself is theirs to write.
+         *
+         * street_address and city are still accepted, unvalidated against the
+         * new shape, so a form or a saved draft posting the old fields is not
+         * turned away mid-checkout.
+         */
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => ['required', 'string', 'max:20', PhoneHelper::RULE],
-            'street_address' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
+            'address' => 'required_without:street_address|nullable|string|max:500',
+            'delivery_zone' => 'nullable|string|in:'.implode(',', ShippingRates::ZONES),
+            'street_address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
             'zone' => 'nullable|string|max:100',
             // Only methods the store can actually take payment for.
             'payment_method' => 'nullable|string|in:'.implode(',', Order::PAYMENT_METHODS),
@@ -39,10 +56,27 @@ class CheckoutController extends Controller
             'coupon_code' => 'nullable|string|max:50',
         ], [
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number so we can reach you about delivery.',
-            'street_address.required' => 'We need a street address to deliver your order.',
+            'address.required_without' => 'We need an address to deliver your order to.',
+            'delivery_zone.in' => 'Choose whether the delivery is inside or outside Dhaka.',
             'payment_method.in' => 'We currently accept Cash on Delivery only.',
             'payment.in' => 'We currently accept Cash on Delivery only.',
         ]);
+
+        /*
+         * One line, whichever field it arrived in. Everything downstream — the
+         * order record, the address book, the invoice — reads street_address,
+         * so the new single field is folded into it rather than adding a second
+         * name for the same thing.
+         */
+        $validated['street_address'] = trim((string) (
+            $validated['address'] ?? $validated['street_address'] ?? ''
+        ));
+
+        // Present whether or not it was sent: everything downstream reads these
+        // keys directly, and a missing one is a fatal rather than a blank.
+        $validated['city'] = $validated['city'] ?? null;
+        $validated['zone'] = $validated['zone'] ?? null;
+        $validated['delivery_zone'] = ShippingRates::normaliseZone($validated['delivery_zone'] ?? null);
 
         // The storefront form posts `payment`; the API contract is `payment_method`.
         $validated['payment_method'] = $validated['payment_method'] ?? $validated['payment'] ?? 'COD';

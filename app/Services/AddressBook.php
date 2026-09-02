@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Address;
 use App\Models\User;
+use App\Support\ShippingRates;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -30,7 +31,13 @@ class AddressBook
     public static function forCheckout(?User $user): array
     {
         if (! $user) {
-            return ['addresses' => [], 'contact' => null];
+            // A guest has no book, but they still pay for delivery and the form
+            // still has to price the two zones.
+            return [
+                'addresses' => [],
+                'contact' => null,
+                'deliveryRates' => self::deliveryRates(),
+            ];
         }
 
         return [
@@ -41,6 +48,21 @@ class AddressBook
                 'name' => $user->name,
                 'phone' => $user->phone,
             ],
+            'deliveryRates' => self::deliveryRates(),
+        ];
+    }
+
+    /**
+     * What each zone costs, so the checkout form can price the choice as it is
+     * made rather than after the server has been asked.
+     *
+     * @return array<string, mixed>
+     */
+    public static function deliveryRates(): array
+    {
+        return [
+            'zones' => ShippingRates::byZone(),
+            'free_over' => ShippingRates::freeThreshold(),
         ];
     }
 
@@ -62,6 +84,10 @@ class AddressBook
                 'phone' => $a->phone ?: $user->phone,
                 'city' => $a->city,
                 'zone' => $a->zone,
+                // What this address pays for delivery, so picking it in the
+                // checkout picker sets the zone rather than leaving the
+                // customer to say it again.
+                'delivery_zone' => $a->delivery_zone,
                 'street_address' => $a->street_address ?: $a->address,
                 'label' => $a->full_address,
             ])
@@ -85,14 +111,21 @@ class AddressBook
             return null;
         }
 
-        $street = trim((string) ($delivery['street_address'] ?? ''));
-        $city = trim((string) ($delivery['city'] ?? ''));
+        $street = trim((string) ($delivery['street_address'] ?? $delivery['address'] ?? ''));
 
-        if ($street === '' || $city === '') {
+        /*
+         * The address line alone is enough to keep. It used to also require a
+         * city, which was right while the form asked for one in its own box —
+         * now the address is a single line and the city is not collected, so
+         * insisting on it would quietly stop remembering anything at all.
+         */
+        if ($street === '') {
             return null;
         }
 
+        $city = trim((string) ($delivery['city'] ?? ''));
         $zone = trim((string) ($delivery['zone'] ?? '')) ?: null;
+        $deliveryZone = ShippingRates::normaliseZone($delivery['delivery_zone'] ?? null);
 
         if ($existing = self::matching($user, $street, $city, $zone)) {
             return $existing;
@@ -100,15 +133,16 @@ class AddressBook
 
         $isFirst = Address::where('user_id', $user->id)->doesntExist();
 
-        return DB::transaction(function () use ($user, $delivery, $street, $city, $zone, $isFirst) {
+        return DB::transaction(function () use ($user, $delivery, $street, $city, $zone, $deliveryZone, $isFirst) {
             if ($isFirst) {
                 // Nothing to unset — this is the only one.
                 return Address::create([
                     'user_id' => $user->id,
                     'name' => $delivery['name'] ?? $user->name,
                     'phone' => $delivery['phone'] ?? $user->phone,
-                    'city' => $city,
+                    'city' => $city ?: null,
                     'zone' => $zone,
+                    'delivery_zone' => $deliveryZone,
                     'street_address' => $street,
                     // Mirrored so the address book, which renders `address`,
                     // shows the street rather than an empty line.
@@ -121,8 +155,9 @@ class AddressBook
                 'user_id' => $user->id,
                 'name' => $delivery['name'] ?? $user->name,
                 'phone' => $delivery['phone'] ?? $user->phone,
-                'city' => $city,
+                'city' => $city ?: null,
                 'zone' => $zone,
+                'delivery_zone' => $deliveryZone,
                 'street_address' => $street,
                 'address' => $street,
                 'is_default' => false,

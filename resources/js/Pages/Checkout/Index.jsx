@@ -23,12 +23,28 @@ import {
 import './Checkout.css';
 
 /**
+ * What the two zones are called on screen. The values are the shop's, matching
+ * ShippingRates::ZONES — the labels are for the customer.
+ */
+const DELIVERY_ZONES = [
+    { value: 'inside_dhaka', label: 'Inside Dhaka' },
+    { value: 'outside_dhaka', label: 'Outside Dhaka' },
+];
+
+/**
  * @param addresses Where this customer has had orders delivered before. Empty
  *                  for a guest, who has nowhere to keep them.
  * @param contact   Their account's name and number, so even a first order does
  *                  not ask for what they registered with.
+ * @param deliveryRates What each zone costs and the spend above which delivery
+ *                  is free, so the choice can be priced as it is made rather
+ *                  than after the server has been asked.
  */
-export default function Checkout({ addresses = [], contact = null }) {
+export default function Checkout({
+    addresses = [],
+    contact = null,
+    deliveryRates = null,
+}) {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -47,9 +63,10 @@ export default function Checkout({ addresses = [], contact = null }) {
         initialValues: {
             name: addresses[0]?.name || contact?.name || '',
             phone: addresses[0]?.phone || contact?.phone || '',
-            city: addresses[0]?.city || '',
-            zone: addresses[0]?.zone || '',
-            street_address: addresses[0]?.street_address || '',
+            address: addresses[0]?.street_address || '',
+            // A saved address remembers which zone it is in, so picking it does
+            // not ask the customer to say so again.
+            delivery_zone: addresses[0]?.delivery_zone || '',
             payment: 'cod',
         },
         validationSchema: checkoutSchema,
@@ -103,9 +120,8 @@ export default function Checkout({ addresses = [], contact = null }) {
             ...formik.values,
             name: addr.name || contact?.name || '',
             phone: addr.phone || contact?.phone || '',
-            city: addr.city || '',
-            zone: addr.zone || '',
-            street_address: addr.street_address || '',
+            address: addr.street_address || '',
+            delivery_zone: addr.delivery_zone || '',
         });
     };
 
@@ -115,9 +131,8 @@ export default function Checkout({ addresses = [], contact = null }) {
         setChosenAddressId(null);
         formik.setValues({
             ...formik.values,
-            city: '',
-            zone: '',
-            street_address: '',
+            address: '',
+            delivery_zone: '',
         });
     };
 
@@ -198,10 +213,42 @@ export default function Checkout({ addresses = [], contact = null }) {
     // Server-calculated so the figure shown here is exactly what will be charged.
     const serverTotals = appliedCoupon?.totals || cart.totals || {};
     const subtotal = serverTotals.subtotal ?? 0;
-    const shipping = serverTotals.shipping_fee ?? 0;
     const discount = appliedCoupon ? (serverTotals.discount ?? 0) : 0;
-    const total =
-        serverTotals.total ?? Math.max(0, subtotal + shipping - discount);
+
+    const zoneRates = deliveryRates?.zones || {};
+    const freeOver = deliveryRates?.free_over ?? null;
+
+    /* Judged on the goods before the coupon, the same as the server does — a
+       promo code should not cost the customer their free delivery. */
+    const freeDelivery = freeOver !== null && subtotal >= freeOver;
+
+    /*
+     * Priced from the zone on screen rather than from the cart's totals.
+     *
+     * The cart was costed before there was an address, so it carries the
+     * inside-Dhaka rate; showing that after somebody has chosen "Outside Dhaka"
+     * would understate the bill right up to the moment they pay. The server
+     * still decides what is charged — this only has to agree with it.
+     */
+    const quotedShipping = serverTotals.shipping_fee ?? 0;
+
+    const shipping = freeDelivery
+        ? 0
+        : formik.values.delivery_zone
+          ? (zoneRates[formik.values.delivery_zone] ?? quotedShipping)
+          : quotedShipping;
+
+    /*
+     * The server's total, moved by the difference in delivery — not rebuilt
+     * from the lines. VAT is worked out server-side and can be inclusive or
+     * added on top, so recomputing here would quietly drop it from the bill.
+     */
+    const total = Math.max(
+        0,
+        (serverTotals.total ?? subtotal + quotedShipping - discount) -
+            quotedShipping +
+            shipping,
+    );
 
     return (
         <>
@@ -236,10 +283,21 @@ export default function Checkout({ addresses = [], contact = null }) {
                                                 <span className="saved-address-street">
                                                     {addr.street_address}
                                                 </span>
+                                                {/* The zone if the address has
+                                                    one, otherwise the area and
+                                                    city it was saved with —
+                                                    addresses kept before the
+                                                    zone was asked for still
+                                                    have to say where they are. */}
                                                 <span className="saved-address-region">
-                                                    {[addr.zone, addr.city]
-                                                        .filter(Boolean)
-                                                        .join(', ')}
+                                                    {DELIVERY_ZONES.find(
+                                                        (z) =>
+                                                            z.value ===
+                                                            addr.delivery_zone,
+                                                    )?.label ||
+                                                        [addr.zone, addr.city]
+                                                            .filter(Boolean)
+                                                            .join(', ')}
                                                 </span>
                                             </span>
                                             {addr.is_default && (
@@ -318,68 +376,98 @@ export default function Checkout({ addresses = [], contact = null }) {
                                         )}
                                 </div>
 
-                                <div className="checkout-form-grid">
-                                    <div className="form-group">
-                                        <label className="form-control-label">
-                                            City / District{' '}
-                                            <span className="required-asterisk">
-                                                *
-                                            </span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="city"
-                                            className={`form-control-input ${formik.touched.city && formik.errors.city ? 'has-error' : ''}`}
-                                            placeholder="e.g. Dhaka"
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            value={formik.values.city}
-                                        />
-                                        {formik.touched.city &&
-                                            formik.errors.city && (
-                                                <span className="form-control-error">
-                                                    {formik.errors.city}
-                                                </span>
-                                            )}
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-control-label">
-                                            Zone / Thana
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="zone"
-                                            className="form-control-input"
-                                            placeholder="e.g. Dhanmondi"
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            value={formik.values.zone}
-                                        />
-                                    </div>
-                                </div>
-
                                 <div className="form-group">
                                     <label className="form-control-label">
-                                        Full Street Address{' '}
+                                        Delivery Address{' '}
                                         <span className="required-asterisk">
                                             *
                                         </span>
                                     </label>
                                     <textarea
-                                        name="street_address"
-                                        className={`form-control-input ${formik.touched.street_address && formik.errors.street_address ? 'has-error' : ''}`}
-                                        placeholder="House number, Road number, Area"
+                                        name="address"
+                                        className={`form-control-input ${formik.touched.address && formik.errors.address ? 'has-error' : ''}`}
+                                        placeholder="House 12, Road 5, Dhanmondi, Dhaka-1205"
                                         rows="3"
                                         onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
-                                        value={formik.values.street_address}
+                                        value={formik.values.address}
                                     ></textarea>
-                                    {formik.touched.street_address &&
-                                        formik.errors.street_address && (
+                                    {formik.touched.address &&
+                                        formik.errors.address && (
                                             <span className="form-control-error">
-                                                {formik.errors.street_address}
+                                                {formik.errors.address}
                                             </span>
                                         )}
+                                </div>
+
+                                {/*
+                                 * Asked rather than read off the address.
+                                 * Delivery is priced by zone, and looking for
+                                 * the word "Dhaka" in a line somebody wrote
+                                 * charges "Dhaka Road, Feni" the local rate.
+                                 * Priced here so the choice and its cost are
+                                 * the same decision.
+                                 */}
+                                <div className="form-group">
+                                    <label className="form-control-label">
+                                        Delivery Area{' '}
+                                        <span className="required-asterisk">
+                                            *
+                                        </span>
+                                    </label>
+                                    <div className="delivery-zone-choice">
+                                        {DELIVERY_ZONES.map((zone) => (
+                                            <label
+                                                key={zone.value}
+                                                className={`delivery-zone-option ${
+                                                    formik.values
+                                                        .delivery_zone ===
+                                                    zone.value
+                                                        ? 'is-chosen'
+                                                        : ''
+                                                }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="delivery_zone"
+                                                    value={zone.value}
+                                                    checked={
+                                                        formik.values
+                                                            .delivery_zone ===
+                                                        zone.value
+                                                    }
+                                                    onChange={
+                                                        formik.handleChange
+                                                    }
+                                                    onBlur={formik.handleBlur}
+                                                />
+                                                <span className="delivery-zone-name">
+                                                    {zone.label}
+                                                </span>
+                                                <span className="delivery-zone-fee">
+                                                    {freeDelivery
+                                                        ? 'Free'
+                                                        : formatBdt(
+                                                              zoneRates[
+                                                                  zone.value
+                                                              ] ?? 0,
+                                                          )}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {formik.touched.delivery_zone &&
+                                        formik.errors.delivery_zone && (
+                                            <span className="form-control-error">
+                                                {formik.errors.delivery_zone}
+                                            </span>
+                                        )}
+                                    {freeDelivery && (
+                                        <span className="delivery-zone-note">
+                                            This order qualifies for free
+                                            delivery.
+                                        </span>
+                                    )}
                                 </div>
                             </form>
                         </div>
