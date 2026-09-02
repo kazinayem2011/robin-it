@@ -100,6 +100,9 @@ class HandleInertiaRequests extends Middleware
             // section it would be refused from.
             'abilities' => $user->abilities(),
             'email_verified_at' => $user->email_verified_at,
+            // Its counterpart, so the account panel can say which of the two
+            // contact details has actually been proved rather than assuming.
+            'phone_verified_at' => $user->phone_verified_at,
         ];
     }
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { router } from '@inertiajs/react';
 import AccountLayout from './AccountLayout';
+import ContactVerification from './ContactVerification';
 import { toast } from '@/Components/Toast';
 import { updateProfileSchema, updatePasswordSchema } from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
@@ -78,6 +79,11 @@ export default function Profile({ user, navCounts, techPoints }) {
                         </p>
                     </div>
                 </div>
+
+                {/* Above the forms because the account panel links here when
+                    something is unconfirmed, and arriving to hunt for the
+                    control would defeat the link. */}
+                <ContactVerification user={user} />
 
                 {/* Personal Info Form */}
                 <form

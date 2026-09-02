@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account\PhoneVerificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -79,6 +80,21 @@ Route::middleware('auth')->group(function () {
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
+
+    /*
+     * Confirming the mobile number already on the account.
+     *
+     * The number comes off the signed-in account rather than the request, so
+     * these cannot be pointed at a stranger's phone; the throttle is still
+     * tight because each send is a text the shop pays for.
+     */
+    Route::post('account/phone/verification', [PhoneVerificationController::class, 'send'])
+        ->middleware('throttle:6,10')
+        ->name('phone.verification.send');
+
+    Route::post('account/phone/verify', [PhoneVerificationController::class, 'verify'])
+        ->middleware('throttle:10,10')
+        ->name('phone.verification.verify');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
         ->name('password.confirm');

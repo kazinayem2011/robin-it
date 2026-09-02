@@ -173,10 +173,46 @@
     color: var(--success);
 }
 
-/* Unverified is a state, not a fault: amber says "outstanding" where red would
-   say "wrong", and nothing here is wrong. */
+/*
+ * Unverified is a state, not a fault: amber says "outstanding" where red would
+ * say "wrong", and nothing here is wrong. Given its own tint rather than the
+ * muted grey of the lines above it, because this is the one row in the card
+ * that is asking to be pressed.
+ */
+.account-identity-meta .is-unverified {
+    background: var(--warning-soft, #fef3c7);
+    border-radius: var(--radius-sm, 6px);
+    padding: 4px 8px;
+    /* Sits proud of the plain contact lines it follows. */
+    margin-top: 2px;
+}
+
 .account-identity-meta .is-unverified svg {
     color: var(--warning, #b45309);
+}
+
+.account-identity-meta .is-unverified a {
+    color: var(--warning-strong, #92400e);
+    font-weight: 600;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-identity-meta .is-unverified a:hover,
+.account-identity-meta .is-unverified a:focus-visible {
+    text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+    .account-identity-meta .is-unverified {
+        background: rgba(180, 83, 9, 0.18);
+    }
+
+    .account-identity-meta .is-unverified a {
+        color: #fbbf24;
+    }
 }
 
 /* The one row that is a link. Underlined on hover only — a permanent underline
@@ -845,4 +881,129 @@
 .dash-invoice-link:hover {
     border-color: var(--primary);
     color: var(--primary);
+}
+
+/* ---------------------------------------------------------------------------
+ * Confirming an email address and a mobile number.
+ *
+ * Sits at the top of Profile & Security because the sidebar links here when
+ * something is outstanding, and arriving to hunt for the control would defeat
+ * the link.
+ * ------------------------------------------------------------------------- */
+.contact-verify-card {
+    background: var(--warning-soft, #fffbeb);
+    border: 1px solid var(--warning-border, #fde68a);
+    border-radius: var(--radius-md, 10px);
+    padding: 18px 20px;
+    margin: 0 0 24px;
+}
+
+/* Nothing outstanding: a quiet line of reassurance, not a panel. */
+.contact-verify-card.is-settled {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border-color: var(--gray-200, #e2e8f0);
+    padding: 12px 16px;
+    color: var(--gray-600, #475569);
+    font-size: 0.85rem;
+}
+
+.contact-verify-card.is-settled svg {
+    color: var(--success, #16a34a);
+    flex-shrink: 0;
+}
+
+.contact-verify-card.is-settled p {
+    margin: 0;
+}
+
+.contact-verify-intro {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: var(--gray-600, #475569);
+}
+
+.contact-verify-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+    border-top: 1px solid var(--warning-border, #fde68a);
+}
+
+/* The code step needs its own line: an OTP field beside a button wraps into
+   a column too narrow to type in on a phone. */
+.contact-verify-row.is-stacked {
+    align-items: flex-start;
+}
+
+.contact-verify-what {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    /* An address is one long unbreakable word in a narrow column. */
+    min-width: 0;
+}
+
+.contact-verify-what svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--gray-500, #64748b);
+}
+
+.contact-verify-what strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--gray-900, #0f172a);
+    overflow-wrap: anywhere;
+}
+
+.contact-verify-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--warning-strong, #92400e);
+}
+
+.contact-verify-state svg {
+    color: currentColor;
+    margin-top: 0;
+}
+
+.contact-verify-code {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Grows to the panel on a phone rather than sitting in a stub column. */
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+@media (max-width: 560px) {
+    .contact-verify-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .contact-verify-card {
+        background: rgba(180, 83, 9, 0.14);
+        border-color: rgba(180, 83, 9, 0.4);
+    }
+
+    .contact-verify-row {
+        border-top-color: rgba(180, 83, 9, 0.35);
+    }
+
+    .contact-verify-state {
+        color: #fbbf24;
+    }
 }

@@ -266,6 +266,10 @@ export const ROUTES = {
     PASSWORD_UPDATE: '/password',
     PASSWORD_CONFIRM: '/confirm-password',
     EMAIL_VERIFICATION_NOTIFICATION: '/email/verification-notification',
+    // Confirming the number already on the account, as opposed to OTP_REGISTER
+    // which confirms one nobody has claimed yet.
+    PHONE_VERIFICATION_SEND: '/account/phone/verification',
+    PHONE_VERIFICATION_VERIFY: '/account/phone/verify',
     LOGOUT: '/logout',
     ADMIN_DASHBOARD: '/admin/dashboard',
     ADMIN_ORDERS: '/admin/orders',

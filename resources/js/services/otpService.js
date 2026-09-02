@@ -42,6 +42,31 @@ export const otpService = {
         );
         return response?.data || response;
     },
+
+    /**
+     * A code to confirm the number already on the signed-in account.
+     *
+     * No number is sent: the server reads it off the account, so this cannot
+     * be pointed at somebody else's handset.
+     */
+    async toVerifyMyNumber() {
+        const response = await axiosInstance.post(
+            ROUTES.PHONE_VERIFICATION_SEND,
+            {},
+            asWebRoute,
+        );
+        return response?.data || response;
+    },
+
+    /** Spend that code and mark the number confirmed. */
+    async confirmMyNumber(code) {
+        const response = await axiosInstance.post(
+            ROUTES.PHONE_VERIFICATION_VERIFY,
+            { code },
+            asWebRoute,
+        );
+        return response?.data || response;
+    },
 };
 
 export default otpService;

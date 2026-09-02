@@ -7,6 +7,7 @@ import {
     MapPin,
     LogOut,
     ShieldCheck,
+    ShieldAlert,
     Sparkles,
     Award,
     Phone,
@@ -38,6 +39,23 @@ export default function AccountLayout({
     const { url } = usePage();
 
     const emailVerified = Boolean(user?.email_verified_at);
+    const phoneVerified = Boolean(user?.phone_verified_at);
+
+    /*
+     * Only what this account actually has. An account holds an email or a
+     * mobile, not necessarily both, and calling a number unconfirmed when there
+     * is no number is noise the customer cannot act on.
+     */
+    const unverified = [
+        user?.email && !emailVerified
+            ? { key: 'email', label: 'Email not verified' }
+            : null,
+        user?.phone && !phoneVerified
+            ? { key: 'phone', label: 'Mobile not verified' }
+            : null,
+    ].filter(Boolean);
+
+    const hasContact = Boolean(user?.email || user?.phone);
 
     /*
      * An account is created with an email or a mobile, so one of the two is
@@ -162,22 +180,33 @@ export default function AccountLayout({
                                             </li>
                                         )}
 
-                                        {user?.email && (
+                                        {/* One line per thing still to prove,
+                                            each a link to where it is proved.
+                                            "Verified member" is claimed only
+                                            when there is nothing outstanding. */}
+                                        {unverified.map(({ key, label }) => (
                                             <li
-                                                className={
-                                                    emailVerified
-                                                        ? 'is-verified'
-                                                        : 'is-unverified'
-                                                }
+                                                key={key}
+                                                className="is-unverified"
                                             >
-                                                <ShieldCheck size={13} />
-                                                <span>
-                                                    {emailVerified
-                                                        ? 'Verified member'
-                                                        : 'Email not verified'}
-                                                </span>
+                                                <ShieldAlert size={13} />
+                                                <Link
+                                                    href={
+                                                        ROUTES.DASHBOARD_PROFILE
+                                                    }
+                                                >
+                                                    {label}
+                                                </Link>
                                             </li>
-                                        )}
+                                        ))}
+
+                                        {hasContact &&
+                                            unverified.length === 0 && (
+                                                <li className="is-verified">
+                                                    <ShieldCheck size={13} />
+                                                    <span>Verified member</span>
+                                                </li>
+                                            )}
                                     </ul>
                                 </div>
 

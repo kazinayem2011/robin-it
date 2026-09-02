@@ -20,9 +20,21 @@ class OtpCode extends Model
     /** Getting back into an account when the password is gone. */
     public const PURPOSE_PASSWORD_RESET = 'password_reset';
 
+    /**
+     * Confirming a number on an account that already exists.
+     *
+     * Registering by mobile confirms the number on the way in, and resetting a
+     * password by mobile confirms it again. Neither covers the customer who
+     * signed up with an email and added a number afterwards, whose number was
+     * therefore unverifiable — there was no flow that could set
+     * phone_verified_at for them.
+     */
+    public const PURPOSE_VERIFY_PHONE = 'verify_phone';
+
     public const PURPOSES = [
         self::PURPOSE_REGISTER,
         self::PURPOSE_PASSWORD_RESET,
+        self::PURPOSE_VERIFY_PHONE,
     ];
 
     protected $fillable = [
