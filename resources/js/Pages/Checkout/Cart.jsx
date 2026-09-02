@@ -57,9 +57,39 @@ export default function Cart() {
         fetchCart(true);
     }, []);
 
+    /*
+     * What this line is allowed to hold, by the same rules the server applies
+     * in CartService::updateItemQuantity(): never more than is in stock, never
+     * more than the per-item cap, never below the product's minimum order.
+     *
+     * Worked out here so the buttons stop at the limit. They did not before —
+     * only "a request is in flight" disabled them — so "+" past the last unit
+     * in stock was a request the server was always going to refuse, and with
+     * the quantity now updating on the spot the refusal showed as the number
+     * going up and snapping back.
+     */
+    const boundsFor = (item) => {
+        const stock =
+            item.variant?.stock_quantity ?? item.product?.stock_quantity ?? null;
+        const cap = cart?.max_quantity_per_item ?? 20;
+
+        return {
+            min: Math.max(1, Number(item.product?.min_order_quantity) || 1),
+            max: stock === null ? cap : Math.min(Number(stock), cap),
+        };
+    };
+
     const updateQuantity = async (itemId, currentQty, delta) => {
+        const item = cart?.items?.find((i) => i.id === itemId);
+        const { min, max } = item
+            ? boundsFor(item)
+            : { min: 1, max: Number.POSITIVE_INFINITY };
+
         const newQty = currentQty + delta;
-        if (newQty < 1) return;
+
+        // Nothing to ask for: the button is disabled at both ends, and this is
+        // the keyboard and double-click case.
+        if (newQty < min || newQty > max) return;
 
         setBusyItemId(itemId);
         setNotice(null);
@@ -250,7 +280,8 @@ export default function Cart() {
                                                     disabled={
                                                         busyItemId ===
                                                             item.id ||
-                                                        item.quantity <= 1
+                                                        item.quantity <=
+                                                            boundsFor(item).min
                                                     }
                                                 >
                                                     -
@@ -269,7 +300,16 @@ export default function Cart() {
                                                     }
                                                     className="cart-qty-btn"
                                                     disabled={
-                                                        busyItemId === item.id
+                                                        busyItemId ===
+                                                            item.id ||
+                                                        item.quantity >=
+                                                            boundsFor(item).max
+                                                    }
+                                                    title={
+                                                        item.quantity >=
+                                                        boundsFor(item).max
+                                                            ? `Only ${boundsFor(item).max} available`
+                                                            : undefined
                                                     }
                                                 >
                                                     +

@@ -34,6 +34,13 @@ class CartController extends Controller
             // Anything that sold out or was delisted while sitting in the cart,
             // so the cart page can warn before the customer reaches checkout.
             'issues' => $cart->exists ? $this->cartService->findUnavailableItems($cart) : [],
+            /*
+             * The same ceiling updateItemQuantity() enforces. Sent rather than
+             * repeated in the page: the cart can then stop at the limit instead
+             * of offering a quantity the next request will refuse, and the two
+             * cannot drift apart the way a copied 20 would.
+             */
+            'max_quantity_per_item' => CartService::MAX_QUANTITY_PER_ITEM,
         ], 'Cart fetched successfully');
     }
 
