@@ -1,7 +1,3 @@
-# Sent by Apache rather than by PHP, so that everything under /storage — the
-# uploaded product shots and avatars, served straight off the disk without the
-# framework ever running — is covered too. App responses get the same three
-# from App\Http\Middleware\SecurityHeaders.
 # Compress what the server does not.
 #
 # This host runs LiteSpeed, which compresses text/html from its own MIME list
@@ -27,11 +23,46 @@
     AddOutputFilterByType BROTLI_COMPRESS application/json application/ld+json image/svg+xml
 </IfModule>
 
+# Sent by the web server rather than by PHP, so that everything under /storage —
+# the uploaded product shots and avatars, served straight off the disk without
+# the framework ever running — is covered too. App responses get the same set
+# from App\Http\Middleware\SecurityHeaders, and a test asserts the two lists
+# have not drifted apart.
 <IfModule mod_headers.c>
     # Honour the declared Content-Type instead of guessing from content.
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Never speak to this host in the clear again.
+    #
+    # http:// already redirects, but the redirect itself is a plaintext request
+    # that can be intercepted before it happens; this removes that one exposed
+    # moment for every visitor after their first.
+    #
+    # A year, and a browser holds it for the full year whatever we send later —
+    # so if TLS ever breaks here the site is unreachable rather than showing a
+    # warning that can be clicked through. Set now, deliberately, while almost
+    # no browser has yet been told: the cost of being wrong grows with every
+    # visitor who has heard it, and today that number is close to zero.
+    #
+    # To back it out, serve max-age=0 and leave it up long enough for browsers
+    # to come back and be told — removing the header does nothing.
+    #
+    # No includeSubDomains: webmail and cPanel answer on subdomains of this
+    # name and their TLS is not ours to vouch for. No preload: that one is
+    # baked into browser binaries and is genuinely hard to undo.
+    #
+    # Sent unconditionally. RFC 6797 requires browsers to ignore it over
+    # plaintext, so there is nothing to guard against, and an env=HTTPS guard
+    # would fail silently if the variable were not set on this host.
+    Header always set Strict-Transport-Security "max-age=31536000"
+
+    # PHP announces its exact patch version on every response, which is free
+    # targeting information for anyone scanning for a known CVE. It cannot be
+    # turned off from here — expose_php is PHP_INI_SYSTEM — so strip it on the
+    # way out instead.
+    Header always unset X-Powered-By
 
     # Vite writes a content hash into every asset filename, so a given name's
     # contents can never change: the browser may keep it and never ask again.

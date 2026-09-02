@@ -7,19 +7,24 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Three headers the shop should have been sending all along.
+ * The headers every response carries.
  *
- * Deliberately not a Content-Security-Policy. A useful one has to be written
- * against every page and every inline script this application actually has,
- * and a guessed policy either breaks the site or is loose enough to be
- * decoration. Same for Strict-Transport-Security, which a browser remembers
- * for as long as it is told to and cannot be taken back by removing it.
+ * Still deliberately not a Content-Security-Policy. A useful one has to be
+ * written against every page and every inline script this application actually
+ * has, and a guessed policy either breaks the site or is loose enough to be
+ * decoration.
  *
- * These three are safe to send everywhere and need no per-page thought.
+ * Strict-Transport-Security was held back for the same reason once — a browser
+ * remembers it for as long as it is told to, and removing the header later
+ * does not take it back. That argument is strongest for a site with visitors
+ * who have already been told, and weakest right now, before launch, when
+ * almost none have. So it goes in now rather than never. public/.htaccess
+ * carries the reasoning in full, including how to back it out.
  *
  * Note what this does *not* cover: everything under /storage is a symlink into
  * public/, served by Apache without PHP ever running, so no middleware sees
- * it. Those files get the same headers from public/.htaccess instead.
+ * it. Those files get the same headers from public/.htaccess instead, and
+ * SecurityHeadersTest asserts the two lists have not drifted apart.
  */
 class SecurityHeaders
 {
@@ -35,6 +40,11 @@ class SecurityHeaders
         // Send the full URL only to ourselves. An order or invoice URL should
         // not travel to whatever a page happens to link out to.
         'Referrer-Policy' => 'strict-origin-when-cross-origin',
+
+        // Never speak to this host in the clear again. Sent on plaintext
+        // responses too: RFC 6797 requires a browser to ignore it there, so
+        // there is nothing to guard, and a guard could only fail silently.
+        'Strict-Transport-Security' => 'max-age=31536000',
     ];
 
     public function handle(Request $request, Closure $next): Response
