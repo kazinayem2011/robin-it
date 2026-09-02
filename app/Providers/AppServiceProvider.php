@@ -6,9 +6,13 @@ use App\Enums\ApiCode;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
+use App\Support\BrandDetails;
 use App\Support\MailSettings;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
@@ -34,9 +38,60 @@ class AppServiceProvider extends ServiceProvider
         $this->constrainRouteKeys();
         $this->configureRateLimiting();
         $this->invalidateCatalogueCacheOnWrite();
+        $this->brandFrameworkEmails();
 
         // SMTP credentials saved in the admin override the .env defaults.
         MailSettings::apply();
+    }
+
+    /**
+     * Put the two framework emails in the shop's envelope.
+     *
+     * Every email this application writes itself extends
+     * emails/layouts/master. These two do not, because Laravel sends them: a
+     * customer who signed up got the shop's welcome email and, moments earlier,
+     * a verification email in the framework's stock template — different
+     * typeface, no logo, no hotline. Same for a password reset, which is
+     * exactly the message a customer is most entitled to be suspicious of.
+     *
+     * Only the presentation changes. The URL, its signature and its expiry are
+     * still the framework's.
+     */
+    protected function brandFrameworkEmails(): void
+    {
+        VerifyEmail::toMailUsing(fn (object $notifiable, string $url) => (new MailMessage)
+            ->subject('Verify your email address — '.BrandDetails::name())
+            ->view('emails.auth.verify-email', [
+                'user' => $notifiable,
+                'url' => $url,
+                'expiresInMinutes' => config('auth.verification.expire', 60),
+            ])
+            ->text('emails.text.auth.verify-email', [
+                'user' => $notifiable,
+                'url' => $url,
+                'expiresInMinutes' => config('auth.verification.expire', 60),
+            ])
+        );
+
+        ResetPassword::toMailUsing(fn (object $notifiable, string $token) => (new MailMessage)
+            ->subject('Reset your password — '.BrandDetails::name())
+            ->view('emails.auth.reset-password', [
+                'user' => $notifiable,
+                'url' => url(route('password.reset', [
+                    'token' => $token,
+                    'email' => $notifiable->getEmailForPasswordReset(),
+                ], false)),
+                'expiresInMinutes' => config('auth.passwords.users.expire', 60),
+            ])
+            ->text('emails.text.auth.reset-password', [
+                'user' => $notifiable,
+                'url' => url(route('password.reset', [
+                    'token' => $token,
+                    'email' => $notifiable->getEmailForPasswordReset(),
+                ], false)),
+                'expiresInMinutes' => config('auth.passwords.users.expire', 60),
+            ])
+        );
     }
 
     /**

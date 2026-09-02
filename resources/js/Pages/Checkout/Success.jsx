@@ -44,8 +44,17 @@ export default function Success({ orderNumber, suggestions = [] }) {
                     >
                         Return Home
                     </Link>
+                    {/* Carrying the number means the page opens on this order
+                        rather than on an empty form asking for something the
+                        customer was just shown. Signed in, it opens the order
+                        outright; a guest is still asked for the mobile on it,
+                        which is what proves the order is theirs. */}
                     <Link
-                        href={ROUTES.TRACK}
+                        href={
+                            orderNumber
+                                ? `${ROUTES.TRACK}/${encodeURIComponent(orderNumber)}`
+                                : ROUTES.TRACK
+                        }
                         className="btn btn-primary hover-lift"
                     >
                         Track Order

@@ -37,6 +37,24 @@ export default function AccountLayout({
 }) {
     const { url } = usePage();
 
+    const emailVerified = Boolean(user?.email_verified_at);
+
+    /*
+     * An account is created with an email or a mobile, so one of the two is
+     * routinely absent. It used to render anyway: the email line as an icon
+     * beside nothing, and the phone line as an em dash, because
+     * formatBdPhone() returns "—" for an empty number and a non-empty string
+     * never falls through `||`. A dash states nothing and cannot be acted on,
+     * so the missing half is offered as a link to the profile instead.
+     */
+    const missingContact = !user
+        ? null
+        : !user.phone
+          ? { icon: Phone, label: 'Add a mobile number' }
+          : !user.email
+            ? { icon: Mail, label: 'Add an email address' }
+            : null;
+
     const items = [
         {
             key: 'overview',
@@ -111,21 +129,55 @@ export default function AccountLayout({
                                     </span>
 
                                     <ul className="account-identity-meta">
-                                        <li title={user?.email}>
-                                            <Mail size={13} />
-                                            <span>{user?.email}</span>
-                                        </li>
-                                        <li>
-                                            <Phone size={13} />
-                                            <span>
-                                                {formatBdPhone(user?.phone) ||
-                                                    'No number yet'}
-                                            </span>
-                                        </li>
-                                        <li className="is-verified">
-                                            <ShieldCheck size={13} />
-                                            <span>Verified member</span>
-                                        </li>
+                                        {user?.email && (
+                                            <li title={user.email}>
+                                                <Mail size={13} />
+                                                <span>{user.email}</span>
+                                            </li>
+                                        )}
+
+                                        {user?.phone && (
+                                            <li title={user.phone}>
+                                                <Phone size={13} />
+                                                <span>
+                                                    {formatBdPhone(user.phone)}
+                                                </span>
+                                            </li>
+                                        )}
+
+                                        {/* Signing up needs an email or a
+                                            mobile, not both, so the one that is
+                                            missing is worth offering rather
+                                            than leaving as a gap. */}
+                                        {missingContact && (
+                                            <li className="account-identity-missing">
+                                                <missingContact.icon
+                                                    size={13}
+                                                />
+                                                <Link
+                                                    href={ROUTES.DASHBOARD_PROFILE}
+                                                >
+                                                    {missingContact.label}
+                                                </Link>
+                                            </li>
+                                        )}
+
+                                        {user?.email && (
+                                            <li
+                                                className={
+                                                    emailVerified
+                                                        ? 'is-verified'
+                                                        : 'is-unverified'
+                                                }
+                                            >
+                                                <ShieldCheck size={13} />
+                                                <span>
+                                                    {emailVerified
+                                                        ? 'Verified member'
+                                                        : 'Email not verified'}
+                                                </span>
+                                            </li>
+                                        )}
                                     </ul>
                                 </div>
 

@@ -24,8 +24,14 @@ export default function Cart() {
        adjusts a number. */
     const [suggestions, setSuggestions] = useState([]);
 
-    const fetchCart = async () => {
-        setLoading(true);
+    /*
+     * @param withSkeleton Only the first load has nothing to show. Every later
+     *   fetch is a correction to a cart already on screen, and raising the
+     *   skeleton for it replaced the whole page — items, totals and all —
+     *   which read as a full page load every time somebody pressed "+".
+     */
+    const fetchCart = async (withSkeleton = false) => {
+        if (withSkeleton) setLoading(true);
         try {
             const data = await cartService.getCart();
             setCart(data);
@@ -33,7 +39,7 @@ export default function Cart() {
             console.error('Failed to load cart', error);
             setNotice(error?.message || 'We could not load your cart.');
         } finally {
-            setLoading(false);
+            if (withSkeleton) setLoading(false);
         }
     };
 
@@ -48,7 +54,7 @@ export default function Cart() {
     }, []);
 
     useEffect(() => {
-        fetchCart();
+        fetchCart(true);
     }, []);
 
     const updateQuantity = async (itemId, currentQty, delta) => {
@@ -57,13 +63,40 @@ export default function Cart() {
 
         setBusyItemId(itemId);
         setNotice(null);
+
+        /*
+         * Show the new number at once, then confirm it.
+         *
+         * A quantity is the one thing on this page the customer has just
+         * decided, so waiting on a round trip to redraw it is the change
+         * feeling slow rather than being slow. The line total follows from the
+         * quantity and moves with it; the cart totals are the server's to
+         * decide — coupons and delivery depend on them — so those settle a
+         * moment later, when the fetch below lands.
+         */
+        setCart((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      items: prev.items.map((item) =>
+                          item.id === itemId
+                              ? { ...item, quantity: newQty }
+                              : item,
+                      ),
+                  }
+                : prev,
+        );
+
         try {
             await cartService.updateItemQuantity(itemId, newQty);
             await fetchCart();
             useAppStore.getState().fetchCartCount();
         } catch (error) {
-            // The server knows exactly how many units are left — say so.
+            // The server knows exactly how many units are left — say so, and
+            // put the row back to whatever it actually holds rather than
+            // leaving the guess on screen.
             setNotice(error?.message || 'We could not update that quantity.');
+            await fetchCart();
         } finally {
             setBusyItemId(null);
         }

@@ -179,6 +179,37 @@ class OrderMailTest extends TestCase
         }
     }
 
+    /**
+     * "Track your order" pointed at /track, which is the empty form — so the
+     * customer arrived at a box asking for the order number the email had just
+     * shown them, and had to copy it across by hand.
+     */
+    public function test_the_track_button_carries_the_order_number(): void
+    {
+        $order = $this->order(User::factory()->create());
+
+        foreach ([
+            'confirmation' => new OrderConfirmationMail($order),
+            'status update' => new OrderStatusUpdatedMail($order, 'pending'),
+        ] as $label => $mailable) {
+            $html = $mailable->render();
+
+            $this->assertStringContainsString(
+                '/track/'.$order->order_number,
+                $html,
+                "The {$label} email's track link does not carry the order number."
+            );
+
+            // Outlook renders the VML button instead of the anchor, so both
+            // have to carry it or half the recipients get the bare form.
+            $this->assertSame(
+                2,
+                substr_count($html, '/track/'.$order->order_number),
+                "The {$label} email should carry the number in both the VML and the anchor."
+            );
+        }
+    }
+
     /** The inbox preview line should describe the message, not leak markup. */
     public function test_the_html_carries_a_preheader_and_outlook_fallbacks(): void
     {

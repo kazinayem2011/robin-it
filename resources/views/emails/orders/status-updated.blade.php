@@ -60,13 +60,13 @@
                 <td align="center" style="padding:0 0 24px;">
                     <!--[if mso]>
                     <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
-                                 href="{{ $brand['url'] }}/track" style="height:46px;v-text-anchor:middle;width:260px;" arcsize="13%" stroke="f" fillcolor="#d12127">
+                                 href="{{ $brand['url'] }}/track/{{ $order->order_number }}" style="height:46px;v-text-anchor:middle;width:260px;" arcsize="13%" stroke="f" fillcolor="#d12127">
                         <w:anchorlock/>
                         <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Track your order</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-- -->
-                    <a href="{{ $brand['url'] }}/track"
+                    <a href="{{ $brand['url'] }}/track/{{ $order->order_number }}"
                        style="display:inline-block; background-color:#d12127; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:15px; font-weight:bold; line-height:46px; text-align:center; text-decoration:none; width:260px; border-radius:8px;">
                         Track your order
                     </a>

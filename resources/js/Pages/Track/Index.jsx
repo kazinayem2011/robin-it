@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import { mainLayout } from '../../Layouts/MainLayout';
@@ -25,10 +25,16 @@ import {
 import './Track.css';
 
 /**
- * @param orderNumber From /track/{orderNumber}. It fills in the first box and
- *                    nothing more — the phone number is still what proves the
- *                    order is yours, so arriving with a link shows the form,
- *                    not somebody's address.
+ * @param orderNumber From /track/{orderNumber}.
+ *
+ * For a guest it fills in the first box and nothing more — the phone number on
+ * the order is what proves the order is theirs, so arriving with a link shows
+ * the form, never somebody's address.
+ *
+ * Signed in, it opens the order: signing in has already proved who they are,
+ * and the server hands back only their own orders without a number. Someone
+ * signed in following a link to an order that is not theirs gets the form,
+ * same as a guest.
  */
 export default function TrackOrder({ orderNumber = null }) {
     const [trackingResult, setTrackingResult] = useState(null);
@@ -110,6 +116,31 @@ export default function TrackOrder({ orderNumber = null }) {
         // Only on arrival: after that the field belongs to whoever is typing.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orderNumber]);
+
+    /*
+     * Arriving from "Track Order" on the confirmation page or the email, signed
+     * in, opens the order instead of showing a form with one box already filled
+     * and a Submit button that is the only thing left to do.
+     *
+     * Only when signed in, and safe because the server decides: trackOrder()
+     * opens an order without a phone number only for the customer it belongs
+     * to, and returns nothing for anyone else's. Following a link to a stranger
+     * s order number therefore lands on the form, exactly as before. A guest is
+     * never auto-submitted — the mobile on the order is what proves it is
+     * theirs, and they have not given it yet.
+     */
+    const autoOpened = useRef(false);
+
+    useEffect(() => {
+        if (autoOpened.current) return;
+        if (!orderNumber || !authUser) return;
+
+        autoOpened.current = true;
+        formik.submitForm();
+        // Once, on arrival. Re-running as the form changes would re-submit
+        // under whoever is typing.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [orderNumber, authUser]);
 
     const STEPS = [
         { id: 1, label: 'Order Placed', icon: Clock },

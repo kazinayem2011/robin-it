@@ -173,6 +173,27 @@
     color: var(--success);
 }
 
+/* Unverified is a state, not a fault: amber says "outstanding" where red would
+   say "wrong", and nothing here is wrong. */
+.account-identity-meta .is-unverified svg {
+    color: var(--warning, #b45309);
+}
+
+/* The one row that is a link. Underlined on hover only — a permanent underline
+   in a column of plain contact lines reads as an error state. */
+.account-identity-missing a {
+    color: var(--primary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-identity-missing a:hover,
+.account-identity-missing a:focus-visible {
+    text-decoration: underline;
+}
+
 .dashboard-content-grid {
     display: grid;
     /*
