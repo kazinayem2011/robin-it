@@ -316,14 +316,26 @@ class CatalogueAttributeSeeder extends Seeder
 
     public function run(): void
     {
+        $attached = 0;
+        $missing = [];
+
         foreach (self::CATALOGUE as $categorySlug => $definitions) {
             $category = Category::where('slug', $categorySlug)->first();
 
+            /*
+             * Shelves are matched by slug, so a catalogue whose tree differs
+             * would define the questions and hang them on nothing. Skipping is
+             * right — a shop without a Printer shelf should not grow one — but
+             * it has to be said out loud, or a seed that did nothing looks
+             * exactly like a seed that worked.
+             */
             if (! $category) {
-                $this->command?->warn("No \"{$categorySlug}\" category; its questions were skipped.");
+                $missing[] = $categorySlug;
 
                 continue;
             }
+
+            $attached++;
 
             foreach ($definitions as $order => $definition) {
                 [$name, $inputType, $unit, $rows] = $definition;
@@ -360,6 +372,16 @@ class CatalogueAttributeSeeder extends Seeder
 
             $this->command?->info(
                 count($definitions)." questions defined against {$category->name}."
+            );
+        }
+
+        $this->command?->newLine();
+        $this->command?->info("{$attached} of ".count(self::CATALOGUE).' shelves now ask questions.');
+
+        if ($missing !== []) {
+            $this->command?->warn(
+                'No category matched these slugs, so their questions were not attached to anything: '
+                .implode(', ', $missing).'.'
             );
         }
     }

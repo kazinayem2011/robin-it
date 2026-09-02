@@ -32,6 +32,13 @@ class Category extends Model
         return $this->hasMany(Category::class, 'parent_id');
     }
 
+    /** The questions this shelf asks about its products. */
+    public function attributes()
+    {
+        return $this->belongsToMany(Attribute::class, 'attribute_category')
+            ->withPivot('sort_order');
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
