@@ -103,6 +103,7 @@ describe('deliveryAddressSchema', () => {
         district: 'Dhaka',
         city: 'Dhanmondi',
         address: 'House 45, Road 12',
+        delivery_zone: 'inside_dhaka',
     };
 
     it('accepts an address a courier could deliver to', async () => {
@@ -125,5 +126,26 @@ describe('deliveryAddressSchema', () => {
         expect(
             await check(deliveryAddressSchema, { ...base, city: '' }),
         ).toBeNull();
+    });
+
+    /*
+     * The zone is what delivery is priced from, and neither field above
+     * settles it — the district is typed by hand and the Dhaka division
+     * reaches Gazipur — so an address saved without one would reach checkout
+     * unable to say what it costs to deliver to.
+     */
+    it('requires a delivery zone', async () => {
+        expect(
+            await check(deliveryAddressSchema, { ...base, delivery_zone: '' }),
+        ).toContain('Choose whether this address is inside or outside Dhaka');
+    });
+
+    it('refuses a zone the shop does not have a rate for', async () => {
+        expect(
+            await check(deliveryAddressSchema, {
+                ...base,
+                delivery_zone: 'chittagong',
+            }),
+        ).not.toBeNull();
     });
 });

@@ -23,6 +23,10 @@ class AddressBookTest extends TestCase
             'district' => 'Dhaka',
             'city' => 'Gulshan',
             'address' => 'House 45, Road 7, Gulshan 2',
+            // What delivery costs to here. Required since the address became a
+            // line the customer writes: neither the district, which is typed by
+            // hand, nor the division, which reaches Gazipur, settles it.
+            'delivery_zone' => 'inside_dhaka',
             'is_default' => true,
         ], $overrides);
     }
@@ -42,6 +46,7 @@ class AddressBookTest extends TestCase
             'district' => 'Dhaka',
             'city' => 'Gulshan',
             'address' => 'House 45, Road 7, Gulshan 2',
+            'delivery_zone' => 'inside_dhaka',
             'is_default' => true,
         ]);
     }

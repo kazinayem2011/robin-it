@@ -30,6 +30,7 @@ export default function Addresses({
             district: 'Dhaka',
             city: '',
             address: '',
+            delivery_zone: '',
             is_default: true,
         },
         validationSchema: deliveryAddressSchema,
@@ -74,7 +75,11 @@ export default function Addresses({
                     <button
                         className="btn btn-primary btn-sm"
                         onClick={() => {
-                            addressForm.reset();
+                            // resetForm(), not reset(): this is a Formik bag,
+                            // and reset() is Inertia's useForm. Calling it threw
+                            // before the modal was ever opened, so "Add New
+                            // Address" did nothing at all.
+                            addressForm.resetForm();
                             setShowAddressModal(true);
                         }}
                     >

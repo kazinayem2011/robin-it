@@ -51,6 +51,18 @@ export const deliveryAddressSchema = Yup.object().shape({
         .required('Street address is required')
         .min(6, 'Please give enough detail to find the door')
         .max(255, 'Address cannot exceed 255 characters'),
+    /*
+     * Asked rather than derived: the district is typed by hand, and the Dhaka
+     * division reaches Gazipur and Tangail, so neither settles what delivery
+     * costs. Saved with the address so checkout knows the price before the
+     * customer picks it.
+     */
+    delivery_zone: Yup.string()
+        .required('Choose whether this address is inside or outside Dhaka')
+        .oneOf(
+            ['inside_dhaka', 'outside_dhaka'],
+            'Choose whether this address is inside or outside Dhaka',
+        ),
 });
 
 export const updatePasswordSchema = Yup.object().shape({

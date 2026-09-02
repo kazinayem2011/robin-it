@@ -8,6 +8,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\Wishlist;
 use App\Services\OrderService;
+use App\Support\ShippingRates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -208,12 +209,18 @@ class DashboardController extends Controller
             'district' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'address' => 'required|string|max:500',
+            // What delivery costs to here. Neither the district nor the
+            // division settles it — one is typed by hand, and the Dhaka
+            // division reaches Gazipur — so the customer says.
+            'delivery_zone' => 'required|string|in:'.implode(',', ShippingRates::ZONES),
             'is_default' => 'nullable|boolean',
         ], [
             'address.required' => 'Please enter your full street address, including house and road number.',
             'division.required' => 'Please choose your division.',
             'district.required' => 'Please choose your district.',
             'city.required' => 'Please enter your city or thana.',
+            'delivery_zone.required' => 'Choose whether this address is inside or outside Dhaka.',
+            'delivery_zone.in' => 'Choose whether this address is inside or outside Dhaka.',
         ]);
 
         $isFirstAddress = Address::where('user_id', $user->id)->count() === 0;
@@ -225,6 +232,7 @@ class DashboardController extends Controller
                 'district' => $validated['district'],
                 'city' => $validated['city'],
                 'address' => $validated['address'],
+                'delivery_zone' => $validated['delivery_zone'],
                 'is_default' => $makeDefault,
             ];
 

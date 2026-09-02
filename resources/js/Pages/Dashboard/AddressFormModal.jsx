@@ -104,6 +104,35 @@ export default function AddressFormModal({
                         )}
                 </div>
 
+                {/*
+                 * Asked, not worked out. Delivery is priced by zone, and
+                 * neither field above settles it: the district is typed by
+                 * hand, and the Dhaka division reaches Gazipur and Tangail.
+                 * Kept here so an address saved in the book arrives at
+                 * checkout already knowing what it costs to deliver to.
+                 */}
+                <div className="auth-form-group">
+                    <label className="auth-label">Delivery Area</label>
+                    <select
+                        value={addressForm.values.delivery_zone}
+                        name="delivery_zone"
+                        onBlur={addressForm.handleBlur}
+                        onChange={addressForm.handleChange}
+                        className={`auth-text-input dash-input-pad${addressForm.touched.delivery_zone && addressForm.errors.delivery_zone ? ' input-error' : ''}`}
+                    >
+                        <option value="">Choose an area…</option>
+                        <option value="inside_dhaka">Inside Dhaka</option>
+                        <option value="outside_dhaka">Outside Dhaka</option>
+                    </select>
+
+                    {addressForm.touched.delivery_zone &&
+                        addressForm.errors.delivery_zone && (
+                            <span className="auth-field-error">
+                                {addressForm.errors.delivery_zone}
+                            </span>
+                        )}
+                </div>
+
                 <div className="dash-modal-btn-row">
                     <button
                         type="button"
