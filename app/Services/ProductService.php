@@ -720,37 +720,67 @@ class ProductService
      */
     public function getPcBuilderCategories(): array
     {
+        /*
+         * Each slot names the shelves it might live on, best first.
+         *
+         * A single hard-coded slug tied the builder to one catalogue: these
+         * were `cpu`, `motherboard`, `pc-case`, `mice` — the tree the shop had
+         * when this was written. Reorganising the catalogue renamed every one
+         * of them, and because a missing category is simply skipped, the
+         * builder answered with an empty blueprint and no error anywhere. A
+         * feature that silently becomes nothing is worse than one that breaks.
+         *
+         * Listing candidates means a rename is survivable and both trees work,
+         * and a slot with no shelf at all is left out rather than offered as an
+         * empty picker.
+         */
         $slots = [
             // Core: the parts that have to be compatible with each other.
-            ['slug' => 'cpu', 'icon' => 'Cpu', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-processor', 'cpu'], 'icon' => 'Cpu', 'group' => 'core', 'required' => true,
                 'hint' => 'Sets the socket your motherboard must match'],
-            ['slug' => 'cpu-cooler', 'icon' => 'Wind', 'group' => 'core', 'required' => false,
+            ['slugs' => ['component-cpu-cooler', 'cpu-cooler'], 'icon' => 'Wind', 'group' => 'core', 'required' => false,
                 'hint' => 'Some processors include one'],
-            ['slug' => 'motherboard', 'icon' => 'Server', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-motherboard', 'motherboard'], 'icon' => 'Server', 'group' => 'core', 'required' => true,
                 'hint' => 'Must match the processor socket and memory type'],
-            ['slug' => 'ram', 'icon' => 'Layers', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-ram-desktop', 'ram'], 'icon' => 'Layers', 'group' => 'core', 'required' => true,
                 'hint' => 'DDR4 and DDR5 are not interchangeable'],
-            ['slug' => 'storage', 'icon' => 'HardDrive', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-ssd', 'storage'], 'icon' => 'HardDrive', 'group' => 'core', 'required' => true,
                 'hint' => 'Where Windows and your games live'],
-            ['slug' => 'graphics-card', 'icon' => 'Monitor', 'group' => 'core', 'required' => false,
+            ['slugs' => ['component-graphics-card', 'graphics-card'], 'icon' => 'Monitor', 'group' => 'core', 'required' => false,
                 'hint' => 'Not needed if the processor has graphics built in'],
-            ['slug' => 'power-supply', 'icon' => 'Zap', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-power-supply', 'power-supply'], 'icon' => 'Zap', 'group' => 'core', 'required' => true,
                 'hint' => 'Sized against the wattage shown above'],
-            ['slug' => 'pc-case', 'icon' => 'Box', 'group' => 'core', 'required' => true,
+            ['slugs' => ['component-casing', 'pc-case'], 'icon' => 'Box', 'group' => 'core', 'required' => true,
                 'hint' => 'Must fit the motherboard form factor'],
 
             // Peripherals: chosen freely, nothing here has to fit anything.
-            ['slug' => 'monitors', 'icon' => 'Tv', 'group' => 'peripherals', 'required' => false],
-            ['slug' => 'keyboards', 'icon' => 'Keyboard', 'group' => 'peripherals', 'required' => false],
-            ['slug' => 'mice', 'icon' => 'Mouse', 'group' => 'peripherals', 'required' => false],
-            ['slug' => 'headsets', 'icon' => 'Headphones', 'group' => 'peripherals', 'required' => false],
-            ['slug' => 'wifi-routers', 'icon' => 'Wifi', 'group' => 'peripherals', 'required' => false],
+            ['slugs' => ['monitor', 'monitors'], 'icon' => 'Tv', 'group' => 'peripherals', 'required' => false],
+            ['slugs' => ['accessories-keyboard', 'keyboards'], 'icon' => 'Keyboard', 'group' => 'peripherals', 'required' => false],
+            ['slugs' => ['accessories-mouse', 'mice'], 'icon' => 'Mouse', 'group' => 'peripherals', 'required' => false],
+            ['slugs' => ['accessories-headphone', 'headsets'], 'icon' => 'Headphones', 'group' => 'peripherals', 'required' => false],
+            ['slugs' => ['networking-router', 'wifi-routers'], 'icon' => 'Wifi', 'group' => 'peripherals', 'required' => false],
         ];
 
-        $categories = Category::where('is_active', true)
-            ->whereIn('slug', array_column($slots, 'slug'))
+        $found = Category::where('is_active', true)
+            ->whereIn('slug', array_merge(...array_column($slots, 'slugs')))
             ->get()
             ->keyBy('slug');
+
+        // Resolve each slot to the first of its candidates that exists, and
+        // key the result by that slug so everything below is unchanged.
+        $categories = collect($slots)
+            ->map(fn (array $slot) => collect($slot['slugs'])
+                ->map(fn (string $slug) => $found->get($slug))
+                ->first(fn ($category) => $category !== null))
+            ->filter()
+            ->keyBy('slug');
+
+        $slots = array_map(function (array $slot) use ($found) {
+            $slot['slug'] = collect($slot['slugs'])
+                ->first(fn (string $slug) => $found->has($slug)) ?? $slot['slugs'][0];
+
+            return $slot;
+        }, $slots);
 
         // Resolving descendants and counting stock per slot used to be done
         // inside the loop, which was 53 queries for 13 slots — each one walking

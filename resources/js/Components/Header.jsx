@@ -22,6 +22,7 @@ import CategoryNav from './CategoryNav';
 import { splitAnnouncement } from '../utils/announcement';
 import { useMarqueeDuration } from '../hooks';
 import { categoryService } from '../services';
+import { readCachedMenu, writeCachedMenu } from '../utils/menuCache';
 import useAppStore from '../store/useAppStore';
 
 /**
@@ -44,7 +45,12 @@ export const Header = () => {
      */
     const isStaff = (auth?.user?.abilities ?? []).length > 0;
 
-    const [categories, setCategories] = useState([]);
+    /*
+     * Seeded from the last known menu, so a refresh paints the bar it had
+     * before instead of an empty one. The fetch below still runs and corrects
+     * it; this only removes the gap between the two.
+     */
+    const [categories, setCategories] = useState(readCachedMenu);
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
@@ -67,9 +73,12 @@ export const Header = () => {
             .then((data) => {
                 if (data && Array.isArray(data)) {
                     setCategories(data);
+                    writeCachedMenu(data);
                 }
             })
             .catch((error) =>
+                // The bar keeps whatever the cache gave it rather than
+                // emptying: a stale menu beats no menu.
                 console.error('Mega menu API load error:', error),
             );
     }, [fetchCartCount]);
