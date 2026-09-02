@@ -38,9 +38,17 @@ class CatalogueAttributeSeederTest extends TestCase
 
     private function seedCatalogue(): void
     {
-        $this->shelf('Router', 'networking-router');
-        $this->shelf('Monitor', 'monitor');
-        $this->shelf('Laptop', 'laptop');
+        foreach ([
+            'Router' => 'networking-router',
+            'Monitor' => 'monitor',
+            'Laptop' => 'laptop',
+            'Phone' => 'phone',
+            'Tablet' => 'tablet',
+            'Keyboard' => 'accessories-keyboard',
+            'Mouse' => 'accessories-mouse',
+        ] as $name => $slug) {
+            $this->shelf($name, $slug);
+        }
 
         $this->seed(CatalogueAttributeSeeder::class);
     }
@@ -106,6 +114,45 @@ class CatalogueAttributeSeederTest extends TestCase
 
         $this->assertSame($attributes, Attribute::count());
         $this->assertSame($values, AttributeValue::count());
+    }
+
+    /**
+     * Two shelves may ask what a shopper calls the same thing.
+     *
+     * Slugs are global, so a phone's RAM and a tablet's cannot both be `ram` —
+     * but both should read "RAM" in the sidebar, where the shelf is the
+     * context. The name is what is shown; the slug is what must be unique.
+     */
+    public function test_two_shelves_can_both_ask_for_ram(): void
+    {
+        $this->seedCatalogue();
+
+        $phone = Attribute::where('slug', 'phone-ram')->firstOrFail();
+        $tablet = Attribute::where('slug', 'tablet-ram')->firstOrFail();
+
+        $this->assertSame('RAM', $phone->name);
+        $this->assertSame('RAM', $tablet->name);
+
+        // ...and each keeps its own answers.
+        $this->assertNotSame($phone->id, $tablet->id);
+        $this->assertContains('RAM', $this->questionsFor('phone'));
+        $this->assertContains('RAM', $this->questionsFor('tablet'));
+    }
+
+    /** Keyboard and Mouse both ask "Type" and both mean their own. */
+    public function test_a_shared_label_does_not_share_a_question(): void
+    {
+        $this->seedCatalogue();
+
+        $keyboard = Attribute::where('slug', 'keyboard-type')->firstOrFail();
+        $mouse = Attribute::where('slug', 'mouse-type')->firstOrFail();
+
+        $this->assertSame('Type', $keyboard->name);
+        $this->assertSame('Type', $mouse->name);
+        $this->assertTrue(
+            $keyboard->values->pluck('label')->intersect($mouse->values->pluck('label'))->count() < 3,
+            'The keyboard and mouse Type questions share most of their answers.'
+        );
     }
 
     /** A category the shop has not created yet is skipped, not fatal. */

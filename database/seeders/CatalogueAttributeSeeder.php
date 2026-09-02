@@ -38,6 +38,12 @@ class CatalogueAttributeSeeder extends Seeder
      * every time a product was added.
      *
      * A band with both bounds null is a plain choice rather than a measurement.
+     *
+     * A fifth element is the attribute's slug, for where two shelves ask what a
+     * shopper would call the same thing. Slugs are global, so a phone's RAM and
+     * a tablet's cannot both be `ram` — but both should read "RAM" in the
+     * sidebar, because the shelf is the context and "Tablet RAM" on the tablet
+     * page is noise. The name is shown; the slug is what must be unique.
      */
     private const CATALOGUE = [
         'networking-router' => [
@@ -145,6 +151,167 @@ class CatalogueAttributeSeeder extends Seeder
                 'Dual Display', 'Type-C Port', 'RJ45 LAN Port',
             ]],
         ],
+
+        'power-ups' => [
+            ['Volt Ampere', 'number', 'VA', [
+                ['Up to 800 VA', null, 800],
+                ['801 to 1200 VA', 801, 1200],
+                ['1201 to 2000 VA', 1201, 2000],
+                ['2001 to 3000 VA', 2001, 3000],
+                ['3001 VA and Above', 3001, null],
+            ]],
+            ['Load Capacity', 'number', 'W', [
+                ['Up to 400 W', null, 400],
+                ['401 to 700 W', 401, 700],
+                ['701 to 1200 W', 701, 1200],
+                ['1201 W and Above', 1201, null],
+            ]],
+            ['Body Material', 'enum', null, ['Metal', 'Plastic']],
+        ],
+
+        'phone' => [
+            ['Display Size', 'number', 'inch', [
+                ['Below 6.0 inch', null, 5.9],
+                ['6.0 to 6.4 inch', 6.0, 6.4],
+                ['6.5 to 6.9 inch', 6.5, 6.9],
+                ['7.0 inch and Above', 7.0, null],
+            ], 'phone-display-size'],
+            ['Display Type', 'enum', null,
+                ['TFT', 'IPS', 'AMOLED', 'Super AMOLED', 'OLED'], 'phone-display-type'],
+            ['Chipset', 'enum', null,
+                ['Snapdragon', 'MediaTek', 'Exynos', 'UNISOC', 'Bionic', 'Tensor', 'Kirin']],
+            ['RAM', 'number', 'GB', [
+                ['2GB', 2, 2], ['3GB', 3, 3], ['4GB', 4, 4], ['6GB', 6, 6],
+                ['8GB', 8, 8], ['12GB', 12, 12], ['16GB', 16, 16],
+            ], 'phone-ram'],
+            ['Internal Storage', 'number', 'GB', [
+                ['64GB', 64, 64], ['128GB', 128, 128], ['256GB', 256, 256],
+                ['512GB', 512, 512], ['1TB', 1024, 1024],
+            ]],
+            ['Battery', 'number', 'mAh', [
+                ['Up to 2999 mAh', null, 2999],
+                ['3000 to 3999 mAh', 3000, 3999],
+                ['4000 to 4999 mAh', 4000, 4999],
+                ['5000 to 5999 mAh', 5000, 5999],
+                ['6000 mAh and Above', 6000, null],
+            ]],
+            ['Features', 'flags', null, [
+                'Dual SIM', 'eSIM Support', '5G Network', 'Fast Charging',
+                'Water Resistant', 'Foldable', 'AI Integrated',
+            ], 'phone-features'],
+        ],
+
+        'tablet' => [
+            ['Screen Size', 'number', 'inch', [
+                ['Up to 7.4 inch', null, 7.4],
+                ['7.5 to 8.4 inch', 7.5, 8.4],
+                ['8.5 to 10.4 inch', 8.5, 10.4],
+                ['10.5 to 11.4 inch', 10.5, 11.4],
+                ['11.5 inch and Above', 11.5, null],
+            ], 'tablet-screen-size'],
+            ['Storage', 'number', 'GB', [
+                ['32GB', 32, 32], ['64GB', 64, 64], ['128GB', 128, 128],
+                ['256GB', 256, 256], ['512GB', 512, 512], ['1TB', 1024, 1024],
+            ], 'tablet-storage'],
+            ['RAM', 'number', 'GB', [
+                ['2 GB', 2, 2], ['3 GB', 3, 3], ['4 GB', 4, 4],
+                ['6 GB', 6, 6], ['8 GB', 8, 8], ['12 GB', 12, 12],
+            ], 'tablet-ram'],
+            ['Operating System', 'enum', null,
+                ['Android', 'Windows', 'iPadOS'], 'tablet-operating-system'],
+            ['Connectivity', 'enum', null, ['Wi-Fi only', 'Wi-Fi + Cellular']],
+        ],
+
+        'office-equipment-printer' => [
+            ['Printer Type', 'enum', null, ['Inkjet', 'Ink Tank', 'Laser', 'Dotmatrix']],
+            ['Functionality', 'enum', null, [
+                'Only Print', 'Print, Scan & Copy', 'Print, Scan, Copy & Fax', 'Professional Photo',
+            ]],
+            ['Colour Output', 'enum', null, ['Black & White', 'Colour', 'Black & White + Colour']],
+            ['Interface', 'enum', null,
+                ['USB', 'USB & Wi-Fi', 'USB & LAN', 'USB, Wi-Fi & LAN'], 'printer-interface'],
+            ['Print Speed', 'number', 'ppm', [
+                ['Less than 15 ppm', null, 14.9],
+                ['15 to 18.9 ppm', 15, 18.9],
+                ['19 to 23.9 ppm', 19, 23.9],
+                ['24 ppm and Above', 24, null],
+            ]],
+            ['Paper Size', 'enum', null, ['A4', 'A3, A3+', 'Legal']],
+            ['Features', 'flags', null,
+                ['Duplex (Auto)', 'Borderless', 'ADF'], 'printer-features'],
+        ],
+
+        'component-ssd' => [
+            ['Capacity', 'number', 'GB', [
+                ['Up to 128GB', null, 128],
+                ['129GB to 256GB', 129, 256],
+                ['257GB to 512GB', 257, 512],
+                ['513GB to 1TB', 513, 1024],
+                ['Over 1TB', 1025, null],
+            ], 'ssd-capacity'],
+            ['Interface', 'enum', null, ['SATA', 'PCI-E'], 'ssd-interface'],
+            ['Form Factor', 'enum', null, ['2.5 inches', 'M.2']],
+            ['PCIe/NVMe Generation', 'enum', null, ['Gen3', 'Gen4', 'Gen5']],
+            ['Read Speed', 'number', 'MB/s', [
+                ['Up to 500 MB/s', null, 500],
+                ['501 to 800 MB/s', 501, 800],
+                ['801 to 1000 MB/s', 801, 1000],
+                ['1001 MB/s and Above', 1001, null],
+            ]],
+        ],
+
+        'accessories-pen-drive' => [
+            ['Connectivity', 'enum', null,
+                ['USB 2.0', 'USB 3.0', 'USB 3.1', 'USB 3.2'], 'pen-drive-connectivity'],
+            ['Capacity', 'number', 'GB', [
+                ['16GB', 16, 16], ['32GB', 32, 32], ['64GB', 64, 64],
+                ['128GB', 128, 128], ['256GB', 256, 256], ['512GB', 512, 512],
+            ], 'pen-drive-capacity'],
+            ['Features', 'flags', null, [
+                'OTG Pendrive', 'Metallic', 'Type-C', 'Hook Attache', 'Key Ring Attache',
+            ], 'pen-drive-features'],
+        ],
+
+        'accessories-memory-card' => [
+            ['Type', 'enum', null, ['SD', 'MicroSD', 'CompactFlash'], 'memory-card-type'],
+            ['Capacity', 'number', 'GB', [
+                ['32GB', 32, 32], ['64GB', 64, 64], ['128GB', 128, 128],
+                ['256GB', 256, 256], ['512GB', 512, 512], ['1TB', 1024, 1024],
+            ], 'memory-card-capacity'],
+        ],
+
+        'accessories-keyboard' => [
+            ['Type', 'enum', null, ['Standard', 'Combo', 'Gaming'], 'keyboard-type'],
+            ['Switch Type', 'enum', null, [
+                'Blue', 'Brown', 'Red', 'Silver', 'Green', 'Yellow', 'Magnetic Switch', 'Membrane',
+            ]],
+            ['Interface', 'enum', null,
+                ['Wired', 'Wireless', 'Bluetooth Wireless', 'Type-C'], 'keyboard-interface'],
+            ['Features', 'flags', null, [
+                'Mechanical', 'RGB', 'Programmable', 'Backlit', 'Bangla Keyboard', 'Waterproof',
+            ], 'keyboard-features'],
+        ],
+
+        'accessories-mouse' => [
+            ['Type', 'enum', null, ['Standard', 'Gaming', 'RGB', 'Programmable'], 'mouse-type'],
+            ['Number of Keys', 'enum', null, ['Up to 3', '4 to 6', '7 to 10', '11 & Above']],
+            ['Interface', 'enum', null,
+                ['Wired', 'Wireless', 'Bluetooth Wireless', 'Type-C'], 'mouse-interface'],
+            ['Max DPI', 'number', 'dpi', [
+                ['Up to 3000', null, 3000],
+                ['3001 to 8000', 3001, 8000],
+                ['8001 to 20000', 8001, 20000],
+                ['20001 and Above', 20001, null],
+            ]],
+        ],
+
+        'accessories-headphone' => [
+            ['Connector', 'enum', null, ['3.5mm', 'Type-C', 'Lightning', 'Wireless']],
+            ['Features', 'flags', null, [
+                'Stereo Bass', 'Gaming', 'Noise Cancelling', 'Splash-Proof',
+                'Detachable Microphone', 'Magnetic Design',
+            ], 'headphone-features'],
+        ],
     ];
 
     public function run(): void
@@ -158,9 +325,11 @@ class CatalogueAttributeSeeder extends Seeder
                 continue;
             }
 
-            foreach ($definitions as $order => [$name, $inputType, $unit, $rows]) {
+            foreach ($definitions as $order => $definition) {
+                [$name, $inputType, $unit, $rows] = $definition;
+
                 $attribute = Attribute::updateOrCreate(
-                    ['slug' => Str::slug($name)],
+                    ['slug' => $definition[4] ?? Str::slug($name)],
                     [
                         'name' => $name,
                         'unit' => $unit,
