@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import {
-    CalendarRange,
-    Store,
-    ArrowRight,
-    Tag,
-    Percent,
-    Sparkles,
-} from 'lucide-react';
+import { CalendarRange, Store, ArrowRight, Tag, Sparkles } from 'lucide-react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import EmptyState from '../../Components/EmptyState';
@@ -78,20 +71,6 @@ export default function Offers() {
                             Gift bundles, cashback and branch campaigns — each
                             with the dates it runs and where it applies.
                         </p>
-
-                        {/*
-                         * The other page that used to live at this address. A
-                         * shopper who came looking for cut prices should not
-                         * have to discover the word changed meaning.
-                         */}
-                        <Link
-                            href={ROUTES.DISCOUNTS}
-                            className="offers-to-discounts"
-                        >
-                            <Percent size={15} />
-                            <span>Looking for discounted products?</span>
-                            <ArrowRight size={14} />
-                        </Link>
                     </div>
 
                     {/*
