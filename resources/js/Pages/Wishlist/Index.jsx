@@ -7,8 +7,8 @@ import ProductSuggestions from '../../Components/ProductSuggestions';
 import ProductImage from '../../Components/ProductImage';
 import { CardGridSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
-import { wishlistService, cartService } from '../../services';
-import useAppStore from '../../store/useAppStore';
+import { wishlistService } from '../../services';
+import { useAddToCart } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
@@ -23,6 +23,7 @@ export default function Wishlist() {
     const [wishlist, setWishlist] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
+    const addToCart = useAddToCart();
 
     useEffect(() => {
         wishlistService
@@ -68,23 +69,27 @@ export default function Wishlist() {
     const handleMoveToCart = async (product) => {
         setActionId(product.id);
         try {
-            await cartService.addToCart(product.id, 1);
+            /*
+             * The shared hook, which refreshes the badge, adds the default
+             * when a product has a single option and raises the picker when
+             * there is a real choice. This used to post a product with no
+             * option, which the server refuses for anything sold by one.
+             */
+            const added = await addToCart(product);
 
-            // The header badge reads from the store, so an add that does not
-            // refresh it leaves the count stale until the next full page load.
-            // Every other place that adds to the cart does this; this one did
-            // not, so moving an item here looked like nothing had happened.
-            useAppStore.getState().fetchCartCount();
+            /*
+             * Only once it is actually in the cart. It returns false when the
+             * picker has opened — nothing has been added yet — and taking the
+             * item off the wishlist then would lose it if the shopper closed
+             * the picker without choosing.
+             */
+            if (!added) return;
 
             await wishlistService.removeFromWishlist(product.id);
             setWishlist((prev) =>
                 prev.filter(
                     (item) => (item.product?.id || item.id) !== product.id,
                 ),
-            );
-            toast.success(
-                `${product.name} moved to shopping cart!`,
-                'Added to Cart',
             );
         } catch (error) {
             console.error('Failed to move to cart', error);

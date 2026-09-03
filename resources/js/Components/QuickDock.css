@@ -23,8 +23,10 @@
 
 .quick-dock-btn {
     position: relative;
-    width: 52px;
-    height: 52px;
+    /* Wide enough that "COMPARE" is not touching both edges. The label is what
+       sets this, not the icon. */
+    width: 66px;
+    height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -42,21 +44,20 @@
 }
 
 .quick-dock-label {
-    font-size: 0.56rem;
+    font-size: 0.58rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     opacity: 0.85;
 }
 
-/*
- * On the icon rather than the tile: the count belongs to the thing it counts,
- * and in the corner of a 52px tile it would sit on the label instead.
- */
+/* Up in the corner, clear of the label beneath the icon. */
 .quick-dock-count {
     position: absolute;
-    top: 6px;
-    right: 8px;
+    /* Out at the corner, half off the tile, so it reads as attached to the
+       icon rather than sitting inside the button's padding. */
+    top: 4px;
+    right: 6px;
     min-width: 17px;
     height: 17px;
     padding: 0 4px;
@@ -86,8 +87,8 @@
  */
 @media (max-width: 640px) {
     .quick-dock-btn {
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
     }
 
     .quick-dock-label {
@@ -95,8 +96,8 @@
     }
 
     .quick-dock-count {
-        top: 3px;
-        right: 3px;
+        top: 2px;
+        right: 2px;
     }
 }
 

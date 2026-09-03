@@ -6,8 +6,9 @@ import EmptyState from '../../Components/EmptyState';
 import ProductImage from '../../Components/ProductImage';
 import { CardGridSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
-import { cartService, compareService } from '../../services';
+import { compareService } from '../../services';
 import useAppStore from '../../store/useAppStore';
+import { useAddToCart } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
@@ -25,6 +26,7 @@ export default function Compare() {
     const [compareProducts, setCompareProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [addingId, setAddingId] = useState(null);
+    const addToCart = useAddToCart();
 
     useEffect(() => {
         loadCompareItems();
@@ -76,18 +78,22 @@ export default function Compare() {
         }
     };
 
+    /*
+     * Through the shared hook, not a fourth copy of the same call.
+     *
+     * This posted a product with no option, which the server refuses for
+     * anything sold by one — and then reported "Failed to add product to
+     * cart", throwing away the reason. Comparing two graphics cards and being
+     * unable to buy either, with no explanation, is the worst place for it.
+     *
+     * The hook adds the default when a product has a single option, raises the
+     * picker when there is a real choice, and shows what the server actually
+     * said when it refuses.
+     */
     const handleAddToCart = async (product) => {
         setAddingId(product.id);
         try {
-            await cartService.addToCart(product.id, 1);
-            useAppStore.getState().fetchCartCount();
-            toast.success(
-                `${product.name} added to your shopping cart!`,
-                'Added to Cart',
-            );
-        } catch (err) {
-            console.error('Failed to add to cart', err);
-            toast.error('Failed to add product to cart.', 'Error');
+            await addToCart(product);
         } finally {
             setAddingId(null);
         }
