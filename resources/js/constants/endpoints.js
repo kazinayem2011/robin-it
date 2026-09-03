@@ -87,6 +87,13 @@ export const API_ENDPOINTS = {
         ORDER_CANCEL: (id) => `/account/orders/${id}/cancel`,
     },
 
+    // The campaigns the shop runs. Not the discounted listing, which is
+    // derived from product prices and has no records of its own.
+    OFFERS: {
+        LIST: '/offers',
+        DETAIL: (slug) => `/offers/${slug}`,
+    },
+
     // Blogs & Tech Journal API
     BLOGS: {
         LIST: '/blogs',
@@ -175,6 +182,8 @@ export const API_ENDPOINTS = {
         CUSTOMERS: '/admin/customers',
         BLOGS: '/admin/blogs',
         BLOG_ITEM: (id) => `/admin/blogs/${id}`,
+        OFFERS: '/admin/offers',
+        OFFER_ITEM: (id) => `/admin/offers/${id}`,
         MEDIA: '/admin/media',
         REVIEWS: '/admin/reviews',
         BRANDS: '/admin/brands',
@@ -245,7 +254,14 @@ export const ROUTES = {
     COMPARE: '/compare',
     STORES: '/stores',
     SUPPORT: '/support',
+    /*
+     * Two things that had been sharing one word: OFFERS is the campaigns the
+     * shop announces, DISCOUNTS is every product whose price is cut — which is
+     * what /offers used to be.
+     */
     OFFERS: '/offers',
+    OFFER_DETAIL: (slug) => `/offers/${slug}`,
+    DISCOUNTS: '/discounts',
     BLOGS: '/blogs',
     BLOG_DETAIL: (slug) => `/blogs/${slug}`,
     ABOUT: '/about',
@@ -304,6 +320,7 @@ export const ROUTES = {
     ADMIN_SETTINGS: '/admin/settings',
     ADMIN_CUSTOMERS: '/admin/customers',
     ADMIN_BLOGS: '/admin/blogs',
+    ADMIN_OFFERS: '/admin/offers',
     ADMIN_QUESTIONS: '/admin/questions',
     ADMIN_REVIEWS: '/admin/reviews',
     ADMIN_EXPENSES: '/admin/expenses',

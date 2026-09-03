@@ -298,13 +298,14 @@ export default function CategoryNav({ categories = [] }) {
         >
             {/*
              * An offer category holds no products of its own — the discounts
-             * live on the products — so it links to the offers page rather than
-             * to a category that would render empty.
+             * live on the products — so it links to the discounted listing
+             * rather than to a category that would render empty. (That listing
+             * was /offers until the campaigns page took the word.)
              */}
             <Link
                 href={
                     category.isOffer
-                        ? ROUTES.OFFERS
+                        ? ROUTES.DISCOUNTS
                         : ROUTES.SHOP_CATEGORY(category.slug)
                 }
                 className={inMore ? 'cat-nav-sublink' : 'cat-nav-link'}

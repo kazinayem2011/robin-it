@@ -721,6 +721,25 @@ export const adminService = {
         return response;
     },
 
+    // --- Offers: the campaigns the shop runs -----------------------------
+    // Not the discounted listing, which is worked out from product prices and
+    // needs no manager.
+
+    async createOffer(offerData) {
+        return axiosInstance.post(API_ENDPOINTS.ADMIN.OFFERS, offerData);
+    },
+
+    async updateOffer(offerId, offerData) {
+        return axiosInstance.put(
+            API_ENDPOINTS.ADMIN.OFFER_ITEM(offerId),
+            offerData,
+        );
+    },
+
+    async deleteOffer(offerId) {
+        return axiosInstance.delete(API_ENDPOINTS.ADMIN.OFFER_ITEM(offerId));
+    },
+
     /**
      * Create a new Tech Journal / Blog post.
      * @param {Object} blogData

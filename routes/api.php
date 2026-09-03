@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\OfferController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CategoryController;
@@ -89,6 +91,9 @@ Route::middleware('throttle:api')->group(function () {
     Route::get(ApiEndpoints::STORES, [StoreController::class, 'index']);
 
     // Blogs & Tech Journal API
+    Route::get(ApiEndpoints::OFFERS, [OfferController::class, 'index']);
+    Route::get(ApiEndpoints::OFFER_SHOW, [OfferController::class, 'show']);
+
     Route::get(ApiEndpoints::BLOGS, [BlogController::class, 'index']);
     Route::get(ApiEndpoints::BLOG_SHOW, [BlogController::class, 'show']);
 
@@ -370,6 +375,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'destroy'])->middleware('can:settings');
 
         // Tech journal
+        Route::post(ApiEndpoints::ADMIN_OFFERS, [AdminOfferController::class, 'store'])->middleware('can:marketing');
+        Route::put(ApiEndpoints::ADMIN_OFFERS_ITEM, [AdminOfferController::class, 'update'])->middleware('can:marketing');
+        Route::delete(ApiEndpoints::ADMIN_OFFERS_ITEM, [AdminOfferController::class, 'destroy'])->middleware('can:marketing');
+
         Route::post(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'store'])->middleware('can:marketing');
         Route::put(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'update'])->middleware('can:marketing');
         Route::delete(ApiEndpoints::ADMIN_BLOGS_ITEM, [AdminBlogController::class, 'destroy'])->middleware('can:marketing');

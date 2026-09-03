@@ -13,6 +13,7 @@ export { default as reviewService } from './reviewService';
 export { default as storeService } from './storeService';
 export { default as settingService } from './settingService';
 export { default as blogService } from './blogService';
+export { default as offerService } from './offerService';
 export { default as contactService } from './contactService';
 export { default as warrantyService } from './warrantyService';
 export { default as otpService } from './otpService';

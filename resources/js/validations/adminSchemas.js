@@ -153,6 +153,47 @@ export const adminSettingsSchema = Yup.object().shape({
     mail_from_name: Yup.string().nullable(),
 });
 
+/**
+ * An offer: a campaign the shop announces, with a window and terms.
+ *
+ * Only the title is truly required — a poster and a date can follow — but an
+ * offer that ends before it starts is a typo, and the server rejects it too.
+ */
+export const adminOfferSchema = Yup.object().shape({
+    title: Yup.string()
+        .min(4, 'Title must be at least 4 characters')
+        .max(200, 'Title cannot exceed 200 characters')
+        .required('Offer title is required'),
+    excerpt: Yup.string()
+        .max(300, 'The one-line summary cannot exceed 300 characters')
+        .nullable(),
+    content: Yup.string().nullable(),
+    image_path: Yup.string().nullable(),
+    starts_at: Yup.string().nullable(),
+    ends_at: Yup.string()
+        .nullable()
+        .test(
+            'after-start',
+            'The offer cannot end before it starts.',
+            function (value) {
+                const { starts_at: startsAt } = this.parent;
+
+                if (!value || !startsAt) return true;
+
+                return new Date(value) >= new Date(startsAt);
+            },
+        ),
+    availability: Yup.string()
+        .max(120, 'Keep this short — "All outlets", "Online only"')
+        .nullable(),
+    link_url: Yup.string().max(500, 'That link is too long').nullable(),
+    is_active: Yup.boolean().default(true),
+    sort_order: Yup.number()
+        .min(0, 'Cannot be negative')
+        .max(9999, 'Too large')
+        .nullable(),
+});
+
 export const adminBlogSchema = Yup.object().shape({
     title: Yup.string()
         .min(5, 'Title must be at least 5 characters')

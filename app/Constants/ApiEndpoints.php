@@ -95,6 +95,12 @@ class ApiEndpoints
     // Showrooms & Stores
     public const STORES = 'stores';
 
+    // The campaigns the shop runs — not the discounted listing, which is
+    // worked out from product prices and has no records of its own.
+    public const OFFERS = 'offers';
+
+    public const OFFER_SHOW = 'offers/{slug}';
+
     // Blogs & Tech Journal
     public const BLOGS = 'blogs';
 
@@ -223,7 +229,18 @@ class ApiEndpoints
 
     public const WEB_SUPPORT = '/support';
 
+    /*
+     * Two different things had been sharing one word.
+     *
+     * WEB_OFFERS is now the campaigns the shop announces, each with a window
+     * and a page of terms. WEB_DISCOUNTS is the listing that was here before —
+     * every product whose price is cut, derived from the catalogue.
+     */
     public const WEB_OFFERS = '/offers';
+
+    public const WEB_OFFER_SHOW = '/offers/{slug}';
+
+    public const WEB_DISCOUNTS = '/discounts';
 
     public const WEB_BLOGS = '/blogs';
 
@@ -377,6 +394,10 @@ class ApiEndpoints
     public const ADMIN_REPORTS_SUPPLIERS = 'reports/suppliers';
 
     public const ADMIN_REPORTS_PROFIT = 'reports/profit-loss';
+
+    public const ADMIN_OFFERS = 'offers';
+
+    public const ADMIN_OFFERS_ITEM = 'offers/{id}';
 
     public const ADMIN_BLOGS = 'blogs';
 

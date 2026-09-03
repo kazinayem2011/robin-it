@@ -459,7 +459,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                 </div>
 
                                 <Link
-                                    href={ROUTES.OFFERS}
+                                    href={ROUTES.DISCOUNTS}
                                     className="btn btn-outline-white btn-sm"
                                 >
                                     {/* Was "ALL 42 DEALS", a number nobody

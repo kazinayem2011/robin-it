@@ -118,10 +118,16 @@ class NavigationDeadEndsTest extends TestCase
         $this->assertNotContains('networking', $this->tree()->pluck('slug'));
     }
 
-    /** The header links here from every page; it used to be a 500. */
-    public function test_the_offers_page_renders(): void
+    /**
+     * The discounted listing, at the address it moved to.
+     *
+     * It was /offers until the campaigns page took that word — two different
+     * things had been sharing it: this one is every product whose price is
+     * cut, worked out from the catalogue, and nobody writes it.
+     */
+    public function test_the_discounts_page_renders(): void
     {
-        $response = $this->get('/offers');
+        $response = $this->get('/discounts');
 
         $response->assertStatus(200);
 
@@ -129,6 +135,15 @@ class NavigationDeadEndsTest extends TestCase
 
         $this->assertSame('Products/Index', $page['component']);
         $this->assertTrue($page['props']['onSaleOnly']);
+    }
+
+    /** And /offers is now the campaigns, which is a different page entirely. */
+    public function test_the_offers_page_is_the_campaigns(): void
+    {
+        $response = $this->get('/offers');
+
+        $response->assertStatus(200);
+        $this->assertSame('Offers/Index', $response->viewData('page')['component']);
     }
 
     /** Direct links to an unstocked category still work — they are just not advertised. */

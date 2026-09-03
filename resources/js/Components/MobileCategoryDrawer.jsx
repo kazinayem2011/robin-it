@@ -10,6 +10,7 @@ import {
     Truck,
     ShieldCheck,
     PhoneCall,
+    Tag,
 } from 'lucide-react';
 import { ROUTES } from '../constants/endpoints';
 import { getCategoryIcon } from '../utils/iconMap';
@@ -302,8 +303,20 @@ export const MobileCategoryDrawer = ({ isOpen, onClose, categories = [] }) => {
                                 className="mobile-hub-card"
                                 onClick={onClose}
                             >
+                                <Tag size={16} />
+                                <span>Offers</span>
+                            </Link>
+
+                            {/* The two are different things: an offer is a
+                                campaign the shop is running, a discount is a
+                                price that has been cut. */}
+                            <Link
+                                href={ROUTES.DISCOUNTS}
+                                className="mobile-hub-card"
+                                onClick={onClose}
+                            >
                                 <Sparkles size={16} />
-                                <span>Special Offers</span>
+                                <span>Discounts</span>
                             </Link>
 
                             <Link

@@ -3,6 +3,7 @@
 use App\Constants\ApiEndpoints;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
+use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -77,7 +78,14 @@ Route::controller(StorefrontPageController::class)->group(function () {
      * every visit — including the header's Offers button, on every page — was
      * a 500.
      */
+    /*
+     * Two different things that had been sharing one word. `/offers` is the
+     * campaigns the shop announces; `/discounts` is the listing of everything
+     * whose price is cut, which is what `/offers` used to render.
+     */
     Route::get(ApiEndpoints::WEB_OFFERS, 'offers')->name('offers');
+    Route::get(ApiEndpoints::WEB_OFFER_SHOW, 'offer')->name('offers.show');
+    Route::get(ApiEndpoints::WEB_DISCOUNTS, 'discounts')->name('discounts');
 
     Route::get(ApiEndpoints::WEB_CART, 'cart')->name('cart');
     Route::get(ApiEndpoints::WEB_CHECKOUT, 'checkout')->name('checkout');
@@ -188,6 +196,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_REPORTS_DELIVERY, [AdminReportController::class, 'delivery'])->name('reports.delivery')->middleware('can:orders');
         Route::get(ApiEndpoints::ADMIN_REPORTS_SUPPLIERS, [AdminReportController::class, 'suppliers'])->name('reports.suppliers')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_REPORTS_PROFIT, [AdminReportController::class, 'profitAndLoss'])->name('reports.profit')->middleware('can:finance');
+        Route::get(ApiEndpoints::ADMIN_OFFERS, [AdminOfferController::class, 'index'])->name('offers')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_BLOGS, [AdminBlogController::class, 'index'])->name('blogs')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_QUESTIONS, [AdminProductQuestionController::class, 'index'])->name('questions')->middleware('can:support');
         Route::get(ApiEndpoints::ADMIN_REVIEWS, [AdminReviewController::class, 'index'])->name('reviews')->middleware('can:support');

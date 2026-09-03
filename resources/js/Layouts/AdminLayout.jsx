@@ -218,6 +218,12 @@ const NAV_GROUPS = [
                 ability: 'marketing',
             },
             {
+                label: 'Offers',
+                href: ROUTES.ADMIN_OFFERS,
+                icon: Tag,
+                ability: 'marketing',
+            },
+            {
                 label: 'Tech Journal',
                 href: ROUTES.ADMIN_BLOGS,
                 icon: BookOpen,

@@ -56,7 +56,26 @@ class StorefrontPageController extends Controller
      * The shop listing restricted to discounted stock, rather than a second
      * listing that would have to grow its own paging, filters and URL sync.
      */
+    /**
+     * The campaigns the shop is running.
+     *
+     * This route used to render the discounted listing, which is a different
+     * thing wearing the same word: that is worked out from product prices and
+     * nobody writes it, while an offer is announced, has a window, applies at
+     * named outlets and has terms worth a page. It moved to /discounts.
+     */
     public function offers(): Response
+    {
+        return Inertia::render('Offers/Index');
+    }
+
+    public function offer(string $slug): Response
+    {
+        return Inertia::render('Offers/Show', ['slug' => $slug]);
+    }
+
+    /** Every product whose price is cut. */
+    public function discounts(): Response
     {
         return Inertia::render('Products/Index', ['onSaleOnly' => true]);
     }

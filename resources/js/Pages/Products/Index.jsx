@@ -281,11 +281,11 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
         : null;
 
     const listingName = onSaleOnly
-        ? 'Offers & Deals'
+        ? 'Discounts'
         : (readableCategory ?? 'All Products');
 
     const pageTitle = onSaleOnly
-        ? `Offers & Deals — ${siteConfig.name}`
+        ? `Discounts — ${siteConfig.name}`
         : categorySlug
           ? `${categorySlug.replace(/-/g, ' ').toUpperCase()} — ${siteConfig.name}`
           : `All Technology Products — ${siteConfig.name}`;
@@ -295,7 +295,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
             <SEOHead
                 title={
                     onSaleOnly
-                        ? 'Offers & Deals — Discounted PC Hardware'
+                        ? 'Discounts — Every Price We Have Cut'
                         : readableCategory
                           ? `${readableCategory} — Price in Bangladesh`
                           : 'Shop All Computer Hardware & Components'
@@ -322,7 +322,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             </div>
                             <h1 className="plp-title">
                                 {onSaleOnly
-                                    ? 'Offers & Deals'
+                                    ? 'Discounts'
                                     : readableCategory || 'Hardware Catalog'}
                             </h1>
                             <span className="plp-item-count">

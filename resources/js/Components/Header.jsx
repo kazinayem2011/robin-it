@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Cpu, Heart, User, PhoneCall, MapPin, Truck, Menu } from 'lucide-react';
+import {
+    Cpu,
+    Heart,
+    User,
+    PhoneCall,
+    MapPin,
+    Truck,
+    Menu,
+    Tag,
+} from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
@@ -215,6 +224,14 @@ export const Header = () => {
                             >
                                 <Truck size={13} className="ticker-icon" />
                                 <span>Track Order</span>
+                            </Link>
+                            <span className="ticker-divider"></span>
+                            {/* The campaigns the shop is running. Distinct
+                                from the discounted listing, which is a price
+                                fact and lives under Discounts. */}
+                            <Link href={ROUTES.OFFERS} className="ticker-link">
+                                <Tag size={13} className="ticker-icon" />
+                                <span>Offers</span>
                             </Link>
                             <span className="ticker-divider"></span>
                             <Link href={ROUTES.STORES} className="ticker-link">
