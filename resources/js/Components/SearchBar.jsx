@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Search,
     X,
@@ -40,6 +40,24 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
     const [searchFocused, setSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const tagsRef = useRef(null);
+    const { url } = usePage();
+
+    /*
+     * The dropdown follows the page.
+     *
+     * Reaching /shop/laptop from the nav bar or the sidebar left this saying
+     * "All Tech", so the shop and its own search box disagreed about what you
+     * were looking at — and searching from there would have thrown you back
+     * out to the whole catalogue. Only on a listing: elsewhere the choice is
+     * the shopper's and nothing should quietly undo it.
+     */
+    useEffect(() => {
+        const path = (url || '').split('?')[0].replace(/\/$/, '');
+
+        if (path !== ROUTES.SHOP && !path.startsWith(`${ROUTES.SHOP}/`)) return;
+
+        setSelectedCategory(path.slice(ROUTES.SHOP.length + 1) || 'all');
+    }, [url]);
 
     const searchIn = useMemo(
         () => [
@@ -134,30 +152,59 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
         }
     };
 
+    /*
+     * Where a category and a term lead, together.
+     *
+     * The category is the route — `/shop/laptop`, not
+     * `/shop?category_slug=laptops`, which the listing does not read as a
+     * category at all and which fell through to its shelf-attribute filters,
+     * asking for products whose spec "category_slug" is "laptops". No product
+     * has one, so every category but "All Tech" used to return nothing.
+     */
+    const destination = (category, term) => {
+        const base =
+            category && category !== 'all'
+                ? ROUTES.SHOP_CATEGORY(category)
+                : ROUTES.SHOP;
+        const q = (term || '').trim();
+
+        return q ? `${base}?search=${encodeURIComponent(q)}` : base;
+    };
+
+    /*
+     * Choosing a category goes there.
+     *
+     * It used to only set a variable: with an empty search box, picking
+     * "Laptop" did nothing at all, and neither did Enter or the button
+     * afterwards, because submitting was guarded on there being a term. The
+     * shopper had made a choice and the shop ignored it.
+     *
+     * Any term already typed comes along, so choosing a category mid-search
+     * runs that search inside it rather than starting over.
+     */
+    const chooseCategory = (slug) => {
+        setSelectedCategory(slug);
+
+        if (slug === selectedCategory) return;
+
+        setSearchFocused(false);
+        router.visit(destination(slug, searchQuery));
+    };
+
     const handleSubmit = (e) => {
         e?.preventDefault();
         setSearchFocused(false);
+
         if (onSearch) {
             onSearch(searchQuery, selectedCategory);
-        } else if (searchQuery.trim()) {
-            /*
-             * The category is the route.
-             *
-             * This used to send `/shop?search=x&category_slug=laptops`, and
-             * the listing read neither: it takes its category from the route,
-             * and `category_slug` fell through to the shelf-attribute filters,
-             * asking for products whose spec "category_slug" is "laptops" —
-             * which no product has. Every category but "All Tech" returned
-             * nothing at all.
-             */
-            const base =
-                selectedCategory !== 'all'
-                    ? ROUTES.SHOP_CATEGORY(selectedCategory)
-                    : ROUTES.SHOP;
 
-            router.visit(
-                `${base}?search=${encodeURIComponent(searchQuery.trim())}`,
-            );
+            return;
+        }
+
+        // A term, a category, or both. Only an empty box on "All Tech" has
+        // nowhere to go.
+        if (searchQuery.trim() || selectedCategory !== 'all') {
+            router.visit(destination(selectedCategory, searchQuery));
         }
     };
 
@@ -185,7 +232,7 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
                 <div className="search-category-selector">
                     <Select
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        onChange={(e) => chooseCategory(e.target.value)}
                         options={searchIn}
                         aria-label="Search within"
                         icon={SlidersHorizontal}

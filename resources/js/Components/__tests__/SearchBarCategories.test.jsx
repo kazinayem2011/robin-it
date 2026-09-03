@@ -14,6 +14,7 @@ vi.mock('@inertiajs/react', () => ({
     router: {
         visit: (...args) => visit(...args),
     },
+    usePage: () => ({ url: '/' }),
 }));
 
 vi.mock('../../services', () => ({
@@ -110,12 +111,72 @@ describe('the header search category', () => {
         expect(visit.mock.calls[0][0]).not.toContain('category_slug');
     });
 
-    it('does not navigate on an empty search', async () => {
+    it('does not navigate on an empty search of everything', async () => {
         const user = userEvent.setup();
 
         render(<SearchBar categories={MENU} />);
         await search(user, '   ');
 
         expect(visit).not.toHaveBeenCalled();
+    });
+
+    /*
+     * Choosing used to only set a variable. With an empty search box, picking
+     * "Laptop" did nothing at all — and neither did Enter or the button after
+     * it, because submitting was guarded on there being a term. The shopper
+     * had made a choice and the shop ignored it.
+     */
+    describe('choosing one', () => {
+        const choose = async (user, name) => {
+            await user.click(
+                screen.getByRole('combobox', { name: /search within/i }),
+            );
+            await user.click(screen.getByRole('option', { name }));
+        };
+
+        it('goes to that category, with nothing typed', async () => {
+            const user = userEvent.setup();
+
+            render(<SearchBar categories={MENU} />);
+            await choose(user, 'Laptop');
+
+            expect(visit).toHaveBeenCalledWith('/shop/laptop');
+        });
+
+        it('takes a half-typed term along rather than dropping it', async () => {
+            const user = userEvent.setup();
+
+            render(<SearchBar categories={MENU} />);
+            await user.type(
+                document.querySelector('.search-text-input'),
+                'corsair',
+            );
+            await choose(user, 'Component');
+
+            expect(visit).toHaveBeenCalledWith(
+                '/shop/component?search=corsair',
+            );
+        });
+
+        it('widens back out to the whole shop', async () => {
+            const user = userEvent.setup();
+
+            render(<SearchBar categories={MENU} />);
+            await choose(user, 'Laptop');
+            visit.mockClear();
+            await choose(user, 'All Tech');
+
+            expect(visit).toHaveBeenCalledWith('/shop');
+        });
+
+        /* Re-picking what is already chosen is not a navigation. */
+        it('stays put when the choice has not changed', async () => {
+            const user = userEvent.setup();
+
+            render(<SearchBar categories={MENU} />);
+            await choose(user, 'All Tech');
+
+            expect(visit).not.toHaveBeenCalled();
+        });
     });
 });
