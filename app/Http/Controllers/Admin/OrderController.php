@@ -39,8 +39,14 @@ class OrderController extends Controller
         $query = Order::with([
             'user', 'items.product.images',
             'courier:id,name,tracking_url_template',
-            // So the refund form knows what is left before anything is typed.
-            'refunds:id,order_id,amount',
+            /*
+             * So the refund form knows what is left before anything is typed,
+             * and so the order can show the money as a story rather than a
+             * balance: when each refund went out and what it was for. The
+             * amount alone was enough for the form and left the log reading
+             * "Invalid Date · Refund".
+             */
+            'refunds:id,order_id,amount,reason,created_at',
             // And the payment form what is still owed.
             'payments',
         ])->latest();

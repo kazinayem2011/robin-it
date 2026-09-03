@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
-    Plus,
+    CircleDollarSign,
     Eye,
-    ShoppingCart,
-    Undo2,
-    Printer,
-    Truck,
-    Wallet,
     PencilLine,
+    Plus,
+    Printer,
+    ShoppingCart,
+    Truck,
+    Undo2,
+    Wallet,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
@@ -34,6 +35,24 @@ import {
     CANCELLABLE_ORDER_STATUSES,
     orderStatusOptionsFor,
 } from '@/constants';
+
+/*
+ * What an order has actually collected.
+ *
+ * The list and the order both answer "is the money in", and answering it
+ * twice is how two screens come to disagree about the same order.
+ */
+const paidOn = (order) =>
+    (order?.payments ?? []).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+const refundedOn = (order) =>
+    (order?.refunds ?? []).reduce((sum, r) => sum + Number(r.amount || 0), 0);
+
+const dueOn = (order) =>
+    Math.max(
+        0,
+        Number(order?.total || 0) - (paidOn(order) - refundedOn(order)),
+    );
 
 export default function Orders({
     orders = { data: [] },
@@ -87,6 +106,10 @@ export default function Orders({
                 `Order #${orderId} status updated to ${newStatus.toUpperCase()}`,
                 'Status Updated',
             );
+            /* The order on screen came from the list, so it is stale the
+               moment the status changes. Close it and refresh rather than
+               leave a panel showing the status it used to have. */
+            setSelectedOrder(null);
             router.reload({ preserveScroll: true });
         } catch (error) {
             console.error('Failed to update order status', error);
@@ -97,14 +120,35 @@ export default function Orders({
         }
     };
 
+    /*
+     * Five columns, not eight.
+     *
+     * The list carried the order number, the customer, their phone, the date,
+     * an item count, the total, a status badge beside a status dropdown, and
+     * seven action buttons — two of which used the same icon. Nothing could be
+     * found at a glance because everything was present at once.
+     *
+     * What stays is what the list is read for: which order, whose, when, what
+     * it is worth and whether the money is in, and where it has got to.
+     * Everything else is one press away in the order itself, which is where it
+     * can be given room.
+     */
     const columns = [
         {
             key: 'order_number',
-            header: 'Order ID',
+            header: 'Order',
             render: (order) => (
-                <span className="admin-order-id-strong">
-                    #{order.order_number}
-                </span>
+                <div>
+                    <span className="admin-order-id-strong">
+                        #{order.order_number}
+                    </span>
+                    {/* Under the number rather than in a column of its own: the
+                        date is how you place an order in time, not something
+                        you scan a column of. */}
+                    <div className="admin-order-date">
+                        {formatDate(order.created_at)}
+                    </div>
+                </div>
             ),
         },
         {
@@ -117,39 +161,14 @@ export default function Orders({
                             ? order.user.name
                             : order.shipping_address?.name}
                     </strong>
-                    <span className="admin-order-user-email">
-                        {order.user?.email}
-                    </span>
+                    {/* The number, not the address. This shop rings people;
+                        the email was a column nobody acted on. */}
+                    <div className="admin-order-phone">
+                        {formatBdPhone(
+                            order.user?.phone || order.shipping_address?.phone,
+                        )}
+                    </div>
                 </div>
-            ),
-        },
-        {
-            key: 'phone',
-            header: 'Contact Phone',
-            render: (order) => (
-                <span className="admin-order-phone">
-                    {formatBdPhone(
-                        order.user?.phone || order.shipping_address?.phone,
-                    )}
-                </span>
-            ),
-        },
-        {
-            key: 'date',
-            header: 'Date',
-            render: (order) => (
-                <span className="admin-order-date">
-                    {formatDate(order.created_at)}
-                </span>
-            ),
-        },
-        {
-            key: 'items',
-            header: 'Items',
-            render: (order) => (
-                <span className="admin-order-items-count">
-                    {order.items_count || order.items?.length || 1} Item(s)
-                </span>
             ),
         },
         {
@@ -162,18 +181,8 @@ export default function Orders({
                  * order with a ৳20,000 deposit against it looked exactly like
                  * one nobody had paid a taka on.
                  */
-                const paid = (order.payments || []).reduce(
-                    (sum, p) => sum + Number(p.amount || 0),
-                    0,
-                );
-                const refunded = (order.refunds || []).reduce(
-                    (sum, r) => sum + Number(r.amount || 0),
-                    0,
-                );
-                const due = Math.max(
-                    0,
-                    Number(order.total || 0) - (paid - refunded),
-                );
+                const paid = paidOn(order);
+                const due = dueOn(order);
 
                 return (
                     <div>
@@ -196,141 +205,43 @@ export default function Orders({
         {
             key: 'status',
             header: 'Status',
-            render: (order) => (
-                <div className="admin-order-status-flex">
-                    <StatusBadge status={order.status} />
-
-                    {/*
-                     * Cancelled and returned are end states. A returned order
-                     * has had its units accounted for item by item; a cancelled
-                     * one has handed them back. Either way there is nothing to
-                     * move it to, so the select is a label.
-                     *
-                     * A delivered order keeps its select but loses "Cancelled":
-                     * the goods are with the customer, so anything coming back
-                     * is a return, which records what condition it arrived in.
-                     */}
-                    {TERMINAL_ORDER_STATUSES.includes(order.status) ? (
-                        <span className="admin-field-hint">
-                            {order.status === 'returned'
-                                ? 'Returned'
-                                : 'Cancelled'}
-                        </span>
-                    ) : (
-                        <select
-                            value={order.status}
-                            onChange={(e) =>
-                                handleStatusChange(order.id, e.target.value)
-                            }
-                            className="admin-status-dropdown"
-                        >
-                            {orderStatusOptionsFor(order.status).map(
-                                (option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    )}
-                </div>
-            ),
+            /* The badge alone. The dropdown that sat beside it moved into the
+               order, where changing a status is a decision rather than
+               something done in passing while scanning a list. */
+            render: (order) => <StatusBadge status={order.status} />,
         },
         {
             key: 'actions',
-            header: 'Actions',
+            header: '',
             align: 'right',
+            /*
+             * Two, from seven.
+             *
+             * Dispatch, return, payment, refund and edit were all here at
+             * once, in a row narrow enough that two of them shared the Undo2
+             * icon — one meaning goods coming back and the other money going
+             * back. They live in the order now, spelled out in words.
+             *
+             * The invoice stays, because printing one is the errand you run
+             * from the list itself, without needing to look at the order.
+             */
             render: (order) => (
                 <div className="admin-input-row-flex admin-order-actions">
                     <button
                         type="button"
                         className="admin-table-icon-btn"
                         onClick={() => setSelectedOrder(order)}
-                        title="Inspect Order Details"
+                        title="Open this order"
                     >
                         <Eye size={14} />
                     </button>
 
-                    {/* Before dispatch, handing the parcel over is its own
-                        step: it records who took it and the number to chase
-                        it by, which a bare status change never did. */}
-                    {CANCELLABLE_ORDER_STATUSES.includes(order.status) && (
-                        <button
-                            type="button"
-                            className="admin-table-icon-btn"
-                            onClick={() => setDispatchingOrder(order)}
-                            title="Dispatch with a courier"
-                        >
-                            <Truck size={14} />
-                        </button>
-                    )}
-
-                    {/* Once an order is dispatched its goods are outside the
-                        building, so anything coming back — refused at the
-                        door, recalled from the courier, or returned after
-                        delivery — arrives through here, where what actually
-                        turned up and its condition are recorded. */}
-                    {RETURNABLE_ORDER_STATUSES.includes(order.status) && (
-                        <button
-                            type="button"
-                            className="admin-table-icon-btn"
-                            onClick={() => setReturningOrder(order)}
-                            title="Process a return"
-                        >
-                            <Undo2 size={14} />
-                        </button>
-                    )}
-
-                    {/* Money going back, which is a different event from goods
-                        coming back: a damaged item may be refunded without
-                        being returned, and an exchange returns goods without
-                        refunding anything. */}
-                    <button
-                        type="button"
-                        className="admin-table-icon-btn"
-                        onClick={() => setPayingOrder(order)}
-                        title="Record a payment received"
-                    >
-                        <Wallet size={14} />
-                    </button>
-
-                    {/*
-                     * Only while the order is still in the shop. Once it is
-                     * with a courier the consignment is booked against a value
-                     * and the paperwork would stop matching what is in the box.
-                     */}
-                    {['pending', 'processing'].includes(order.status) && (
-                        <button
-                            type="button"
-                            className="admin-table-icon-btn"
-                            onClick={() => setEditingOrder(order)}
-                            title="Change what is on this order"
-                        >
-                            <PencilLine size={14} />
-                        </button>
-                    )}
-
-                    <button
-                        type="button"
-                        className="admin-table-icon-btn"
-                        onClick={() => setRefundingOrder(order)}
-                        title="Record a refund"
-                    >
-                        <Undo2 size={14} />
-                    </button>
-
-                    {/* Opens the print dialog straight away — the paperwork
-                        goes out with the rider. */}
                     <a
                         href={`/orders/${order.id}/invoice?print=1`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="admin-table-icon-btn"
-                        title="Print invoice"
-                        onClick={(e) => e.stopPropagation()}
+                        title="Print the invoice"
                     >
                         <Printer size={14} />
                     </a>
@@ -409,19 +320,109 @@ export default function Orders({
                 title={selectedOrder?.order_number || 'Order'}
                 maxWidth="680px"
                 footer={
-                    <>
-                        <a
-                            href={`/orders/${selectedOrder?.id}/invoice?print=1`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-outline"
-                        >
-                            <Printer size={15} /> Print invoice
-                        </a>
+                    /*
+                     * Everything that can be done to this order, named.
+                     *
+                     * These were seven icons in a table row, where two shared
+                     * a glyph and none had room for a word. Here each is what
+                     * it does, and only the ones that apply to this order's
+                     * state are offered — which is the same rule the row used,
+                     * simply legible now.
+                     */
+                    <div className="admin-order-actions-footer">
+                        <div className="admin-order-actions-doing">
+                            {CANCELLABLE_ORDER_STATUSES.includes(
+                                selectedOrder?.status,
+                            ) && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={Truck}
+                                    onClick={() => {
+                                        setDispatchingOrder(selectedOrder);
+                                        setSelectedOrder(null);
+                                    }}
+                                >
+                                    Dispatch
+                                </Button>
+                            )}
+
+                            {RETURNABLE_ORDER_STATUSES.includes(
+                                selectedOrder?.status,
+                            ) && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={Undo2}
+                                    onClick={() => {
+                                        setReturningOrder(selectedOrder);
+                                        setSelectedOrder(null);
+                                    }}
+                                >
+                                    Goods back
+                                </Button>
+                            )}
+
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                icon={Wallet}
+                                onClick={() => {
+                                    setPayingOrder(selectedOrder);
+                                    setSelectedOrder(null);
+                                }}
+                            >
+                                Payment in
+                            </Button>
+
+                            {/* Money going back is a different event from
+                                goods coming back: a damaged item may be
+                                refunded without being returned, and an
+                                exchange returns goods without refunding. They
+                                shared an icon in the row, which said the
+                                opposite. */}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                icon={CircleDollarSign}
+                                onClick={() => {
+                                    setRefundingOrder(selectedOrder);
+                                    setSelectedOrder(null);
+                                }}
+                            >
+                                Money back
+                            </Button>
+
+                            {['pending', 'processing'].includes(
+                                selectedOrder?.status,
+                            ) && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={PencilLine}
+                                    onClick={() => {
+                                        setEditingOrder(selectedOrder);
+                                        setSelectedOrder(null);
+                                    }}
+                                >
+                                    Edit items
+                                </Button>
+                            )}
+
+                            <a
+                                href={`/orders/${selectedOrder?.id}/invoice?print=1`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-secondary btn-sm"
+                            >
+                                <Printer size={15} /> Invoice
+                            </a>
+                        </div>
+
                         <Button onClick={() => setSelectedOrder(null)}>
                             Close
                         </Button>
-                    </>
+                    </div>
                 }
             >
                 {selectedOrder && (
@@ -437,7 +438,66 @@ export default function Orders({
                                     {formatBdt(selectedOrder.total)}
                                 </div>
                             </div>
-                            <StatusBadge status={selectedOrder.status} />
+
+                            {/*
+                             * Where the order is, and where it goes next.
+                             *
+                             * This was a dropdown in the table, next to the
+                             * badge, on every row — so the most consequential
+                             * control on the screen sat in the column you
+                             * scroll past, one mis-click from marking the
+                             * wrong order delivered. It belongs with the
+                             * order, next to what it is about to change.
+                             *
+                             * Cancelled and returned are end states: a
+                             * returned order has had its units accounted for
+                             * item by item, a cancelled one has handed them
+                             * back, and there is nowhere to move either. A
+                             * delivered order keeps the control but loses
+                             * "Cancelled" — the goods are with the customer,
+                             * so anything coming back is a return, which
+                             * records what condition it arrived in.
+                             */}
+                            <div className="admin-order-status-control">
+                                <StatusBadge status={selectedOrder.status} />
+
+                                {TERMINAL_ORDER_STATUSES.includes(
+                                    selectedOrder.status,
+                                ) ? (
+                                    <span className="admin-field-hint">
+                                        {selectedOrder.status === 'returned'
+                                            ? 'Returned — nothing further to move'
+                                            : 'Cancelled — nothing further to move'}
+                                    </span>
+                                ) : (
+                                    <label className="admin-order-status-move">
+                                        <span className="admin-field-hint">
+                                            Move to
+                                        </span>
+                                        <select
+                                            value={selectedOrder.status}
+                                            onChange={(e) =>
+                                                handleStatusChange(
+                                                    selectedOrder.id,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="admin-status-dropdown"
+                                        >
+                                            {orderStatusOptionsFor(
+                                                selectedOrder.status,
+                                            ).map((option) => (
+                                                <option
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                )}
+                            </div>
                         </div>
 
                         {/* Customer & Shipping Summary */}
@@ -531,6 +591,83 @@ export default function Orders({
                                 ))}
                             </tbody>
                         </table>
+
+                        {/*
+                         * What has actually been collected.
+                         *
+                         * This arithmetic existed only in the list's total
+                         * cell, so the order itself — the place you open to
+                         * find out about it — could tell you what it came to
+                         * and not a thing about whether the shop had the
+                         * money. Every payment and every refund is listed,
+                         * because "৳20,000 owed" invites the question of what
+                         * came in and when.
+                         */}
+                        <div className="admin-detail-panel">
+                            <span className="admin-detail-panel-label">
+                                Money
+                            </span>
+
+                            <dl className="admin-detail-grid">
+                                <div>
+                                    <dt>Order total</dt>
+                                    <dd>{formatBdt(selectedOrder.total)}</dd>
+                                </div>
+                                <div>
+                                    <dt>Paid</dt>
+                                    <dd>{formatBdt(paidOn(selectedOrder))}</dd>
+                                </div>
+                                <div>
+                                    <dt>Refunded</dt>
+                                    <dd>
+                                        {formatBdt(refundedOn(selectedOrder))}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Outstanding</dt>
+                                    <dd>
+                                        {dueOn(selectedOrder) > 0 ? (
+                                            <strong className="admin-order-due">
+                                                {formatBdt(
+                                                    dueOn(selectedOrder),
+                                                )}
+                                            </strong>
+                                        ) : (
+                                            <span className="admin-order-settled">
+                                                Settled
+                                            </span>
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+
+                            {(selectedOrder.payments ?? []).length > 0 && (
+                                <ul className="admin-money-log">
+                                    {selectedOrder.payments.map((p) => (
+                                        <li key={`p-${p.id}`}>
+                                            <span>
+                                                {formatDate(p.created_at)} ·{' '}
+                                                {p.method ?? 'Payment'}
+                                            </span>
+                                            <span className="admin-money-in">
+                                                +{formatBdt(p.amount)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                    {(selectedOrder.refunds ?? []).map((r) => (
+                                        <li key={`r-${r.id}`}>
+                                            <span>
+                                                {formatDate(r.created_at)} ·{' '}
+                                                {r.reason ?? 'Refund'}
+                                            </span>
+                                            <span className="admin-money-out">
+                                                −{formatBdt(r.amount)}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     </div>
                 )}
             </Modal>

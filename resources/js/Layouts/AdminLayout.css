@@ -1112,12 +1112,6 @@ a.admin-card:hover,
     display: block;
 }
 
-.admin-order-user-email {
-    display: block;
-    font-size: 0.72rem;
-    color: var(--gray-400);
-}
-
 .admin-order-phone {
     color: var(--gray-500);
     font-family: monospace;
@@ -1128,20 +1122,10 @@ a.admin-card:hover,
     font-size: 0.78rem;
 }
 
-.admin-order-items-count {
-    color: var(--dark-800);
-}
-
 .admin-order-total-price {
     font-weight: 800;
     color: var(--primary);
     font-family: var(--font-heading);
-}
-
-.admin-order-status-flex {
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .admin-order-actions-right {
@@ -4499,4 +4483,97 @@ a.admin-card:hover,
 /* The box itself is redundant once the chip fills in, and crowds the label. */
 .admin-attr-chip input {
     display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The order, opened.
+ *
+ * The list used to carry a status dropdown and seven action icons on every
+ * row. Both moved in here, where each has room to say what it is.
+ * ------------------------------------------------------------------------- */
+.admin-order-status-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.admin-order-status-move {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-order-status-move .admin-status-dropdown {
+    /* Wide enough for "Out for delivery" without the label clipping. */
+    min-width: 150px;
+}
+
+/*
+ * Two groups: everything you might do to the order, then the way out. Wraps
+ * rather than shrinking, so a button never becomes an unreadable stub.
+ */
+.admin-order-actions-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.admin-order-actions-doing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    /* Takes the slack so Close stays pinned to the far edge. */
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Every payment and refund against the order, newest last, so the running
+   story of the money reads top to bottom. */
+.admin-money-log {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--border-light, #e2e8f0);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.admin-money-log li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: var(--gray-600, #475569);
+}
+
+.admin-money-log li > span:last-child {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.admin-money-in {
+    color: var(--success, #16a34a);
+}
+
+.admin-money-out {
+    color: var(--danger, #dc2626);
+}
+
+@media (max-width: 560px) {
+    .admin-order-actions-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-order-status-control {
+        align-items: flex-start;
+    }
 }
