@@ -14,6 +14,7 @@ use App\Services\CategoryService;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class CatalogPresentationTest extends TestCase
@@ -170,6 +171,57 @@ class CatalogPresentationTest extends TestCase
 
         $this->assertNotNull($entry);
         $this->assertSame(253, $entry['wattage'], 'Wattage must come from the product spec, not the default.');
+    }
+
+    /**
+     * The builder must find its parts under the shelves the shop actually has.
+     *
+     * The lookups asked for 'cpu', 'gpu' and 'ram' — what the old hundred-
+     * category tree called them. The StarTech taxonomy names them
+     * 'component-processor', 'component-graphics-card' and
+     * 'component-ram-desktop', so every lookup found nothing and the
+     * homepage's configurator rendered three empty pickers: no error, no empty
+     * state, just blank.
+     *
+     * The existing wattage test above never caught it, because it builds its
+     * own category with the slug 'cpu'. It pinned the tree that had been
+     * replaced, so it stayed green while the page was blank.
+     */
+    public function test_the_builder_finds_parts_under_the_current_taxonomy(): void
+    {
+        foreach ([
+            'component-processor' => 'Ryzen 7 9800X3D',
+            'component-graphics-card' => 'RTX 5080',
+            'component-ram-desktop' => 'Vengeance 32GB',
+        ] as $slug => $name) {
+            $category = Category::create([
+                'name' => $name.' shelf',
+                'slug' => $slug,
+                'is_active' => true,
+            ]);
+
+            Product::create([
+                'category_id' => $category->id,
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'price' => 50000,
+                'stock_quantity' => 3,
+                'is_active' => true,
+            ]);
+        }
+
+        $specs = app(ProductService::class)->getBuilderQuickSpecs();
+
+        foreach (['cpu', 'gpu', 'ram'] as $part) {
+            $this->assertNotEmpty(
+                $specs[$part],
+                "The configurator found no {$part}, so its picker renders blank."
+            );
+        }
+
+        $this->assertSame('Ryzen 7 9800X3D', collect($specs['cpu'])->first()['name']);
+        $this->assertSame('RTX 5080', collect($specs['gpu'])->first()['name']);
+        $this->assertSame('Vengeance 32GB', collect($specs['ram'])->first()['name']);
     }
 
     public function test_product_cards_expose_wattage_for_the_builder_ui(): void

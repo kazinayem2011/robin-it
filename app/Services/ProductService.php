@@ -661,9 +661,24 @@ class ProductService
      */
     public function getBuilderQuickSpecs(): array
     {
-        $cpus = $this->componentsUnder('cpu');
-        $gpus = $this->componentsUnder('gpu', 'graphics-card');
-        $rams = $this->componentsUnder('ram', 'memory');
+        /*
+         * The shelf slugs, and the ones they used to be.
+         *
+         * These asked for 'cpu', 'gpu' and 'ram', which is what the old
+         * hundred-category tree called them. The StarTech taxonomy names them
+         * 'component-processor', 'component-graphics-card' and
+         * 'component-ram-desktop', so every lookup found nothing and the
+         * homepage's builder rendered three empty pickers — no error, no empty
+         * state, just blank.
+         *
+         * getPcBuilderCategories() was corrected to candidate lists when this
+         * bit the full builder; this method reads the same shelves and was
+         * missed. The old slugs stay in the list so a shop still on the old
+         * tree keeps working.
+         */
+        $cpus = $this->componentsUnder('component-processor', 'cpu');
+        $gpus = $this->componentsUnder('component-graphics-card', 'gpu', 'graphics-card');
+        $rams = $this->componentsUnder('component-ram-desktop', 'ram', 'memory');
 
         return [
             'cpu' => $this->formatSpecGroup($cpus, 125),
