@@ -149,6 +149,45 @@ class OffersTest extends TestCase
         $this->assertStringContainsString('<li', $offer->content);
     }
 
+    /*
+     * The header's Offers button says "RUNNING NOW" on every page of the shop.
+     * With nothing running that is a claim the shop cannot keep, and following
+     * it lands on an empty page — so the count it depends on has to be shared
+     * with every page, and has to be right.
+     */
+    public function test_every_page_is_told_how_many_offers_are_running(): void
+    {
+        $this->offer(['title' => 'On now']);
+        $this->offer([
+            'title' => 'Not yet',
+            'starts_at' => now()->addWeek(),
+            'ends_at' => now()->addWeeks(2),
+        ]);
+        $this->offer([
+            'title' => 'Over',
+            'starts_at' => now()->subMonth(),
+            'ends_at' => now()->subDay(),
+        ]);
+        $this->offer(['title' => 'Switched off', 'is_active' => false]);
+
+        // Running and upcoming — the two the page shows. Not the finished one,
+        // and not the one staff have switched off.
+        $this->assertSame(
+            2,
+            $this->get('/')->viewData('page')['props']['offers_running']
+        );
+    }
+
+    public function test_the_count_is_nought_when_nothing_is_on(): void
+    {
+        $this->offer(['title' => 'Switched off', 'is_active' => false]);
+
+        $this->assertSame(
+            0,
+            $this->get('/')->viewData('page')['props']['offers_running']
+        );
+    }
+
     public function test_both_pages_render(): void
     {
         // The campaigns, and the discounted listing at its new address.

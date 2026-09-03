@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Offer;
 use App\Models\SiteSetting;
 use App\Models\Store;
 use App\Models\User;
@@ -74,6 +75,19 @@ class HandleInertiaRequests extends Middleware
             // were four. A count nobody maintains drifts into a false claim,
             // so it is read from the branches that actually exist.
             'showroom_count' => fn () => Store::where('is_active', true)->count(),
+
+            /*
+             * How many campaigns are on, so the header can stop offering them
+             * when there are none.
+             *
+             * The Offers button says "RUNNING NOW" on every page. With nothing
+             * running that is a claim the shop cannot keep, and following it
+             * lands on an empty page — the dead end this codebase already has
+             * a test file named after. Counted here rather than fetched by the
+             * header, which would be a second request on every page for the
+             * sake of one button.
+             */
+            'offers_running' => fn () => Offer::current()->count(),
         ];
     }
 

@@ -35,7 +35,13 @@ export const Header = () => {
      * Two sources for one thing, one of them a round trip the page had already
      * paid for.
      */
-    const { auth, site_settings: siteSettings = {} } = usePage().props;
+    const {
+        auth,
+        site_settings: siteSettings = {},
+        // How many campaigns are on. Shared with every page rather than
+        // fetched here, which would be a request per page for one button.
+        offers_running: offersRunning = 0,
+    } = usePage().props;
 
     /*
      * Seeded from the last known menu, so a refresh paints the bar it had
@@ -225,14 +231,30 @@ export const Header = () => {
                                 <Truck size={13} className="ticker-icon" />
                                 <span>Track Order</span>
                             </Link>
-                            <span className="ticker-divider"></span>
-                            {/* The campaigns the shop is running. Distinct
-                                from the discounted listing, which is a price
-                                fact and lives under Discounts. */}
-                            <Link href={ROUTES.OFFERS} className="ticker-link">
-                                <Tag size={13} className="ticker-icon" />
-                                <span>Offers</span>
-                            </Link>
+                            {/*
+                             * The campaigns the shop is running. Distinct from
+                             * the discounted listing, which is a price fact
+                             * and lives under Discounts.
+                             *
+                             * Absent when there are none: this sits on every
+                             * page of the shop, and an empty page is a dead
+                             * end.
+                             */}
+                            {offersRunning > 0 && (
+                                <>
+                                    <span className="ticker-divider"></span>
+                                    <Link
+                                        href={ROUTES.OFFERS}
+                                        className="ticker-link"
+                                    >
+                                        <Tag
+                                            size={13}
+                                            className="ticker-icon"
+                                        />
+                                        <span>Offers</span>
+                                    </Link>
+                                </>
+                            )}
                             <span className="ticker-divider"></span>
                             <Link href={ROUTES.STORES} className="ticker-link">
                                 <MapPin size={13} className="ticker-icon" />
@@ -287,21 +309,29 @@ export const Header = () => {
                          * rather than one of the small tool icons. Filled
                          * rather than outlined, because an offer is the thing
                          * the shop most wants noticed.
+                         *
+                         * Only while there is something to notice. It says
+                         * RUNNING NOW, which with nothing running is a claim
+                         * the shop cannot keep, and it led to an empty page.
                          */}
-                        <Link
-                            href={ROUTES.OFFERS}
-                            className="header-highlight-btn offers-glow-btn"
-                        >
-                            <div className="btn-glow-icon">
-                                <Tag size={18} />
-                            </div>
-                            <div className="btn-glow-text">
-                                <span className="btn-glow-sub">
-                                    RUNNING NOW
-                                </span>
-                                <span className="btn-glow-title">OFFERS</span>
-                            </div>
-                        </Link>
+                        {offersRunning > 0 && (
+                            <Link
+                                href={ROUTES.OFFERS}
+                                className="header-highlight-btn offers-glow-btn"
+                            >
+                                <div className="btn-glow-icon">
+                                    <Tag size={18} />
+                                </div>
+                                <div className="btn-glow-text">
+                                    <span className="btn-glow-sub">
+                                        RUNNING NOW
+                                    </span>
+                                    <span className="btn-glow-title">
+                                        OFFERS
+                                    </span>
+                                </div>
+                            </Link>
+                        )}
 
                         {/* A shopper's own bell: how they hear that their
                             order has shipped without refreshing the page. Only

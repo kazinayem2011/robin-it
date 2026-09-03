@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     X,
     Plus,
@@ -37,6 +37,8 @@ AccordionToggleButton.displayName = 'AccordionToggleButton';
  * Provides 3-level interactive hierarchy (+ / - toggle) matching StarTech / Ryans mobile UX.
  */
 export const MobileCategoryDrawer = ({ isOpen, onClose, categories = [] }) => {
+    // Shared with every page — see HandleInertiaRequests.
+    const { offers_running: offersRunning = 0 } = usePage().props;
     // Track expanded Level 1 parents & Level 2 subcategories
     const [expandedL1, setExpandedL1] = useState({});
     const [expandedL2, setExpandedL2] = useState({});
@@ -298,14 +300,18 @@ export const MobileCategoryDrawer = ({ isOpen, onClose, categories = [] }) => {
                                 <span>PC Builder</span>
                             </Link>
 
-                            <Link
-                                href={ROUTES.OFFERS}
-                                className="mobile-hub-card"
-                                onClick={onClose}
-                            >
-                                <Tag size={16} />
-                                <span>Offers</span>
-                            </Link>
+                            {/* Same as the header: not offered when there is
+                                nothing on. */}
+                            {offersRunning > 0 && (
+                                <Link
+                                    href={ROUTES.OFFERS}
+                                    className="mobile-hub-card"
+                                    onClick={onClose}
+                                >
+                                    <Tag size={16} />
+                                    <span>Offers</span>
+                                </Link>
+                            )}
 
                             {/* The two are different things: an offer is a
                                 campaign the shop is running, a discount is a
