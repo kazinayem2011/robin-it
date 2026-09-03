@@ -135,7 +135,7 @@ export default function OfferDetail({ slug }) {
             />
             <Head title={`${offer.title} — ${siteConfig.name}`} />
 
-            <div className="container offers-page">
+            <div className="container offers-page is-single">
                 <div className="breadcrumbs">
                     <Link href={ROUTES.HOME}>Home</Link>
                     <Link href={ROUTES.OFFERS}>Offers</Link>

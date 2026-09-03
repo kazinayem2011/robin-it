@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { CalendarRange, Store, ArrowRight, Tag, Percent } from 'lucide-react';
+import {
+    CalendarRange,
+    Store,
+    ArrowRight,
+    Tag,
+    Percent,
+    Sparkles,
+} from 'lucide-react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import EmptyState from '../../Components/EmptyState';
@@ -59,30 +66,68 @@ export default function Offers() {
                 </div>
 
                 <header className="offers-head">
-                    <span className="section-pill-tag">WHAT&rsquo;S ON</span>
-                    <h1>Running Offers</h1>
-                    <p>
-                        Gift bundles, cashback and branch campaigns — each with
-                        the dates it runs and where it applies.
-                    </p>
+                    <div className="offers-head-text">
+                        <span className="offers-eyebrow">
+                            <Sparkles size={13} />
+                            What&rsquo;s on
+                        </span>
+
+                        <h1>Running Offers</h1>
+
+                        <p>
+                            Gift bundles, cashback and branch campaigns — each
+                            with the dates it runs and where it applies.
+                        </p>
+
+                        {/*
+                         * The other page that used to live at this address. A
+                         * shopper who came looking for cut prices should not
+                         * have to discover the word changed meaning.
+                         */}
+                        <Link
+                            href={ROUTES.DISCOUNTS}
+                            className="offers-to-discounts"
+                        >
+                            <Percent size={15} />
+                            <span>Looking for discounted products?</span>
+                            <ArrowRight size={14} />
+                        </Link>
+                    </div>
 
                     {/*
-                     * The other page that used to live at this address. A
-                     * shopper who came looking for cut prices should not have
-                     * to find out the word changed meaning.
+                     * What is actually on, counted.
                      *
-                     * Under the description rather than flush right: the cart
-                     * dock is fixed to the right edge of the window, and at
-                     * common widths it sat over the end of this pill.
+                     * The right of this header was empty, and a count is the
+                     * one thing worth putting there: it is true, it comes from
+                     * the list below rather than being written by hand, and it
+                     * answers the question the page exists to answer before a
+                     * single card is read. A zero is not shown — "0 starting
+                     * soon" is a fact nobody needs.
                      */}
-                    <Link
-                        href={ROUTES.DISCOUNTS}
-                        className="offers-to-discounts"
-                    >
-                        <Percent size={15} />
-                        <span>Looking for discounted products?</span>
-                        <ArrowRight size={14} />
-                    </Link>
+                    {!loading && offers.length > 0 && (
+                        <div className="offers-stats">
+                            {[
+                                ['running', 'Running now'],
+                                ['upcoming', 'Starting soon'],
+                            ].map(([status, label]) => {
+                                const n = offers.filter(
+                                    (o) => o.status === status,
+                                ).length;
+
+                                if (!n) return null;
+
+                                return (
+                                    <div
+                                        key={status}
+                                        className={`offers-stat is-${status}`}
+                                    >
+                                        <strong>{n}</strong>
+                                        <span>{label}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </header>
 
                 {loading ? (

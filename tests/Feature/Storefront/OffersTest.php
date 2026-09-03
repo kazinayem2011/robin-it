@@ -128,6 +128,27 @@ class OffersTest extends TestCase
         $this->assertStringNotContainsString('<script', $offer->content);
     }
 
+    /*
+     * An offer's terms are usually a table — buy this, get that. The sanitiser
+     * has always allowed one; this is the check that it still does, because a
+     * tightened allowlist would silently flatten every gift matrix in the shop
+     * into a run-on paragraph.
+     */
+    public function test_the_terms_may_carry_a_table_and_a_list(): void
+    {
+        $offer = $this->offer([
+            'content' => '<h4>Gift details</h4>'
+                .'<table><thead><tr><th>Range</th><th>Gift</th></tr></thead>'
+                .'<tbody><tr><td>Ryzen 5</td><td>Earbuds</td></tr></tbody></table>'
+                .'<ul><li>One gift per purchase.</li></ul>',
+        ]);
+
+        $this->assertStringContainsString('<table', $offer->content);
+        $this->assertStringContainsString('<th', $offer->content);
+        $this->assertStringContainsString('Earbuds', $offer->content);
+        $this->assertStringContainsString('<li', $offer->content);
+    }
+
     public function test_both_pages_render(): void
     {
         // The campaigns, and the discounted listing at its new address.

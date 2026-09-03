@@ -42,34 +42,95 @@
     color: var(--gray-300);
 }
 
+/*
+ * The page header, as a panel.
+ *
+ * It was four things stacked on the left with an empty right half. The panel
+ * gives it an edge to sit against, and the counts give the right side
+ * something true to hold — read from the list below, not written by hand.
+ */
 .offers-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin: 10px 0 28px;
+    padding: 26px 30px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: linear-gradient(
+        135deg,
+        var(--bg-surface) 0%,
+        var(--bg-surface-subtle) 100%
+    );
+}
+
+/*
+ * A wash of the brand colour bleeding in from the corner the counts sit in.
+ * Behind everything, and soft enough that the text over it does not have to
+ * fight for contrast.
+ */
+.offers-head::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -8%;
+    width: 420px;
+    height: 300%;
+    background: radial-gradient(
+        closest-side,
+        rgba(209, 33, 39, 0.09),
+        transparent
+    );
+    pointer-events: none;
+}
+
+.offers-head-text {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.offers-eyebrow {
+    display: inline-flex;
+    align-items: center;
     gap: 6px;
-    margin: 8px 0 28px;
+    padding: 4px 11px;
+    border-radius: var(--radius-full);
+    background: rgba(209, 33, 39, 0.1);
+    color: var(--primary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
 }
 
 .offers-head h1 {
-    margin: 10px 0 6px;
-    font-size: 2rem;
+    font-size: 2.1rem;
     font-weight: 800;
+    letter-spacing: -0.6px;
     color: var(--dark-900);
 }
 
 .offers-head p {
-    max-width: 56ch;
-    color: var(--gray-500);
+    max-width: 52ch;
     font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--gray-500);
 }
 
-/* The page that used to live at this address, for whoever came looking. */
 .offers-to-discounts {
-    margin-top: 10px;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 14px;
+    margin-top: 6px;
+    padding: 9px 15px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
     background: var(--bg-surface);
@@ -83,6 +144,68 @@
 .offers-to-discounts:hover {
     border-color: var(--primary);
     color: var(--primary);
+    transform: translateX(2px);
+}
+
+/* ---- what is on, counted ---- */
+
+.offers-stats {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.offers-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 108px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    text-align: center;
+}
+
+.offers-stat strong {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--dark-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.offers-stat span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+/* What is on today is the number the page is about. */
+.offers-stat.is-running {
+    border-color: rgba(209, 33, 39, 0.28);
+    background: rgba(209, 33, 39, 0.05);
+}
+
+.offers-stat.is-running strong {
+    color: var(--primary);
+}
+
+/*
+ * Room for the cart dock, which is fixed to the right edge of the window and
+ * is not part of this layout. Measured: it covers 66px of the container at
+ * 1280px and 6px at 1440px, and nothing from 1600px up — so the reservation
+ * is made exactly where it is needed and nowhere else.
+ */
+@media (min-width: 641px) and (max-width: 1560px) {
+    .offers-head {
+        padding-right: 96px;
+    }
 }
 
 /* ---- the list -----------------------------------------------------------
@@ -220,6 +343,16 @@
 
 /* ---- one offer ---------------------------------------------------------- */
 
+/*
+ * On a single offer the whole column is centred, so the trail and the back
+ * link line up with the card rather than starting at the page edge.
+ */
+.offers-page.is-single .breadcrumbs,
+.offers-page.is-single .offer-back {
+    max-width: 860px;
+    margin-inline: auto;
+}
+
 .offer-back {
     display: inline-flex;
     align-items: center;
@@ -235,8 +368,25 @@
     color: var(--primary);
 }
 
+/*
+ * A full-width block of the column's measure, with the link at its start —
+ * `width: fit-content` here would shrink the box and the auto margins would
+ * then centre the link itself, which is not what centring the column means.
+ */
+.offers-page.is-single .offer-back {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/*
+ * Centred, not parked against the left edge.
+ *
+ * It is a single column of prose on a page with nothing beside it, so at
+ * 1400px it was 860px of card with 460px of empty grey to its right.
+ */
 .offer-detail-card {
     max-width: 860px;
+    margin-inline: auto;
     padding: 26px;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
@@ -306,6 +456,16 @@
     color: var(--dark-900);
 }
 
+/* Terms are written with h4 sub-headings — "Gift details", "Terms &
+   conditions" — so it needs a size of its own rather than the browser's. */
+.offer-detail-body h4 {
+    margin: 24px 0 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--dark-900);
+}
+
 .offer-detail-body p {
     margin-bottom: 16px;
 }
@@ -328,6 +488,53 @@
 .offer-detail-body img {
     max-width: 100%;
     border-radius: var(--radius-sm);
+}
+
+.offer-detail-body strong {
+    color: var(--dark-900);
+}
+
+.offer-detail-body hr {
+    margin: 26px 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
+}
+
+/*
+ * The gift matrix.
+ *
+ * An offer's terms are usually a table — buy this, get that — and the
+ * sanitiser has always allowed one, but nothing styled it, so it rendered as
+ * bare rows with no rules and no padding. Wrapped so a wide one scrolls inside
+ * itself rather than pushing the page sideways.
+ */
+.offer-detail-body table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    display: block;
+    overflow-x: auto;
+}
+
+.offer-detail-body th,
+.offer-detail-body td {
+    padding: 11px 14px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+    vertical-align: top;
+}
+
+.offer-detail-body th {
+    background: var(--bg-surface-subtle);
+    font-weight: 700;
+    color: var(--dark-900);
+    white-space: nowrap;
+}
+
+/* Banding, so a long row is read across rather than drifting a line. */
+.offer-detail-body tbody tr:nth-child(even) td {
+    background: rgba(148, 163, 184, 0.06);
 }
 
 /* ---- the countdown ------------------------------------------------------ */
