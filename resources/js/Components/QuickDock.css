@@ -1,0 +1,108 @@
+/* ---------------------------------------------------------------------------
+ * Compare and cart, pinned to the right edge.
+ *
+ * They were two of seven controls in the header's tool row, and they are the
+ * two a shopper checks most while scrolling a listing — which is exactly when
+ * the header has been scrolled away.
+ * ------------------------------------------------------------------------- */
+.quick-dock {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    /* Flush to the edge, rounded on the inside only, so it reads as attached
+       to the window rather than floating in front of it. */
+    border-radius: var(--radius-md, 10px) 0 0 var(--radius-md, 10px);
+    overflow: hidden;
+    box-shadow: 0 6px 22px -8px rgba(15, 23, 42, 0.35);
+}
+
+.quick-dock-btn {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: var(--dark-900, #0f172a);
+    color: var(--white, #fff);
+    text-decoration: none;
+    transition: background var(--transition-fast, 0.15s);
+}
+
+.quick-dock-btn:hover,
+.quick-dock-btn:focus-visible {
+    background: var(--primary, #d12127);
+}
+
+.quick-dock-label {
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+/*
+ * On the icon rather than the tile: the count belongs to the thing it counts,
+ * and in the corner of a 52px tile it would sit on the label instead.
+ */
+.quick-dock-count {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full, 999px);
+    background: var(--primary, #d12127);
+    color: var(--white, #fff);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.quick-dock-btn:hover .quick-dock-count,
+.quick-dock-btn:focus-visible .quick-dock-count {
+    /* The tile has taken the accent, so the badge steps back off it. */
+    background: var(--white, #fff);
+    color: var(--primary, #d12127);
+}
+
+/*
+ * Smaller on a phone, and never removed. Cart is not optional, and this is
+ * the only place it lives now that the header's tool row no longer carries
+ * it — hiding it here would leave nowhere to reach it from.
+ */
+@media (max-width: 640px) {
+    .quick-dock-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .quick-dock-label {
+        display: none;
+    }
+
+    .quick-dock-count {
+        top: 3px;
+        right: 3px;
+    }
+}
+
+/* Printing a page should not print a floating control over it. */
+@media print {
+    .quick-dock {
+        display: none;
+    }
+}

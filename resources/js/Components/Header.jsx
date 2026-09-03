@@ -1,16 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import {
-    Cpu,
-    Scale,
-    Heart,
-    ShoppingCart,
-    User,
-    PhoneCall,
-    MapPin,
-    Truck,
-    Menu,
-} from 'lucide-react';
+import { Cpu, Heart, User, PhoneCall, MapPin, Truck, Menu } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
@@ -50,10 +40,8 @@ export const Header = () => {
     const megaNavRef = useRef(null);
     const marqueeRef = useRef(null);
 
-    const cartCount = useAppStore((state) => state.cartCount);
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
     const wishlistCount = useAppStore((state) => state.wishlistCount);
-    const compareCount = useAppStore((state) => state.compareCount);
 
     // Fetch the mega menu tree and sync the cart badge. The layout is
     // persistent now, so this runs on the first page and not on every
@@ -274,23 +262,6 @@ export const Header = () => {
                             </div>
                         </Link>
 
-                        {/* Compare */}
-                        <Link
-                            href={ROUTES.COMPARE}
-                            className="header-tool-btn"
-                            title="Product Comparison"
-                        >
-                            <div className="tool-icon-box">
-                                <Scale size={20} />
-                                {compareCount > 0 && (
-                                    <span className="tool-count-badge">
-                                        {compareCount}
-                                    </span>
-                                )}
-                            </div>
-                            <span className="tool-label">Compare</span>
-                        </Link>
-
                         {/* A shopper's own bell: how they hear that their
                             order has shipped without refreshing the page. Only
                             when signed in — there is nothing to tell a guest. */}
@@ -318,22 +289,10 @@ export const Header = () => {
                             <span className="tool-label">Wishlist</span>
                         </Link>
 
-                        {/* Shopping Cart */}
-                        <Link
-                            href={ROUTES.CART}
-                            className="header-tool-btn"
-                            title="Shopping Cart"
-                        >
-                            <div className="tool-icon-box">
-                                <ShoppingCart size={20} />
-                                {cartCount > 0 && (
-                                    <span className="tool-count-badge">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </div>
-                            <span className="tool-label">Cart</span>
-                        </Link>
+                        {/* Compare and cart are pinned to the side of the
+                            page instead — see QuickDock. They carry a running
+                            count, and this row is scrolled away exactly when a
+                            shopper wants to check it. */}
 
                         {/*
                          * No separate Admin button here any more: the account

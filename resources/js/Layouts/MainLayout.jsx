@@ -3,6 +3,7 @@ import Header from '../Components/Header';
 import Footer from '../Components/Footer';
 import ToastContainer from '../Components/Toast';
 import VariantPickerModal from '../Components/VariantPickerModal';
+import QuickDock from '../Components/QuickDock';
 import { useFlashToasts } from '../hooks';
 import './MainLayout.css';
 
@@ -30,6 +31,11 @@ export default function MainLayout({ children }) {
              * here rather than copied into each list that renders cards.
              */}
             <VariantPickerModal />
+
+            {/* Compare and cart, pinned to the edge rather than sitting in a
+                header row that scrolls away. Mounted with the shell so it is
+                in the same place on every page. */}
+            <QuickDock />
 
             {/* Global Toast Notifications (SSOT) */}
             <ToastContainer />
