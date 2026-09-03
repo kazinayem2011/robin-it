@@ -500,6 +500,14 @@ class ProductService
             ->where('slug', $slug)
             ->with([
                 'category', 'brand', 'images', 'specifications', 'quantityDiscounts',
+                /*
+                 * The shelf's own answers — RAM, Wi-Fi Standard, Panel Type —
+                 * which the sidebar filters on and which the compare page can
+                 * line up across products. They are structured, unlike a
+                 * free-text specification, so two products answering the same
+                 * question can actually be read against each other.
+                 */
+                'attributeValues.attribute',
                 // Stock and price live on the option for a variant product, so
                 // the detail page cannot render a buy button without them, and
                 // each carries its own photos for the gallery.

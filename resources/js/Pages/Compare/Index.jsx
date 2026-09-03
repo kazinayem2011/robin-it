@@ -6,7 +6,7 @@ import EmptyState from '../../Components/EmptyState';
 import ProductImage from '../../Components/ProductImage';
 import { CardGridSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
-import { compareService } from '../../services';
+import { compareService, productService } from '../../services';
 import useAppStore from '../../store/useAppStore';
 import { useAddToCart } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
@@ -38,12 +38,41 @@ export default function Compare() {
             const data = await compareService.getComparison();
             // Handle backend response or localStorage array
             const normalized = Array.isArray(data)
-                ? data.map((item) => item.product || item)
+                ? data.map((item) => item.product || item).slice(0, 4)
                 : [];
-            setCompareProducts(normalized.slice(0, 4));
-            useAppStore
-                .getState()
-                .setCompareCount(normalized.slice(0, 4).length);
+
+            /*
+             * Fetched in full, not read from what was stored.
+             *
+             * Comparing is kept in the browser, and what goes in is the card's
+             * payload — a name, a price, a picture and three specs flattened
+             * to strings. The table asked those objects for their
+             * specifications and their answers to the shelf's questions, and
+             * they have neither, so every product compared on four fixed rows
+             * and nothing else. The whole page was four rows deep however much
+             * the shop knew about the things in it.
+             *
+             * Each product is asked for once, in parallel. One that cannot be
+             * fetched — withdrawn since it was added — keeps what was stored,
+             * so it still appears with its name and price rather than
+             * vanishing from a comparison the shopper built.
+             */
+            const full = await Promise.all(
+                normalized.map(async (p) => {
+                    if (!p?.slug) return p;
+
+                    try {
+                        return (
+                            (await productService.getProductBySlug(p.slug)) || p
+                        );
+                    } catch {
+                        return p;
+                    }
+                }),
+            );
+
+            setCompareProducts(full);
+            useAppStore.getState().setCompareCount(full.length);
         } catch (e) {
             console.error('Failed to load comparison list', e);
             setCompareProducts([]);
@@ -100,10 +129,34 @@ export default function Compare() {
     };
 
     // Calculate unique spec keys across all compared products
-    const allSpecKeys = Array.from(
+    /*
+     * Every row worth comparing, in the order they are worth reading.
+     *
+     * Two sources, because the shop keeps two kinds of fact. The shelf's own
+     * questions — Processor Type, Display Size, Wi-Fi Standard — are
+     * structured, asked of every product on that shelf, and are what the
+     * sidebar filters on; they go first, because two products answering the
+     * same question are exactly what a comparison is for. Free-text
+     * specifications follow.
+     *
+     * A row appears if any product being compared has an answer, and the ones
+     * that do not show an em dash. Dropping rows only some products answer
+     * would hide the difference the shopper came to see.
+     */
+    const attributeRows = Array.from(
         new Set(
             compareProducts.flatMap((p) =>
-                (p.specifications || []).map((s) => s.spec_name),
+                (p.attribute_values || [])
+                    .map((v) => v.attribute?.name)
+                    .filter(Boolean),
+            ),
+        ),
+    );
+
+    const specRows = Array.from(
+        new Set(
+            compareProducts.flatMap((p) =>
+                (p.specifications || []).map((sp) => sp.name).filter(Boolean),
             ),
         ),
     );
@@ -381,37 +434,53 @@ export default function Compare() {
                                     ))}
                                 </tr>
 
-                                {/* Dynamic Specifications Rows */}
-                                {allSpecKeys.map((specKey) => (
+                                {/* The shelf's questions, then the free-text
+                                    specifications. Both read the column names
+                                    the tables actually use — this asked for
+                                    spec_name and spec_value, which are not
+                                    columns, so no row ever appeared even for a
+                                    product carrying twenty specifications. */}
+                                {[
+                                    ...attributeRows.map((name) => ({
+                                        name,
+                                        answer: (p) =>
+                                            (p.attribute_values || [])
+                                                .filter(
+                                                    (v) =>
+                                                        v.attribute?.name ===
+                                                        name,
+                                                )
+                                                .map((v) => v.label)
+                                                .join(', '),
+                                    })),
+                                    ...specRows.map((name) => ({
+                                        name,
+                                        answer: (p) =>
+                                            (p.specifications || []).find(
+                                                (sp) => sp.name === name,
+                                            )?.value,
+                                    })),
+                                ].map(({ name, answer }) => (
                                     <tr
-                                        key={specKey}
+                                        key={name}
                                         className="compare-tbody-row"
                                     >
                                         <td className="compare-td-label">
-                                            {specKey}
+                                            {name}
                                         </td>
-                                        {compareProducts.map((p) => {
-                                            const spec = (
-                                                p.specifications || []
-                                            ).find(
-                                                (s) => s.spec_name === specKey,
-                                            );
-                                            return (
-                                                <td
-                                                    key={p.id}
-                                                    className="compare-td-val"
-                                                >
-                                                    {spec
-                                                        ? spec.spec_value
-                                                        : '—'}
-                                                </td>
-                                            );
-                                        })}
+                                        {compareProducts.map((p) => (
+                                            <td
+                                                key={p.id}
+                                                className="compare-td-val"
+                                            >
+                                                {answer(p) || '—'}
+                                            </td>
+                                        ))}
                                         {Array.from({
                                             length: emptySlotsCount,
                                         }).map((_, idx) => (
                                             <td
-                                                key={`empty-spec-${specKey}-${idx}`}
+                                                key={`empty-row-${name}-${idx}`}
                                                 className="compare-td-val"
                                                 style={{
                                                     color: 'var(--gray-400)',
