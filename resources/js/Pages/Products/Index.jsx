@@ -376,6 +376,10 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             value={activeFilters}
                             onChange={applyFilters}
                             categorySlug={categorySlug}
+                            /* So a category link keeps the sort and the
+                               filters rather than starting the shopper over. */
+                            sort={sort}
+                            defaultSort={defaultSort}
                             hideOnSale={onSaleOnly}
                             /* Placeholders only when there is nothing at all
                                to show — the very first listing of the session. */

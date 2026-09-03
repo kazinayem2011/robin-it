@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
 import { formatBdt } from '../utils/formatters';
 import { ROUTES } from '../constants/endpoints';
+import { buildShopSearch } from '../utils/shopQuery';
 import { FilterFacetSkeleton } from './Skeleton';
 
 /**
@@ -18,6 +19,12 @@ export default function ProductFilters({
     value = {},
     onChange,
     categorySlug = null,
+    /*
+     * What the listing is sorted by, so a category link can carry it. Not used
+     * for anything the sidebar draws.
+     */
+    sort = null,
+    defaultSort = null,
     // The offers page is already restricted to on-sale, so the box would be
     // a checkbox that does nothing.
     hideOnSale = false,
@@ -218,6 +225,23 @@ export default function ProductFilters({
             0,
         );
 
+    /*
+     * A category is a different page, but the same shopping.
+     *
+     * These links carried the bare route, so choosing a category threw away
+     * everything the shopper had already narrowed by: search "corsair", click
+     * Component, and you were looking at all 161 components with the term
+     * gone from the page and from the URL. Paging is the one thing that does
+     * not survive — page 4 of Laptops is not page 4 of Monitors.
+     */
+    const hrefFor = (slug) =>
+        (slug ? ROUTES.SHOP_CATEGORY(slug) : ROUTES.SHOP) +
+        buildShopSearch({
+            sort: sort ?? undefined,
+            filters: value,
+            defaultSort: defaultSort ?? undefined,
+        });
+
     const clearAll = () => {
         setMinPrice('');
         setMaxPrice('');
@@ -298,7 +322,7 @@ export default function ProductFilters({
                                 <ul className="plp-category-tree">
                                     <li>
                                         <Link
-                                            href={ROUTES.SHOP}
+                                            href={hrefFor(null)}
                                             className={`plp-category-link${!categorySlug ? ' is-current' : ''}`}
                                         >
                                             All products
@@ -308,9 +332,7 @@ export default function ProductFilters({
                                     {visibleCategories.map((parent) => (
                                         <li key={parent.id}>
                                             <Link
-                                                href={ROUTES.SHOP_CATEGORY(
-                                                    parent.slug,
-                                                )}
+                                                href={hrefFor(parent.slug)}
                                                 className={`plp-category-link${categorySlug === parent.slug ? ' is-current' : ''}`}
                                             >
                                                 <span>{parent.name}</span>
@@ -330,7 +352,7 @@ export default function ProductFilters({
                                                                     }
                                                                 >
                                                                     <Link
-                                                                        href={ROUTES.SHOP_CATEGORY(
+                                                                        href={hrefFor(
                                                                             child.slug,
                                                                         )}
                                                                         className={`plp-category-link is-child${categorySlug === child.slug ? ' is-current' : ''}`}
