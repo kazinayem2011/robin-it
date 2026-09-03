@@ -64,23 +64,10 @@
     object-fit: cover;
 }
 
-.user-menu-name {
-    font-size: 0.82rem;
-    font-weight: 700;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
+/* The one thing left saying this opens something, now the name has gone. */
 .user-menu-chevron {
     flex-shrink: 0;
     opacity: 0.55;
-}
-
-/* The admin topbar is tighter and already dense, so the first name is dropped
-   there and the avatar carries it. */
-.user-menu.variant-admin .user-menu-name {
-    display: none;
 }
 
 .user-menu-panel {

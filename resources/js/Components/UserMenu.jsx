@@ -136,6 +136,13 @@ export default function UserMenu({ user, variant = 'site' }) {
                 className="user-menu-trigger"
                 aria-haspopup="menu"
                 aria-expanded={open}
+                /*
+                 * Named for a screen reader, since nothing here is written
+                 * down any more: the trigger is the avatar alone, and the name
+                 * it used to carry is in the panel, in full, where it is
+                 * actually useful.
+                 */
+                aria-label={`Account menu for ${user.name}`}
                 onClick={() => setOpen((was) => !was)}
                 title={user.name}
             >
@@ -147,10 +154,6 @@ export default function UserMenu({ user, variant = 'site' }) {
                     ) : (
                         initial
                     )}
-                </span>
-
-                <span className="user-menu-name">
-                    {user.name?.split(' ')[0]}
                 </span>
 
                 <ChevronDown size={14} className="user-menu-chevron" />

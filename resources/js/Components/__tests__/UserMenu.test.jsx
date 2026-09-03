@@ -59,6 +59,29 @@ describe('UserMenu', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
+    /*
+     * The trigger is the avatar alone. The name used to sit beside it and was
+     * saying the same thing twice — the panel gives it in full, with the
+     * address, which is the version worth having.
+     */
+    it('does not write the name beside the avatar', () => {
+        render(<UserMenu user={customer} />);
+
+        expect(screen.queryByText(/rahim/i)).toBeNull();
+    });
+
+    /* Nothing is written down there any more, so a screen reader needs the
+       button named some other way. */
+    it('still names the trigger for a screen reader', () => {
+        render(<UserMenu user={customer} />);
+
+        expect(
+            screen.getByRole('button', {
+                name: /account menu for rahim chowdhury/i,
+            }),
+        ).toBeTruthy();
+    });
+
     it('stays shut until it is asked for', () => {
         render(<UserMenu user={customer} />);
 
