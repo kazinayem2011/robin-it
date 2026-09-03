@@ -185,12 +185,39 @@ class PurchaseOrderService
                     );
                 }
 
+                // What was quoted, unless the invoice says otherwise.
+                $unitCost = $line['unit_cost'] ?? $item->unit_cost;
+
+                /*
+                 * Refused rather than received without one.
+                 *
+                 * A stock movement with no cost is skipped by every costed
+                 * query — valuation, the latest-cost lookup, margin on
+                 * anything sold from these units. The stock would land on the
+                 * shelf and quietly count for nothing, which is worse than
+                 * being stopped here: nobody goes looking for a number that
+                 * was never wrong, only absent.
+                 *
+                 * A draft may legitimately carry no price, because the
+                 * supplier had not confirmed one when the order was raised.
+                 * Receiving is where that stops being acceptable, and the
+                 * invoice in hand is exactly when it is answerable.
+                 */
+                if ($unitCost === null || $unitCost === '') {
+                    throw new StorefrontException(
+                        "{$item->display_name} has no unit cost. Enter what it cost on the invoice — "
+                            .'stock received without a price cannot be valued, and would not show in '
+                            .'your margins.',
+                        422,
+                        ApiCode::VALIDATION_ERROR
+                    );
+                }
+
                 $receiptLines[] = [
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $quantity,
-                    // What was quoted, unless the invoice says otherwise.
-                    'unit_cost' => $line['unit_cost'] ?? $item->unit_cost,
+                    'unit_cost' => (float) $unitCost,
                 ];
 
                 $item->increment('quantity_received', $quantity);

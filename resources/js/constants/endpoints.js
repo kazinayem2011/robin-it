@@ -208,6 +208,9 @@ export const API_ENDPOINTS = {
         CAMPAIGN_RECIPIENTS: (id) => `/admin/campaigns/${id}/recipients`,
         CAMPAIGN_SEND: (id) => `/admin/campaigns/${id}/send`,
         PURCHASE_ORDERS: '/admin/purchase-orders',
+        // The route has always existed; nothing on the screen called it,
+        // so a draft's prices could not be corrected once saved.
+        PURCHASE_ORDER_ITEM: (id) => `/admin/purchase-orders/${id}`,
         PURCHASE_ORDER_SEND: (id) => `/admin/purchase-orders/${id}/send`,
         PURCHASE_ORDER_CANCEL: (id) => `/admin/purchase-orders/${id}/cancel`,
         PURCHASE_ORDER_RECEIVE: (id) => `/admin/purchase-orders/${id}/receive`,

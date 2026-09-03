@@ -3,11 +3,12 @@ import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
     ClipboardList,
+    PackageCheck,
+    Pencil,
     Plus,
     Send,
-    PackageCheck,
-    XCircle,
     Trash2,
+    XCircle,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
@@ -41,6 +42,7 @@ export default function Purchasing({
 }) {
     const [writing, setWriting] = useState(false);
     const [receiving, setReceiving] = useState(null);
+    const [editing, setEditing] = useState(null);
 
     const go = (params) =>
         router.get(
@@ -130,16 +132,31 @@ export default function Purchasing({
             render: (o) => (
                 <div className="admin-input-row-flex">
                     {o.status === 'draft' && (
-                        <button
-                            type="button"
-                            className="admin-table-icon-btn"
-                            title="Send to the supplier"
-                            onClick={() =>
-                                act(adminService.sendPurchaseOrder, o)
-                            }
-                        >
-                            <Send size={14} />
-                        </button>
+                        <>
+                            {/* A draft is the only thing safe to rewrite: once
+                                it is sent the supplier has been told, and once
+                                anything is received the lines are a record of
+                                what arrived. */}
+                            <button
+                                type="button"
+                                className="admin-table-icon-btn"
+                                title="Edit — quantities and prices"
+                                onClick={() => setEditing(o)}
+                            >
+                                <Pencil size={14} />
+                            </button>
+
+                            <button
+                                type="button"
+                                className="admin-table-icon-btn"
+                                title="Send to the supplier"
+                                onClick={() =>
+                                    act(adminService.sendPurchaseOrder, o)
+                                }
+                            >
+                                <Send size={14} />
+                            </button>
+                        </>
                     )}
 
                     {['sent', 'partial'].includes(o.status) && (
@@ -227,12 +244,17 @@ export default function Purchasing({
             )}
 
             <WriteOrderModal
-                open={writing}
+                open={writing || Boolean(editing)}
+                editing={editing}
                 suppliers={suppliers}
                 stores={stores}
-                onClose={() => setWriting(false)}
+                onClose={() => {
+                    setWriting(false);
+                    setEditing(null);
+                }}
                 onSaved={() => {
                     setWriting(false);
+                    setEditing(null);
                     refresh();
                 }}
             />
@@ -250,7 +272,22 @@ export default function Purchasing({
 }
 
 /** Writing an order: a supplier, a date, and the lines. */
-function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
+/**
+ * @param editing A draft to correct, or null to raise a new order.
+ *
+ * The screen offered Send, Receive and Cancel and nothing else, so an order
+ * saved with the wrong price — or with none, which the form allows because a
+ * price is not always known when the order is raised — could not be put right.
+ * The endpoint to do it has existed all along; nothing called it.
+ */
+function WriteOrderModal({
+    open,
+    editing = null,
+    suppliers,
+    stores,
+    onClose,
+    onSaved,
+}) {
     const [supplierId, setSupplierId] = useState('');
     const [storeId, setStoreId] = useState('');
     const [expected, setExpected] = useState('');
@@ -259,6 +296,34 @@ function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
     const [search, setSearch] = useState('');
     const [units, setUnits] = useState([]);
     const [saving, setSaving] = useState(false);
+
+    /* Loaded on open, so re-opening a draft shows what it holds now rather
+       than whatever was last typed into the form. */
+    React.useEffect(() => {
+        if (!open) return;
+
+        setSearch('');
+        setUnits([]);
+        setSupplierId(editing ? String(editing.supplier_id ?? '') : '');
+        setStoreId(editing?.store_id ? String(editing.store_id) : '');
+        setExpected(
+            editing?.expected_on ? editing.expected_on.slice(0, 10) : '',
+        );
+        setNote(editing?.note ?? '');
+        setLines(
+            (editing?.items ?? []).map((i) => ({
+                key: `${i.product_id}:${i.product_variant_id ?? ''}`,
+                product_id: i.product_id,
+                product_variant_id: i.product_variant_id ?? null,
+                name: i.display_name ?? `#${i.product_id}`,
+                quantity: i.quantity,
+                unit_cost:
+                    i.unit_cost === null || i.unit_cost === undefined
+                        ? ''
+                        : String(i.unit_cost),
+            })),
+        );
+    }, [open, editing]);
 
     const find = async (term) => {
         setSearch(term);
@@ -312,7 +377,7 @@ function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
         setSaving(true);
 
         try {
-            const res = await adminService.createPurchaseOrder({
+            const payload = {
                 supplier_id: Number(supplierId),
                 store_id: storeId ? Number(storeId) : null,
                 expected_on: expected || null,
@@ -323,7 +388,12 @@ function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
                     quantity: Number(l.quantity),
                     unit_cost: l.unit_cost === '' ? null : Number(l.unit_cost),
                 })),
-            });
+            };
+
+            const res = editing
+                ? await adminService.updatePurchaseOrder(editing.id, payload)
+                : await adminService.createPurchaseOrder(payload);
+
             toast.success(res?.message || 'Order saved.');
             setLines([]);
             setSupplierId('');
@@ -341,7 +411,7 @@ function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
         <Modal
             isOpen={open}
             onClose={onClose}
-            title="New purchase order"
+            title={editing ? `Edit ${editing.reference}` : 'New purchase order'}
             maxWidth="720px"
             footer={
                 <>
@@ -532,6 +602,11 @@ function WriteOrderModal({ open, suppliers, stores, onClose, onSaved }) {
  */
 function ReceiveModal({ order, onClose, onSaved }) {
     const [got, setGot] = useState({});
+    /* What each unit cost on the invoice, per line. Pre-filled from the order
+       so a purchase raised with prices is still one press, and editable
+       because the invoice is what was actually paid — which is not always
+       what was quoted. */
+    const [cost, setCost] = useState({});
     const [invoice, setInvoice] = useState('');
     const [saving, setSaving] = useState(false);
 
@@ -546,6 +621,16 @@ function ReceiveModal({ order, onClose, onSaved }) {
                 ]),
             ),
         );
+        setCost(
+            Object.fromEntries(
+                (order.items ?? []).map((i) => [
+                    i.id,
+                    i.unit_cost === null || i.unit_cost === undefined
+                        ? ''
+                        : String(i.unit_cost),
+                ]),
+            ),
+        );
         setInvoice('');
     }, [order]);
 
@@ -553,14 +638,37 @@ function ReceiveModal({ order, onClose, onSaved }) {
         setSaving(true);
 
         try {
+            const lines = (order.items ?? [])
+                .map((i) => ({
+                    purchase_order_item_id: i.id,
+                    quantity: Number(got[i.id] ?? 0),
+                    unit_cost: cost[i.id] === '' ? null : Number(cost[i.id]),
+                }))
+                .filter((l) => l.quantity > 0);
+
+            /*
+             * Caught here rather than by the server, so the message names the
+             * line rather than arriving as "lines.2.unit_cost is required".
+             * Stock received without a price is skipped by every costed query
+             * — it would sit on the shelf contributing nothing to valuation
+             * or to the margin on anything sold from it.
+             */
+            const unpriced = lines.filter(
+                (l) => l.unit_cost === null || Number.isNaN(l.unit_cost),
+            );
+
+            if (unpriced.length) {
+                toast.error(
+                    'Every line being received needs a unit cost — stock without a price cannot be valued.',
+                );
+                setSaving(false);
+
+                return;
+            }
+
             const res = await adminService.receivePurchaseOrder(order.id, {
                 invoice_number: invoice || null,
-                lines: (order.items ?? [])
-                    .map((i) => ({
-                        purchase_order_item_id: i.id,
-                        quantity: Number(got[i.id] ?? 0),
-                    }))
-                    .filter((l) => l.quantity > 0),
+                lines,
             });
             toast.success(res?.message || 'Received.');
             onSaved();
@@ -608,6 +716,7 @@ function ReceiveModal({ order, onClose, onSaved }) {
                         <th>Product</th>
                         <th className="po-num">Outstanding</th>
                         <th className="po-num">Arrived</th>
+                        <th className="po-num">Unit cost</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -629,6 +738,21 @@ function ReceiveModal({ order, onClose, onSaved }) {
                                         value={got[i.id] ?? ''}
                                         onChange={(e) =>
                                             setGot((prev) => ({
+                                                ...prev,
+                                                [i.id]: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                </td>
+                                <td className="po-num">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        value={cost[i.id] ?? ''}
+                                        onChange={(e) =>
+                                            setCost((prev) => ({
                                                 ...prev,
                                                 [i.id]: e.target.value,
                                             }))

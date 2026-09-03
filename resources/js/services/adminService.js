@@ -389,6 +389,15 @@ export const adminService = {
         return response;
     },
 
+    /** Correct a draft: its lines, their quantities and what they cost. */
+    async updatePurchaseOrder(id, payload) {
+        const response = await axiosInstance.put(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_ITEM(id),
+            payload,
+        );
+        return response;
+    },
+
     async sendPurchaseOrder(id) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.PURCHASE_ORDER_SEND(id),

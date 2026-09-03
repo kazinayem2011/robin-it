@@ -281,4 +281,125 @@ class PurchaseOrderTest extends TestCase
                 ->has('orders.data', 1)
                 ->where('orders.data.0.status', PurchaseOrder::SENT));
     }
+
+    // --- what things cost --------------------------------------------------
+
+    /**
+     * Stock cannot be received without a price.
+     *
+     * A movement with no unit_cost is skipped by every costed query — the
+     * valuation, the latest-cost lookup, the margin on anything sold from
+     * those units. The stock lands on the shelf and counts for nothing, and
+     * nobody goes looking for a number that was never wrong, only absent.
+     */
+    public function test_an_uncosted_delivery_is_refused(): void
+    {
+        $order = $this->draft(quantity: 5, cost: null);
+        $this->orders->send($order);
+
+        $itemId = $order->items()->first()->id;
+
+        $this->actingAs($this->buyer)
+            ->postJson("/api/admin/purchase-orders/{$order->id}/receive", [
+                'lines' => [['purchase_order_item_id' => $itemId, 'quantity' => 5]],
+            ])
+            ->assertStatus(422);
+
+        // And nothing moved: the shelf is where it was.
+        $this->assertSame(0, $this->product->fresh()->stock_quantity);
+    }
+
+    /** Giving the price at the door is enough; the draft need not have had one. */
+    public function test_an_uncosted_order_can_be_received_by_pricing_it_now(): void
+    {
+        $order = $this->draft(quantity: 5, cost: null);
+        $this->orders->send($order);
+
+        $itemId = $order->items()->first()->id;
+
+        $this->actingAs($this->buyer)
+            ->postJson("/api/admin/purchase-orders/{$order->id}/receive", [
+                'lines' => [[
+                    'purchase_order_item_id' => $itemId,
+                    'quantity' => 5,
+                    'unit_cost' => 1750,
+                ]],
+            ])
+            ->assertOk();
+
+        $this->assertSame(5, $this->product->fresh()->stock_quantity);
+        $this->assertSame(
+            1750.0,
+            (float) StockMovement::whereNotNull('unit_cost')->latest('id')->value('unit_cost')
+        );
+    }
+
+    /** The invoice is what was paid, and it outranks what was quoted. */
+    public function test_the_invoice_price_beats_the_quoted_one(): void
+    {
+        $order = $this->draft(quantity: 4, cost: 200000);
+        $this->orders->send($order);
+
+        $itemId = $order->items()->first()->id;
+
+        $this->actingAs($this->buyer)
+            ->postJson("/api/admin/purchase-orders/{$order->id}/receive", [
+                'lines' => [[
+                    'purchase_order_item_id' => $itemId,
+                    'quantity' => 4,
+                    'unit_cost' => 185000,
+                ]],
+            ])
+            ->assertOk();
+
+        $this->assertSame(
+            185000.0,
+            (float) StockMovement::whereNotNull('unit_cost')->latest('id')->value('unit_cost')
+        );
+    }
+
+    /**
+     * A draft's prices can be corrected.
+     *
+     * The screen offered Send, Receive and Cancel and nothing else, so an
+     * order saved with the wrong price — or with none — could not be put
+     * right. The endpoint existed the whole time; nothing called it.
+     */
+    public function test_a_draft_can_be_repriced(): void
+    {
+        $order = $this->draft(quantity: 6, cost: null);
+
+        $this->actingAs($this->buyer)
+            ->putJson("/api/admin/purchase-orders/{$order->id}", [
+                'supplier_id' => $this->supplier->id,
+                'lines' => [[
+                    'product_id' => $this->product->id,
+                    'quantity' => 6,
+                    'unit_cost' => 199000,
+                ]],
+            ])
+            ->assertOk();
+
+        $this->assertSame(199000.0, (float) $order->fresh()->items()->first()->unit_cost);
+    }
+
+    /** Once it is with the supplier, the lines are their copy too. */
+    public function test_a_sent_order_cannot_be_repriced(): void
+    {
+        $order = $this->draft(quantity: 6, cost: 200000);
+        $this->orders->send($order);
+
+        $this->actingAs($this->buyer)
+            ->putJson("/api/admin/purchase-orders/{$order->id}", [
+                'supplier_id' => $this->supplier->id,
+                'lines' => [[
+                    'product_id' => $this->product->id,
+                    'quantity' => 6,
+                    'unit_cost' => 1,
+                ]],
+            ])
+            ->assertStatus(422);
+
+        $this->assertSame(200000.0, (float) $order->fresh()->items()->first()->unit_cost);
+    }
 }
