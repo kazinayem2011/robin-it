@@ -305,9 +305,23 @@ class ProductService
             ->withCatalogAggregates();
 
         if ($tab !== 'all') {
-            $tabSlug = $tab === 'gpu' ? 'graphics-card' : $tab;
-            $allCatIds = $this->categoryService->getDescendantIds($tabSlug);
+            /*
+             * The tab is a category slug. It used to special-case 'gpu' and
+             * rewrite it to 'graphics-card', from when these tabs were a fixed
+             * list — both names belong to the old hundred-category tree and
+             * neither resolves against the current one, so the branch mapped a
+             * dead slug to a dead slug. The tabs are built from real category
+             * slugs now, so the value arrives ready to use.
+             */
+            $allCatIds = $this->categoryService->getDescendantIds($tab);
 
+            /*
+             * A slug that resolves to nothing leaves the list unfiltered
+             * rather than empty. Deliberate, and worth knowing: asking for a
+             * shelf that does not exist returns the whole catalogue instead of
+             * saying so. It is why the old 'gpu' rewrite went unnoticed —
+             * there were always products on screen.
+             */
             if (! empty($allCatIds)) {
                 $this->scopeToCategories($query, $allCatIds);
             }
