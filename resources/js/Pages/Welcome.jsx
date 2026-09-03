@@ -430,58 +430,73 @@ export default function Welcome({ banners = [], blogs = [] }) {
                     </div>
                 </section>
 
-                {/* 4. LIVE FLASH SALE (REUSABLE PRODUCT CARD) */}
-                <section className="container section-gap">
-                    <div className="flash-sale-hero-container">
-                        {/* Header with Live Ticking Countdown */}
-                        <div className="flash-sale-header-bar">
-                            <div className="flash-header-left-box">
-                                <div className="flash-sale-live-badge">
-                                    <Flame
-                                        size={18}
-                                        className="flame-icon-pulse"
+                {/*
+                 * 4. LIVE FLASH SALE
+                 *
+                 * Only when something is actually discounted. This rendered
+                 * unconditionally, so a shop with nothing on offer showed a
+                 * "FLASH DEALS" badge over a live countdown and an empty grid
+                 * — a sale that had apparently sold out mid-page, or a broken
+                 * one. No deals, no section.
+                 *
+                 * The skeleton still shows while loading, so the section does
+                 * not appear and then vanish on a slow connection.
+                 */}
+                {(loadingFlash || flashSaleProducts.length > 0) && (
+                    <section className="container section-gap">
+                        <div className="flash-sale-hero-container">
+                            {/* Header with Live Ticking Countdown */}
+                            <div className="flash-sale-header-bar">
+                                <div className="flash-header-left-box">
+                                    <div className="flash-sale-live-badge">
+                                        <Flame
+                                            size={18}
+                                            className="flame-icon-pulse"
+                                        />
+                                        <span>FLASH DEALS</span>
+                                    </div>
+                                    <CountdownTimer
+                                        label="ENDING IN:"
+                                        variant="default"
+                                        showIcon={false}
                                     />
-                                    <span>FLASH DEALS</span>
                                 </div>
-                                <CountdownTimer
-                                    label="ENDING IN:"
-                                    variant="default"
-                                    showIcon={false}
-                                />
+
+                                <Link
+                                    href={ROUTES.OFFERS}
+                                    className="btn btn-outline-white btn-sm"
+                                >
+                                    {/* Was "ALL 42 DEALS", a number nobody
+                                    maintained and nothing checked. */}
+                                    <span>ALL DEALS</span>
+                                    <ArrowRight size={14} />
+                                </Link>
                             </div>
 
-                            <Link
-                                href={ROUTES.OFFERS}
-                                className="btn btn-outline-white btn-sm"
-                            >
-                                <span>ALL 42 DEALS</span>
-                                <ArrowRight size={14} />
-                            </Link>
+                            {/* High-Impact Flash Product Cards (DRY ProductCard Component) */}
+                            <div className="flash-products-grid">
+                                {loadingFlash
+                                    ? [...Array(4)].map((_, i) => (
+                                          <ProductCardSkeleton key={i} />
+                                      ))
+                                    : flashSaleProducts.map((product) => (
+                                          <ProductCard
+                                              key={product.id}
+                                              product={product}
+                                              variant="flash"
+                                              isWishlisted={wishlistIds.includes(
+                                                  product.id,
+                                              )}
+                                              onAddToCart={addToCart}
+                                              onToggleWishlist={() =>
+                                                  toggleWishlist(product.id)
+                                              }
+                                          />
+                                      ))}
+                            </div>
                         </div>
-
-                        {/* High-Impact Flash Product Cards (DRY ProductCard Component) */}
-                        <div className="flash-products-grid">
-                            {loadingFlash
-                                ? [...Array(4)].map((_, i) => (
-                                      <ProductCardSkeleton key={i} />
-                                  ))
-                                : flashSaleProducts.map((product) => (
-                                      <ProductCard
-                                          key={product.id}
-                                          product={product}
-                                          variant="flash"
-                                          isWishlisted={wishlistIds.includes(
-                                              product.id,
-                                          )}
-                                          onAddToCart={addToCart}
-                                          onToggleWishlist={() =>
-                                              toggleWishlist(product.id)
-                                          }
-                                      />
-                                  ))}
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                )}
 
                 {/* 5. DYNAMIC HIGH-IMPACT GRAPHICAL PROMOTIONAL SHOWCASES */}
                 {(() => {
