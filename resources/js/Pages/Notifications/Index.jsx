@@ -10,12 +10,13 @@ import {
     Undo2,
     Trash2,
     ExternalLink,
+    CheckCheck,
 } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { mainLayout } from '@/Layouts/MainLayout';
 import Button from '@/Components/Button';
-import Pagination from '@/Components/Pagination';
-import SearchInput from '@/Components/SearchInput';
+import DataTable from '@/Components/DataTable';
+import Tabs from '@/Components/Tabs';
 import { toast } from '@/Components/Toast';
 import { notificationService } from '@/services';
 import siteConfig from '@/constants/siteConfig';
@@ -31,8 +32,8 @@ const ICONS = {
     stock: PackageMinus,
 };
 
-/** Turns "order.placed" into "Order placed" for the filter, without a table
- *  of labels that would fall out of date the moment a kind is added. */
+/** Turns "order.placed" into "Order placed", so a kind added later needs no
+ *  entry in a table of labels that would fall out of date. */
 const kindLabel = (kind) => {
     const words = String(kind)
         .replace(/[._-]+/g, ' ')
@@ -51,9 +52,13 @@ const isStaff = (role) => Boolean(role) && role !== 'customer';
  * view while still sitting in the table, and there was no way to mark one back
  * to unread, throw one away, or find the one about a particular order.
  *
+ * Built from Tabs and DataTable like every other list in the admin, rather
+ * than from its own markup: the search box, the paging, the empty state and
+ * the header actions all come with them, and it then looks like the rest of
+ * the screens instead of like a page somebody added later.
+ *
  * Served to whoever is signed in rather than to admins alone — a customer is
- * told about their own order — so it wears whichever shell that person is
- * used to.
+ * told about their own order — so it wears whichever shell that person knows.
  */
 export default function Notifications({
     notifications = { data: [] },
@@ -75,7 +80,7 @@ export default function Notifications({
         );
 
     /* The list is server-rendered, so anything that changes a row reloads it
-       rather than trying to keep two copies of the truth in step. */
+       rather than keeping a second copy of the truth in step. */
     const refresh = () => router.reload({ preserveScroll: true });
 
     const act = async (id, fn, failure) => {
@@ -117,239 +122,216 @@ export default function Notifications({
         if (item.url) router.visit(item.url);
     };
 
-    const body = (
-        <div className="notif-page">
-            <Head title={`Notifications — ${siteConfig.name}`} />
+    const columns = [
+        {
+            key: 'notification',
+            header: 'Notification',
+            render: (item) => {
+                const Icon = ICONS[item.icon] || Bell;
 
-            <div className="notif-page-head">
-                <div>
-                    <h1 className="notif-page-title">Notifications</h1>
-                    <p className="notif-page-sub">
-                        {unread > 0
-                            ? `${unread} unread`
-                            : 'Everything here has been read'}
-                    </p>
-                </div>
+                return (
+                    <div
+                        className={`notif-cell ${item.read ? '' : 'is-unread'}`}
+                    >
+                        <span className="notif-cell-icon">
+                            <Icon size={15} />
+                        </span>
+                        <div className="notif-cell-text">
+                            <strong>{item.title}</strong>
+                            <span>{item.body}</span>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            key: 'when',
+            header: 'When',
+            /* The exact time as a title on the relative one: "3 days ago" is
+               what you read, the date is what you check. */
+            render: (item) => (
+                <span className="notif-when" title={item.on}>
+                    {item.at}
+                </span>
+            ),
+        },
+        {
+            key: 'actions',
+            header: '',
+            align: 'right',
+            render: (item) => (
+                <div className="admin-input-row-flex">
+                    {item.url && (
+                        <button
+                            type="button"
+                            className="admin-table-icon-btn"
+                            title="Open what this is about"
+                            onClick={() => open(item)}
+                        >
+                            <ExternalLink size={14} />
+                        </button>
+                    )}
 
-                <div className="notif-page-bulk">
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        icon={Check}
-                        disabled={working || unread === 0}
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        disabled={busyId === item.id}
+                        title={item.read ? 'Mark unread' : 'Mark read'}
                         onClick={() =>
-                            bulk(
-                                notificationService.markAllRead,
-                                'Could not mark them read.',
+                            act(
+                                item.id,
+                                () =>
+                                    item.read
+                                        ? notificationService.markUnread(
+                                              item.id,
+                                          )
+                                        : notificationService.markRead(item.id),
+                                'Could not change that.',
                             )
                         }
                     >
-                        Mark all read
-                    </Button>
+                        {item.read ? <Undo2 size={14} /> : <Check size={14} />}
+                    </button>
 
-                    {/* Only the ones already read. Clearing the unread ones
-                        would throw away what nobody has looked at, which is
-                        the opposite of tidying up. */}
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        icon={Trash2}
-                        disabled={working}
-                        onClick={() => {
-                            if (
-                                window.confirm(
-                                    'Delete every notification you have already read? The unread ones stay.',
-                                )
-                            ) {
-                                bulk(
-                                    notificationService.clearRead,
-                                    'Could not clear them.',
-                                );
-                            }
-                        }}
-                    >
-                        Clear read
-                    </Button>
-                </div>
-            </div>
-
-            <div className="notif-filters">
-                <div className="notif-filter-tabs">
-                    {[
-                        { value: 'all', label: 'All' },
-                        { value: 'unread', label: 'Unread' },
-                        { value: 'read', label: 'Read' },
-                    ].map((tab) => (
-                        <button
-                            key={tab.value}
-                            type="button"
-                            className={`notif-filter-tab ${
-                                (filters.status || 'all') === tab.value
-                                    ? 'is-active'
-                                    : ''
-                            }`}
-                            onClick={() => go({ status: tab.value })}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Only the kinds this person has actually received; a filter
-                    offering "Low stock" to a customer is a dead end. */}
-                {kinds.length > 1 && (
-                    <select
-                        className="notif-kind-select"
-                        value={filters.kind || ''}
-                        onChange={(e) =>
-                            go({ kind: e.target.value || undefined })
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        disabled={busyId === item.id}
+                        title="Delete"
+                        onClick={() =>
+                            act(
+                                item.id,
+                                () => notificationService.remove(item.id),
+                                'Could not delete that.',
+                            )
                         }
                     >
-                        <option value="">Everything</option>
-                        {kinds.map((kind) => (
-                            <option key={kind} value={kind}>
-                                {kindLabel(kind)}
-                            </option>
-                        ))}
-                    </select>
-                )}
-
-                <SearchInput
-                    value={filters.search || ''}
-                    onSearch={(term) => go({ search: term || undefined })}
-                    placeholder="Search notifications"
-                />
-            </div>
-
-            {notifications.data.length === 0 ? (
-                <div className="notif-page-empty">
-                    <Bell size={34} />
-                    <p>
-                        {filters.search ||
-                        filters.kind ||
-                        filters.status !== 'all'
-                            ? 'Nothing matches that.'
-                            : 'Nothing yet. This is where order updates and alerts arrive.'}
-                    </p>
+                        <Trash2 size={14} />
+                    </button>
                 </div>
-            ) : (
-                <ul className="notif-page-list">
-                    {notifications.data.map((item) => {
-                        const Icon = ICONS[item.icon] || Bell;
+            ),
+        },
+    ];
 
-                        return (
-                            <li
-                                key={item.id}
-                                className={`notif-row ${item.read ? '' : 'is-unread'}`}
+    const tabs = [
+        { key: 'all', label: 'All' },
+        { key: 'unread', label: 'Unread', badge: unread || undefined },
+        { key: 'read', label: 'Read' },
+    ];
+
+    const body = (
+        <>
+            <Head title={`Notifications — ${siteConfig.name}`} />
+
+            <Tabs
+                variant="enclosed"
+                tabs={tabs}
+                activeTab={filters.status || 'all'}
+                onChange={(status) => go({ status })}
+            />
+
+            <DataTable
+                columns={columns}
+                data={notifications.data ?? []}
+                title="Notifications"
+                subtitle={
+                    unread > 0
+                        ? `${unread} unread`
+                        : 'Everything here has been read'
+                }
+                searchable
+                searchValue={filters.search || ''}
+                onSearch={(term) => go({ search: term || undefined })}
+                searchPlaceholder="Search notifications"
+                headerActions={
+                    <>
+                        {/* Only the kinds this person has actually received.
+                            Offering "Low stock" to a customer is a dead end
+                            dressed as a choice. */}
+                        {kinds.length > 1 && (
+                            <select
+                                className="admin-filter-picker"
+                                value={filters.kind || ''}
+                                onChange={(e) =>
+                                    go({ kind: e.target.value || undefined })
+                                }
                             >
-                                <span className="notif-row-icon">
-                                    <Icon size={16} />
-                                </span>
+                                <option value="">Everything</option>
+                                {kinds.map((kind) => (
+                                    <option key={kind} value={kind}>
+                                        {kindLabel(kind)}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
 
-                                <div className="notif-row-text">
-                                    <strong>{item.title}</strong>
-                                    <span>{item.body}</span>
-                                    {/* The exact time as a title on the
-                                        relative one: "3 days ago" is what you
-                                        read, the date is what you check. */}
-                                    <em title={item.on}>{item.at}</em>
-                                </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={CheckCheck}
+                            disabled={working || unread === 0}
+                            onClick={() =>
+                                bulk(
+                                    notificationService.markAllRead,
+                                    'Could not mark them read.',
+                                )
+                            }
+                        >
+                            Mark all read
+                        </Button>
 
-                                <div className="notif-row-actions">
-                                    {item.url && (
-                                        <button
-                                            type="button"
-                                            className="notif-row-btn"
-                                            title="Open what this is about"
-                                            onClick={() => open(item)}
-                                        >
-                                            <ExternalLink size={15} />
-                                        </button>
-                                    )}
-
-                                    <button
-                                        type="button"
-                                        className="notif-row-btn"
-                                        disabled={busyId === item.id}
-                                        title={
-                                            item.read
-                                                ? 'Mark unread'
-                                                : 'Mark read'
-                                        }
-                                        onClick={() =>
-                                            act(
-                                                item.id,
-                                                () =>
-                                                    item.read
-                                                        ? notificationService.markUnread(
-                                                              item.id,
-                                                          )
-                                                        : notificationService.markRead(
-                                                              item.id,
-                                                          ),
-                                                'Could not change that.',
-                                            )
-                                        }
-                                    >
-                                        {item.read ? (
-                                            <Undo2 size={15} />
-                                        ) : (
-                                            <Check size={15} />
-                                        )}
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="notif-row-btn is-danger"
-                                        disabled={busyId === item.id}
-                                        title="Delete"
-                                        onClick={() =>
-                                            act(
-                                                item.id,
-                                                () =>
-                                                    notificationService.remove(
-                                                        item.id,
-                                                    ),
-                                                'Could not delete that.',
-                                            )
-                                        }
-                                    >
-                                        <Trash2 size={15} />
-                                    </button>
-                                </div>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
-
-            {notifications.last_page > 1 && (
-                <Pagination
-                    links={notifications.links}
-                    currentPage={notifications.current_page}
-                    totalPages={notifications.last_page}
-                    from={notifications.from}
-                    to={notifications.to}
-                    total={notifications.total}
-                    onPageChange={(page) => go({ page })}
-                />
-            )}
-        </div>
+                        {/* Only the ones already read. Clearing the unread ones
+                            would throw away what nobody has looked at, which is
+                            the opposite of tidying up. */}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={Trash2}
+                            disabled={working}
+                            onClick={() => {
+                                if (
+                                    window.confirm(
+                                        'Delete every notification you have already read? The unread ones stay.',
+                                    )
+                                ) {
+                                    bulk(
+                                        notificationService.clearRead,
+                                        'Could not clear them.',
+                                    );
+                                }
+                            }}
+                        >
+                            Clear read
+                        </Button>
+                    </>
+                }
+                emptyTitle="Nothing here"
+                emptyDescription="Order updates and alerts arrive here as they happen."
+                emptyIcon={Bell}
+                pagination
+                paginationLinks={notifications.links}
+                paginationMeta={notifications}
+                onPageChange={(page) => go({ page })}
+            />
+        </>
     );
 
+    /*
+     * Staff get the admin shell, which already supplies the page's padding —
+     * this used to add its own on top, which is why it sat further from the
+     * edge than every other screen. A customer gets the site's container.
+     */
     return staff ? (
-        <AdminLayout title="Notifications">{body}</AdminLayout>
+        <AdminLayout
+            title="Notifications"
+            subtitle="Everything the shop has told you about"
+        >
+            {body}
+        </AdminLayout>
     ) : (
-        body
+        <div className="notif-page-wrapper container">{body}</div>
     );
 }
 
-/*
- * Staff already have the admin shell around the body above, so wrapping again
- * would put the storefront header on top of it. A customer gets the site shell
- * they came from.
- */
 Notifications.layout = (page) =>
     isStaff(page.props?.auth?.user?.role) ? page : mainLayout(page);
-
-export { Notifications as NotificationsPage };

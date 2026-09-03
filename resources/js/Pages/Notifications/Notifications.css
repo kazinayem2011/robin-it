@@ -1,233 +1,84 @@
 /* ---------------------------------------------------------------------------
  * Every notification, which the bell is not.
  *
- * The bell is a dropdown: twenty rows, one action, no way back. This is the
- * same rows with room to be filtered, marked either way, and thrown away.
+ * Almost nothing here. The page is Tabs and DataTable, like every other list
+ * in the admin, so the padding, the header, the search box, the paging and the
+ * empty state all come from them — an earlier version of this file set its own
+ * page padding on top of the shell's, which is why it sat further from the
+ * edge than every other screen.
+ *
+ * What is left is the one cell those components cannot know about: a
+ * notification is an icon, a line to read and a line of detail.
  * ------------------------------------------------------------------------- */
-.notif-page {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 28px 16px 60px;
+
+/* Only for a customer, who has no admin shell to sit in. The container gives
+   the width; this gives the room above and below that the shell would. */
+.notif-page-wrapper {
+    padding-top: 28px;
+    padding-bottom: 56px;
 }
 
-.notif-page-head {
+.notif-cell {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-}
-
-.notif-page-title {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--dark-900, #0f172a);
-}
-
-.notif-page-sub {
-    margin: 4px 0 0;
-    font-size: 0.85rem;
-    color: var(--gray-600, #475569);
-}
-
-.notif-page-bulk {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.notif-filters {
-    display: flex;
-    align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-}
-
-.notif-filter-tabs {
-    display: inline-flex;
-    padding: 3px;
-    gap: 2px;
-    background: var(--gray-100, #f1f5f9);
-    border-radius: var(--radius-md, 10px);
-}
-
-.notif-filter-tab {
-    padding: 6px 14px;
-    border: none;
-    background: none;
-    border-radius: var(--radius-sm, 7px);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--gray-600, #475569);
-    cursor: pointer;
-}
-
-.notif-filter-tab.is-active {
-    background: var(--white, #fff);
-    color: var(--dark-900, #0f172a);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-}
-
-.notif-kind-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-md, 10px);
-    background: var(--white, #fff);
-    font-size: 0.84rem;
-    color: var(--dark-900, #0f172a);
-}
-
-/* Takes the remaining width so the search box is not a stub beside the
-   filters, and drops to its own line before it gets too narrow to type in. */
-.notif-filters > *:last-child {
-    flex: 1 1 220px;
+    /* An order number is one long word, and the cell must let it wrap rather
+       than widen the column. */
     min-width: 0;
 }
 
-.notif-page-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.notif-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--white, #fff);
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-md, 12px);
-}
-
-/*
- * Unread carries a bar rather than a tint. A whole row of coloured cards
- * reads as an alert log; the bar says "this one" while the row stays a row.
- */
-.notif-row.is-unread {
-    border-left: 3px solid var(--primary, #d12127);
-}
-
-.notif-row-icon {
+.notif-cell-icon {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     background: var(--gray-100, #f1f5f9);
-    color: var(--gray-600, #475569);
+    color: var(--gray-500, #64748b);
 }
 
-.notif-row.is-unread .notif-row-icon {
+/*
+ * Unread is carried by the icon and the weight of the title, not by tinting
+ * the row. A table where half the rows are coloured reads as an alert log
+ * rather than a list.
+ */
+.notif-cell.is-unread .notif-cell-icon {
     background: var(--primary-light, #fef2f2);
     color: var(--primary, #d12127);
 }
 
-.notif-row-text {
+.notif-cell-text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    /* An order number is one long word; it must wrap rather than widen. */
+    gap: 1px;
     min-width: 0;
-    flex: 1 1 auto;
 }
 
-.notif-row-text strong {
-    font-size: 0.9rem;
-    font-weight: 700;
+.notif-cell-text strong {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--gray-700, #334155);
+    overflow-wrap: anywhere;
+}
+
+.notif-cell.is-unread .notif-cell-text strong {
+    font-weight: 800;
     color: var(--dark-900, #0f172a);
-    overflow-wrap: anywhere;
 }
 
-.notif-row-text span {
-    font-size: 0.82rem;
-    line-height: 1.45;
-    color: var(--gray-600, #475569);
-    overflow-wrap: anywhere;
-}
-
-.notif-row-text em {
-    font-style: normal;
-    font-size: 0.74rem;
+.notif-cell-text span {
+    font-size: 0.78rem;
+    line-height: 1.4;
     color: var(--gray-500, #64748b);
-    /* The exact date is the title; this is the glanceable half. */
+    overflow-wrap: anywhere;
+}
+
+.notif-when {
+    font-size: 0.78rem;
+    color: var(--gray-500, #64748b);
+    white-space: nowrap;
+    /* The exact date is the title attribute; this is the glanceable half. */
     cursor: help;
-}
-
-.notif-row-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-}
-
-.notif-row-btn {
-    width: 30px;
-    height: 30px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm, 7px);
-    background: none;
-    color: var(--gray-500, #64748b);
-    cursor: pointer;
-    transition:
-        background var(--transition-fast, 0.15s),
-        color var(--transition-fast, 0.15s);
-}
-
-.notif-row-btn:hover:not(:disabled) {
-    background: var(--gray-100, #f1f5f9);
-    color: var(--dark-900, #0f172a);
-}
-
-.notif-row-btn.is-danger:hover:not(:disabled) {
-    background: var(--danger-light, #fef2f2);
-    color: var(--danger, #dc2626);
-}
-
-.notif-row-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.notif-page-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 56px 20px;
-    text-align: center;
-    color: var(--gray-500, #64748b);
-    background: var(--white, #fff);
-    border: 1px dashed var(--border-color, #e2e8f0);
-    border-radius: var(--radius-md, 12px);
-}
-
-.notif-page-empty p {
-    margin: 0;
-    font-size: 0.88rem;
-    max-width: 42ch;
-}
-
-@media (max-width: 560px) {
-    /* The actions drop under the text rather than squeezing it to a column
-       too narrow to read a product name in. */
-    .notif-row {
-        flex-wrap: wrap;
-    }
-
-    .notif-row-actions {
-        margin-left: 44px;
-    }
 }
