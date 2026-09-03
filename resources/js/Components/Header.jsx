@@ -242,7 +242,7 @@ export const Header = () => {
                     </div>
 
                     {/* Central High-Conversion Search Bar (SSOT Component) */}
-                    <SearchBar />
+                    <SearchBar categories={categories} />
 
                     {/* Right E-Commerce Action Center */}
                     <div className="header-action-group">

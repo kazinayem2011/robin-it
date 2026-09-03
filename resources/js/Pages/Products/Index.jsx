@@ -21,7 +21,7 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
 import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, X } from 'lucide-react';
 import './Index.css';
 
 /**
@@ -328,6 +328,32 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             <span className="plp-item-count">
                                 Showing {products.length} of {totalCount} items
                             </span>
+
+                            {/*
+                             * What was searched for, and a way out of it.
+                             *
+                             * Without this a shopper who searched from the
+                             * header sees a catalogue that is suddenly much
+                             * smaller, with nothing on the page saying why and
+                             * no way back — "Clear all" is the shelf filters,
+                             * and a search term is not one of those.
+                             */}
+                            {activeFilters.search && (
+                                <button
+                                    type="button"
+                                    className="plp-search-chip"
+                                    onClick={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            search: undefined,
+                                        }))
+                                    }
+                                >
+                                    Results for &ldquo;{activeFilters.search}
+                                    &rdquo;
+                                    <X size={13} />
+                                </button>
+                            )}
                         </div>
 
                         <div className="plp-controls">

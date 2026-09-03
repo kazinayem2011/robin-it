@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
     Search,
@@ -20,7 +20,15 @@ import ProductImage from './ProductImage';
 /**
  * Enhanced High-Conversion SearchBar component with multi-facet instant suggestions (SSOT)
  */
-export const SearchBar = ({ onSearch }) => {
+/**
+ * @param categories the mega-menu tree the header has already fetched. The
+ *   dropdown used to offer six names written down in siteConfig — of which
+ *   `components`, `laptops`, `monitors` and `gaming` matched no category in
+ *   the shop at all, the real slugs being `component`, `laptop` and `monitor`,
+ *   with nothing called gaming. A list kept by hand beside a list kept by the
+ *   shop is a list that drifts; this is the shop's own.
+ */
+export const SearchBar = ({ onSearch, categories = [] }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [suggestions, setSuggestions] = useState({
@@ -32,6 +40,16 @@ export const SearchBar = ({ onSearch }) => {
     const [searchFocused, setSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const tagsRef = useRef(null);
+
+    const searchIn = useMemo(
+        () => [
+            { value: 'all', label: 'All Tech' },
+            ...categories
+                .filter((c) => c?.slug && c?.name)
+                .map((c) => ({ value: c.slug, label: c.name })),
+        ],
+        [categories],
+    );
 
     // Same speed as the announcement ticker, from the measured content width.
     useMarqueeDuration(tagsRef);
@@ -122,12 +140,24 @@ export const SearchBar = ({ onSearch }) => {
         if (onSearch) {
             onSearch(searchQuery, selectedCategory);
         } else if (searchQuery.trim()) {
-            const url = `${ROUTES.SHOP}?search=${encodeURIComponent(searchQuery.trim())}${
+            /*
+             * The category is the route.
+             *
+             * This used to send `/shop?search=x&category_slug=laptops`, and
+             * the listing read neither: it takes its category from the route,
+             * and `category_slug` fell through to the shelf-attribute filters,
+             * asking for products whose spec "category_slug" is "laptops" —
+             * which no product has. Every category but "All Tech" returned
+             * nothing at all.
+             */
+            const base =
                 selectedCategory !== 'all'
-                    ? `&category_slug=${selectedCategory}`
-                    : ''
-            }`;
-            router.visit(url);
+                    ? ROUTES.SHOP_CATEGORY(selectedCategory)
+                    : ROUTES.SHOP;
+
+            router.visit(
+                `${base}?search=${encodeURIComponent(searchQuery.trim())}`,
+            );
         }
     };
 
@@ -156,7 +186,7 @@ export const SearchBar = ({ onSearch }) => {
                     <Select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                        options={siteConfig.searchCategories}
+                        options={searchIn}
                         aria-label="Search within"
                         icon={SlidersHorizontal}
                         className="search-category-select"

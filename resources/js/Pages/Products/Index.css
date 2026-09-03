@@ -527,3 +527,29 @@
 .plp-filter-check:hover {
     background: var(--bg-surface-subtle);
 }
+
+/*
+ * The search term, shown beside the count.
+ *
+ * A shopper arriving from the header search sees a much smaller catalogue;
+ * this is the page saying why, and the way back out.
+ */
+.plp-search-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 3px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface-subtle);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--dark-800);
+    cursor: pointer;
+}
+
+.plp-search-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}

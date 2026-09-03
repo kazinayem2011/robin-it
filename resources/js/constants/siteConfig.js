@@ -140,16 +140,6 @@ export const siteConfig = {
         'OLED 240Hz',
     ],
 
-    // Search Category Filter Options
-    searchCategories: [
-        { label: 'All Tech', value: 'all' },
-        { label: 'Components', value: 'components' },
-        { label: 'Laptops', value: 'laptops' },
-        { label: 'Desktop PC', value: 'desktop' },
-        { label: 'Monitors', value: 'monitors' },
-        { label: 'Gaming Gear', value: 'gaming' },
-    ],
-
     // Global Key Value Perks
     perks: [
         {

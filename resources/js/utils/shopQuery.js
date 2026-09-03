@@ -9,6 +9,10 @@
  * These two functions are the whole contract: parse turns a querystring into
  * the listing's state, build turns that state back into a querystring. Both
  * are pure so they can be tested without a browser.
+ *
+ * The category is deliberately not in here. It is the route — `/shop/laptop`,
+ * not `/shop?category_slug=laptop` — so a category page is a page, with its
+ * own address, and not a filter that happens to be spelled like one.
  */
 
 /**
@@ -83,6 +87,20 @@ export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
     if (params.get('in_stock') === '1') filters.in_stock = true;
     if (params.get('on_sale') === '1') filters.on_sale = true;
 
+    /*
+     * What the shopper typed.
+     *
+     * `search` was listed as reserved — so it was never mistaken for a shelf
+     * filter — and then thrown away, because nothing here returned it and
+     * nothing downstream asked for it. The header search box sent
+     * `/shop?search=corsair`, this listing rebuilt the URL from its own state,
+     * and the term vanished on arrival: the shopper searched and was shown all
+     * 1,269 products.
+     */
+    const term = (params.get('search') || params.get('q') || '').trim();
+
+    if (term) filters.search = term;
+
     const attributes = {};
 
     for (const [key, raw] of params.entries()) {
@@ -130,6 +148,7 @@ export const buildShopSearch = ({
 
     if (filters.in_stock) params.set('in_stock', '1');
     if (filters.on_sale) params.set('on_sale', '1');
+    if (filters.search) params.set('search', filters.search);
 
     // Sorted, so the same selection always produces the same address — two
     // shoppers ticking the same boxes in a different order share one link.

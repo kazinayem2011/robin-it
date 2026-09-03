@@ -1,6 +1,45 @@
 import { describe, it, expect } from 'vitest';
 import { parseShopQuery, buildShopSearch } from '../shopQuery';
 
+/*
+ * The search term.
+ *
+ * It was listed as reserved so it could not be mistaken for a shelf filter,
+ * and then dropped — the listing rebuilt the URL from its own state and the
+ * term went with it, so searching "corsair" from the header showed the whole
+ * catalogue.
+ */
+describe('the search term', () => {
+    it('is read out of the URL', () => {
+        expect(parseShopQuery('?search=corsair').filters.search).toBe(
+            'corsair',
+        );
+    });
+
+    it('survives a round trip, so the listing cannot rewrite it away', () => {
+        const state = parseShopQuery('?search=corsair&in_stock=1');
+
+        expect(buildShopSearch(state)).toContain('search=corsair');
+    });
+
+    it('accepts q as well, since that is what a link may carry', () => {
+        expect(parseShopQuery('?q=rtx+4090').filters.search).toBe('rtx 4090');
+    });
+
+    it('is absent rather than empty when nothing was typed', () => {
+        expect(parseShopQuery('?search=%20%20').filters.search).toBeUndefined();
+        expect(buildShopSearch({ filters: {} })).toBe('');
+    });
+
+    /* It is a term, not a facet: it must never land in `attributes`, which is
+       where any unrecognised parameter goes. */
+    it('is never mistaken for a shelf filter', () => {
+        expect(
+            parseShopQuery('?search=corsair').filters.attributes,
+        ).toBeUndefined();
+    });
+});
+
 describe('parseShopQuery', () => {
     it('defaults to page one, latest, no filters', () => {
         expect(parseShopQuery('')).toEqual({
