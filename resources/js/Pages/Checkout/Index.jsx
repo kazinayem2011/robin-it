@@ -13,14 +13,7 @@ import { formatBdt } from '../../utils/formatters';
 import { boundsFor as cartBounds } from '../../utils/cartBounds';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import {
-    ShoppingCart,
-    Tag,
-    X,
-    AlertTriangle,
-    MapPin,
-    Plus,
-} from 'lucide-react';
+import { ShoppingCart, Tag, X, AlertTriangle } from 'lucide-react';
 import './Checkout.css';
 
 /**
@@ -31,6 +24,25 @@ const DELIVERY_ZONES = [
     { value: 'inside_dhaka', label: 'Inside Dhaka' },
     { value: 'outside_dhaka', label: 'Outside Dhaka' },
 ];
+
+/**
+ * One line for a saved address, for the picker.
+ *
+ * The street first, because that is what tells two of the customer's own
+ * addresses apart; the zone after it, because that is what decides delivery.
+ * Addresses saved before the zone was asked for fall back to the area and
+ * city they were kept with, so an older one still says where it is.
+ */
+export const addressLabel = (addr) => {
+    const where =
+        DELIVERY_ZONES.find((z) => z.value === addr.delivery_zone)?.label ||
+        [addr.zone, addr.city].filter(Boolean).join(', ');
+
+    return (
+        [addr.street_address, where].filter(Boolean).join(' — ') +
+        (addr.is_default ? '  (default)' : '')
+    );
+};
 
 /**
  * @param addresses Where this customer has had orders delivered before. Empty
@@ -101,9 +113,7 @@ export default function Checkout({
             setCart(await cartService.getCart());
             useAppStore.getState().fetchCartCount();
         } catch (error) {
-            toast.error(
-                error?.message || 'We could not update that quantity.',
-            );
+            toast.error(error?.message || 'We could not update that quantity.');
             // Put the line back to whatever the cart actually holds.
             setCart(await cartService.getCart());
         } finally {
@@ -317,61 +327,59 @@ export default function Checkout({
                             </h3>
 
                             {/*
-                             * Only worth showing when there is a choice to
-                             * make. One saved address is already in the boxes
-                             * below, and a guest has none.
+                             * A list rather than a stack of cards.
+                             *
+                             * Each saved address was a card two lines tall, so
+                             * four of them pushed the form itself off the
+                             * screen — on a phone the customer scrolled past
+                             * their own addresses to reach the fields. A
+                             * select says the same thing in one row, and shows
+                             * whichever is chosen without hiding the rest.
+                             *
+                             * Shown from the first saved address, not the
+                             * second: with one saved, the only way to deliver
+                             * somewhere else was to overwrite the boxes and
+                             * hope, which is not an offer the page was making.
                              */}
-                            {addresses.length > 1 && (
-                                <div className="saved-address-picker">
-                                    {addresses.map((addr) => (
-                                        <button
-                                            type="button"
-                                            key={addr.id}
-                                            className={`saved-address-option ${chosenAddressId === addr.id ? 'is-chosen' : ''}`}
-                                            onClick={() => applyAddress(addr)}
-                                        >
-                                            <MapPin size={15} />
-                                            <span className="saved-address-body">
-                                                <span className="saved-address-street">
-                                                    {addr.street_address}
-                                                </span>
-                                                {/* The zone if the address has
-                                                    one, otherwise the area and
-                                                    city it was saved with —
-                                                    addresses kept before the
-                                                    zone was asked for still
-                                                    have to say where they are. */}
-                                                <span className="saved-address-region">
-                                                    {DELIVERY_ZONES.find(
-                                                        (z) =>
-                                                            z.value ===
-                                                            addr.delivery_zone,
-                                                    )?.label ||
-                                                        [addr.zone, addr.city]
-                                                            .filter(Boolean)
-                                                            .join(', ')}
-                                                </span>
-                                            </span>
-                                            {addr.is_default && (
-                                                <span className="saved-address-default">
-                                                    Default
-                                                </span>
-                                            )}
-                                        </button>
-                                    ))}
-
-                                    <button
-                                        type="button"
-                                        className={`saved-address-option saved-address-new ${chosenAddressId === null ? 'is-chosen' : ''}`}
-                                        onClick={startNewAddress}
+                            {addresses.length > 0 && (
+                                <div className="form-group">
+                                    <label
+                                        className="form-control-label"
+                                        htmlFor="saved-address"
                                     >
-                                        <Plus size={15} />
-                                        <span className="saved-address-body">
-                                            <span className="saved-address-street">
-                                                Deliver somewhere else
-                                            </span>
-                                        </span>
-                                    </button>
+                                        Deliver to
+                                    </label>
+                                    <select
+                                        id="saved-address"
+                                        className="form-control-input"
+                                        value={chosenAddressId ?? 'new'}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            if (value === 'new') {
+                                                startNewAddress();
+                                                return;
+                                            }
+
+                                            const addr = addresses.find(
+                                                (a) => String(a.id) === value,
+                                            );
+
+                                            if (addr) applyAddress(addr);
+                                        }}
+                                    >
+                                        {addresses.map((addr) => (
+                                            <option
+                                                key={addr.id}
+                                                value={addr.id}
+                                            >
+                                                {addressLabel(addr)}
+                                            </option>
+                                        ))}
+                                        <option value="new">
+                                            + Deliver somewhere else
+                                        </option>
+                                    </select>
                                 </div>
                             )}
 
