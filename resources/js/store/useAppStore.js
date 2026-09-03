@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { cartService } from '../services';
+import { cartService, compareService } from '../services';
 
 const useAppStore = create((set, get) => ({
     // Client UI State
@@ -34,6 +34,26 @@ const useAppStore = create((set, get) => ({
 
     compareCount: 0,
     setCompareCount: (count) => set({ compareCount: count }),
+    /*
+     * The compare badge only ever knew what happened in this page's lifetime.
+     *
+     * It was set when something was added and when the compare page was
+     * opened, and nowhere else — so it started every page at nought. Refresh
+     * with four things in the matrix and the badge simply vanished, until you
+     * added a fifth or opened the page it was counting.
+     *
+     * The cart has been asking the server on boot all along; this is the same,
+     * for the same reason.
+     */
+    fetchCompareCount: async () => {
+        try {
+            const items = await compareService.getComparison();
+
+            set({ compareCount: Array.isArray(items) ? items.length : 0 });
+        } catch (error) {
+            console.error('Failed to fetch compare count', error);
+        }
+    },
 
     // Toast Notifications System
     toasts: [],

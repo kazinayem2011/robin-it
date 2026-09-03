@@ -41,6 +41,7 @@ export const Header = () => {
     const marqueeRef = useRef(null);
 
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
+    const fetchCompareCount = useAppStore((state) => state.fetchCompareCount);
     const wishlistCount = useAppStore((state) => state.wishlistCount);
 
     // Fetch the mega menu tree and sync the cart badge. The layout is
@@ -48,6 +49,7 @@ export const Header = () => {
     // navigation after it.
     useEffect(() => {
         fetchCartCount();
+        fetchCompareCount();
 
         categoryService
             .getMegaMenu()
@@ -62,7 +64,7 @@ export const Header = () => {
                 // emptying: a stale menu beats no menu.
                 console.error('Mega menu API load error:', error),
             );
-    }, [fetchCartCount]);
+    }, [fetchCartCount, fetchCompareCount]);
 
     /*
      * The whole header block pins, pulled up by exactly the height of the
