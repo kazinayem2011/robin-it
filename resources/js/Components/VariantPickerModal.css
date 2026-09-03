@@ -30,14 +30,40 @@
     z-index: -1;
 }
 
+/*
+ * The panel's whole palette, in one place.
+ *
+ * This file briefly carried a prefers-color-scheme block, which was a mistake:
+ * the shop is light throughout and has no dark theme, so the picker rendered
+ * dark over a light page. Worse, that block redefined the text but not the
+ * chosen row's background, which stayed a pale pink — so the selected
+ * option's label was pale on pale and the only easily readable row was the
+ * one nobody had picked.
+ *
+ * Naming the colours here rather than reaching for globals inline is what
+ * makes a future theme a change to this block instead of a change to twenty
+ * rules — and what would have made that half-a-theme impossible.
+ */
 .variant-picker-panel {
+    --vp-surface: var(--bg-surface, #fff);
+    --vp-option-bg: var(--bg-surface, #fff);
+    --vp-option-border: var(--border-color, #e2e8f0);
+    --vp-option-hover: var(--gray-400, #94a3b8);
+    --vp-chosen-bg: #fef2f2;
+    --vp-chosen-border: var(--primary, #d12127);
+    --vp-accent: var(--primary, #d12127);
+    --vp-text: var(--dark-900, #0f172a);
+    --vp-muted: var(--gray-500, #64748b);
+    --vp-chip: var(--gray-100, #f1f5f9);
+    --vp-chip-hover: var(--gray-200, #e2e8f0);
+
     width: 100%;
     max-width: 440px;
     /* Never taller than the window; the list inside scrolls instead. */
     max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
-    background: var(--bg-surface, #fff);
+    background: var(--vp-surface);
     border-radius: 18px;
     /* Two shadows: a wide soft one for depth, a tight one to seat the edge.
        A single large blur reads as a smudge under the panel. */
@@ -84,7 +110,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--gray-500, #64748b);
+    color: var(--vp-muted);
 }
 
 .variant-picker-title {
@@ -93,7 +119,7 @@
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: -0.01em;
-    color: var(--dark-900, #0f172a);
+    color: var(--vp-text);
     /* A long product name wraps rather than pushing the close button out. */
     overflow-wrap: anywhere;
     text-wrap: balance;
@@ -108,8 +134,8 @@
     align-items: center;
     justify-content: center;
     border: none;
-    background: var(--gray-100, #f1f5f9);
-    color: var(--gray-500, #64748b);
+    background: var(--vp-chip);
+    color: var(--vp-muted);
     cursor: pointer;
     border-radius: 50%;
     transition:
@@ -118,8 +144,8 @@
 }
 
 .variant-picker-close:hover {
-    background: var(--gray-200, #e2e8f0);
-    color: var(--dark-900, #0f172a);
+    background: var(--vp-chip-hover);
+    color: var(--vp-text);
 }
 
 .variant-picker-note {
@@ -127,7 +153,7 @@
     padding: 8px 22px 22px;
     font-size: 0.86rem;
     line-height: 1.5;
-    color: var(--gray-600, #475569);
+    color: var(--vp-muted);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -151,9 +177,9 @@
     align-items: center;
     gap: 12px;
     padding: 13px 15px;
-    border: 1.5px solid var(--border-color, #e2e8f0);
+    border: 1.5px solid var(--vp-option-border);
     border-radius: 12px;
-    background: var(--bg-surface, #fff);
+    background: var(--vp-option-bg);
     cursor: pointer;
     text-align: left;
     transition:
@@ -162,17 +188,17 @@
 }
 
 .variant-picker-option:hover:not(:disabled) {
-    border-color: var(--gray-400, #94a3b8);
+    border-color: var(--vp-option-hover);
 }
 
 .variant-picker-option:focus-visible {
-    outline: 2px solid var(--primary, #d12127);
+    outline: 2px solid var(--vp-accent);
     outline-offset: 2px;
 }
 
 .variant-picker-option.is-chosen {
-    border-color: var(--primary, #d12127);
-    background: var(--primary-light, #fef2f2);
+    border-color: var(--vp-chosen-border);
+    background: var(--vp-chosen-bg);
 }
 
 /* A tick rather than a ring: the row is already tinted, and a second
@@ -184,7 +210,7 @@
     right: 12px;
     width: 7px;
     height: 12px;
-    border: solid var(--primary, #d12127);
+    border: solid var(--vp-accent);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
@@ -197,7 +223,7 @@
 .variant-picker-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--dark-900, #0f172a);
+    color: var(--vp-text);
     overflow-wrap: anywhere;
 }
 
@@ -209,12 +235,12 @@
     padding-right: 16px;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--dark-900, #0f172a);
+    color: var(--vp-text);
     font-variant-numeric: tabular-nums;
 }
 
 .variant-picker-option.is-chosen .variant-picker-price {
-    color: var(--primary, #d12127);
+    color: var(--vp-accent);
 }
 
 .variant-picker-out {
@@ -223,7 +249,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--gray-500, #64748b);
+    color: var(--vp-muted);
 }
 
 .variant-picker-actions {
@@ -243,31 +269,5 @@
     .variant-picker-backdrop,
     .variant-picker-panel {
         animation: none;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    .variant-picker-panel {
-        background: #0f172a;
-    }
-
-    .variant-picker-option {
-        background: #131f38;
-        border-color: rgba(148, 163, 184, 0.22);
-    }
-
-    .variant-picker-option:hover:not(:disabled) {
-        border-color: rgba(148, 163, 184, 0.45);
-    }
-
-    .variant-picker-name,
-    .variant-picker-title,
-    .variant-picker-price {
-        color: #e2e8f0;
-    }
-
-    .variant-picker-close {
-        background: rgba(148, 163, 184, 0.16);
-        color: #cbd5e1;
     }
 }

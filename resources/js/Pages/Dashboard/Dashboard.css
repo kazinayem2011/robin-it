@@ -205,16 +205,6 @@
     text-decoration: underline;
 }
 
-@media (prefers-color-scheme: dark) {
-    .account-identity-meta .is-unverified {
-        background: rgba(180, 83, 9, 0.18);
-    }
-
-    .account-identity-meta .is-unverified a {
-        color: #fbbf24;
-    }
-}
-
 /* The one row that is a link. Underlined on hover only — a permanent underline
    in a column of plain contact lines reads as an error state. */
 .account-identity-missing a {
@@ -990,20 +980,5 @@
     .contact-verify-row {
         flex-direction: column;
         align-items: stretch;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    .contact-verify-card {
-        background: rgba(180, 83, 9, 0.14);
-        border-color: rgba(180, 83, 9, 0.4);
-    }
-
-    .contact-verify-row {
-        border-top-color: rgba(180, 83, 9, 0.35);
-    }
-
-    .contact-verify-state {
-        color: #fbbf24;
     }
 }
