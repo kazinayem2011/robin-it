@@ -231,30 +231,6 @@ export const Header = () => {
                                 <Truck size={13} className="ticker-icon" />
                                 <span>Track Order</span>
                             </Link>
-                            {/*
-                             * The campaigns the shop is running. Distinct from
-                             * the discounted listing, which is a price fact
-                             * and lives under Discounts.
-                             *
-                             * Absent when there are none: this sits on every
-                             * page of the shop, and an empty page is a dead
-                             * end.
-                             */}
-                            {offersRunning > 0 && (
-                                <>
-                                    <span className="ticker-divider"></span>
-                                    <Link
-                                        href={ROUTES.OFFERS}
-                                        className="ticker-link"
-                                    >
-                                        <Tag
-                                            size={13}
-                                            className="ticker-icon"
-                                        />
-                                        <span>Offers</span>
-                                    </Link>
-                                </>
-                            )}
                             <span className="ticker-divider"></span>
                             <Link href={ROUTES.STORES} className="ticker-link">
                                 <MapPin size={13} className="ticker-icon" />
