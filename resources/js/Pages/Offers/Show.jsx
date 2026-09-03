@@ -168,7 +168,7 @@ export default function OfferDetail({ slug }) {
 
                     <h1>{offer.title}</h1>
 
-                    <p className="offer-card-meta">
+                    <p className="offer-detail-meta">
                         <span>
                             <CalendarRange size={14} />
                             {when.range}

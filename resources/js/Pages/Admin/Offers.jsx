@@ -134,7 +134,7 @@ export default function AdminOffers({ offers = [] }) {
             const { path } = await uploadService.uploadImage(file, 'offers');
 
             formik.setFieldValue('image_path', path);
-            toast.success('Poster uploaded.', 'Upload Complete');
+            toast.success('Banner uploaded.', 'Upload Complete');
         } catch (err) {
             toast.error(
                 err?.message || 'Could not upload that image.',
@@ -357,7 +357,7 @@ export default function AdminOffers({ offers = [] }) {
 
                             <div>
                                 <label className="admin-form-field-label">
-                                    Offer Poster
+                                    Offer Banner
                                 </label>
                                 <div className="admin-input-row-flex">
                                     <input
@@ -425,10 +425,10 @@ export default function AdminOffers({ offers = [] }) {
                         isOpen={cropperOpen}
                         onClose={() => setCropperOpen(false)}
                         onCropComplete={handleCropComplete}
-                        /* Square, like the posters these are — see the
-                           storefront card, which is 1:1. */
-                        aspectRatio={1}
-                        title="Crop Offer Poster (square, 800x800)"
+                        /* Landscape: on the storefront these are banners
+                           the width of a promo tile, not square posters. */
+                        aspectRatio={16 / 9}
+                        title="Crop Offer Banner (16:9, 1280x720)"
                     />
                 )}
             </div>

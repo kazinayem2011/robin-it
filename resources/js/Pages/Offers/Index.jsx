@@ -59,21 +59,21 @@ export default function Offers() {
                 </div>
 
                 <header className="offers-head">
-                    <div>
-                        <span className="section-pill-tag">
-                            WHAT&rsquo;S ON
-                        </span>
-                        <h1>Running Offers</h1>
-                        <p>
-                            Gift bundles, cashback and branch campaigns — each
-                            with the dates it runs and where it applies.
-                        </p>
-                    </div>
+                    <span className="section-pill-tag">WHAT&rsquo;S ON</span>
+                    <h1>Running Offers</h1>
+                    <p>
+                        Gift bundles, cashback and branch campaigns — each with
+                        the dates it runs and where it applies.
+                    </p>
 
                     {/*
                      * The other page that used to live at this address. A
                      * shopper who came looking for cut prices should not have
                      * to find out the word changed meaning.
+                     *
+                     * Under the description rather than flush right: the cart
+                     * dock is fixed to the right edge of the window, and at
+                     * common widths it sat over the end of this pill.
                      */}
                     <Link
                         href={ROUTES.DISCOUNTS}
@@ -88,12 +88,11 @@ export default function Offers() {
                 {loading ? (
                     <div className="offers-grid">
                         {[0, 1, 2].map((n) => (
-                            <div key={n} className="offer-card is-loading">
-                                <div className="offer-card-media" />
-                                <div className="offer-card-body">
+                            <div key={n} className="offer-banner is-loading">
+                                <span className="offer-banner-content">
                                     <span className="offer-skeleton-line" />
                                     <span className="offer-skeleton-line is-short" />
-                                </div>
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -111,36 +110,39 @@ export default function Offers() {
                             const when = offerWindow(offer);
 
                             return (
-                                <article key={offer.id} className="offer-card">
-                                    <Link
-                                        href={ROUTES.OFFER_DETAIL(offer.slug)}
-                                        className="offer-card-media"
-                                    >
-                                        {offer.image_path ? (
-                                            <img
-                                                src={offer.image_path}
-                                                alt={offer.title}
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <span className="offer-card-fallback">
-                                                <Tag size={26} />
-                                            </span>
-                                        )}
+                                /*
+                                 * The same banner the homepage promos are:
+                                 * artwork with the words over it, not a card
+                                 * with a picture stuck on top. An offer's
+                                 * poster is designed to be read, so it is the
+                                 * whole tile.
+                                 */
+                                <Link
+                                    key={offer.id}
+                                    href={ROUTES.OFFER_DETAIL(offer.slug)}
+                                    className="offer-banner"
+                                    style={
+                                        offer.image_path
+                                            ? {
+                                                  backgroundImage: `url(${offer.image_path})`,
+                                              }
+                                            : undefined
+                                    }
+                                >
+                                    <span className="offer-banner-overlay" />
 
-                                        {/* Only when it says something the
-                                            dates below do not. */}
-                                        {when.badge && (
-                                            <span
-                                                className={`offer-card-badge is-${when.tone}`}
-                                            >
-                                                {when.badge}
-                                            </span>
-                                        )}
-                                    </Link>
+                                    {/* Only when it says something the dates
+                                        below do not. */}
+                                    {when.badge && (
+                                        <span
+                                            className={`offer-banner-badge is-${when.tone}`}
+                                        >
+                                            {when.badge}
+                                        </span>
+                                    )}
 
-                                    <div className="offer-card-body">
-                                        <p className="offer-card-meta">
+                                    <span className="offer-banner-content">
+                                        <span className="offer-banner-meta">
                                             <span>
                                                 <CalendarRange size={13} />
                                                 {when.range}
@@ -151,35 +153,20 @@ export default function Offers() {
                                                     {offer.availability}
                                                 </span>
                                             )}
-                                        </p>
+                                        </span>
 
-                                        <h2>
-                                            <Link
-                                                href={ROUTES.OFFER_DETAIL(
-                                                    offer.slug,
-                                                )}
-                                            >
-                                                {offer.title}
-                                            </Link>
-                                        </h2>
+                                        <h2>{offer.title}</h2>
 
                                         {offer.excerpt && (
-                                            <p className="offer-card-desc">
-                                                {offer.excerpt}
-                                            </p>
+                                            <p>{offer.excerpt}</p>
                                         )}
 
-                                        <Link
-                                            href={ROUTES.OFFER_DETAIL(
-                                                offer.slug,
-                                            )}
-                                            className="btn btn-primary btn-sm"
-                                        >
+                                        <span className="btn btn-primary btn-sm">
                                             View Details{' '}
                                             <ArrowRight size={14} />
-                                        </Link>
-                                    </div>
-                                </article>
+                                        </span>
+                                    </span>
+                                </Link>
                             );
                         })}
                     </div>

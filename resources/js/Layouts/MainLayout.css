@@ -859,6 +859,69 @@
     transform: translateY(-2px);
 }
 
+/*
+ * Offers, beside the builder.
+ *
+ * Filled rather than outlined: the builder is a tool a shopper goes looking
+ * for, an offer is the thing the shop wants noticed on the way past, so of the
+ * two highlighted buttons this is the louder one.
+ */
+.offers-glow-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, #b01a20 100%);
+    color: var(--white);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all var(--transition-fast);
+}
+
+.offers-glow-btn:hover {
+    box-shadow: 0 6px 20px var(--primary-glow);
+    transform: translateY(-2px);
+}
+
+/* The same sweep the builder has, so the pair read as one set. */
+.offers-glow-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.25),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.offers-glow-btn:hover::before {
+    left: 100%;
+}
+
+/* On a filled button the icon tile takes the light rather than the accent. */
+.offers-glow-btn .btn-glow-icon {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--white);
+}
+
+.offers-glow-btn .btn-glow-sub {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.offers-glow-btn .btn-glow-title {
+    color: var(--white);
+}
+
 .btn-glow-icon {
     width: 32px;
     height: 32px;
@@ -2228,7 +2291,8 @@
     .top-ticker-right {
         display: none;
     }
-    .pc-builder-glow-btn {
+    .pc-builder-glow-btn,
+    .offers-glow-btn {
         display: none;
     }
     .footer-support-grid {

@@ -281,6 +281,28 @@ export const Header = () => {
                             </div>
                         </Link>
 
+                        {/*
+                         * The campaigns the shop is running, beside the
+                         * builder and treated the same way — a destination
+                         * rather than one of the small tool icons. Filled
+                         * rather than outlined, because an offer is the thing
+                         * the shop most wants noticed.
+                         */}
+                        <Link
+                            href={ROUTES.OFFERS}
+                            className="header-highlight-btn offers-glow-btn"
+                        >
+                            <div className="btn-glow-icon">
+                                <Tag size={18} />
+                            </div>
+                            <div className="btn-glow-text">
+                                <span className="btn-glow-sub">
+                                    RUNNING NOW
+                                </span>
+                                <span className="btn-glow-title">OFFERS</span>
+                            </div>
+                        </Link>
+
                         {/* A shopper's own bell: how they hear that their
                             order has shipped without refreshing the page. Only
                             when signed in — there is nothing to tell a guest. */}
