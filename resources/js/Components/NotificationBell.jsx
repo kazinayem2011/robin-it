@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     Bell,
     ShoppingCart,
@@ -9,7 +9,7 @@ import {
     CheckCheck,
 } from 'lucide-react';
 import axiosInstance from '../services/axiosInstance';
-import { API_ENDPOINTS } from '../constants/endpoints';
+import { API_ENDPOINTS, ROUTES } from '../constants/endpoints';
 import { payloadFrom } from '../utils/apiPayload';
 import { onUserNotification } from '../echo';
 import './NotificationBell.css';
@@ -162,6 +162,20 @@ export default function NotificationBell({ userId }) {
                             })}
                         </ul>
                     )}
+
+                    {/*
+                     * The way out of a dropdown that holds twenty rows and no
+                     * history. Always offered, including when the panel is
+                     * empty: "nothing yet" is a fine answer to have, and the
+                     * page is where you go to check it against last week.
+                     */}
+                    <Link
+                        href={ROUTES.NOTIFICATIONS}
+                        className="notif-see-all"
+                        onClick={() => setOpen(false)}
+                    >
+                        See all notifications
+                    </Link>
                 </div>
             )}
         </div>

@@ -396,6 +396,18 @@ class ApiEndpoints
 
     public const NOTIFICATIONS_READ_ALL = 'notifications/read-all';
 
+    /** Back to unread, for something dealt with too quickly. */
+    public const NOTIFICATION_UNREAD = 'notifications/{notification}/unread';
+
+    /** One, gone. */
+    public const NOTIFICATION_DELETE = 'notifications/{notification}';
+
+    /** Everything already read — never the unread ones. */
+    public const NOTIFICATIONS_CLEAR_READ = 'notifications/clear-read';
+
+    /** The page the bell links to. */
+    public const WEB_NOTIFICATIONS = 'notifications';
+
     public const ADMIN_SETTINGS_TEST_EMAIL = 'settings/test-email';
 
     public const ADMIN_QUESTIONS = 'questions';

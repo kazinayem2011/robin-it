@@ -36,13 +36,29 @@ describe('page layouts', () => {
     });
 
     it('every page that imports the shell declares it as a persistent layout', () => {
+        /*
+         * Either form counts:
+         *
+         *     Page.layout = mainLayout;
+         *     Page.layout = (page) => condition ? page : mainLayout(page);
+         *
+         * The second is for a page served to both staff and customers — the
+         * notifications list — which wears the admin shell for one and the
+         * site shell for the other. What this guards against is a page that
+         * imports the shell and then renders it inside its own tree, which the
+         * test above catches directly; handing the page to mainLayout, however
+         * it decides to, keeps the shell persistent.
+         */
+        const declaresLayout = (src) =>
+            /\.layout\s*=\s*mainLayout\b/.test(src) ||
+            /\.layout\s*=\s*\([\s\S]{0,80}?\)\s*=>[\s\S]{0,300}?mainLayout\(/.test(
+                src,
+            );
+
         const offenders = walk(PAGES)
             .filter((f) => {
                 const src = read(f);
-                return (
-                    src.includes('mainLayout') &&
-                    !/\.layout\s*=\s*mainLayout/.test(src)
-                );
+                return src.includes('mainLayout') && !declaresLayout(src);
             })
             .map(rel);
 

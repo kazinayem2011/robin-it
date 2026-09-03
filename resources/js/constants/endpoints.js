@@ -60,6 +60,9 @@ export const API_ENDPOINTS = {
     NOTIFICATIONS: '/notifications',
     NOTIFICATION_READ: (id) => `/notifications/${id}/read`,
     NOTIFICATIONS_READ_ALL: '/notifications/read-all',
+    NOTIFICATION_UNREAD: (id) => `/notifications/${id}/unread`,
+    NOTIFICATION_DELETE: (id) => `/notifications/${id}`,
+    NOTIFICATIONS_CLEAR_READ: '/notifications/clear-read',
 
     WISHLIST: {
         BASE: '/wishlist',
@@ -255,6 +258,7 @@ export const ROUTES = {
     DASHBOARD_ORDERS: '/dashboard/orders',
     DASHBOARD_WISHLIST: '/dashboard/wishlist',
     DASHBOARD_ADDRESSES: '/dashboard/addresses',
+    NOTIFICATIONS: '/notifications',
     DASHBOARD_PROFILE: '/dashboard/profile',
     ACCOUNT: '/account',
     PROFILE_EDIT: '/profile',

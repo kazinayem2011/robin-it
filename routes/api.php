@@ -209,6 +209,11 @@ Route::middleware(['web', 'auth:sanctum', 'throttle:api'])->group(function () {
     Route::get(ApiEndpoints::NOTIFICATIONS, [NotificationController::class, 'index']);
     Route::post(ApiEndpoints::NOTIFICATION_READ, [NotificationController::class, 'markRead']);
     Route::post(ApiEndpoints::NOTIFICATIONS_READ_ALL, [NotificationController::class, 'markAllRead']);
+    Route::post(ApiEndpoints::NOTIFICATION_UNREAD, [NotificationController::class, 'markUnread']);
+    // Clearing comes before the {notification} route, or "clear-read" is read
+    // as an id and deletes nothing while reporting success.
+    Route::delete(ApiEndpoints::NOTIFICATIONS_CLEAR_READ, [NotificationController::class, 'clearRead']);
+    Route::delete(ApiEndpoints::NOTIFICATION_DELETE, [NotificationController::class, 'destroy']);
 });
 
 /*

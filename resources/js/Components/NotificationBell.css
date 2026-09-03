@@ -195,3 +195,19 @@
 .header-tool-bell .notif-trigger:hover {
     border: 0;
 }
+
+/* The way out of a dropdown that holds twenty rows and no history. */
+.notif-see-all {
+    display: block;
+    padding: 11px 14px;
+    border-top: 1px solid var(--border-light, #e2e8f0);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary, #d12127);
+    text-decoration: none;
+}
+
+.notif-see-all:hover {
+    background: var(--gray-50, #f8fafc);
+}

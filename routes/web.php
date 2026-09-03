@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\WarrantyController as AdminWarrantyController;
 use App\Http\Controllers\Customer\AvatarController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StorefrontPageController;
@@ -124,6 +125,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get(ApiEndpoints::DASHBOARD_ORDERS, [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get(ApiEndpoints::DASHBOARD_WISHLIST, [DashboardController::class, 'wishlist'])->name('dashboard.wishlist');
     Route::get(ApiEndpoints::DASHBOARD_ADDRESSES, [DashboardController::class, 'addresses'])->name('dashboard.addresses');
+
+    /*
+     * Every notification, which the bell is not: it holds the last twenty
+     * with no way to look further back, mark one unread, or throw any away.
+     * Signed-in rather than admin-only — a customer is told about their own
+     * order, and the rows are scoped by the relation.
+     */
+    Route::get(ApiEndpoints::WEB_NOTIFICATIONS, [NotificationController::class, 'page'])
+        ->name('notifications');
     Route::get(ApiEndpoints::DASHBOARD_PROFILE, [DashboardController::class, 'profile'])->name('dashboard.profile');
 
     Route::post(ApiEndpoints::ACCOUNT_PROFILE, [DashboardController::class, 'updateProfile'])->name('account.profile');
