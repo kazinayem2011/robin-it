@@ -19,6 +19,11 @@ class AddressBookTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            // Who the parcel is for and the number the courier rings. Both are
+            // columns the checkout picker has always read and nothing ever
+            // wrote, because the form had no box for either.
+            'name' => 'Rahim Uddin',
+            'phone' => '01711223344',
             'division' => 'Dhaka',
             'district' => 'Dhaka',
             'city' => 'Gulshan',
@@ -49,6 +54,46 @@ class AddressBookTest extends TestCase
             'delivery_zone' => 'inside_dhaka',
             'is_default' => true,
         ]);
+    }
+
+    public function test_a_saved_address_keeps_who_it_is_for(): void
+    {
+        $user = User::factory()->create(['name' => 'Account Holder']);
+
+        $this->actingAs($user)->post('/'.ApiEndpoints::ACCOUNT_ADDRESS, $this->payload([
+            'name' => 'Karim at the office',
+            'phone' => '01911223344',
+        ]));
+
+        // Not the account holder: an address may be someone else's door.
+        $this->assertDatabaseHas('addresses', [
+            'user_id' => $user->id,
+            'name' => 'Karim at the office',
+            'phone' => '01911223344',
+        ]);
+    }
+
+    public function test_an_address_needs_a_recipient_and_a_number(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/'.ApiEndpoints::ACCOUNT_ADDRESS, array_diff_key(
+                $this->payload(),
+                array_flip(['name', 'phone'])
+            ))
+            ->assertSessionHasErrors(['name', 'phone']);
+
+        $this->assertDatabaseCount('addresses', 0);
+    }
+
+    public function test_a_mobile_number_has_to_look_like_one(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/'.ApiEndpoints::ACCOUNT_ADDRESS, $this->payload(['phone' => '12345']))
+            ->assertSessionHasErrors('phone');
     }
 
     public function test_the_first_address_becomes_the_default_automatically(): void

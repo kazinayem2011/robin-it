@@ -36,6 +36,61 @@ export default function AddressFormModal({
             maxWidth="480px"
         >
             <form onSubmit={handleAddressSubmit} noValidate>
+                {/*
+                 * Who the parcel is for, and the number the courier rings.
+                 *
+                 * Both were in the form's initial values and required by its
+                 * schema, and neither had a box to be typed into — so an
+                 * account with no phone number on it could not save an address
+                 * at all: Formik rejected the submit, no field existed to show
+                 * the error on, and the button simply did nothing.
+                 */}
+                <div className="auth-form-group">
+                    <label className="auth-label" htmlFor="addr-name">
+                        Recipient&rsquo;s Name{' '}
+                        <span className="required-asterisk">*</span>
+                    </label>
+                    <input
+                        id="addr-name"
+                        type="text"
+                        name="name"
+                        placeholder="Who should the courier ask for?"
+                        value={addressForm.values.name}
+                        onChange={addressForm.handleChange}
+                        onBlur={addressForm.handleBlur}
+                        className={`auth-text-input${addressForm.touched.name && addressForm.errors.name ? ' input-error' : ''}`}
+                    />
+                    {addressForm.touched.name && addressForm.errors.name && (
+                        <span className="auth-field-error">
+                            {addressForm.errors.name}
+                        </span>
+                    )}
+                </div>
+
+                <div className="auth-form-group">
+                    <label className="auth-label" htmlFor="addr-phone">
+                        Mobile Number{' '}
+                        <span className="required-asterisk">*</span>
+                    </label>
+                    <input
+                        id="addr-phone"
+                        type="tel"
+                        name="phone"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        placeholder="01711223344"
+                        value={addressForm.values.phone}
+                        onChange={addressForm.handleChange}
+                        onBlur={addressForm.handleBlur}
+                        className={`auth-text-input${addressForm.touched.phone && addressForm.errors.phone ? ' input-error' : ''}`}
+                    />
+                    {addressForm.touched.phone && addressForm.errors.phone && (
+                        <span className="auth-field-error">
+                            {addressForm.errors.phone}
+                        </span>
+                    )}
+                </div>
+
                 <Select
                     label="Division"
                     name="division"

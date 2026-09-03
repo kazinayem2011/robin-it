@@ -81,6 +81,8 @@ export default function Select({
     formik = null,
     /** null decides by length; true or false settles it. */
     searchable = null,
+    /** Drawn inside the trigger, so it is part of the control, not beside it. */
+    icon: Icon = null,
     searchPlaceholder = 'Type to search…',
     emptyText = 'Nothing matches that.',
     'aria-label': ariaLabel,
@@ -536,6 +538,8 @@ export default function Select({
                 onKeyDown={onKeyDown}
                 {...rest}
             >
+                {Icon && <Icon size={14} className="ui-select-icon" />}
+
                 <span className="ui-select-value">
                     {selected ? selected.label : placeholder}
                 </span>

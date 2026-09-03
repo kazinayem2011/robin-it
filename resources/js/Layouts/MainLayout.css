@@ -344,18 +344,14 @@
     box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
+/* Only the rule that separates it from the search box: the padding moved onto
+   the button inside, so the whole strip is the control it looks like. */
 .search-category-selector {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 0 12px;
     border-right: 1px solid var(--border-color);
     background: transparent;
     height: 100%;
-}
-
-.cat-select-icon {
-    color: var(--gray-400);
 }
 
 /*
@@ -364,9 +360,10 @@
  * resized itself would push the search box around under the cursor.
  */
 .search-category-select {
-    width: 118px;
+    width: 146px;
     height: 100%;
-    padding: 0;
+    gap: 6px;
+    padding: 0 12px;
     border: none;
     background-color: transparent;
     box-shadow: none;

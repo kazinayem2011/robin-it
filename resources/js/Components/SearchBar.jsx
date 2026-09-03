@@ -143,13 +143,22 @@ export const SearchBar = ({ onSearch }) => {
                 className={`main-search-bar ${searchFocused ? 'search-focused' : ''}`}
                 noValidate
             >
+                {/*
+                 * The icon is inside the control, not next to it.
+                 *
+                 * The strip reads as one thing — icon, label, chevron, a rule
+                 * separating it from the search box — but only the label and
+                 * chevron were the control. Clicking the icon, or the padding
+                 * on either side of it, did nothing at all, which is the part
+                 * of the strip the eye lands on first.
+                 */}
                 <div className="search-category-selector">
-                    <SlidersHorizontal size={14} className="cat-select-icon" />
                     <Select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         options={siteConfig.searchCategories}
                         aria-label="Search within"
+                        icon={SlidersHorizontal}
                         className="search-category-select"
                     />
                 </div>

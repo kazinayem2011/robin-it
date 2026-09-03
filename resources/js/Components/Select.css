@@ -29,9 +29,10 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    /* auto, not 100% — the native selects these replaced sized to their box,
-       and the callers that want a full-width field say so in their own class. */
-    width: auto;
+    /* Fills its box, as a form control does. Every caller that wants
+       something else — the sort control, the search bar's category picker —
+       says so in the class it already carried. */
+    width: 100%;
     max-width: 100%;
     height: 46px;
     padding: 0 10px 0 14px;
@@ -57,6 +58,18 @@
 .ui-select .ui-select-trigger,
 .ui-select-field .ui-select-trigger {
     padding-right: 10px;
+    /*
+     * A trigger must never be the reason a column cannot get narrower.
+     *
+     * A native <select> has a fixed default intrinsic width — it does not ask
+     * for its longest option — which is why one could sit in a 100%-wide
+     * column on a phone without widening it. A <button> asks for its whole
+     * label, and a label that cannot wrap asks for all of it: on the home page
+     * the builder's part picker demanded 435px inside a 390px screen, which
+     * pushed the layout viewport to 643px and took every fixed element,
+     * including the cart dock, off the side of the screen.
+     */
+    min-width: 0;
 }
 
 .ui-select-trigger:hover:not(:disabled) {
@@ -89,8 +102,21 @@
 
 /* One line, cut with an ellipsis. A long saved address must not stretch the
    field it sits in or wrap it to two rows. */
+/*
+ * `width: 0` with flex-grow, not `flex: 1` alone.
+ *
+ * The label must not wrap — it is one line with an ellipsis — but a box that
+ * cannot wrap asks the layout for its whole text, and on a phone the browser
+ * gives it: the builder's part picker demanded 435px inside a 390px screen,
+ * which widened the home page's layout viewport to 643px and carried every
+ * fixed element, the cart dock included, off the side of the display.
+ *
+ * A zero width asks for nothing; flex-grow still hands it every pixel that is
+ * actually going spare, so what you see is unchanged.
+ */
 .ui-select-value {
-    flex: 1;
+    flex: 1 1 0;
+    width: 0;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -102,6 +128,12 @@
 .ui-select-trigger.is-empty .ui-select-value {
     color: var(--gray-400);
     font-weight: 400;
+}
+
+/* Part of the control, not a decoration beside it — see SearchBar. */
+.ui-select-icon {
+    flex-shrink: 0;
+    color: var(--gray-400);
 }
 
 .ui-select-chevron {

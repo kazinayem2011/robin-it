@@ -48,6 +48,8 @@ createInertiaApp({
         root.render(<App {...props} />);
     },
     progress: {
-        color: '#4B5563',
+        // The brand red, same as --primary. A grey bar at the top of the page
+        // reads as chrome; this one is the shop telling you it heard you.
+        color: '#d12127',
     },
 });

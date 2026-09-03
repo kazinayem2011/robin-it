@@ -203,8 +203,21 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        PhoneHelper::canonicalise($request, 'phone');
+
         $validated = $request->validate([
             'id' => 'nullable|integer',
+            /*
+             * Who the parcel is for, and the number the courier rings.
+             *
+             * The columns have always been there and the checkout picker has
+             * always read them, but nothing ever wrote them: the form asked
+             * for neither, so every saved address fell back to the account
+             * holder. Delivering to your office or your parents' house was
+             * therefore impossible to record.
+             */
+            'name' => 'required|string|max:120',
+            'phone' => ['required', 'string', PhoneHelper::RULE],
             'division' => 'required|string|max:100',
             'district' => 'required|string|max:100',
             'city' => 'required|string|max:100',
@@ -221,13 +234,20 @@ class DashboardController extends Controller
             'city.required' => 'Please enter your city or thana.',
             'delivery_zone.required' => 'Choose whether this address is inside or outside Dhaka.',
             'delivery_zone.in' => 'Choose whether this address is inside or outside Dhaka.',
+            'name.required' => "Please give the recipient's name.",
+            'phone.required' => 'A mobile number is required for delivery.',
+            'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number.',
         ]);
+
+        $validated['phone'] = PhoneHelper::normalizeBdPhone($validated['phone']);
 
         $isFirstAddress = Address::where('user_id', $user->id)->count() === 0;
         $makeDefault = ! empty($validated['is_default']) || $isFirstAddress;
 
         DB::transaction(function () use ($validated, $user, $makeDefault) {
             $payload = [
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
                 'division' => $validated['division'],
                 'district' => $validated['district'],
                 'city' => $validated['city'],
