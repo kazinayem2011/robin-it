@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { offerWindow, timeLeft } from '../offerWindow';
+import { offerWindow } from '../offerWindow';
 
 /**
  * How an offer's window reads.
@@ -88,27 +88,5 @@ describe('offerWindow', () => {
                 tone: 'ended',
             });
         });
-    });
-});
-
-describe('timeLeft', () => {
-    it('breaks the wait into whole units', () => {
-        const now = Date.UTC(2026, 8, 1, 0, 0, 0);
-        const end = new Date(Date.UTC(2026, 8, 3, 5, 30, 15));
-
-        expect(timeLeft(end, now)).toEqual({
-            days: 2,
-            hours: 5,
-            minutes: 30,
-            seconds: 15,
-        });
-    });
-
-    /* null, so the page can stop the timer rather than render zeroes for the
-       rest of the visit. */
-    it('is null once there is nothing left to count', () => {
-        expect(timeLeft(new Date(Date.now() - 1000))).toBeNull();
-        expect(timeLeft(null)).toBeNull();
-        expect(timeLeft('not a date')).toBeNull();
     });
 });

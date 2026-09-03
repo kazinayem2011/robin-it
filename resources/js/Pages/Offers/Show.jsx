@@ -7,61 +7,17 @@ import {
     ArrowRight,
     Tag,
     AlertTriangle,
+    Flame,
 } from 'lucide-react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import EmptyState from '../../Components/EmptyState';
+import CountdownTimer from '../../Components/CountdownTimer';
 import { offerService } from '../../services';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
-import { offerWindow, timeLeft } from '../../utils/offerWindow';
+import { offerWindow } from '../../utils/offerWindow';
 import './Offers.css';
-
-/** Ticks once a second, and only while there is something to count. */
-function Countdown({ endsAt }) {
-    const [left, setLeft] = useState(() => timeLeft(endsAt));
-
-    useEffect(() => {
-        if (!endsAt) return undefined;
-
-        setLeft(timeLeft(endsAt));
-
-        const id = setInterval(() => {
-            const next = timeLeft(endsAt);
-
-            setLeft(next);
-
-            // Nothing left to count: stop, rather than run a timer for the
-            // rest of the visit re-rendering the same zeroes.
-            if (!next) clearInterval(id);
-        }, 1000);
-
-        return () => clearInterval(id);
-    }, [endsAt]);
-
-    if (!left) return null;
-
-    const parts = [
-        ['Days', left.days],
-        ['Hours', left.hours],
-        ['Minutes', left.minutes],
-        ['Seconds', left.seconds],
-    ];
-
-    return (
-        <div className="offer-countdown" role="timer" aria-live="off">
-            <span className="offer-countdown-label">Offer ends in</span>
-            <div className="offer-countdown-units">
-                {parts.map(([label, value]) => (
-                    <span key={label} className="offer-countdown-unit">
-                        <strong>{String(value).padStart(2, '0')}</strong>
-                        <small>{label}</small>
-                    </span>
-                ))}
-            </div>
-        </div>
-    );
-}
 
 /**
  * One campaign, in full.
@@ -73,11 +29,13 @@ function Countdown({ endsAt }) {
 export default function OfferDetail({ slug }) {
     const [offer, setOffer] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [expired, setExpired] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
 
         setLoading(true);
+        setExpired(false);
 
         offerService
             .getOfferBySlug(slug)
@@ -123,7 +81,12 @@ export default function OfferDetail({ slug }) {
     }
 
     const when = offerWindow(offer);
-    const ended = offer.status === 'ended';
+    /*
+     * `expired` is the clock running out while the page sits open. The server
+     * said this was running when it sent it, and the page must stop saying so
+     * the moment it is not.
+     */
+    const ended = offer.status === 'ended' || expired;
 
     return (
         <>
@@ -155,7 +118,54 @@ export default function OfferDetail({ slug }) {
                             reference.
                         </p>
                     ) : (
-                        <Countdown endsAt={when.endsAt} />
+                        when.endsAt && (
+                            /*
+                             * The same bar the flash deals carry on the home
+                             * page, and the same CountdownTimer inside it. The
+                             * shop already had one; a second hand-rolled clock
+                             * is one more thing to keep in step with it.
+                             */
+                            <div className="offer-countdown-bar">
+                                <div className="offer-countdown-left">
+                                    <span className="offer-countdown-badge">
+                                        <Flame
+                                            size={16}
+                                            className="flame-icon-pulse"
+                                        />
+                                        <span>LIMITED TIME</span>
+                                    </span>
+
+                                    <CountdownTimer
+                                        targetDate={when.endsAt}
+                                        label="ENDS IN:"
+                                        variant="default"
+                                        showIcon={false}
+                                        onExpire={() => setExpired(true)}
+                                    />
+                                </div>
+
+                                {/* The right of the bar, which the flash
+                                    banner fills with "ALL DEALS". Here it is
+                                    what this particular offer is for. */}
+                                {offer.link_url ? (
+                                    <a
+                                        href={offer.link_url}
+                                        className="btn btn-outline-white btn-sm"
+                                    >
+                                        <span>See the products</span>
+                                        <ArrowRight size={14} />
+                                    </a>
+                                ) : (
+                                    <Link
+                                        href={ROUTES.OFFERS}
+                                        className="btn btn-outline-white btn-sm"
+                                    >
+                                        <span>All offers</span>
+                                        <ArrowRight size={14} />
+                                    </Link>
+                                )}
+                            </div>
+                        )
                     )}
 
                     {offer.image_path && (

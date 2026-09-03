@@ -830,6 +830,17 @@ textarea.has-error:focus,
     animation: pulse-glow 2s infinite;
 }
 
+/*
+ * The pulsing flame on a "live" badge.
+ *
+ * It lived in Welcome.css while its keyframes lived here, so it only animated
+ * on the home page — the offer countdown reuses the same badge and got a
+ * still flame. A class whose keyframes are global belongs beside them.
+ */
+.flame-icon-pulse {
+    animation: live-pulse 1.2s infinite;
+}
+
 @keyframes live-pulse {
     0% {
         transform: scale(0.95);

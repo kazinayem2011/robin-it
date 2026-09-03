@@ -77,24 +77,3 @@ export const offerWindow = (offer = {}) => {
 
     return { range, badge: null, tone: 'running', endsAt };
 };
-
-/**
- * The countdown on an offer's own page, as whole units.
- *
- * @returns {{days: number, hours: number, minutes: number, seconds: number}|null}
- *   null once there is nothing left to count.
- */
-export const timeLeft = (endsAt, now = Date.now()) => {
-    if (!endsAt) return null;
-
-    const ms = new Date(endsAt).getTime() - now;
-
-    if (!Number.isFinite(ms) || ms <= 0) return null;
-
-    return {
-        days: Math.floor(ms / DAY),
-        hours: Math.floor((ms % DAY) / 3600000),
-        minutes: Math.floor((ms % 3600000) / 60000),
-        seconds: Math.floor((ms % 60000) / 1000),
-    };
-};

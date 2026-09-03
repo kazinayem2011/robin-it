@@ -537,57 +537,55 @@
     background: rgba(148, 163, 184, 0.06);
 }
 
-/* ---- the countdown ------------------------------------------------------ */
+/* ---- the countdown -----------------------------------------------------
+ * The same bar the flash deals carry on the home page: dark gradient, red
+ * underline, badge and clock on the left, an action on the right. The clock
+ * itself is CountdownTimer, which the home page has always used — see
+ * Show.jsx.
+ * ------------------------------------------------------------------------- */
 
-.offer-countdown {
+.offer-countdown-bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    padding: 14px 18px;
     margin-bottom: 20px;
+    padding: 14px 20px;
     border-radius: var(--radius-sm);
-    background: var(--dark-900);
-    color: var(--white, #fff);
+    border-bottom: 2px solid var(--primary);
+    background: linear-gradient(
+        135deg,
+        var(--dark-900) 0%,
+        var(--dark-800) 100%
+    );
+    color: var(--white);
 }
 
-.offer-countdown-label {
-    font-size: 0.74rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.75;
-}
-
-.offer-countdown-units {
+.offer-countdown-left {
     display: flex;
-    gap: 10px;
-}
-
-.offer-countdown-unit {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    min-width: 52px;
-    padding: 6px 8px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.offer-countdown-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
     border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.offer-countdown-unit strong {
-    font-size: 1.15rem;
+    background: var(--primary);
+    color: var(--white);
+    font-family: var(--font-heading);
+    font-size: 0.82rem;
     font-weight: 800;
-    line-height: 1;
-    /* So the numbers do not shuffle sideways every second. */
-    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 14px rgba(234, 72, 79, 0.4);
 }
 
-.offer-countdown-unit small {
-    margin-top: 3px;
-    font-size: 0.62rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    opacity: 0.7;
+.offer-countdown-bar .btn {
+    flex-shrink: 0;
 }
 
 .offer-ended-note {
@@ -658,11 +656,11 @@
         padding: 18px;
     }
 
-    .offer-countdown {
-        gap: 10px;
+    .offer-countdown-bar {
+        padding: 12px 14px;
     }
 
-    .offer-countdown-unit {
-        min-width: 46px;
+    .offer-countdown-left {
+        gap: 12px;
     }
 }
