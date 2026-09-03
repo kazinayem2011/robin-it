@@ -1,0 +1,193 @@
+/* ---------------------------------------------------------------------------
+ * The account menu, in both headers.
+ *
+ * One component, two triggers: the storefront header is a row of icon-and-
+ * label tools, the admin topbar is a tighter strip. The panel below is the
+ * same in both — the differences are in how the button beside it is shaped,
+ * not in what it opens.
+ * ------------------------------------------------------------------------- */
+.user-menu {
+    position: relative;
+}
+
+.user-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full, 999px);
+    background: none;
+    cursor: pointer;
+    color: inherit;
+    /* The name is elided rather than allowed to widen the header. */
+    max-width: 190px;
+    min-width: 0;
+    transition:
+        background var(--transition-fast, 0.15s),
+        border-color var(--transition-fast, 0.15s);
+}
+
+.user-menu-trigger:hover,
+.user-menu[data-open='true'] .user-menu-trigger {
+    background: var(--gray-100, #f1f5f9);
+}
+
+.user-menu-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(
+        135deg,
+        var(--primary, #d12127) 0%,
+        #d32f2f 100%
+    );
+    color: var(--white, #fff);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+/* Staff are told apart at a glance from the customer they are helping, which
+   matters on a shared counter machine. */
+.user-menu-avatar.is-staff {
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+}
+
+.user-menu-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-menu-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-menu-chevron {
+    flex-shrink: 0;
+    opacity: 0.55;
+}
+
+/* The admin topbar is tighter and already dense, so the first name is dropped
+   there and the avatar carries it. */
+.user-menu.variant-admin .user-menu-name {
+    display: none;
+}
+
+.user-menu-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    /* Anchored to the right edge: this sits at the end of both headers, and a
+       left-anchored panel would hang off the window. */
+    right: 0;
+    z-index: 1100;
+    min-width: 240px;
+    padding: 6px;
+    background: var(--bg-surface, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-lg, 14px);
+    box-shadow:
+        0 18px 40px -12px rgba(15, 23, 42, 0.26),
+        0 4px 12px -6px rgba(15, 23, 42, 0.12);
+    animation: userMenuOpen 0.14s ease-out;
+}
+
+/* Ends at `transform: none`: a transform left in place keeps the panel on its
+   own layer and its text softly rasterised for as long as it is open. */
+@keyframes userMenuOpen {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.user-menu-head {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--border-light, #f1f5f9);
+    margin-bottom: 4px;
+}
+
+.user-menu-head strong {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dark-900, #0f172a);
+    overflow-wrap: anywhere;
+}
+
+.user-menu-head span {
+    font-size: 0.74rem;
+    color: var(--gray-500, #64748b);
+    overflow-wrap: anywhere;
+}
+
+.user-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.user-menu-list a,
+.user-menu-signout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: none;
+    background: none;
+    border-radius: var(--radius-sm, 8px);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--gray-700, #334155);
+    text-decoration: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.user-menu-list a:hover,
+.user-menu-list a:focus-visible {
+    background: var(--gray-100, #f1f5f9);
+    color: var(--dark-900, #0f172a);
+}
+
+.user-menu-list svg,
+.user-menu-signout svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+/* Its own group, and the only destructive thing in the panel, so it is not one
+   slip away from "Notifications". */
+.user-menu-signout {
+    margin-top: 4px;
+    border-top: 1px solid var(--border-light, #f1f5f9);
+    border-radius: 0 0 var(--radius-sm, 8px) var(--radius-sm, 8px);
+    color: var(--danger, #dc2626);
+}
+
+.user-menu-signout:hover,
+.user-menu-signout:focus-visible {
+    background: var(--danger-light, #fef2f2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .user-menu-panel {
+        animation: none;
+    }
+}

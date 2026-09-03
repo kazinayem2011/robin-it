@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import NotificationBell from './NotificationBell';
+import UserMenu from './UserMenu';
 import { SearchBar } from './SearchBar';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
@@ -369,34 +370,10 @@ export const Header = () => {
 
                         {/* User Account / Sign In */}
                         {auth?.user ? (
-                            <Link
-                                href={ROUTES.DASHBOARD}
-                                className="header-tool-btn user-profile-btn"
-                                title="My Account"
-                            >
-                                <div
-                                    className={`tool-icon-box user-avatar-box ${isStaff ? 'user-avatar-admin' : 'user-avatar-customer'}`}
-                                >
-                                    {/* The picture where there is one; the
-                                        initial is the fallback, not the rule. */}
-                                    {auth.user.avatar ? (
-                                        <img
-                                            src={auth.user.avatar}
-                                            alt={auth.user.name || 'Profile'}
-                                            className="user-avatar-photo"
-                                        />
-                                    ) : (
-                                        <span className="user-avatar-initials">
-                                            {auth.user.name
-                                                ?.charAt(0)
-                                                .toUpperCase()}
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="tool-label tool-label-ellipsis">
-                                    {auth.user.name?.split(' ')[0]}
-                                </span>
-                            </Link>
+                            /* Was a plain link to the dashboard overview, so
+                               reaching an order or an address meant landing on
+                               one page and navigating from it. */
+                            <UserMenu user={auth.user} variant="site" />
                         ) : (
                             <Link
                                 href={ROUTES.LOGIN}

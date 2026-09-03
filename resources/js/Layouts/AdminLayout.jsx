@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import ToastContainer from '../Components/Toast';
 import NotificationBell from '../Components/NotificationBell';
+import UserMenu from '../Components/UserMenu';
 import { useFlashToasts } from '../hooks';
 import {
     LayoutDashboard,
@@ -493,6 +494,15 @@ export default function AdminLayout({
                             <span>Open Store</span>
                             <ExternalLink size={14} />
                         </Link>
+
+                        {/*
+                         * The topbar had no account control at all: signing
+                         * out was a small icon in the sidebar footer, which is
+                         * the part that collapses into a drawer on a phone —
+                         * so on a phone there was no way to sign out without
+                         * opening the navigation first.
+                         */}
+                        <UserMenu user={user} variant="admin" />
                     </div>
                 </header>
 
