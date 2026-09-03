@@ -43,9 +43,9 @@ describe('UserMenu', () => {
 
     beforeEach(() => vi.clearAllMocks());
 
-    const openMenu = async (user) => {
+    const openMenu = async (user, variant = 'site') => {
         const person = userEvent.setup();
-        render(<UserMenu user={user} />);
+        render(<UserMenu user={user} variant={variant} />);
         await person.click(
             screen.getByRole('button', { name: /rahim|nayem/i }),
         );
@@ -113,15 +113,46 @@ describe('UserMenu', () => {
         ).toBeNull();
     });
 
-    it('offers staff the admin and the store', async () => {
-        await openMenu(staff);
+    /*
+     * The menu used to be chosen by role alone, so a staff member standing in
+     * the admin was offered the admin — the place they were already — and was
+     * never offered the customer dashboard, which nothing inside the admin
+     * links to. It reads where it is now.
+     */
+    it('offers staff the admin when they are on the store', async () => {
+        await openMenu(staff, 'site');
 
         expect(
             screen.getByRole('menuitem', { name: /admin dashboard/i }),
         ).toBeTruthy();
         expect(
+            screen.queryByRole('menuitem', { name: /open the store/i }),
+        ).toBeNull();
+    });
+
+    it('offers staff the store when they are in the admin', async () => {
+        await openMenu(staff, 'admin');
+
+        expect(
             screen.getByRole('menuitem', { name: /open the store/i }),
         ).toBeTruthy();
+        expect(
+            screen.queryByRole('menuitem', { name: /admin dashboard/i }),
+        ).toBeNull();
+    });
+
+    /* Their own orders and addresses live on the customer side, and nothing
+       inside the admin links to them. */
+    it('offers staff their own account from inside the admin', async () => {
+        await openMenu(staff, 'admin');
+
+        for (const label of [
+            /my orders/i,
+            /wishlist/i,
+            /delivery addresses/i,
+        ]) {
+            expect(screen.getByRole('menuitem', { name: label })).toBeTruthy();
+        }
     });
 
     /* The trigger has room for a first name; two staff called Rahim need the

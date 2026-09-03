@@ -129,6 +129,27 @@
     padding: 0;
 }
 
+/*
+ * The one link that leaves where you are — the admin from the store, the
+ * store from the admin — kept apart from the account pages below it, which
+ * only move you around within the same place.
+ */
+.user-menu-crossing {
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border-light, #f1f5f9);
+}
+
+.user-menu-crossing a {
+    color: var(--primary, #d12127);
+}
+
+.user-menu-crossing a:hover,
+.user-menu-crossing a:focus-visible {
+    background: var(--primary-light, #fef2f2);
+    color: var(--primary, #d12127);
+}
+
 .user-menu-list a,
 .user-menu-signout {
     width: 100%;

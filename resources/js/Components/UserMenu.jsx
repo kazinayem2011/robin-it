@@ -29,8 +29,10 @@ import './UserMenu.css';
  * for no reason anybody can remember.
  *
  * @param user     the signed-in person
- * @param variant  'site' in the storefront header, 'admin' in the topbar —
- *                 which decides the trigger's shape, not what it contains
+ * @param variant  'site' in the storefront header, 'admin' in the topbar.
+ *                 It decides the one link that leaves where you are: the
+ *                 admin offers the store, the store offers the admin. The
+ *                 account pages below it are the same in both.
  */
 export default function UserMenu({ user, variant = 'site' }) {
     const [open, setOpen] = useState(false);
@@ -63,65 +65,66 @@ export default function UserMenu({ user, variant = 'site' }) {
 
     if (!user) return null;
 
+    const inAdmin = variant === 'admin';
+
     /*
-     * What this person actually has.
+     * The way to the other side, first.
      *
-     * A customer's account sections, and for staff the admin they work in —
-     * plus the store itself, which is the thing they are most often checking
-     * against. Notifications is in both because both receive them.
+     * The menu used to be chosen by role alone, so a staff member standing in
+     * the admin was offered the admin — and never the customer dashboard,
+     * which is where their own orders and addresses live and which nothing in
+     * the admin links to. It reads where it is instead: in the admin it offers
+     * the store, on the store it offers the admin.
+     *
+     * A customer has no other side to be offered.
      */
-    const links = staff
-        ? [
-              {
-                  href: ROUTES.ADMIN_DASHBOARD,
-                  label: 'Admin dashboard',
-                  icon: LayoutDashboard,
-              },
-              {
-                  href: ROUTES.NOTIFICATIONS,
-                  label: 'Notifications',
-                  icon: Bell,
-              },
-              {
-                  href: ROUTES.DASHBOARD_PROFILE,
-                  label: 'Profile & security',
-                  icon: User,
-              },
-              {
-                  href: ROUTES.HOME,
-                  label: 'Open the store',
-                  icon: ExternalLink,
-                  newTab: true,
-              },
-          ]
-        : [
-              { href: ROUTES.DASHBOARD, label: 'Overview', icon: Sparkles },
-              {
-                  href: ROUTES.DASHBOARD_ORDERS,
-                  label: 'My orders',
-                  icon: Package,
-              },
-              {
-                  href: ROUTES.DASHBOARD_WISHLIST,
-                  label: 'Wishlist',
-                  icon: Heart,
-              },
-              {
-                  href: ROUTES.DASHBOARD_ADDRESSES,
-                  label: 'Delivery addresses',
-                  icon: MapPin,
-              },
-              {
-                  href: ROUTES.NOTIFICATIONS,
-                  label: 'Notifications',
-                  icon: Bell,
-              },
-              {
-                  href: ROUTES.DASHBOARD_PROFILE,
-                  label: 'Profile & security',
-                  icon: User,
-              },
-          ];
+    const crossing = !staff
+        ? null
+        : inAdmin
+          ? {
+                href: ROUTES.HOME,
+                label: 'Open the store',
+                icon: ExternalLink,
+                newTab: true,
+            }
+          : {
+                href: ROUTES.ADMIN_DASHBOARD,
+                label: 'Admin dashboard',
+                icon: LayoutDashboard,
+            };
+
+    /*
+     * Everyone's own account, staff included — they buy things too, and these
+     * pages are reachable from nowhere else once you are inside the admin.
+     */
+    const links = [
+        { href: ROUTES.DASHBOARD, label: 'Overview', icon: Sparkles },
+        {
+            href: ROUTES.DASHBOARD_ORDERS,
+            label: 'My orders',
+            icon: Package,
+        },
+        {
+            href: ROUTES.DASHBOARD_WISHLIST,
+            label: 'Wishlist',
+            icon: Heart,
+        },
+        {
+            href: ROUTES.DASHBOARD_ADDRESSES,
+            label: 'Delivery addresses',
+            icon: MapPin,
+        },
+        {
+            href: ROUTES.NOTIFICATIONS,
+            label: 'Notifications',
+            icon: Bell,
+        },
+        {
+            href: ROUTES.DASHBOARD_PROFILE,
+            label: 'Profile & security',
+            icon: User,
+        },
+    ];
 
     const initial = user.name?.charAt(0).toUpperCase() ?? '?';
 
@@ -176,6 +179,29 @@ export default function UserMenu({ user, variant = 'site' }) {
                                 'Signed in'}
                         </span>
                     </div>
+
+                    {/* Its own group above the rest: it is the one link that
+                        leaves where you are, rather than moving within it. */}
+                    {crossing && (
+                        <ul className="user-menu-list user-menu-crossing">
+                            <li>
+                                <Link
+                                    href={crossing.href}
+                                    role="menuitem"
+                                    onClick={close}
+                                    {...(crossing.newTab
+                                        ? {
+                                              target: '_blank',
+                                              rel: 'noopener noreferrer',
+                                          }
+                                        : {})}
+                                >
+                                    <crossing.icon size={15} />
+                                    <span>{crossing.label}</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    )}
 
                     <ul className="user-menu-list">
                         {links.map(({ href, label, icon: Icon, newTab }) => (
