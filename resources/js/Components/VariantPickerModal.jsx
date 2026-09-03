@@ -97,7 +97,9 @@ export default function VariantPickerModal() {
         try {
             await cartService.addToCart(product.id, 1, chosen.id);
             useAppStore.getState().fetchCartCount();
-            toast.success(`Added "${product.name} — ${chosen.name}" to your cart.`);
+            toast.success(
+                `Added "${product.name} — ${chosen.name}" to your cart.`,
+            );
             close();
 
             // Buy Now asked to go on to checkout; the cart icon did not.
@@ -125,9 +127,17 @@ export default function VariantPickerModal() {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="variant-picker-head">
-                    <h2 className="variant-picker-title">
-                        {product?.name || name || 'Choose an option'}
-                    </h2>
+                    <div>
+                        {/* Says what the dialog is for before naming the
+                            product, so the title can be the product alone
+                            rather than a sentence about it. */}
+                        <span className="variant-picker-eyebrow">
+                            Choose an option
+                        </span>
+                        <h2 className="variant-picker-title">
+                            {product?.name || name || 'This product'}
+                        </h2>
+                    </div>
                     <button
                         type="button"
                         className="variant-picker-close"

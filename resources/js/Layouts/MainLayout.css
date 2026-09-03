@@ -1845,10 +1845,21 @@
     right: 0;
     bottom: 0;
     background-color: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(4px);
+    /* The blur sits on ::before, so the drawer's labels are not inside a
+       filtered layer. See .modal-backdrop-overlay in app.css. */
+    isolation: isolate;
     z-index: 9999;
     display: flex;
     animation: drawerFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-drawer-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: -1;
 }
 
 .mobile-drawer-panel {

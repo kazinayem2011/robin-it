@@ -9,64 +9,124 @@
     position: fixed;
     inset: 0;
     z-index: 1200;
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(11, 15, 25, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+    /* The frosting goes on ::before so the panel's text is not inside a
+       filtered layer — a backdrop-filter ancestor drops subpixel
+       antialiasing and every word comes out soft. */
+    isolation: isolate;
+    animation: variantPickerFade 0.18s ease-out;
+}
+
+.variant-picker-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: -1;
 }
 
 .variant-picker-panel {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     /* Never taller than the window; the list inside scrolls instead. */
     max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
-    background: var(--white, #fff);
-    border-radius: var(--radius-lg, 14px);
-    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+    background: var(--bg-surface, #fff);
+    border-radius: 18px;
+    /* Two shadows: a wide soft one for depth, a tight one to seat the edge.
+       A single large blur reads as a smudge under the panel. */
+    box-shadow:
+        0 24px 60px -12px rgba(15, 23, 42, 0.3),
+        0 6px 18px -8px rgba(15, 23, 42, 0.16);
     overflow: hidden;
+    animation: variantPickerRise 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes variantPickerFade {
+    from {
+        opacity: 0;
+    }
+}
+
+/*
+ * Ends at `transform: none`, not `scale(1)`. A transform left in place keeps
+ * the panel on its own GPU layer and its text softly rasterised for as long
+ * as it is open.
+ */
+@keyframes variantPickerRise {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .variant-picker-head {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    padding: 20px 22px 14px;
+}
+
+.variant-picker-eyebrow {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--gray-500, #64748b);
 }
 
 .variant-picker-title {
     margin: 0;
-    font-size: 0.98rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: var(--dark-900, #0f172a);
     /* A long product name wraps rather than pushing the close button out. */
     overflow-wrap: anywhere;
+    text-wrap: balance;
 }
 
 .variant-picker-close {
     margin-left: auto;
     flex-shrink: 0;
-    padding: 4px;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    background: none;
+    background: var(--gray-100, #f1f5f9);
     color: var(--gray-500, #64748b);
     cursor: pointer;
-    border-radius: var(--radius-sm, 6px);
+    border-radius: 50%;
+    transition:
+        background var(--transition-fast, 0.15s),
+        color var(--transition-fast, 0.15s);
 }
 
 .variant-picker-close:hover {
-    background: var(--gray-100, #f1f5f9);
+    background: var(--gray-200, #e2e8f0);
     color: var(--dark-900, #0f172a);
 }
 
 .variant-picker-note {
     margin: 0;
-    padding: 20px 18px;
+    padding: 8px 22px 22px;
     font-size: 0.86rem;
+    line-height: 1.5;
     color: var(--gray-600, #475569);
     display: flex;
     flex-direction: column;
@@ -77,7 +137,7 @@
 .variant-picker-list {
     list-style: none;
     margin: 0;
-    padding: 12px;
+    padding: 0 14px 4px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -85,23 +145,29 @@
 }
 
 .variant-picker-option {
+    position: relative;
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 11px 13px;
-    border: 1px solid var(--border-color, #e2e8f0);
-    border-radius: var(--radius-md, 10px);
-    background: var(--white, #fff);
+    gap: 12px;
+    padding: 13px 15px;
+    border: 1.5px solid var(--border-color, #e2e8f0);
+    border-radius: 12px;
+    background: var(--bg-surface, #fff);
     cursor: pointer;
     text-align: left;
     transition:
-        border-color var(--transition-fast, 0.15s),
-        background var(--transition-fast, 0.15s);
+        border-color 0.14s ease,
+        background 0.14s ease;
 }
 
 .variant-picker-option:hover:not(:disabled) {
-    border-color: var(--primary, #d12127);
+    border-color: var(--gray-400, #94a3b8);
+}
+
+.variant-picker-option:focus-visible {
+    outline: 2px solid var(--primary, #d12127);
+    outline-offset: 2px;
 }
 
 .variant-picker-option.is-chosen {
@@ -109,13 +175,27 @@
     background: var(--primary-light, #fef2f2);
 }
 
+/* A tick rather than a ring: the row is already tinted, and a second
+   indicator competing with the border reads as two states at once. */
+.variant-picker-option.is-chosen::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 7px;
+    height: 12px;
+    border: solid var(--primary, #d12127);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
 .variant-picker-option.is-out {
-    opacity: 0.55;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .variant-picker-name {
-    font-size: 0.87rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--dark-900, #0f172a);
     overflow-wrap: anywhere;
@@ -125,26 +205,32 @@
 .variant-picker-price {
     margin-left: auto;
     flex-shrink: 0;
-    font-size: 0.87rem;
+    /* Clears the tick on the chosen row. */
+    padding-right: 16px;
+    font-size: 0.9rem;
     font-weight: 700;
-    color: var(--primary, #d12127);
+    color: var(--dark-900, #0f172a);
     font-variant-numeric: tabular-nums;
+}
+
+.variant-picker-option.is-chosen .variant-picker-price {
+    color: var(--primary, #d12127);
 }
 
 .variant-picker-out {
     flex-shrink: 0;
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: var(--gray-500, #64748b);
 }
 
 .variant-picker-actions {
     display: flex;
     gap: 10px;
-    padding: 12px 14px 14px;
-    border-top: 1px solid var(--border-color, #e2e8f0);
+    padding: 14px;
+    margin-top: 4px;
 }
 
 .variant-picker-actions > * {
@@ -153,18 +239,35 @@
     min-width: 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .variant-picker-backdrop,
+    .variant-picker-panel {
+        animation: none;
+    }
+}
+
 @media (prefers-color-scheme: dark) {
     .variant-picker-panel {
         background: #0f172a;
     }
 
     .variant-picker-option {
-        background: #111c33;
-        border-color: rgba(148, 163, 184, 0.25);
+        background: #131f38;
+        border-color: rgba(148, 163, 184, 0.22);
+    }
+
+    .variant-picker-option:hover:not(:disabled) {
+        border-color: rgba(148, 163, 184, 0.45);
     }
 
     .variant-picker-name,
-    .variant-picker-title {
+    .variant-picker-title,
+    .variant-picker-price {
         color: #e2e8f0;
+    }
+
+    .variant-picker-close {
+        background: rgba(148, 163, 184, 0.16);
+        color: #cbd5e1;
     }
 }

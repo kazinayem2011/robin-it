@@ -6,13 +6,23 @@
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(4px);
+    /* The blur lives on ::before, not here — see below. */
+    isolation: isolate;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
     overflow-y: auto;
+}
+
+.quotation-modal-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: -1;
 }
 
 .quotation-sheet-container {

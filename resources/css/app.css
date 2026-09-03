@@ -782,16 +782,36 @@ textarea.has-error:focus,
 
 .glass-panel {
     background: var(--white-alpha-85);
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--white-alpha-60);
+}
+
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--white-alpha-60);
+    z-index: -1;
 }
 
 .dark-glass-panel {
     background: rgba(15, 23, 42, 0.85);
+    position: relative;
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-glass-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: -1;
 }
 
 /* Shimmer & Glow Effects */
@@ -1277,13 +1297,35 @@ textarea.has-error:focus,
     right: 0;
     bottom: 0;
     background: rgba(11, 15, 25, 0.55);
-    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
     padding: 20px;
     animation: fadeIn 0.2s ease-out;
+    /* isolation, not a filter: see ::before below. */
+    isolation: isolate;
+}
+
+/*
+ * The frosting, on a layer of its own behind the dialog.
+ *
+ * backdrop-filter used to sit on the overlay itself — which is an ancestor of
+ * the dialog, so the browser promoted the whole subtree to a GPU layer and
+ * rendered its text without subpixel antialiasing. Every word in every modal
+ * came out soft, and it read as damaged rather than blurred.
+ *
+ * On a pseudo-element the blur still applies to what is behind the overlay,
+ * and the dialog is a sibling of the filtered layer rather than a child of it,
+ * so its text is drawn normally.
+ */
+.modal-backdrop-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: -1;
 }
 
 .modal-dialog-container {
@@ -2411,7 +2453,9 @@ textarea.admin-form-input {
     right: 0;
     bottom: 0;
     background-color: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(6px);
+    /* The blur lives on ::before, so the dialog's text is not inside a
+       filtered layer. See .modal-backdrop-overlay for why. */
+    isolation: isolate;
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -2427,6 +2471,15 @@ textarea.admin-form-input {
     justify-content: center;
     padding: 16px;
     animation: fadeIn 0.18s ease;
+}
+
+.cropper-modal-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: -1;
 }
 
 .cropper-modal-dialog {

@@ -2019,7 +2019,8 @@ a.admin-card:hover,
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    /* The blur lives on ::before, not here — see below. */
+    isolation: isolate;
     z-index: 1050;
     display: flex;
     align-items: center;
@@ -2027,6 +2028,16 @@ a.admin-card:hover,
     padding: 20px;
     overflow-y: auto;
     animation: adminFadeIn 0.18s ease-out;
+}
+
+.admin-modal-overlay::before,
+.admin-modal-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: -1;
 }
 
 @keyframes adminFadeIn {
