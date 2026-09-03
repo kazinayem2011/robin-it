@@ -1,5 +1,22 @@
 import React from 'react';
 import { Modal } from '@/Components/Modal';
+import Select from '@/Components/Select';
+
+const DIVISIONS = [
+    'Dhaka',
+    'Chattogram',
+    'Rajshahi',
+    'Khulna',
+    'Sylhet',
+    'Barishal',
+    'Rangpur',
+    'Mymensingh',
+];
+
+const ZONES = [
+    { value: 'inside_dhaka', label: 'Inside Dhaka' },
+    { value: 'outside_dhaka', label: 'Outside Dhaka' },
+];
 
 export default function AddressFormModal({
     showAddressModal,
@@ -19,32 +36,13 @@ export default function AddressFormModal({
             maxWidth="480px"
         >
             <form onSubmit={handleAddressSubmit} noValidate>
-                <div className="auth-form-group">
-                    <label className="auth-label">Division</label>
-                    <select
-                        value={addressForm.values.division}
-                        name="division"
-                        onBlur={addressForm.handleBlur}
-                        onChange={addressForm.handleChange}
-                        className={`auth-text-input dash-input-pad${addressForm.touched.division && addressForm.errors.division ? ' input-error' : ''}`}
-                    >
-                        <option value="Dhaka">Dhaka</option>
-                        <option value="Chattogram">Chattogram</option>
-                        <option value="Rajshahi">Rajshahi</option>
-                        <option value="Khulna">Khulna</option>
-                        <option value="Sylhet">Sylhet</option>
-                        <option value="Barishal">Barishal</option>
-                        <option value="Rangpur">Rangpur</option>
-                        <option value="Mymensingh">Mymensingh</option>
-                    </select>
-
-                    {addressForm.touched.division &&
-                        addressForm.errors.division && (
-                            <span className="auth-field-error">
-                                {addressForm.errors.division}
-                            </span>
-                        )}
-                </div>
+                <Select
+                    label="Division"
+                    name="division"
+                    formik={addressForm}
+                    options={DIVISIONS}
+                    className="auth-text-input dash-input-pad"
+                />
 
                 <div className="auth-form-group">
                     <label className="auth-label">District</label>
@@ -111,27 +109,14 @@ export default function AddressFormModal({
                  * Kept here so an address saved in the book arrives at
                  * checkout already knowing what it costs to deliver to.
                  */}
-                <div className="auth-form-group">
-                    <label className="auth-label">Delivery Area</label>
-                    <select
-                        value={addressForm.values.delivery_zone}
-                        name="delivery_zone"
-                        onBlur={addressForm.handleBlur}
-                        onChange={addressForm.handleChange}
-                        className={`auth-text-input dash-input-pad${addressForm.touched.delivery_zone && addressForm.errors.delivery_zone ? ' input-error' : ''}`}
-                    >
-                        <option value="">Choose an area…</option>
-                        <option value="inside_dhaka">Inside Dhaka</option>
-                        <option value="outside_dhaka">Outside Dhaka</option>
-                    </select>
-
-                    {addressForm.touched.delivery_zone &&
-                        addressForm.errors.delivery_zone && (
-                            <span className="auth-field-error">
-                                {addressForm.errors.delivery_zone}
-                            </span>
-                        )}
-                </div>
+                <Select
+                    label="Delivery Area"
+                    name="delivery_zone"
+                    formik={addressForm}
+                    placeholder="Choose an area…"
+                    options={ZONES}
+                    className="auth-text-input dash-input-pad"
+                />
 
                 <div className="dash-modal-btn-row">
                     <button

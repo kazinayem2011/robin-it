@@ -25,6 +25,9 @@ Object.defineProperty(window, 'matchMedia', {
 
 window.scrollTo = vi.fn();
 
+// Nor this one, which any list that keeps its highlighted row on screen calls.
+Element.prototype.scrollIntoView = vi.fn();
+
 /*
  * jsdom in this configuration exposes no Storage at all, so anything reading
  * localStorage sees `undefined` rather than an empty store — which is not what

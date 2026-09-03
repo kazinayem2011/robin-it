@@ -486,19 +486,6 @@
     gap: 16px;
 }
 
-.category-scroll-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.74rem;
-    font-weight: 600;
-    color: var(--gray-400);
-    background: var(--bg-surface-subtle);
-    border: 1px solid var(--border-color);
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-}
-
 .category-marquee-wrapper {
     position: relative;
     width: 100%;
@@ -1032,27 +1019,22 @@
     color: var(--gray-500);
 }
 
+/*
+ * The arrow used to be a background image, because the arrow of a native
+ * select cannot be moved. It is a real element now — see Select.jsx — so the
+ * image here would have drawn a second one behind it.
+ */
 .builder-part-select {
     width: 100%;
-    padding: 8px 32px 8px 11px;
+    padding: 8px 11px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background-color: var(--bg-surface);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    appearance: none;
     font-family: inherit;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--dark-900);
     cursor: pointer;
-    text-overflow: ellipsis;
-}
-
-.builder-part-select:focus {
-    outline: none;
-    border-color: var(--primary);
 }
 
 .builder-part-price {

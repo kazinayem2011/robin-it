@@ -1,0 +1,345 @@
+/* ---------------------------------------------------------------------------
+ * The dropdown we draw ourselves. See Select.jsx for why.
+ *
+ * The trigger's base rules are all inside :where(), which has no specificity
+ * at all. That is deliberate: every one of these replaced a <select> that
+ * already carried a class — .plp-sort-select, .builder-part-select,
+ * .form-control-input, .auth-text-input — and those classes are what give each
+ * one its height, width and type. At zero specificity they still win, exactly
+ * as they did over the global `select` rule, and nothing here has to be
+ * restated per caller or fought with !important.
+ * ------------------------------------------------------------------------- */
+
+/*
+ * The wrapper is not a box.
+ *
+ * `contents` makes the button itself the flex or grid child, so a trigger
+ * dropped into a search bar or a toolbar row sits exactly where the select
+ * did. The hidden input is display:none regardless, and the panel is
+ * portalled to the body, so the wrapper has nothing left to lay out.
+ */
+.ui-select {
+    display: contents;
+}
+
+/* ---- the closed control ------------------------------------------------- */
+
+:where(.ui-select-trigger) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    /* auto, not 100% — the native selects these replaced sized to their box,
+       and the callers that want a full-width field say so in their own class. */
+    width: auto;
+    max-width: 100%;
+    height: 46px;
+    padding: 0 10px 0 14px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--dark-900);
+    font-family: inherit;
+    font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+/*
+ * The caller's class sets the padding it wants on both sides, having been
+ * written for a select whose arrow was a background image inside that padding.
+ * Ours is a real element in the flow, so it needs its own room — taken here,
+ * after those classes have had their say, and only on the side the chevron is.
+ */
+.ui-select .ui-select-trigger,
+.ui-select-field .ui-select-trigger {
+    padding-right: 10px;
+}
+
+.ui-select-trigger:hover:not(:disabled) {
+    border-color: var(--gray-300, #cbd5e1);
+}
+
+.ui-select-trigger:focus-visible,
+.ui-select-trigger[aria-expanded='true'] {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(209, 33, 39, 0.12);
+}
+
+.ui-select-trigger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ui-select-trigger.input-error {
+    border-color: var(--danger, #dc2626);
+}
+
+/* A nudge on press belongs to buttons that do something; this one opens a
+   list positioned against its own edge, and moving that edge mid-click makes
+   the panel jump. */
+.ui-select-trigger:active:not(:disabled),
+.ui-select-option:active:not(:disabled) {
+    transform: none;
+}
+
+/* One line, cut with an ellipsis. A long saved address must not stretch the
+   field it sits in or wrap it to two rows. */
+.ui-select-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font: inherit;
+    color: inherit;
+}
+
+.ui-select-trigger.is-empty .ui-select-value {
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.ui-select-chevron {
+    flex-shrink: 0;
+    color: var(--gray-500);
+    transition: transform var(--transition-fast);
+}
+
+.ui-select-trigger[aria-expanded='true'] .ui-select-chevron {
+    transform: rotate(180deg);
+}
+
+/* ---- the panel ---------------------------------------------------------- */
+
+.ui-select-panel {
+    position: fixed;
+    /*
+     * Above the modals, which sit at 9999.
+     *
+     * Measured, not guessed: with the panel at 1200 the address book's
+     * division picker opened *behind* the dialog it belongs to —
+     * elementFromPoint over the open list returned the label of the field
+     * underneath it. A dropdown that renders behind its own modal is broken
+     * every time it is used; a toast (10000) passing under this one for three
+     * seconds is not. That is the whole of the trade.
+     */
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    overflow: hidden;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.28);
+    animation: ui-select-in 0.12s ease-out;
+}
+
+@keyframes ui-select-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+.ui-select-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--gray-400);
+}
+
+.ui-select-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: var(--dark-900);
+}
+
+.ui-select-search button {
+    display: inline-flex;
+    padding: 2px;
+    border: none;
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+}
+
+.ui-select-search button:hover {
+    color: var(--dark-900);
+}
+
+.ui-select-list {
+    flex: 1;
+    margin: 0;
+    padding: 5px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.ui-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: var(--dark-800);
+    text-align: left;
+    cursor: pointer;
+}
+
+/*
+ * Highlight follows the keyboard and the pointer alike — one state, so
+ * arrowing down and hovering cannot both look "current" at once.
+ */
+.ui-select-option.is-active {
+    background: var(--bg-surface-subtle);
+    color: var(--dark-900);
+}
+
+.ui-select-option.is-selected {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.ui-select-option:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ui-select-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.ui-select-option-text > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ui-select-option-text small {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+.ui-select-empty {
+    padding: 14px 12px;
+    font-size: 0.84rem;
+    color: var(--gray-500);
+    text-align: center;
+}
+
+/* ---- on a phone, a sheet ------------------------------------------------ */
+
+/*
+ * The one thing a native select is better at is the OS picker's big touch
+ * targets, so on a phone this becomes a sheet with rows of the same size
+ * rather than a shrunken desktop panel — which would have been the one place
+ * this change made things worse.
+ */
+.ui-select-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(15, 23, 42, 0.45);
+    animation: ui-select-fade 0.15s ease-out;
+}
+
+@keyframes ui-select-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+.ui-select-panel.is-sheet {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    max-height: 70vh;
+    border: none;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    animation: ui-select-up 0.2s ease-out;
+    /* Clear of the home indicator on a phone with no bezel. */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@keyframes ui-select-up {
+    from {
+        transform: translateY(100%);
+    }
+}
+
+.ui-select-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ui-select-sheet-head strong {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--dark-900);
+}
+
+.ui-select-sheet-head button {
+    display: inline-flex;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    color: var(--gray-500);
+    cursor: pointer;
+}
+
+.ui-select-panel.is-sheet .ui-select-list {
+    padding: 6px 8px 10px;
+}
+
+.ui-select-panel.is-sheet .ui-select-option {
+    /* Comfortably over the 44px a thumb needs. */
+    min-height: 48px;
+    font-size: 0.92rem;
+}
+
+.ui-select-panel.is-sheet .ui-select-search {
+    padding: 10px 14px;
+}
+
+/* Someone who has asked their machine to stop moving things. */
+@media (prefers-reduced-motion: reduce) {
+    .ui-select-panel,
+    .ui-select-panel.is-sheet,
+    .ui-select-sheet-backdrop {
+        animation: none;
+    }
+
+    .ui-select-chevron {
+        transition: none;
+    }
+}

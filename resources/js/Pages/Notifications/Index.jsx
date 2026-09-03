@@ -16,6 +16,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { mainLayout } from '@/Layouts/MainLayout';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
+import Select from '@/Components/Select';
 import Tabs from '@/Components/Tabs';
 import { toast } from '@/Components/Toast';
 import { notificationService } from '@/services';
@@ -249,20 +250,21 @@ export default function Notifications({
                             Offering "Low stock" to a customer is a dead end
                             dressed as a choice. */}
                         {kinds.length > 1 && (
-                            <select
+                            <Select
                                 className="admin-filter-picker"
+                                aria-label="Filter by kind"
                                 value={filters.kind || ''}
                                 onChange={(e) =>
                                     go({ kind: e.target.value || undefined })
                                 }
-                            >
-                                <option value="">Everything</option>
-                                {kinds.map((kind) => (
-                                    <option key={kind} value={kind}>
-                                        {kindLabel(kind)}
-                                    </option>
-                                ))}
-                            </select>
+                                options={[
+                                    { value: '', label: 'Everything' },
+                                    ...kinds.map((kind) => ({
+                                        value: kind,
+                                        label: kindLabel(kind),
+                                    })),
+                                ]}
+                            />
                         )}
 
                         <Button

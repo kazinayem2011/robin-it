@@ -5,6 +5,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService, checkoutService, couponService } from '../../services';
 import Button from '../../Components/Button';
 import ProductImage from '../../Components/ProductImage';
+import Select from '../../Components/Select';
 import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
@@ -349,12 +350,14 @@ export default function Checkout({
                                     >
                                         Deliver to
                                     </label>
-                                    <select
+                                    <Select
                                         id="saved-address"
                                         className="form-control-input"
                                         value={chosenAddressId ?? 'new'}
                                         onChange={(e) => {
-                                            const value = e.target.value;
+                                            const value = String(
+                                                e.target.value,
+                                            );
 
                                             if (value === 'new') {
                                                 startNewAddress();
@@ -367,19 +370,17 @@ export default function Checkout({
 
                                             if (addr) applyAddress(addr);
                                         }}
-                                    >
-                                        {addresses.map((addr) => (
-                                            <option
-                                                key={addr.id}
-                                                value={addr.id}
-                                            >
-                                                {addressLabel(addr)}
-                                            </option>
-                                        ))}
-                                        <option value="new">
-                                            + Deliver somewhere else
-                                        </option>
-                                    </select>
+                                        options={[
+                                            ...addresses.map((addr) => ({
+                                                value: addr.id,
+                                                label: addressLabel(addr),
+                                            })),
+                                            {
+                                                value: 'new',
+                                                label: '+ Deliver somewhere else',
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             )}
 

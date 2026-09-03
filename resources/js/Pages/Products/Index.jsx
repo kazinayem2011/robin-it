@@ -13,6 +13,7 @@ import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import { ProductCard } from '../../Components/ProductCard';
 import ProductFilters from '../../Components/ProductFilters';
+import Select from '../../Components/Select';
 import SEOHead from '../../Components/SEOHead';
 import { ProductCardSkeleton } from '../../Components/Skeleton';
 
@@ -40,6 +41,21 @@ import './Index.css';
  * They are only a frame stale: the request for the new ones is already out.
  */
 let lastFacets = null;
+
+/*
+ * The orders the listing can be sorted in.
+ *
+ * `discount_high` and `price_low_high` were accepted by the API all along and
+ * the dropdown never offered them, so neither was reachable without editing
+ * the URL by hand.
+ */
+const SORT_OPTIONS = [
+    { value: 'latest', label: 'Latest Arrivals' },
+    { value: 'discount_high', label: 'Biggest Discount' },
+    { value: 'price_low_high', label: 'Price: Low to High' },
+    { value: 'price_high_low', label: 'Price: High to Low' },
+    { value: 'name_asc', label: 'Name: A to Z' },
+];
 
 export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     /*
@@ -318,28 +334,13 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             <span className="plp-sort-label">
                                 <ArrowUpDown size={14} /> Sort:
                             </span>
-                            <select
+                            <Select
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value)}
                                 className="plp-sort-select"
-                            >
-                                <option value="latest">Latest Arrivals</option>
-                                {/*
-                                 * The API has always accepted these two and
-                                 * the dropdown never offered them, so neither
-                                 * was reachable without hand-editing the URL.
-                                 */}
-                                <option value="discount_high">
-                                    Biggest Discount
-                                </option>
-                                <option value="price_low_high">
-                                    Price: Low to High
-                                </option>
-                                <option value="price_high_low">
-                                    Price: High to Low
-                                </option>
-                                <option value="name_asc">Name: A to Z</option>
-                            </select>
+                                aria-label="Sort products by"
+                                options={SORT_OPTIONS}
+                            />
                         </div>
                     </div>
 

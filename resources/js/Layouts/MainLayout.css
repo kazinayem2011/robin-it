@@ -358,16 +358,29 @@
     color: var(--gray-400);
 }
 
-.search-category-selector select {
+/*
+ * Sits inside the search bar's border rather than drawing one of its own. A
+ * fixed width because the label changes with the choice, and a picker that
+ * resized itself would push the search box around under the cursor.
+ */
+.search-category-select {
+    width: 118px;
+    height: 100%;
+    padding: 0;
     border: none;
-    /* background-color, not the shorthand: the shorthand clears
-       background-image, and that is where the dropdown arrow lives. */
     background-color: transparent;
-    outline: none;
+    box-shadow: none;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--dark-800);
     cursor: pointer;
+}
+
+.search-category-select:hover,
+.search-category-select:focus-visible,
+.search-category-select[aria-expanded='true'] {
+    border: none;
+    box-shadow: none;
 }
 
 .search-text-input {

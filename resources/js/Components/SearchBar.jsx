@@ -12,6 +12,7 @@ import {
 import { productService } from '../services';
 import { useMarqueeDuration } from '../hooks';
 import siteConfig from '../constants/siteConfig';
+import Select from './Select';
 import { ROUTES } from '../constants/endpoints';
 import { formatBdt } from '../utils/formatters';
 import ProductImage from './ProductImage';
@@ -144,16 +145,13 @@ export const SearchBar = ({ onSearch }) => {
             >
                 <div className="search-category-selector">
                     <SlidersHorizontal size={14} className="cat-select-icon" />
-                    <select
+                    <Select
                         value={selectedCategory}
                         onChange={(e) => setSelectedCategory(e.target.value)}
-                    >
-                        {siteConfig.searchCategories.map((cat) => (
-                            <option key={cat.value} value={cat.value}>
-                                {cat.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={siteConfig.searchCategories}
+                        aria-label="Search within"
+                        className="search-category-select"
+                    />
                 </div>
 
                 <input

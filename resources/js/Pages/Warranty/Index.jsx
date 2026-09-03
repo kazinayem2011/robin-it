@@ -6,7 +6,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
-import FormSelect from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import Tabs from '../../Components/Tabs';
 import { toast } from '../../Components/Toast';
 import { warrantyService, storeService } from '../../services';
@@ -637,14 +637,14 @@ export default function WarrantyIndex() {
                                     </div>
 
                                     <div className="form-row-2col">
-                                        <FormSelect
+                                        <Select
                                             label="Defect / Malfunction Type"
                                             name="issue_type"
                                             required
                                             formik={formik}
                                             options={ISSUE_TYPES}
                                         />
-                                        <FormSelect
+                                        <Select
                                             label="Dropoff Showroom or Courier Pickup"
                                             name="dropoff_branch"
                                             required

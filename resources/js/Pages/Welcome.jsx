@@ -22,7 +22,6 @@ import {
     ShieldCheck,
     Truck,
     RefreshCw,
-    Sparkles,
     Cpu,
     MonitorPlay,
     MemoryStick,
@@ -33,6 +32,7 @@ import EmptyState from '../Components/EmptyState';
 import { ProductCard } from '../Components/ProductCard';
 import SEOHead from '../Components/SEOHead';
 import { ProductCardSkeleton } from '../Components/Skeleton';
+import Select from '../Components/Select';
 import Tabs from '../Components/Tabs';
 import { getCategoryIcon } from '../utils/iconMap';
 import { formatBdt } from '../utils/formatters';
@@ -385,10 +385,6 @@ export default function Welcome({ banners = [], blogs = [] }) {
                             <h2>Featured Tech Categories</h2>
                         </div>
                         <div className="category-header-actions">
-                            <span className="category-scroll-hint">
-                                <Sparkles size={13} /> Auto-sliding • Pause on
-                                hover
-                            </span>
                             <Link
                                 href={ROUTES.SHOP}
                                 className="view-all-text-link"
@@ -782,7 +778,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                                         >
                                                             {label}
                                                         </label>
-                                                        <select
+                                                        <Select
                                                             id={`pick-${key}`}
                                                             className="builder-part-select"
                                                             value={value || ''}
@@ -792,29 +788,33 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                                                         .value,
                                                                 )
                                                             }
-                                                        >
-                                                            {Object.entries(
+                                                            /* The price of
+                                                               each part, in
+                                                               the list rather
+                                                               than only after
+                                                               picking it —
+                                                               which is the
+                                                               question a
+                                                               builder is
+                                                               actually asking
+                                                               when they open
+                                                               this. */
+                                                            options={Object.entries(
                                                                 options || {},
                                                             ).map(
                                                                 ([
                                                                     optKey,
                                                                     item,
-                                                                ]) => (
-                                                                    <option
-                                                                        key={
-                                                                            optKey
-                                                                        }
-                                                                        value={
-                                                                            optKey
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            item.name
-                                                                        }
-                                                                    </option>
-                                                                ),
+                                                                ]) => ({
+                                                                    value: optKey,
+                                                                    label: item.name,
+                                                                    hint: formatBdt(
+                                                                        item.price ||
+                                                                            0,
+                                                                    ),
+                                                                }),
                                                             )}
-                                                        </select>
+                                                        />
                                                     </div>
 
                                                     <span className="builder-part-price">

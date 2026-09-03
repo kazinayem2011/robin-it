@@ -99,7 +99,15 @@
     gap: 5px;
 }
 
+/*
+ * A fixed width, not the content's.
+ *
+ * "Latest Arrivals" and "Price: Low to High" are eight characters apart, and a
+ * control that resized itself on every choice moved the toolbar under the
+ * cursor that had just clicked it.
+ */
 .plp-sort-select {
+    width: 190px;
     height: 40px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
@@ -108,15 +116,8 @@
     font-size: 0.84rem;
     font-weight: 600;
     color: var(--dark-900);
-    outline: none;
     cursor: pointer;
     transition: border-color var(--transition-fast);
-}
-
-.plp-sort-select:focus {
-    outline: none;
-    border-color: var(--border-color);
-    box-shadow: none;
 }
 
 /*
