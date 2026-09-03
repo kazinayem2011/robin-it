@@ -140,16 +140,6 @@
     border-bottom: 1px solid var(--border-light, #f1f5f9);
 }
 
-.user-menu-crossing a {
-    color: var(--primary, #d12127);
-}
-
-.user-menu-crossing a:hover,
-.user-menu-crossing a:focus-visible {
-    background: var(--primary-light, #fef2f2);
-    color: var(--primary, #d12127);
-}
-
 .user-menu-list a,
 .user-menu-signout {
     width: 100%;
@@ -174,6 +164,24 @@
     color: var(--dark-900, #0f172a);
 }
 
+/*
+ * After the generic link rule, not before it.
+ *
+ * `.user-menu-crossing a` and `.user-menu-list a` have the same specificity,
+ * so whichever is written last wins — and this sat ten lines earlier, which
+ * meant the one link meant to stand out was drawn in the same grey as the
+ * rest. Order, not !important.
+ */
+.user-menu-crossing a {
+    color: var(--primary, #d12127);
+}
+
+.user-menu-crossing a:hover,
+.user-menu-crossing a:focus-visible {
+    background: var(--primary-light, #fef2f2);
+    color: var(--primary, #d12127);
+}
+
 .user-menu-list svg,
 .user-menu-signout svg {
     flex-shrink: 0;
@@ -192,6 +200,30 @@
 .user-menu-signout:hover,
 .user-menu-signout:focus-visible {
     background: var(--danger-light, #fef2f2);
+}
+
+/*
+ * On a phone the panel cannot be anchored to the trigger.
+ *
+ * It hangs off the right of both headers, which is right while the trigger is
+ * near that edge — but on the storefront at 375px the account button sits on
+ * the left of the tool row, so a 240px panel ran 42px past the left edge of
+ * the window. Measured, not guessed.
+ *
+ * Pinned to the window instead: fixed, inset from both sides, so it cannot
+ * leave the screen wherever the button it belongs to happens to be.
+ */
+@media (max-width: 640px) {
+    .user-menu-panel {
+        position: fixed;
+        top: auto;
+        left: 12px;
+        right: 12px;
+        /* Under the header rather than over it, and never taller than the
+           window — the list grows by one row for staff. */
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
