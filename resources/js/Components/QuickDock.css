@@ -86,9 +86,33 @@
  * it — hiding it here would leave nowhere to reach it from.
  */
 @media (max-width: 640px) {
+    /*
+     * Bottom-right on a phone, not the vertical middle.
+     *
+     * The middle of a 667px window lands in the header — measured on the
+     * compare page, it sat over the category bar and took the last letters
+     * off the page title. There is no room to put a fixed strip beside the
+     * content at this width, so it goes where a floating control belongs on a
+     * phone: out of the way at the bottom, clear of anything above it.
+     */
+    .quick-dock {
+        top: auto;
+        bottom: 16px;
+        right: 12px;
+        transform: none;
+        border-radius: var(--radius-md, 10px);
+        gap: 8px;
+        /* Separate tiles here rather than one welded strip: at this size the
+           pair reads as two buttons, which is what they are. */
+        overflow: visible;
+        box-shadow: none;
+    }
+
     .quick-dock-btn {
         width: 46px;
         height: 46px;
+        border-radius: 50%;
+        box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.45);
     }
 
     .quick-dock-label {
@@ -96,8 +120,8 @@
     }
 
     .quick-dock-count {
-        top: 2px;
-        right: 2px;
+        top: -3px;
+        right: -3px;
     }
 }
 
