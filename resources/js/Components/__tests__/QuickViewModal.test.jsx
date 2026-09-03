@@ -64,7 +64,8 @@ describe('QuickViewModal', () => {
         );
         await person.click(screen.getByRole('button', { name: /add to cart/i }));
 
-        expect(addToCart).toHaveBeenCalledWith(3, 2);
+        // The third argument is the option, null for a product without one.
+        expect(addToCart).toHaveBeenCalledWith(3, 2, null);
     });
 
     it('sends an option product to the picker rather than a doomed request', async () => {
@@ -110,7 +111,8 @@ describe('QuickViewModal', () => {
         expect(more).toBeDisabled();
 
         await person.click(screen.getByRole('button', { name: /add to cart/i }));
-        expect(addToCart).toHaveBeenCalledWith(3, 2);
+        // The third argument is the option, null for a product without one.
+        expect(addToCart).toHaveBeenCalledWith(3, 2, null);
     });
 
     it('does not offer to sell something that is out of stock', () => {

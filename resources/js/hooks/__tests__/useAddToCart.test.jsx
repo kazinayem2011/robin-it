@@ -56,7 +56,7 @@ describe('useAddToCart', () => {
     it('adds a plain product straight to the cart', async () => {
         await click({ id: 7, name: 'Mouse', slug: 'mouse' });
 
-        expect(addToCart).toHaveBeenCalledWith(7, 1);
+        expect(addToCart).toHaveBeenCalledWith(7, 1, null);
         expect(openVariantPicker).not.toHaveBeenCalled();
         expect(visit).not.toHaveBeenCalled();
     });

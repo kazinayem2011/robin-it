@@ -76,7 +76,7 @@ class ProductService
     public function getFilteredProducts(array $filters, int $perPage = self::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
         $query = $this->baseFilteredQuery($filters)
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])
             ->withCatalogAggregates();
 
         // Sorting — price sorts use the discounted price the customer sees.
@@ -288,7 +288,7 @@ class ProductService
     {
         return Product::active()
             ->discounted()
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])
             ->withCatalogAggregates()
             ->take($this->clampLimit($limit))
             ->get()
@@ -301,7 +301,7 @@ class ProductService
     public function getFeaturedProducts(string $tab = 'all', int $limit = 8): Collection
     {
         $query = Product::active()
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])
             ->withCatalogAggregates();
 
         if ($tab !== 'all') {
@@ -430,6 +430,29 @@ class ProductService
             'totalStock' => $stock + $sold,
             'inStock' => $product->isInStock(),
             'stockQuantity' => $stock,
+            /*
+             * Sold by option, and which one to reach for.
+             *
+             * The card decides between adding straight to the cart and asking
+             * which option, and it had no way to tell: has_variants was never
+             * sent, so every card treated an option product as a plain one,
+             * sent a request the server refuses, and showed the refusal —
+             * "Choose an option for … before adding it to your cart" — as
+             * though something had gone wrong.
+             *
+             * The default is the first option that can actually be bought, so
+             * one option means one tap and no question. Only filled when the
+             * relation is already loaded: working it out per card would be a
+             * query per card, and a listing is where that hurts most.
+             */
+            'has_variants' => (bool) $product->has_variants,
+            'default_variant_id' => $this->defaultVariantIdFor($product),
+            'variant_count' => $product->relationLoaded('activeVariants')
+                ? $product->activeVariants->count()
+                : null,
+            // What the quantity control may go down to; the cart and checkout
+            // already respect it, and the card had no idea it existed.
+            'min_order_quantity' => $product->minimumOrderQuantity(),
             // Sold ahead of a delivery. `preorder` is only true when the shelf
             // is empty and the setting is on, so the UI never has to work out
             // which of the two states it is looking at.
@@ -443,6 +466,29 @@ class ProductService
                 $product->short_description ?: 'Official Global Warranty',
             ],
         ];
+    }
+
+    /**
+     * The option a card should reach for when nobody has chosen one.
+     *
+     * The first that can actually be bought, so a product with a single option
+     * — the common case, where the option exists only to carry a serial or a
+     * colour — is one tap rather than a question with one answer.
+     *
+     * Null when the relation was not loaded, which keeps a listing from
+     * running a query per card. The card then asks instead, which is correct
+     * rather than merely cheap.
+     */
+    private function defaultVariantIdFor(Product $product): ?int
+    {
+        if (! $product->has_variants || ! $product->relationLoaded('activeVariants')) {
+            return null;
+        }
+
+        $buyable = $product->activeVariants
+            ->first(fn ($variant) => (int) $variant->stock_quantity > 0);
+
+        return $buyable?->id;
     }
 
     /**
@@ -883,7 +929,7 @@ class ProductService
         $categoryIds = $this->categoryService->getDescendantIds($componentSlug);
 
         $query = Product::active()
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])
             ->withCatalogAggregates();
 
         if (! empty($categoryIds)) {
@@ -1046,7 +1092,7 @@ class ProductService
                     ->orWhere('slug', 'LIKE', "%{$needle}%")
                     ->orWhere('short_description', 'LIKE', "%{$needle}%");
             })
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])
             ->withCatalogAggregates()
             ->take(6)
             ->get()

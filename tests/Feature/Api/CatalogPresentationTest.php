@@ -255,4 +255,77 @@ class CatalogPresentationTest extends TestCase
             ->assertJsonPath('error', true)
             ->assertJsonPath('code', 'NOT_FOUND');
     }
+
+    /**
+     * A card has to know the product is sold by option.
+     *
+     * has_variants was never sent, so every card treated an option product as
+     * a plain one: it posted product-without-option, the server refused, and
+     * the refusal — "Choose an option for … before adding it to your cart" —
+     * was shown to the shopper as though something had broken. The card cannot
+     * decide between adding and asking without this.
+     */
+    public function test_a_card_is_told_when_a_product_is_sold_by_option(): void
+    {
+        $plain = $this->product(['name' => 'Plain Mouse']);
+        $withOptions = $this->product([
+            'name' => 'Vengeance DDR5',
+            'has_variants' => true,
+        ]);
+
+        $cards = collect($this->getJson('/api/'.ApiEndpoints::PRODUCTS_INDEX)->json('data'))
+            ->keyBy('name');
+
+        $this->assertFalse($cards['Plain Mouse']['has_variants']);
+        $this->assertTrue($cards['Vengeance DDR5']['has_variants']);
+
+        // Named so a card can stop offering a quantity it cannot sell.
+        $this->assertArrayHasKey('min_order_quantity', $cards['Plain Mouse']);
+
+        unset($plain, $withOptions);
+    }
+
+    /**
+     * One option is not a choice, so the card is given it and adds it outright
+     * rather than opening a dialog with a single answer.
+     */
+    public function test_a_single_option_is_offered_as_the_default(): void
+    {
+        $product = $this->product(['name' => 'One Option', 'has_variants' => true]);
+
+        $variant = $product->variants()->create([
+            'name' => '16GB',
+            'sku' => 'ONE-16',
+            'price' => 12000,
+            'stock_quantity' => 4,
+            'is_active' => true,
+        ]);
+
+        $card = collect($this->getJson('/api/'.ApiEndpoints::PRODUCTS_INDEX)->json('data'))
+            ->firstWhere('name', 'One Option');
+
+        $this->assertSame(1, $card['variant_count']);
+        $this->assertSame($variant->id, $card['default_variant_id']);
+    }
+
+    /** The default skips an option nobody can buy. */
+    public function test_the_default_option_is_one_that_is_in_stock(): void
+    {
+        $product = $this->product(['name' => 'Two Options', 'has_variants' => true]);
+
+        $product->variants()->create([
+            'name' => '8GB', 'sku' => 'TWO-8', 'price' => 6000,
+            'stock_quantity' => 0, 'is_active' => true,
+        ]);
+        $stocked = $product->variants()->create([
+            'name' => '32GB', 'sku' => 'TWO-32', 'price' => 24000,
+            'stock_quantity' => 3, 'is_active' => true,
+        ]);
+
+        $card = collect($this->getJson('/api/'.ApiEndpoints::PRODUCTS_INDEX)->json('data'))
+            ->firstWhere('name', 'Two Options');
+
+        $this->assertSame($stocked->id, $card['default_variant_id']);
+        $this->assertSame(2, $card['variant_count']);
+    }
 }

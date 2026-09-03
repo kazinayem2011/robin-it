@@ -52,19 +52,32 @@ export default function QuickViewModal({ show, onClose, product }) {
          * broken rather than incomplete.
          */
         if (hasOptions) {
-            onClose();
-            useAppStore.getState().openVariantPicker({
-                slug: product.slug,
-                name: product.name,
-                thenCheckout: false,
-            });
+            // One option is not a question; add the default and say which.
+            const onlyOne =
+                product.variant_count === 1 && product.default_variant_id;
 
-            return;
+            if (!onlyOne) {
+                onClose();
+                useAppStore.getState().openVariantPicker({
+                    slug: product.slug,
+                    name: product.name,
+                    thenCheckout: false,
+                });
+
+                return;
+            }
         }
 
         setAdding(true);
         try {
-            await cartService.addToCart(product.id, quantity);
+            await cartService.addToCart(
+                product.id,
+                quantity,
+                // Set only for a product whose single option is the
+                // default; anything with a real choice went to the
+                // picker above.
+                hasOptions ? product.default_variant_id : null,
+            );
             useAppStore.getState().fetchCartCount();
             toast.success(
                 `Added ${quantity}x "${product.name}" to cart!`,
