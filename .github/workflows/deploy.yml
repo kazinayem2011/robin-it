@@ -59,7 +59,25 @@ jobs:
       # public/build is gitignored and there is no Node on the server, so this
       # is the only place the production assets can come from. Without them
       # every page renders as unstyled HTML.
+      #
+      # The VITE_ values have to be here rather than in the server's .env.
+      # Vite compiles them into the bundle, and this is where the bundle is
+      # made — the server never runs a build, so anything set only in its .env
+      # is invisible to the browser. Pusher was configured on the server and
+      # the bell still fell back to fetching for exactly this reason.
+      #
+      # Both are public by nature: they ship inside the JavaScript every
+      # visitor downloads. They are repository *variables*, not secrets, so
+      # that is stated rather than implied. The Pusher secret is not here and
+      # must never be — it belongs only in the server's .env.
+      #
+      # Absent, the shop still works: initEcho() returns null and the bell
+      # falls back to fetching, which is the difference between real-time
+      # being switched off and the site being broken.
       - name: Build production assets
+        env:
+          VITE_PUSHER_APP_KEY: ${{ vars.VITE_PUSHER_APP_KEY }}
+          VITE_PUSHER_APP_CLUSTER: ${{ vars.VITE_PUSHER_APP_CLUSTER }}
         run: npm run build
 
       # A test file co-located under Pages was once picked up by the Inertia
