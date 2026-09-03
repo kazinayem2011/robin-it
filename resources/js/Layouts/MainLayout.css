@@ -230,18 +230,29 @@
  */
 /* Outlined on the dark bar rather than filled — it is a convenience, not the
    thing the page is selling. */
+/*
+ * Track Order, in the shop's red.
+ *
+ * It was an outlined pill that only filled on hover — so on a bar of grey
+ * links it was quieter than the hotline beside it, and the one thing a
+ * customer with an order already placed comes back for looked like another
+ * link. Filled, it is the single coloured thing on a near-black strip and
+ * reads first.
+ */
 .ticker-link-featured {
-    background: transparent;
+    background: var(--primary);
     color: var(--white) !important;
     padding: 3px 12px;
     border-radius: var(--radius-full);
-    border: 1px solid var(--white-alpha-40);
+    border: 1px solid var(--primary);
     font-weight: 700;
 }
 
 .ticker-link-featured:hover {
-    background: var(--primary);
-    border-color: var(--primary);
+    /* Darker, not lighter: the bar behind it is near-black, so lifting the
+       fill would shrink the contrast that makes it stand out. */
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 
 .ticker-divider {
