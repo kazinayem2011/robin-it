@@ -282,7 +282,7 @@ export default function AdminBanners({ banners = [] }) {
                                         value={formik.values.image_path}
                                         onChange={formik.handleChange}
                                         placeholder="/images/hero_banner_beast_pc.jpg"
-                                        className="form-input admin-input-flex-1"
+                                        className="auth-text-input admin-input-flex-1"
                                     />
                                     <Button
                                         type="button"

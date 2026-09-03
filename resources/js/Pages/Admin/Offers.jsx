@@ -366,7 +366,7 @@ export default function AdminOffers({ offers = [] }) {
                                         value={formik.values.image_path}
                                         onChange={formik.handleChange}
                                         placeholder="/images/offers/desktop-deal.jpg"
-                                        className="form-input admin-input-flex-1"
+                                        className="auth-text-input admin-input-flex-1"
                                     />
                                     <Button
                                         type="button"

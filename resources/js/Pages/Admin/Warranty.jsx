@@ -216,7 +216,7 @@ export default function AdminWarranty({ claims = [] }) {
                                             setDiagnosticNotes(e.target.value)
                                         }
                                         rows={4}
-                                        className="form-input w-full"
+                                        className="auth-text-input"
                                         placeholder="e.g. Diagnostic complete. Replaced blown VRM capacitor on power stage. Unit passed 24h FurMark burn-in test at 68°C."
                                     />
                                 </div>
