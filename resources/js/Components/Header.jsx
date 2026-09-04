@@ -319,10 +319,15 @@ export const Header = () => {
                             </div>
                         )}
 
-                        {/* Wishlist */}
+                        {/*
+                         * Wishlist. Hidden on a phone — see
+                         * .header-tool-wishlist: the row has to fit beside the
+                         * logo there, and the account menu carries a wishlist
+                         * link already.
+                         */}
                         <Link
                             href={ROUTES.WISHLIST}
-                            className="header-tool-btn"
+                            className="header-tool-btn header-tool-wishlist"
                             title="Saved Wishlist"
                         >
                             <div className="tool-icon-box">

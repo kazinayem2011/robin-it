@@ -2266,6 +2266,70 @@
     .header-grid-container {
         flex-wrap: wrap;
     }
+
+    /*
+     * The hamburger, the logo, the bell and the account on one row.
+     *
+     * They were on two: the brand box and the tools each took a line of their
+     * own, so the header was four rows deep before a product was in sight.
+     * The brand box gives up the space it was holding, and the logo shrinks
+     * into whatever is left rather than pushing the tools onto their own line.
+     */
+    .header-brand-box {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 8px;
+    }
+
+    /*
+     * The logo takes what is left of the row rather than its natural width.
+     *
+     * 34px of hamburger, two 44px tools and the gaps leave about 180px on a
+     * 390px screen. `height: auto` here was a mistake on the way: it released
+     * the image to its own 542px and pushed everything onto a second line.
+     */
+    .header-brand-box .brand-logo-img-header {
+        max-width: 170px;
+    }
+
+    .header-action-group {
+        gap: 6px;
+    }
+
+    /*
+     * The wishlist goes. Three tools and a logo do not fit on a phone row, and
+     * of the three it is the one already reachable from the account menu —
+     * the bell is time-sensitive and the account is how you sign in.
+     */
+    .header-tool-wishlist {
+        display: none;
+    }
+
+    /*
+     * And the category bar goes with it. The hamburger opens the same tree,
+     * in a drawer with room to read it, so this was a second way to the same
+     * place costing a whole row above the fold.
+     */
+    .site-mega-nav {
+        display: none;
+    }
+
+    /*
+     * The search row fits inside itself.
+     *
+     * 147 + 188 + 48 came to 383 in a 358px bar, so the magnifier was pushed
+     * out of sight. An input's automatic minimum is its placeholder, which is
+     * a sentence long here, so `flex: 1` could not shrink it — min-width: 0 is
+     * what lets it. The category picker gives up some width too: at 147px it
+     * was taking 41% of the bar to say "All Tech".
+     */
+    .search-text-input {
+        min-width: 0;
+    }
+
+    .search-category-select {
+        width: 116px;
+    }
     .main-search-wrapper {
         order: 3;
         /*
