@@ -221,10 +221,22 @@ export default function AdminSettings({
         enableReinitialize: true,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                await adminService.updateSettings(values);
-                toast.success(
-                    'Site settings and Email SMTP configuration saved successfully!',
-                );
+                const res = await adminService.updateSettings(values);
+
+                /*
+                 * What was saved, rather than two of the seven tabs.
+                 *
+                 * This said "Site settings and Email SMTP configuration saved"
+                 * whichever tab you were on — so saving the SMS provider, or a
+                 * VAT rate, or the ticker, told you about SMTP. One save does
+                 * write every tab, so it was not false, but naming two of them
+                 * and omitting SMS, shipping, VAT, SEO and the ticker reads as
+                 * though the others were left behind.
+                 *
+                 * The server already says it plainly, and the test-email button
+                 * beside this already prefers the server's own words.
+                 */
+                toast.success(res?.message || 'Settings saved.');
                 router.reload({ only: ['settings'] });
             } catch (err) {
                 toast.error(err?.message || 'Failed to update settings.');
