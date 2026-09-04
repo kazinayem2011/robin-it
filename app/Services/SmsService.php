@@ -306,8 +306,18 @@ class SmsService
 
     private function viaGreenWeb(string $phone, string $message, string $token): bool
     {
-        $url = $this->setting('sms_url')
-            ?: config('services.sms.greenweb_url', 'http://api.greenweb.com.bd/api.php?json');
+        /*
+         * GreenWeb's own endpoint, never the generic gateway's.
+         *
+         * This used to prefer the stored `sms_url`, which is the *other*
+         * gateway's address — the Settings form says as much, and the two are
+         * only ever used one or the other. So a shop that had a generic
+         * gateway and then switched to GreenWeb posted its GreenWeb token,
+         * GreenWeb-shaped, to the old endpoint, and got back a complaint about
+         * missing api_key and senderid. GREENWEB_SMS_URL is there for anyone
+         * who genuinely needs to point GreenWeb somewhere else.
+         */
+        $url = config('services.sms.greenweb_url', 'http://api.greenweb.com.bd/api.php?json');
 
         try {
             $response = Http::connectTimeout(15)
@@ -452,7 +462,7 @@ class SmsService
     private static function scrub(string $text): string
     {
         return preg_replace(
-            '/((?:api_?key|token|password|passwd|secret)["\']?\s*[:=]\s*"?)([^&"\s,}]+)/i',
+            '/((?:api_?key|token|password|passwd|secret)["\']?\s*[:=]\s*"?)([^&"\s,}\[\]{]+)/i',
             '$1[redacted]',
             $text
         ) ?? $text;

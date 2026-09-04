@@ -150,6 +150,35 @@ class SmsTest extends TestCase
         $this->assertFalse($this->sms->send('01712345678', 'Hello'));
     }
 
+    /**
+     * The one that made a working token look broken.
+     *
+     * `sms_url` is the *other* gateway's address — the Settings screen says so,
+     * and the two paths are only ever used one or the other. viaGreenWeb() was
+     * preferring it anyway, so a shop that had a generic gateway and then moved
+     * to GreenWeb posted its GreenWeb token, GreenWeb-shaped, to the old
+     * provider, and got back a complaint about a missing api_key. Found by
+     * doing exactly that.
+     */
+    public function test_a_greenweb_token_always_goes_to_greenweb(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(['*' => Http::response('{"status":"SENT"}')]);
+
+        config(['services.sms.greenweb_url' => 'https://greenweb.test/api']);
+
+        SiteSetting::create(['key' => 'sms_enabled', 'value' => '1']);
+        SiteSetting::create(['key' => 'sms_token', 'value' => SmsService::encryptSecret('greenweb-token')]);
+        // Left behind by a previous provider, as it would be after a switch.
+        SiteSetting::create(['key' => 'sms_url', 'value' => 'https://old-provider.test/api/sendsms']);
+        SiteSetting::flushCache();
+
+        $this->assertTrue(app(SmsService::class)->send('01712345678', 'Hello'));
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://greenweb.test/api'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'old-provider.test'));
+    }
+
     public function test_nothing_is_sent_with_no_gateway_and_no_log_fallback(): void
     {
         config(['services.sms.token' => null, 'services.sms.url' => null]);
