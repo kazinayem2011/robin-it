@@ -796,153 +796,174 @@ export default function AdminSettings({
                         </div>
                     )}
 
-                    {/* TAB 4: Announcement Ticker */}
-                    {/* TAB: SEO & Social */}
                     {activeTab === 'sms' && (
-                        <div className="admin-settings-panel">
-                            <p className="admin-field-hint admin-settings-intro">
-                                Most customers here read a text and never open
-                                the email. Every message costs, so choose which
-                                ones are worth sending — your courier already
-                                texts the customer on dispatch and delivery.
-                            </p>
+                        <div className="admin-card">
+                            <div className="admin-card-header">
+                                <div className="admin-card-title-inline">
+                                    <MessageSquare
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        SMS &amp; Order Notifications
+                                    </h3>
+                                </div>
+                            </div>
+                            <div className="admin-card-body admin-settings-panel">
+                                <p className="admin-field-hint admin-settings-intro">
+                                    Most customers here read a text and never
+                                    open the email. Every message costs, so
+                                    choose which ones are worth sending — your
+                                    courier already texts the customer on
+                                    dispatch and delivery.
+                                </p>
 
-                            <Checkbox
-                                name="sms_enabled"
-                                label="Send order updates by SMS"
-                                checked={formik.values.sms_enabled}
-                                onChange={formik.handleChange}
-                            />
+                                <Checkbox
+                                    name="sms_enabled"
+                                    label="Send order updates by SMS"
+                                    checked={formik.values.sms_enabled}
+                                    onChange={formik.handleChange}
+                                />
 
-                            {/*
-                             * Who sends, chosen rather than guessed — and only
-                             * that provider's fields are shown, so a leftover
-                             * credential from a previous one cannot look live.
-                             */}
-                            <Select
-                                label="Provider"
-                                name="sms_provider"
-                                formik={formik}
-                                options={smsProviders}
-                                helperText={
-                                    smsProviders.find(
-                                        (p) =>
-                                            p.value ===
-                                            formik.values.sms_provider,
-                                    )?.hint
-                                }
-                            />
-
-                            {formik.values.sms_provider === 'greenweb' ? (
-                                <FormInput
-                                    label="GreenWeb token"
-                                    name="sms_token"
-                                    type="password"
+                                {/*
+                                 * Who sends, chosen rather than guessed — and only
+                                 * that provider's fields are shown, so a leftover
+                                 * credential from a previous one cannot look live.
+                                 */}
+                                <Select
+                                    label="Provider"
+                                    name="sms_provider"
                                     formik={formik}
-                                    placeholder={
-                                        smsSecretsSet.sms_token
-                                            ? 'Saved — type to replace'
-                                            : 'The token from your GreenWeb account'
+                                    options={smsProviders}
+                                    helperText={
+                                        smsProviders.find(
+                                            (p) =>
+                                                p.value ===
+                                                formik.values.sms_provider,
+                                        )?.hint
                                     }
                                 />
-                            ) : (
-                                <>
-                                    <div className="form-row-2col">
-                                        <FormInput
-                                            label="Gateway URL"
-                                            name="sms_url"
-                                            formik={formik}
-                                            placeholder="https://your-provider/api/send"
-                                        />
-                                        <FormInput
-                                            label="Sender ID"
-                                            name="sms_sender_id"
-                                            formik={formik}
-                                            placeholder="The name or number messages arrive from"
-                                        />
-                                    </div>
 
+                                {formik.values.sms_provider === 'greenweb' ? (
                                     <FormInput
-                                        label="Gateway API key"
-                                        name="sms_api_key"
+                                        label="GreenWeb token"
+                                        name="sms_token"
                                         type="password"
                                         formik={formik}
                                         placeholder={
-                                            smsSecretsSet.sms_api_key
+                                            smsSecretsSet.sms_token
                                                 ? 'Saved — type to replace'
-                                                : ''
+                                                : 'The token from your GreenWeb account'
                                         }
                                     />
-                                </>
-                            )}
-
-                            {(smsSecretsSet.sms_token ||
-                                smsSecretsSet.sms_api_key) && (
-                                <p className="admin-field-hint">
-                                    A credential is already saved. Leave the
-                                    field blank to keep it, or type a new one to
-                                    replace it — like the SMTP password, it is
-                                    never sent back to this page.
-                                </p>
-                            )}
-
-                            <p className="admin-field-hint">
-                                Only the provider chosen above is used, so a
-                                credential left behind by a previous one cannot
-                                send anything. With none configured, and only on
-                                a local machine, messages are written to the log
-                                so the flow can be followed without a provider
-                                account.
-                            </p>
-
-                            {smsEvents.length > 0 && (
-                                <div
-                                    className={`admin-sms-events${formik.values.sms_enabled ? '' : ' is-muted'}`}
-                                >
-                                    <h4 className="admin-settings-subhead">
-                                        Which messages to send
-                                    </h4>
-
-                                    {smsEvents.map((event) => (
-                                        <label
-                                            key={event.key}
-                                            className="admin-sms-event"
-                                        >
-                                            {/*
-                                             * The row is the affordance, so
-                                             * this is the design system's
-                                             * checkbox class on a plain input
-                                             * rather than the Checkbox
-                                             * component, whose own wrapper
-                                             * would shrink the hit area to
-                                             * the tick.
-                                             */}
-                                            <input
-                                                type="checkbox"
-                                                className="custom-checkbox-input"
-                                                name={event.key}
-                                                checked={Boolean(
-                                                    formik.values[event.key],
-                                                )}
-                                                onChange={formik.handleChange}
-                                                disabled={
-                                                    !formik.values.sms_enabled
-                                                }
+                                ) : (
+                                    <>
+                                        <div className="form-row-2col">
+                                            <FormInput
+                                                label="Gateway URL"
+                                                name="sms_url"
+                                                formik={formik}
+                                                placeholder="https://your-provider/api/send"
                                             />
-                                            <span>
-                                                <strong>{event.label}</strong>
-                                                <small>{event.hint}</small>
-                                            </span>
-                                        </label>
-                                    ))}
+                                            <FormInput
+                                                label="Sender ID"
+                                                name="sms_sender_id"
+                                                formik={formik}
+                                                placeholder="The name or number messages arrive from"
+                                            />
+                                        </div>
 
-                                    {!formik.values.sms_enabled && (
-                                        <p className="admin-field-hint">
-                                            Turn SMS on above to change these.
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                                        <FormInput
+                                            label="Gateway API key"
+                                            name="sms_api_key"
+                                            type="password"
+                                            formik={formik}
+                                            placeholder={
+                                                smsSecretsSet.sms_api_key
+                                                    ? 'Saved — type to replace'
+                                                    : ''
+                                            }
+                                        />
+                                    </>
+                                )}
+
+                                {(smsSecretsSet.sms_token ||
+                                    smsSecretsSet.sms_api_key) && (
+                                    <p className="admin-field-hint">
+                                        A credential is already saved. Leave the
+                                        field blank to keep it, or type a new
+                                        one to replace it — like the SMTP
+                                        password, it is never sent back to this
+                                        page.
+                                    </p>
+                                )}
+
+                                <p className="admin-field-hint">
+                                    Only the provider chosen above is used, so a
+                                    credential left behind by a previous one
+                                    cannot send anything. With none configured,
+                                    and only on a local machine, messages are
+                                    written to the log so the flow can be
+                                    followed without a provider account.
+                                </p>
+
+                                {smsEvents.length > 0 && (
+                                    <div
+                                        className={`admin-sms-events${formik.values.sms_enabled ? '' : ' is-muted'}`}
+                                    >
+                                        <h4 className="admin-settings-subhead">
+                                            Which messages to send
+                                        </h4>
+
+                                        {smsEvents.map((event) => (
+                                            <label
+                                                key={event.key}
+                                                className="admin-sms-event"
+                                            >
+                                                {/*
+                                                 * The row is the affordance, so
+                                                 * this is the design system's
+                                                 * checkbox class on a plain input
+                                                 * rather than the Checkbox
+                                                 * component, whose own wrapper
+                                                 * would shrink the hit area to
+                                                 * the tick.
+                                                 */}
+                                                <input
+                                                    type="checkbox"
+                                                    className="custom-checkbox-input"
+                                                    name={event.key}
+                                                    checked={Boolean(
+                                                        formik.values[
+                                                            event.key
+                                                        ],
+                                                    )}
+                                                    onChange={
+                                                        formik.handleChange
+                                                    }
+                                                    disabled={
+                                                        !formik.values
+                                                            .sms_enabled
+                                                    }
+                                                />
+                                                <span>
+                                                    <strong>
+                                                        {event.label}
+                                                    </strong>
+                                                    <small>{event.hint}</small>
+                                                </span>
+                                            </label>
+                                        ))}
+
+                                        {!formik.values.sms_enabled && (
+                                            <p className="admin-field-hint">
+                                                Turn SMS on above to change
+                                                these.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
