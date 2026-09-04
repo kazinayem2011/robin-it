@@ -211,3 +211,29 @@
 .notif-see-all:hover {
     background: var(--gray-50, #f8fafc);
 }
+
+/*
+ * On a phone it spans the screen instead of hanging off the left of it.
+ *
+ * `right: 0` anchors the panel to the bell, and the bell sits about 300px
+ * across a 390px screen — so a 340px panel started at -44px and its first 44
+ * were simply not there. `max-width: calc(100vw - 32px)` did not help: the
+ * panel was already narrower than that, and the problem was where it began,
+ * not how wide it was.
+ *
+ * The same fix the account menu beside it already carries: inset from both
+ * edges, so neither one can decide the panel's position on its own.
+ */
+@media (max-width: 640px) {
+    .notif-panel {
+        position: fixed;
+        top: auto;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-width: none;
+        /* Never taller than the window — the list grows with the unread. */
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+}
