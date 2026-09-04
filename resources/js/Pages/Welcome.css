@@ -1422,6 +1422,11 @@
  * and in the PC builder's component picker, so all three were the same.
  */
 @media (max-width: 640px) {
+    /* 32px all round leaves little for the part rows inside it on a phone. */
+    .pc-builder-interactive-panel {
+        padding: 24px 20px;
+    }
+
     /*
      * The flash bar carries a badge, a countdown and a "view all" button on
      * one unwrappable line. On a phone there is room for about half of that:
