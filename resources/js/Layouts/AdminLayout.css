@@ -810,6 +810,33 @@ a.admin-card:hover,
 }
 
 /*
+ * A header carrying a tab strip gives it a row of its own.
+ *
+ * The strip takes what the row's other controls leave, and on the orders
+ * header that is the search box and "Take an order". Measured across the
+ * widths the admin is actually used at, the six status tabs — 506px of them —
+ * had 8px to show themselves in at 820px, 52px at 900px and 92px at 1200px.
+ * The filter that decides what the page lists was a sliver at every size but
+ * a very wide desktop, and it hides its own scrollbar, so there was nothing
+ * to say the other five statuses were there at all.
+ *
+ * Only headers with a strip wrap; the rest keep the single line they were
+ * designed around. :has() is what makes that distinction, and where it is not
+ * supported nothing changes — the strip stays as it is today rather than
+ * breaking.
+ */
+.admin-header-actions:has(.admin-tabs-bar) {
+    flex-wrap: wrap;
+}
+
+.admin-header-actions:has(.admin-tabs-bar) .admin-tabs-bar {
+    flex-basis: 100%;
+    /* Last, so the search box and the page's action keep each other company
+       on the row above instead of taking one line each. */
+    order: 1;
+}
+
+/*
  * One height for everything in the bar, whatever the page put there and
  * whatever scale it came from.
  */
@@ -3438,8 +3465,50 @@ a.admin-card:hover,
         display: none;
     }
 
+    /*
+     * The bar was told to wrap while the rule above it still fixed the height
+     * at 70px. So on a phone the title took a row of its own and pushed the
+     * bell, the store link and the account menu onto a third — all of it
+     * outside a bar that was still 70px tall and sticky at z-index 90, so the
+     * three of them were painted over the top of the page's own content.
+     *
+     * One row, and the title gives up its width rather than its position: it
+     * is the only part here that can be shortened without losing a control.
+     */
     .admin-topbar {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        padding: 0 16px;
+        gap: 10px;
+    }
+
+    .admin-page-title-group {
+        flex: 1 1 0;
+        /* Without this the group's min-content width is the longest word in
+           the subtitle, and a flex item will not shrink below that. */
+        min-width: 0;
+    }
+
+    .admin-page-title-group h2 {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* A sentence of prose has nowhere to go on one 70px row. */
+    .admin-page-title-group p {
+        display: none;
+    }
+
+    .admin-topbar-actions {
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    /* The avatar is its own affordance; the arrow beside it is 14px the page
+       title has a better use for. */
+    .admin-topbar-actions .user-menu-chevron {
+        display: none;
     }
 
     /* Groups of buttons in a card header stack instead of running off the
@@ -3448,6 +3517,38 @@ a.admin-card:hover,
     .admin-header-actions {
         flex-wrap: wrap;
         width: 100%;
+    }
+
+    /*
+     * The strip takes the width of its row rather than what the row's other
+     * controls leave it. On a phone that was 122px for six order statuses —
+     * "All" and half of "Pending" — where the row itself is 278px.
+     *
+     * Only the basis changes. The `width: 0` above it is what keeps the strip
+     * out of the group's min-content, and setting a width here instead put
+     * the group's minimum at the full 506px the tabs want, which pushed it
+     * 174px past the side of the card with no scroll left to recover it.
+     */
+    .admin-header-actions .admin-tabs-bar {
+        flex-basis: 100%;
+    }
+
+    /*
+     * 506px of tabs in 278px still has to be dragged, and a bar that hides
+     * its scrollbar gives no sign there is anything past the edge.
+     */
+    .admin-header-actions .admin-tabs-bar {
+        scrollbar-width: thin;
+    }
+
+    .admin-header-actions .admin-tabs-bar::-webkit-scrollbar {
+        display: block;
+        height: 3px;
+    }
+
+    .admin-header-actions .admin-tabs-bar::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
     }
 
     .admin-summary-strip,
