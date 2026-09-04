@@ -982,3 +982,34 @@
         align-items: stretch;
     }
 }
+
+/*
+ * The account pages kept their desktop padding all the way down to a phone:
+ * 28px on every side of the panel, inside a container adding 32px above and
+ * 60px below. On a 390px screen that is 56px of the width spent on air before
+ * an order row, an address card or the profile form gets any, and 92px of
+ * height before the first of them appears.
+ *
+ * 24px 20px is what the homepage panels and the PC builder already drop to at
+ * this width, so the account pages now stop somewhere the rest of the site
+ * recognises rather than at a number of their own.
+ */
+@media (max-width: 640px) {
+    .dashboard-layout-container {
+        padding: 16px 0 40px;
+    }
+
+    .dashboard-main-surface {
+        padding: 24px 20px;
+    }
+
+    /*
+     * 480px of guaranteed height keeps a desktop panel from collapsing next to
+     * the sidebar beside it. On a phone the sidebar is above, not beside, so
+     * there is nothing to match — it only strands the empty states ("You
+     * haven't placed any orders yet") at the top of a tall white box.
+     */
+    .dashboard-main-surface {
+        min-height: 320px;
+    }
+}
