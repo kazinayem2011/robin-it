@@ -2330,6 +2330,44 @@
     .search-category-select {
         width: 116px;
     }
+
+    /*
+     * Tighter rows, and the icons squared up with the search box.
+     *
+     * The header was 14px of padding, a 56px tool row, a 16px gap and then the
+     * search — with the bell carrying a text label while the avatar beside it
+     * carried none, so the two sat at different heights and the gap under the
+     * bell read as a mistake. The labels go on a phone: an alarm bell and a
+     * profile circle need no caption, and dropping them squares the row up and
+     * takes 20px out of the header.
+     */
+    .site-main-header {
+        padding-block: 10px;
+    }
+
+    .header-grid-container {
+        row-gap: 10px;
+    }
+
+    .header-action-group .tool-label {
+        display: none;
+    }
+
+    .header-action-group .tool-icon-box {
+        width: 38px;
+        height: 38px;
+    }
+
+    /*
+     * The boxes already lined up with the search bar; the glyphs inside them
+     * did not, because each carried its own padding. Removing it puts the
+     * hamburger's first bar and the chevron's tip on the same verticals as the
+     * edges of the search box below.
+     */
+    .mobile-menu-trigger-btn {
+        padding: 0;
+        width: 34px;
+    }
     .main-search-wrapper {
         order: 3;
         /*
