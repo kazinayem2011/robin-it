@@ -43,6 +43,16 @@ class SettingController extends Controller
                 ->mapWithKeys(fn ($key) => [$key => SmsService::isSecretSet($key)]),
             // Shipped rather than repeated in the page, so which messages
             // exist and which are on out of the box is decided in one place.
+            // Shipped rather than written into the page, so the list of
+            // providers and which fields each needs is decided in one place.
+            'smsProviders' => collect(SmsService::PROVIDERS)
+                ->map(fn ($provider, $key) => [
+                    'value' => $key,
+                    'label' => $provider['label'],
+                    'hint' => $provider['hint'],
+                    'fields' => $provider['fields'],
+                ])
+                ->values(),
             'smsEvents' => collect(SmsService::EVENTS)
                 ->map(fn ($event, $key) => [
                     'key' => 'sms_on_'.$key,

@@ -29,6 +29,7 @@ class SmsService
     /** What the Settings screen stores. */
     public const KEYS = [
         'sms_enabled',
+        'sms_provider',
         'sms_token',
         'sms_url',
         'sms_api_key',
@@ -40,6 +41,35 @@ class SmsService
         'sms_on_returned',
         'sms_on_refund',
         'sms_on_payment_due',
+    ];
+
+    public const PROVIDER_GREENWEB = 'greenweb';
+
+    public const PROVIDER_CUSTOM = 'custom';
+
+    /**
+     * Who sends the messages, said out loud rather than guessed.
+     *
+     * This used to be inferred: a token meant GreenWeb, a URL and key meant
+     * the other one. That reads fine until a shop switches — the old
+     * provider's fields are still saved, and nothing on the screen says which
+     * set is live. It cost an afternoon here, with a good GreenWeb token being
+     * posted to a previous provider's endpoint and the reply complaining about
+     * fields GreenWeb does not have.
+     *
+     * @var array<string, array{label: string, hint: string, fields: list<string>}>
+     */
+    public const PROVIDERS = [
+        self::PROVIDER_GREENWEB => [
+            'label' => 'GreenWeb',
+            'hint' => 'One token is all it needs — the sender ID is fixed to your GreenWeb account.',
+            'fields' => ['sms_token'],
+        ],
+        self::PROVIDER_CUSTOM => [
+            'label' => 'Another gateway',
+            'hint' => 'For BulkSMSBD, MIMSMS, Alpha Net and most other resellers: they take the same api_key, senderid and phone parameters.',
+            'fields' => ['sms_url', 'sms_api_key', 'sms_sender_id'],
+        ],
     ];
 
     /**
@@ -104,7 +134,10 @@ class SmsService
             $message
         ) ?? $message;
 
-        if ($token = $this->setting('sms_token')) {
+        $provider = $this->provider();
+        $token = $this->setting('sms_token');
+
+        if ($provider === self::PROVIDER_GREENWEB && $token) {
             return $this->viaGreenWeb($phone, $message, $token);
         }
 
@@ -112,7 +145,7 @@ class SmsService
         $key = $this->setting('sms_api_key');
         $sender = $this->setting('sms_sender_id');
 
-        if ($url && $key && $sender) {
+        if ($provider === self::PROVIDER_CUSTOM && $url && $key && $sender) {
             return $this->viaGenericGateway($phone, $message, $url, $key, $sender);
         }
 
@@ -218,6 +251,27 @@ class SmsService
         }
 
         return (bool) $stored && $stored !== '0';
+    }
+
+    /**
+     * Who is configured to send.
+     *
+     * A shop that chose one is held to it, so a leftover credential from a
+     * previous provider cannot quietly take over. A shop that has never seen
+     * this setting falls back to the old rule — whichever credential is
+     * present — so nothing that was working stops.
+     */
+    public function provider(): string
+    {
+        $chosen = $this->setting('sms_provider');
+
+        if (isset(self::PROVIDERS[$chosen])) {
+            return $chosen;
+        }
+
+        return filled($this->setting('sms_token'))
+            ? self::PROVIDER_GREENWEB
+            : self::PROVIDER_CUSTOM;
     }
 
     public function enabled(): bool

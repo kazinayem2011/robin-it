@@ -179,6 +179,72 @@ class SmsTest extends TestCase
         Http::assertNotSent(fn ($request) => str_contains($request->url(), 'old-provider.test'));
     }
 
+    /**
+     * A chosen provider is held to, even with the other one's fields filled.
+     *
+     * Which gateway sends used to be inferred from whichever credential
+     * happened to be present. That reads fine until a shop switches: the old
+     * provider's fields are still saved, nothing on the screen says which set
+     * is live, and the wrong one can win.
+     */
+    public function test_the_chosen_provider_is_the_one_used(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(['*' => Http::response('{"status":"SENT"}')]);
+
+        config(['services.sms.greenweb_url' => 'https://greenweb.test/api']);
+
+        SiteSetting::create(['key' => 'sms_enabled', 'value' => '1']);
+        SiteSetting::create(['key' => 'sms_provider', 'value' => SmsService::PROVIDER_CUSTOM]);
+        // Both sets configured, as they are mid-switch.
+        SiteSetting::create(['key' => 'sms_token', 'value' => SmsService::encryptSecret('greenweb-token')]);
+        SiteSetting::create(['key' => 'sms_url', 'value' => 'https://chosen.test/send']);
+        SiteSetting::create(['key' => 'sms_api_key', 'value' => SmsService::encryptSecret('chosen-key')]);
+        SiteSetting::create(['key' => 'sms_sender_id', 'value' => '8801000000000']);
+        SiteSetting::flushCache();
+
+        $this->assertTrue(app(SmsService::class)->send('01712345678', 'Hello'));
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://chosen.test/send'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'greenweb.test'));
+    }
+
+    /** A shop that has never seen the setting keeps working exactly as before. */
+    public function test_an_unchosen_provider_falls_back_to_whichever_is_configured(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(['*' => Http::response('{"status":"SENT"}')]);
+
+        config(['services.sms.greenweb_url' => 'https://greenweb.test/api']);
+
+        SiteSetting::create(['key' => 'sms_enabled', 'value' => '1']);
+        SiteSetting::create(['key' => 'sms_token', 'value' => SmsService::encryptSecret('greenweb-token')]);
+        SiteSetting::flushCache();
+
+        $this->assertSame(SmsService::PROVIDER_GREENWEB, app(SmsService::class)->provider());
+        $this->assertTrue(app(SmsService::class)->send('01712345678', 'Hello'));
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://greenweb.test/api'));
+    }
+
+    /**
+     * Choosing one and configuring the other sends nothing, rather than
+     * quietly using whatever happens to be filled in.
+     */
+    public function test_a_provider_without_its_credentials_sends_nothing(): void
+    {
+        Http::preventStrayRequests();
+
+        SiteSetting::create(['key' => 'sms_enabled', 'value' => '1']);
+        SiteSetting::create(['key' => 'sms_provider', 'value' => SmsService::PROVIDER_CUSTOM]);
+        SiteSetting::create(['key' => 'sms_token', 'value' => SmsService::encryptSecret('greenweb-token')]);
+        SiteSetting::flushCache();
+
+        config(['services.sms.log_fallback' => false]);
+
+        $this->assertFalse(app(SmsService::class)->send('01712345678', 'Hello'));
+    }
+
     public function test_nothing_is_sent_with_no_gateway_and_no_log_fallback(): void
     {
         config(['services.sms.token' => null, 'services.sms.url' => null]);

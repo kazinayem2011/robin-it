@@ -42,6 +42,10 @@ return [
      */
     'sms' => [
         'enabled' => env('SMS_ENABLED', false),
+        // 'greenweb' or 'custom'. Normally set from Settings -> SMS; left null
+        // here so an unset value falls back to whichever credential is present,
+        // which is how this behaved before the choice was explicit.
+        'provider' => env('SMS_PROVIDER'),
         'token' => env('SMS_TOKEN'),
         'greenweb_url' => env('GREENWEB_SMS_URL', 'http://api.greenweb.com.bd/api.php?json'),
         'url' => env('SMS_API_URL'),

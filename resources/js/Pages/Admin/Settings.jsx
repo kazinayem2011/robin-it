@@ -5,6 +5,7 @@ import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
 import FormSelect from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import Checkbox from '../../Components/Checkbox';
 import Tabs from '../../Components/Tabs';
 import { toast } from '../../Components/Toast';
@@ -44,6 +45,7 @@ export default function AdminSettings({
     mailPasswordSet = false,
     smsSecretsSet = {},
     smsEvents = [],
+    smsProviders = [],
 }) {
     const [activeTab, setActiveTab] = useState(tabFromUrl);
 
@@ -192,6 +194,15 @@ export default function AdminSettings({
             ),
             mail_mailer: initialMap.mail_mailer || 'smtp',
             sms_enabled: initialMap.sms_enabled === '1',
+            /*
+             * Which gateway sends. It used to be inferred from whichever
+             * credential happened to be filled in, which reads fine until a
+             * shop switches: the old provider's fields are still saved and
+             * nothing says which set is live.
+             */
+            sms_provider:
+                initialMap.sms_provider ||
+                (smsSecretsSet.sms_token ? 'greenweb' : 'custom'),
             // Never arrives from the server; blank means "keep what is saved".
             sms_token: '',
             sms_url: initialMap.sms_url || '',
@@ -785,7 +796,26 @@ export default function AdminSettings({
                                 onChange={formik.handleChange}
                             />
 
-                            <div className="form-row-2col">
+                            {/*
+                             * Who sends, chosen rather than guessed — and only
+                             * that provider's fields are shown, so a leftover
+                             * credential from a previous one cannot look live.
+                             */}
+                            <Select
+                                label="Provider"
+                                name="sms_provider"
+                                formik={formik}
+                                options={smsProviders}
+                                helperText={
+                                    smsProviders.find(
+                                        (p) =>
+                                            p.value ===
+                                            formik.values.sms_provider,
+                                    )?.hint
+                                }
+                            />
+
+                            {formik.values.sms_provider === 'greenweb' ? (
                                 <FormInput
                                     label="GreenWeb token"
                                     name="sms_token"
@@ -794,36 +824,39 @@ export default function AdminSettings({
                                     placeholder={
                                         smsSecretsSet.sms_token
                                             ? 'Saved — type to replace'
-                                            : 'Leave blank to use the gateway below'
+                                            : 'The token from your GreenWeb account'
                                     }
                                 />
-                                <FormInput
-                                    label="Sender ID"
-                                    name="sms_sender_id"
-                                    formik={formik}
-                                    placeholder="The name messages arrive from"
-                                />
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="form-row-2col">
+                                        <FormInput
+                                            label="Gateway URL"
+                                            name="sms_url"
+                                            formik={formik}
+                                            placeholder="https://your-provider/api/send"
+                                        />
+                                        <FormInput
+                                            label="Sender ID"
+                                            name="sms_sender_id"
+                                            formik={formik}
+                                            placeholder="The name or number messages arrive from"
+                                        />
+                                    </div>
 
-                            <div className="form-row-2col">
-                                <FormInput
-                                    label="Gateway URL"
-                                    name="sms_url"
-                                    formik={formik}
-                                    placeholder="https://your-provider/api/send"
-                                />
-                                <FormInput
-                                    label="Gateway API key"
-                                    name="sms_api_key"
-                                    type="password"
-                                    formik={formik}
-                                    placeholder={
-                                        smsSecretsSet.sms_api_key
-                                            ? 'Saved — type to replace'
-                                            : ''
-                                    }
-                                />
-                            </div>
+                                    <FormInput
+                                        label="Gateway API key"
+                                        name="sms_api_key"
+                                        type="password"
+                                        formik={formik}
+                                        placeholder={
+                                            smsSecretsSet.sms_api_key
+                                                ? 'Saved — type to replace'
+                                                : ''
+                                        }
+                                    />
+                                </>
+                            )}
 
                             {(smsSecretsSet.sms_token ||
                                 smsSecretsSet.sms_api_key) && (
@@ -836,11 +869,12 @@ export default function AdminSettings({
                             )}
 
                             <p className="admin-field-hint">
-                                A GreenWeb token is used on its own when one is
-                                set. Otherwise the URL, key and sender ID are
-                                used together. With neither, and only on a local
-                                machine, messages are written to the log so the
-                                flow can be followed without a provider account.
+                                Only the provider chosen above is used, so a
+                                credential left behind by a previous one cannot
+                                send anything. With none configured, and only on
+                                a local machine, messages are written to the log
+                                so the flow can be followed without a provider
+                                account.
                             </p>
 
                             {smsEvents.length > 0 && (
