@@ -153,7 +153,29 @@
 .detail-icon {
     color: var(--gray-400);
     flex-shrink: 0;
-    margin-top: 2px;
+    /*
+     * Centred on the first line, computed rather than nudged. The row is
+     * 1.4 line-height and the glyph is 16px, so half the difference puts it
+     * on the middle of line one — and it stays right if the type changes,
+     * which a hand-picked 2px would not.
+     */
+    margin-top: calc((1.4em - 16px) / 2);
+}
+
+/*
+ * The touch target grows outward, not downward.
+ *
+ * Below 820px these links are given a 28px minimum height so a thumb can hit
+ * them — see MainLayout.css. But the box centres its text in that 28px while
+ * the icon beside it is aligned to the top of the row, so the phone and email
+ * lines sat about 4px below their icons while the address and hours, which
+ * are not links, sat level. The negative margins take back exactly what the
+ * minimum added, so the target is still 28px and the line is where it would
+ * have been.
+ */
+.store-detail-row .store-phone-link,
+.store-detail-row .store-email-link {
+    margin-block: calc((28px - 1.4em) / -2);
 }
 
 .store-phone-link,
