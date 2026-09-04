@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { Truck, ShieldCheck, PhoneCall, Cpu, Check } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import { contactService } from '../services';
+import useAppStore from '../store/useAppStore';
 import { toast } from './Toast';
 
 /**
@@ -15,6 +16,26 @@ export const Footer = () => {
     // Counted from the branches that exist rather than a number written into
     // the markup, which had drifted to claiming "15+" against four.
     const showroomCount = usePage().props?.showroom_count ?? 0;
+
+    /*
+     * Read off the same tree the header's category bar is built from, which
+     * the store has already fetched for it.
+     *
+     * These were five links typed by hand, and every one of them pointed at a
+     * category the shop does not have — "laptops" for "laptop", and a "gaming"
+     * that never existed — so the whole column had been landing on an empty
+     * grid. The tree only contains categories that exist and hold stock, so a
+     * link built from it cannot go nowhere.
+     */
+    const popularCategories = useAppStore((state) => state.categories).slice(0, 5);
+    const fetchCategories = useAppStore((state) => state.fetchCategories);
+
+    // The header asks for the same tree and the store lets only the first
+    // caller through, so this costs nothing where both are on the page — and
+    // covers the footer on any layout that does not carry a header.
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
 
     /*
      * This box was a form whose only handler was preventDefault, so an address
@@ -157,31 +178,13 @@ export const Footer = () => {
                 <div className="footer-nav-col">
                     <h5>Popular Categories</h5>
                     <ul>
-                        <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('laptop')}>
-                                Gaming Laptops & MacBooks
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('component')}>
-                                Processors & Graphics Cards
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('desktop')}>
-                                Desktops & Gaming PCs
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('monitor')}>
-                                OLED & 240Hz Monitors
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('accessories')}>
-                                Keyboards, Mice &amp; Headsets
-                            </Link>
-                        </li>
+                        {popularCategories.map((category) => (
+                            <li key={category.slug}>
+                                <Link href={ROUTES.SHOP_CATEGORY(category.slug)}>
+                                    {category.name}
+                                </Link>
+                            </li>
+                        ))}
                         <li>
                             <Link href={ROUTES.PC_BUILDER}>
                                 Interactive PC Builder

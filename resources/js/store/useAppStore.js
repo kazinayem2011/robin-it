@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { cartService, compareService } from '../services';
+import { cartService, categoryService, compareService } from '../services';
+import { readCachedMenu, writeCachedMenu } from '../utils/menuCache';
 
 const useAppStore = create((set, get) => ({
     // Client UI State
@@ -10,6 +11,37 @@ const useAppStore = create((set, get) => ({
     isCartSidebarOpen: false,
     toggleCartSidebar: () =>
         set((state) => ({ isCartSidebarOpen: !state.isCartSidebarOpen })),
+
+    /*
+     * The category tree, held once for the whole page.
+     *
+     * The header fetched this into its own state, which left every other part
+     * of the site that wanted to link to a category writing the slugs out by
+     * hand — and the footer's five were written against a taxonomy the shop
+     * had already replaced, so all five had been landing on an empty grid.
+     * Anything that reads from here cannot name a category that is not there.
+     */
+    categories: readCachedMenu(),
+    categoriesLoaded: false,
+    fetchCategories: async () => {
+        // The header and the footer both want this on the same page; the
+        // first one through does the work.
+        if (get().categoriesLoaded) return;
+        set({ categoriesLoaded: true });
+
+        try {
+            const data = await categoryService.getMegaMenu();
+
+            if (Array.isArray(data) && data.length) {
+                set({ categories: data });
+                writeCachedMenu(data);
+            }
+        } catch (error) {
+            // Whatever the cache gave us stays: a stale menu beats no menu.
+            set({ categoriesLoaded: false });
+            console.error('Mega menu API load error:', error);
+        }
+    },
 
     // Realtime Badges & Counts
     cartCount: 0,

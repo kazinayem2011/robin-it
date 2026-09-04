@@ -20,8 +20,6 @@ import { ROUTES } from '../constants/endpoints';
 import CategoryNav from './CategoryNav';
 import { splitAnnouncement } from '../utils/announcement';
 import { useMarqueeDuration } from '../hooks';
-import { categoryService } from '../services';
-import { readCachedMenu, writeCachedMenu } from '../utils/menuCache';
 import useAppStore from '../store/useAppStore';
 
 /**
@@ -47,8 +45,11 @@ export const Header = () => {
      * Seeded from the last known menu, so a refresh paints the bar it had
      * before instead of an empty one. The fetch below still runs and corrects
      * it; this only removes the gap between the two.
+     *
+     * It lives in the store rather than here because the footer links to the
+     * same categories, and the copy it used to keep instead was hand-written.
      */
-    const [categories, setCategories] = useState(readCachedMenu);
+    const categories = useAppStore((state) => state.categories);
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
@@ -57,6 +58,7 @@ export const Header = () => {
 
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
     const fetchCompareCount = useAppStore((state) => state.fetchCompareCount);
+    const fetchCategories = useAppStore((state) => state.fetchCategories);
     const wishlistCount = useAppStore((state) => state.wishlistCount);
 
     // Fetch the mega menu tree and sync the cart badge. The layout is
@@ -66,20 +68,8 @@ export const Header = () => {
         fetchCartCount();
         fetchCompareCount();
 
-        categoryService
-            .getMegaMenu()
-            .then((data) => {
-                if (data && Array.isArray(data)) {
-                    setCategories(data);
-                    writeCachedMenu(data);
-                }
-            })
-            .catch((error) =>
-                // The bar keeps whatever the cache gave it rather than
-                // emptying: a stale menu beats no menu.
-                console.error('Mega menu API load error:', error),
-            );
-    }, [fetchCartCount, fetchCompareCount]);
+        fetchCategories();
+    }, [fetchCartCount, fetchCompareCount, fetchCategories]);
 
     /*
      * The whole header block pins, pulled up by exactly the height of the
