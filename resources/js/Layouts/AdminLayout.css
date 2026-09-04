@@ -4577,3 +4577,26 @@ a.admin-card:hover,
         align-items: flex-start;
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * Settings: tabs down the side, the panel beside them.
+ * ------------------------------------------------------------------------- */
+.admin-settings-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.admin-settings-layout .admin-settings-form {
+    /* min-width: 0 so a wide table or a long input inside the panel narrows
+       instead of pushing the column of tabs off the screen. */
+    flex: 1;
+    min-width: 0;
+}
+
+/* The tabs become a row again below this, so the panel goes back under them. */
+@media (max-width: 900px) {
+    .admin-settings-layout {
+        display: block;
+    }
+}

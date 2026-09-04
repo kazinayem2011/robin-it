@@ -158,3 +158,81 @@
     color: var(--white);
     border-color: transparent;
 }
+
+/* ---------------------------------------------------------------------------
+ * Vertical: a column of tabs beside the panel rather than a row above it.
+ *
+ * Opt-in, so every existing row is untouched. Worth reaching for once there
+ * are enough tabs that the row wraps or scrolls — the settings screen has
+ * seven, one of them called "Announcement Ticker" — because down the side
+ * they can all be read at once and the panel keeps its full width.
+ * ------------------------------------------------------------------------- */
+.reusable-tabs-container.orientation-vertical {
+    width: auto;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.reusable-tabs-container.orientation-vertical .reusable-tabs-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    overflow-x: visible;
+    /* Wide enough for the longest label on one line, narrow enough to leave
+       the panel the room it needs. */
+    width: 232px;
+}
+
+.reusable-tabs-container.orientation-vertical .reusable-tab-btn {
+    justify-content: flex-start;
+    width: 100%;
+    text-align: left;
+}
+
+/* The line variant's underline becomes a marker down the leading edge. */
+.reusable-tabs-container.orientation-vertical.variant-line .reusable-tabs-nav {
+    border-bottom: none;
+    border-inline-start: 2px solid var(--border-color);
+}
+
+.reusable-tabs-container.orientation-vertical.variant-line .reusable-tab-btn {
+    margin-inline-start: -2px;
+    border-bottom: none;
+    border-inline-start: 2px solid transparent;
+}
+
+.reusable-tabs-container.orientation-vertical.variant-line
+    .reusable-tab-btn.active {
+    border-inline-start-color: var(--primary);
+}
+
+/* A badge sits at the far end of the row rather than beside the label. */
+.reusable-tabs-container.orientation-vertical .reusable-tab-badge {
+    margin-inline-start: auto;
+}
+
+/*
+ * No width to give away on a phone, so it goes back to being a row — the
+ * same scrolling strip every other screen uses.
+ */
+@media (max-width: 900px) {
+    .reusable-tabs-container.orientation-vertical {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .reusable-tabs-container.orientation-vertical .reusable-tabs-nav {
+        flex-direction: row;
+        align-items: center;
+        width: auto;
+        gap: 8px;
+        overflow-x: auto;
+        border-inline-start: none;
+    }
+
+    .reusable-tabs-container.orientation-vertical .reusable-tab-btn {
+        width: auto;
+        margin-inline-start: 0;
+        border-inline-start-color: transparent;
+    }
+}

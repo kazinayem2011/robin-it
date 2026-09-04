@@ -299,8 +299,13 @@ export default function AdminSettings({
         >
             <Head title="Admin Settings" />
 
-            <div className="admin-page-container">
-                {/* Settings Tabs Navigation */}
+            <div className="admin-page-container admin-settings-layout">
+                {/*
+                 * Down the side rather than across the top. Seven tabs, one of
+                 * them called "Announcement Ticker", either wrapped to a second
+                 * row or scrolled out of sight; in a column they are all
+                 * readable at once and the panel keeps its width.
+                 */}
                 <Tabs
                     tabs={[
                         {
@@ -342,6 +347,7 @@ export default function AdminSettings({
                     activeTab={activeTab}
                     onChange={selectTab}
                     variant="enclosed"
+                    orientation="vertical"
                 />
 
                 <form
