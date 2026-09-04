@@ -15,6 +15,7 @@ use App\Services\AddressBook;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -243,9 +244,48 @@ class StorefrontPageController extends Controller
         return Inertia::render('Warranty/Index');
     }
 
+    /**
+     * The journal's filter tabs come from the posts rather than a list in the
+     * page.
+     *
+     * Five of the six tabs were written into Blogs/Index.jsx — "Hardware
+     * Review", "Industry News", "Benchmark & Overclocking", "PC Building
+     * Guide" — and the posts are filed under none of them. Four of the five
+     * therefore returned nothing, and the two categories that do have posts
+     * ("Displays & Peripherals", "Storage & Memory") had no tab to reach them
+     * by. Whoever files the next post picks the category, so the tabs have to
+     * be read off the posts, not agreed with them by hand.
+     */
     public function blogs(): Response
     {
-        return Inertia::render('Blogs/Index');
+        return Inertia::render('Blogs/Index', [
+            'categories' => BlogPost::published()
+                ->whereNotNull('category')
+                ->where('category', '!=', '')
+                ->select('category')
+                ->groupBy('category')
+                ->orderByRaw('COUNT(*) DESC')
+                ->pluck('category')
+                ->map(fn (string $c) => ['key' => $c, 'label' => self::titleCase($c)])
+                ->values(),
+        ]);
+    }
+
+    /**
+     * Categories are filed in caps ("PC BUILDING"), which is shouting in a tab
+     * strip. Str::title alone would make that "Pc Building", so the acronyms a
+     * computer shop files under keep their case.
+     */
+    private static function titleCase(string $value): string
+    {
+        $acronyms = ['PC', 'CPU', 'GPU', 'RAM', 'SSD', 'HDD', 'PSU', 'UPS', 'AI',
+            'VR', 'TV', 'OLED', 'LED', 'LCD', 'USB', 'RGB', 'NVME', '4K', '8K'];
+
+        return collect(explode(' ', Str::title($value)))
+            ->map(fn (string $word) => in_array(strtoupper($word), $acronyms, true)
+                ? (strtoupper($word) === 'NVME' ? 'NVMe' : strtoupper($word))
+                : $word)
+            ->implode(' ');
     }
 
     public function blog(string $slug): Response

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import Tabs from '../../Components/Tabs';
@@ -9,16 +9,20 @@ import siteConfig from '../../constants/siteConfig';
 import { BookOpen, Search, Clock, User, Calendar, Flame } from 'lucide-react';
 import './Blogs.css';
 
-const CATEGORIES = [
-    { key: 'all', label: 'All Articles' },
-    { key: 'Buying Guide', label: 'Buying Guides' },
-    { key: 'Hardware Review', label: 'Hardware Reviews' },
-    { key: 'Benchmark & Overclocking', label: 'Benchmarks' },
-    { key: 'PC Building Guide', label: 'PC Building' },
-    { key: 'Industry News', label: 'Tech News' },
-];
+const ALL_ARTICLES = { key: 'all', label: 'All Articles' };
 
 export default function BlogsIndex() {
+    /*
+     * The tabs used to be a list written here: "Hardware Review", "Industry
+     * News", "Benchmark & Overclocking", "PC Building Guide". Posts are filed
+     * under none of those, so four of the five tabs opened on an empty page,
+     * while the categories that do have posts had no tab at all. They come off
+     * the posts now, so a tab exists exactly when something is filed under it.
+     */
+    const { categories = [] } = usePage().props;
+    const tabs = [ALL_ARTICLES, ...categories];
+
+
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('all');
@@ -90,7 +94,7 @@ export default function BlogsIndex() {
                 {/* Category Navigation Strip */}
                 <div style={{ marginBottom: '32px' }}>
                     <Tabs
-                        tabs={CATEGORIES}
+                        tabs={tabs}
                         activeTab={activeCategory}
                         onChange={setActiveCategory}
                         variant="pills"
