@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sms;
 
+use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OtpCode;
 use App\Models\SiteSetting;
@@ -9,6 +10,7 @@ use App\Services\SmsService;
 use App\Support\SmsTemplates;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -285,7 +287,17 @@ class SmsTest extends TestCase
      */
     public function test_every_message_is_in_bengali_and_stays_short(): void
     {
-        $order = $this->order();
+        /*
+         * Measured at the length production actually sends.
+         *
+         * Under test `url()` answers http://localhost and the fixture's order
+         * number is ORD-SMS1 — together about 30 characters shorter than the
+         * real thing, which is the difference between two parts and three. A
+         * budget checked against the short version is not a budget.
+         */
+        URL::forceRootUrl('https://robinscomputer.com');
+
+        $order = $this->order(['order_number' => 'ORD-LSFCIBTEIG']);
         $shop = 'Robins Computer';
 
         $messages = ['placed' => SmsTemplates::orderPlaced($order, $shop)];
@@ -297,6 +309,34 @@ class SmsTest extends TestCase
                 $messages[$status] = $message;
             }
         }
+
+        /*
+         * Dispatch in every shape it actually takes.
+         *
+         * The bare order has no courier and no consignment, which is the
+         * shortest this message ever gets — so measuring only that said two
+         * parts while the real thing was three. `tracking_url` is computed
+         * from the courier's own template, so the case with a carrier link is
+         * built by giving the courier one rather than by setting the field.
+         */
+        $order->status = 'shipped';
+
+        foreach ([
+            'shipped:carrier-link' => ['Steadfast', 'PTH8842190', 'https://steadfast.com.bd/t/{tracking}'],
+            'shipped:consignment' => ['Steadfast', 'PTH8842190', null],
+            'shipped:carrier-only' => ['Steadfast', null, null],
+        ] as $name => [$courier, $number, $template]) {
+            $order->setRelation('courier', new Courier([
+                'name' => $courier,
+                'tracking_url_template' => $template,
+            ]));
+            $order->tracking_number = $number;
+
+            $messages[$name] = SmsTemplates::statusChanged($order, $shop);
+        }
+
+        $order->setRelation('courier', null);
+        $order->tracking_number = null;
 
         $messages['refund'] = SmsTemplates::refundIssued($order, 5000, $shop);
         $messages['due'] = SmsTemplates::paymentDue($order, 5000, $shop);

@@ -70,13 +70,26 @@ class SmsTemplates
         $courier = $order->courier?->name;
         $carrier = $courier ? " {$courier} দিয়ে" : '';
 
-        $link = $order->tracking_url ?: self::trackUrl($order);
+        /*
+         * One way to follow the parcel, not two.
+         *
+         * A Bengali message gets 70 characters to a part, and a courier plus a
+         * consignment number plus a link ran to 146 — three parts, on a message
+         * that is off by default because the courier has already sent its own.
+         *
+         * So: the carrier's own tracking page where they have one, since it
+         * opens on the consignment and is the thing worth tapping. Failing
+         * that, the consignment number itself, which is what a customer reads
+         * out to a courier's hotline. Only with neither do we fall back to our
+         * own page — the order confirmation already carried that link.
+         */
+        $follow = match (true) {
+            filled($order->tracking_url) => "ট্র্যাক: {$order->tracking_url}",
+            filled($order->tracking_number) => "কনসাইনমেন্ট {$order->tracking_number}।",
+            default => 'ট্র্যাক: '.self::trackUrl($order),
+        };
 
-        $number = $order->tracking_number
-            ? " কনসাইনমেন্ট {$order->tracking_number}।"
-            : '';
-
-        return "{$shop}: অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}।{$number} ট্র্যাক: {$link}";
+        return "{$shop}: অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}";
     }
 
     public static function refundIssued(Order $order, float $amount, string $shop): string
