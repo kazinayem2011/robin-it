@@ -3,6 +3,7 @@
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\EnforceSessionWindow;
 use App\Http\Middleware\EnsureAbility;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
@@ -33,6 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeaders::class);
 
         $middleware->web(append: [
+            // First of the three: it runs before Inertia shares an auth prop
+            // for someone whose session has just run out of time.
+            EnforceSessionWindow::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

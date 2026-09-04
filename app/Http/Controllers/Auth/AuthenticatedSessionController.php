@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\CartService;
+use App\Support\SessionWindow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,10 @@ class AuthenticatedSessionController extends Controller
         if ($user) {
             $cartService->mergeGuestCart($user->id, $guestSessionId);
         }
+
+        // Only now is it known whose "remember me" this is, and a staff one is
+        // not allowed to outlive the week their session gets.
+        SessionWindow::capRememberCookie($user);
 
         // Redirect admins to Admin Dashboard, customers to User Dashboard / intended page
         if ($user && $user->isAdmin()) {

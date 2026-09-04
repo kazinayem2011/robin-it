@@ -2,6 +2,19 @@
 
 use Illuminate\Support\Str;
 
+/*
+| Two windows, one guard. A shopper stays signed in for two months, so the cart
+| and the order history are still waiting on their next visit; staff are cut
+| back to a week, because an admin cookie is worth incomparably more than a
+| shopper's. EnforceSessionWindow picks between the two on every request.
+|
+| The admin window is capped at the shopper one: `lifetime` below is what the
+| database handler expires every row by, so a longer staff window could not be
+| honoured anyway.
+*/
+$customerLifetime = (int) env('SESSION_LIFETIME', 86400);   // 60 days
+$adminLifetime = (int) env('SESSION_ADMIN_LIFETIME', 10080); // 7 days
+
 return [
 
     /*
@@ -30,9 +43,19 @@ return [
     | to expire immediately when the browser is closed then you may
     | indicate that via the expire_on_close configuration option.
     |
+    | `lifetime` is the one Laravel itself reads: the cookie StartSession
+    | stamps on the way out, and the expiry the database handler sweeps by. It
+    | starts as the longer of the two windows so the store outlives every
+    | session it holds, and EnforceSessionWindow narrows it to `admin_lifetime`
+    | for the duration of a request made by staff.
+    |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => $customerLifetime,
+
+    'customer_lifetime' => $customerLifetime,
+
+    'admin_lifetime' => min($adminLifetime, $customerLifetime),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
