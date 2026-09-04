@@ -273,41 +273,76 @@ class SmsTest extends TestCase
      * unicode and the part size to 70. Two of these once cost double for a
      * dash.
      */
-    public function test_every_message_is_one_plain_part(): void
+    /**
+     * Every message is in Bengali, and none of them has grown.
+     *
+     * This used to assert the opposite half: that every message was pure
+     * GSM-7 and one part, because that is the cheapest a message can be. The
+     * gateway has since told us that is not allowed — all SMS must be in
+     * Bengali, Banglish is out, Bengali mixed with English is fine, English
+     * alone is not. So the alphabet is settled and what is left to guard is
+     * the length, which the alphabet more than doubled the cost of.
+     */
+    public function test_every_message_is_in_bengali_and_stays_short(): void
     {
-        $gsm = "@£\$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;"
-            .'<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà^{}\\[~]|€';
-        $allowed = preg_split('//u', $gsm, -1, PREG_SPLIT_NO_EMPTY);
-
         $order = $this->order();
-        $messages = ['placed' => SmsTemplates::orderPlaced($order, 'Robins Computer')];
+        $shop = 'Robins Computer';
+
+        $messages = ['placed' => SmsTemplates::orderPlaced($order, $shop)];
 
         foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $order->status = $status;
 
-            if ($message = SmsTemplates::statusChanged($order, 'Robins Computer')) {
+            if ($message = SmsTemplates::statusChanged($order, $shop)) {
                 $messages[$status] = $message;
             }
         }
 
-        $messages['refund'] = SmsTemplates::refundIssued($order, 5000, 'Robins Computer');
-        $messages['due'] = SmsTemplates::paymentDue($order, 5000, 'Robins Computer');
+        $messages['refund'] = SmsTemplates::refundIssued($order, 5000, $shop);
+        $messages['due'] = SmsTemplates::paymentDue($order, 5000, $shop);
 
         foreach (OtpCode::PURPOSES as $purpose) {
-            $messages["code:{$purpose}"] = SmsTemplates::verificationCode('048213', $purpose, 'Robins Computer');
+            $messages["code:{$purpose}"] = SmsTemplates::verificationCode('048213', $purpose, $shop);
         }
 
         foreach ($messages as $name => $message) {
-            $offenders = array_unique(array_filter(
-                preg_split('//u', $message, -1, PREG_SPLIT_NO_EMPTY),
-                fn ($c) => ! in_array($c, $allowed, true)
-            ));
+            $this->assertMatchesRegularExpression(
+                '/\p{Bengali}/u',
+                $message,
+                "The \"{$name}\" message is English only, which the gateway does not accept."
+            );
 
-            $this->assertSame([], array_values($offenders),
-                "The \"{$name}\" message uses characters outside GSM-7, which doubles what it costs to send.");
+            /*
+             * Two parts is the ceiling. A Bengali message gets 70 characters
+             * to a part rather than 160, so a sentence that reads as a small
+             * courtesy is a third of the bill again, on every order, forever.
+             */
+            $this->assertLessThanOrEqual(
+                2,
+                SmsService::parts($message),
+                "The \"{$name}\" message runs to ".SmsService::parts($message).' parts.'
+            );
+        }
+    }
 
-            $this->assertLessThanOrEqual(160, mb_strlen($message),
-                "The \"{$name}\" message is longer than one part.");
+    /**
+     * The one sent most often stays a single part.
+     *
+     * A code goes out on every sign-up, every phone login and every password
+     * reset — many times more often than any order message — so this is the
+     * one worth counting characters over. It sits at 66 of the 70 a unicode
+     * part allows; two more words put it over, and did once already.
+     */
+    public function test_a_verification_code_is_a_single_part(): void
+    {
+        foreach (OtpCode::PURPOSES as $purpose) {
+            $message = SmsTemplates::verificationCode('048213', $purpose, 'Robins Computer');
+
+            $this->assertSame(
+                1,
+                SmsService::parts($message),
+                "The [{$purpose}] code message costs two parts: \"{$message}\""
+            );
         }
     }
 
