@@ -135,10 +135,38 @@
 }
 
 @media (max-width: 768px) {
+    /*
+     * Stacked, and tighter than the desktop version it inherits.
+     *
+     * On a phone the trail, the title, the count and the sort control each
+     * take a line of their own, so the desktop spacing between them adds up:
+     * it was 411px from the top of the page before the first filter, on an
+     * 844px screen. The type does the separating here — a 1.6rem heading over
+     * a 0.82rem count needs no help — so the gaps come down and the page's
+     * own top and bottom padding with them.
+     */
+    .plp-page-wrapper {
+        padding-top: 14px;
+    }
+
     .plp-header-banner {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: 10px;
+        padding-bottom: 10px;
+    }
+
+    .plp-title {
+        margin-top: 0;
+        font-size: 1.45rem;
+    }
+
+    .plp-breadcrumbs-spacer {
+        margin-bottom: 2px;
+    }
+
+    .plp-container {
+        gap: 14px;
     }
 }
 
