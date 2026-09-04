@@ -910,9 +910,13 @@
     min-width: 0;
 }
 
+/*
+ * The columns live in app.css, beside the flash grid's, so the two cannot
+ * drift. They already had: this file carried its own ladder — three across at
+ * 1200px, two at 640 — which beat app.css by source order, so Best Selling
+ * showed two cards on a phone while Flash Deals directly above it showed one.
+ */
 .standard-products-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
 }
 
@@ -1417,18 +1421,7 @@
  * The grid had no responsive rule at all — it is used here, on the wishlist
  * and in the PC builder's component picker, so all three were the same.
  */
-@media (max-width: 1200px) {
-    .standard-products-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
 @media (max-width: 640px) {
-    .standard-products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-
     /*
      * The flash bar carries a badge, a countdown and a "view all" button on
      * one unwrappable line. On a phone there is room for about half of that:
