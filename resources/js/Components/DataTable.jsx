@@ -180,6 +180,20 @@ export const DataTable = ({
                                         <td
                                             key={col.key || colIdx}
                                             className={col.className || ''}
+                                            /*
+                                             * Below 640px the head is gone and
+                                             * each row is a card, so the cell
+                                             * has to say which column it is.
+                                             * Only a plain string can: a
+                                             * header built out of elements has
+                                             * no text to borrow.
+                                             */
+                                            data-label={
+                                                typeof col.header === 'string' &&
+                                                col.header.trim()
+                                                    ? col.header
+                                                    : undefined
+                                            }
                                             style={{
                                                 textAlign: col.align || 'left',
                                             }}

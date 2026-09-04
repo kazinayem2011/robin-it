@@ -2641,6 +2641,180 @@ a.admin-card:hover,
     min-width: 520px;
 }
 
+/*
+ * Below 640px each row becomes a card instead of a line in a table.
+ *
+ * The table asked for 520px minimum, which is under what any of these
+ * actually need, so on a phone every one of them was both scrolled sideways
+ * and crushed: the orders table put five columns in 548px of a 278px card,
+ * which made "Kazi Nayem" two lines, the phone number three, and cut the
+ * total to "৳11,87" with the rest past the edge. Rows stood 128px tall and
+ * three of them filled the screen — the widest tables here want 1600px, so no
+ * min-width was going to fix it, only a different shape.
+ *
+ * The head goes, and each cell names its own column instead. The label comes
+ * from data-label, which DataTable copies off the column header.
+ */
+@media (max-width: 640px) {
+    /* Nothing to scroll to any more. */
+    .admin-table-responsive {
+        overflow-x: visible;
+    }
+
+    .admin-table-responsive > .admin-table {
+        min-width: 0;
+    }
+
+    .admin-table,
+    .admin-table tbody,
+    .admin-table tr {
+        display: block;
+        width: auto;
+    }
+
+    .admin-table thead {
+        display: none;
+    }
+
+    .admin-table tr {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 2px 14px;
+        margin-bottom: 12px;
+    }
+
+    .admin-table tr:last-child {
+        margin-bottom: 0;
+    }
+
+    /* The hover tint belongs to a row you are pointing at, not a card. */
+    .admin-table tr:hover td {
+        background: none;
+    }
+
+    .admin-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--border-light);
+        /* The column's own alignment is set inline, so it takes precedence
+           over anything written here; in a card the label is on the left and
+           the value on the right whatever the column asked for. */
+        text-align: left !important;
+    }
+
+    .admin-table td:last-child {
+        border-bottom: none;
+    }
+
+    .admin-table td::before {
+        content: attr(data-label);
+        /*
+         * Shrinkable, so a long column name gives way to the value rather
+         * than the other way round: "Bangladeshi Mobile" beside a number that
+         * cannot be broken pushed the number past the side of the card.
+         */
+        flex: 0 1 auto;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray-400);
+    }
+
+    /*
+     * The actions column has no header to borrow, so it gets no label — and
+     * with nothing on its left, space-between would strand the buttons
+     * against the wrong edge.
+     */
+    .admin-table td:not([data-label]) {
+        justify-content: flex-end;
+    }
+
+    .admin-table td:not([data-label])::before {
+        content: none;
+    }
+
+    /*
+     * The value is whatever the column rendered — a name over a phone number,
+     * a badge, a stack of buttons. It gets the rest of the row and wraps
+     * inside it rather than pushing the label off the side.
+     *
+     * Two things stop it. A flex item will not shrink below its content
+     * unless it is told it may, and a long word is not a breakable thing:
+     * a product name, an email and a phone number each held their cell open
+     * — "Corsair Vengeance RGB DDR5 32GB" made one 463px wide inside a 248px
+     * card and took the whole table sideways with it. Naming the classes that
+     * did it would only last until the next column, so both are answered
+     * here for anything inside a cell.
+     */
+    .admin-table td * {
+        min-width: 0;
+    }
+
+    .admin-table td {
+        overflow-wrap: anywhere;
+    }
+
+    .admin-table-item-cell {
+        flex-wrap: wrap;
+    }
+
+    /*
+     * Breaking anywhere is for the values that have nowhere else to break —
+     * an email, a SKU, a long product name. A control's label is not one of
+     * them: it gave "Receive" as "Recei / ve" across two lines of its own
+     * button.
+     */
+    .admin-table td button,
+    .admin-table td .btn,
+    .admin-table td a,
+    .admin-table td [class*='badge'],
+    .admin-table td [class*='chip'],
+    .admin-table td [class*='pill'] {
+        overflow-wrap: normal;
+    }
+
+    /*
+     * A chip holds a branch name and a count and is set not to break, which
+     * on a narrow card put the count outside the card. It breaks between its
+     * words here — still never inside one.
+     */
+    .admin-table td [class*='chip'] {
+        white-space: normal;
+    }
+
+    /*
+     * A name cut to "Logitec…" on a card is worse than the same name over two
+     * lines: the column is no longer holding a row of them to a common width,
+     * so there is nothing left for the ellipsis to be protecting.
+     */
+    .admin-product-item-title {
+        max-width: none;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    /*
+     * A cell holding a thumbnail and two lines of text cannot also share its
+     * row with a label. Beside "PRODUCT DETAILS" and a 38px image there were
+     * 130px left, which turned "Logitech MX Master 3S Wireless Mouse" into
+     * six lines of one or two words. These cells put the label above and take
+     * the width of the card for themselves.
+     */
+    .admin-table td:has(.admin-table-item-cell),
+    .admin-table td:has(.admin-product-item-flex),
+    .admin-table td:has(img) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+}
+
 /* ── Stock & inventory ─────────────────────────────────────────────────────── */
 
 .admin-stock-intro {
