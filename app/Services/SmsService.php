@@ -366,7 +366,7 @@ class SmsService
 
     private function readReply(string $gateway, string $phone, $response): bool
     {
-        $body = trim($response->body());
+        $body = self::scrub(trim($response->body()));
 
         if ($this->accepted($response->json(), $body, $response->successful())) {
             Log::info("SMS sent to {$phone} via {$gateway}: [{$body}]");
@@ -441,6 +441,24 @@ class SmsService
     }
 
     /**
+     * Take the credentials out of anything on its way to the log.
+     *
+     * The generic gateway is a GET, so the API key rides in the query string —
+     * and Guzzle puts the whole failing URL into its exception message. A
+     * connection error therefore wrote the key into laravel.log in the clear,
+     * where it outlives the incident and gets copied around in support
+     * threads. Found by reading a log after a failed send.
+     */
+    private static function scrub(string $text): string
+    {
+        return preg_replace(
+            '/((?:api_?key|token|password|passwd|secret)["\']?\s*[:=]\s*"?)([^&"\s,}]+)/i',
+            '$1[redacted]',
+            $text
+        ) ?? $text;
+    }
+
+    /**
      * A read timeout is not proof of failure: the gateway takes the message
      * before it answers, so the SMS still lands. Anything else — DNS, a refused
      * connection, TLS — means the request never arrived, and that is a real
@@ -448,7 +466,7 @@ class SmsService
      */
     private function handleException(string $gateway, string $phone, \Throwable $e): bool
     {
-        $reason = $e->getMessage();
+        $reason = self::scrub($e->getMessage());
 
         if (preg_match('/curl error (?:28|operation timed out)|timed out|timeout/i', $reason)) {
             Log::warning("{$gateway} timed out for {$phone}, treating the SMS as sent: {$reason}");

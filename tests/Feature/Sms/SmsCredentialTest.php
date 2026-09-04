@@ -6,8 +6,10 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -131,6 +133,45 @@ class SmsCredentialTest extends TestCase
         $this->assertTrue(app(SmsService::class)->send('01712345678', 'Test message.'));
 
         Http::assertSent(fn ($request) => $request->data()['token'] === 'live-token');
+    }
+
+    /**
+     * The one that put a live key on disk in the clear.
+     *
+     * The generic gateway is a GET, so the API key rides in the query string,
+     * and Guzzle puts the whole failing URL into its exception message. A
+     * gateway that would not answer therefore wrote the key into laravel.log —
+     * where it outlives the incident and gets pasted into support threads.
+     * Found by reading a log after a failed send, not by reading the code.
+     */
+    public function test_a_gateway_failure_does_not_write_the_key_into_the_log(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake(function () {
+            // What Guzzle actually raises: the whole URL, credentials and all.
+            throw new ConnectionException(
+                'cURL error 7: Failed to connect to gateway.test port 80 '
+                .'for http://gateway.test/api/sendsms?api_key=live-secret-key'
+                .'&type=text&phone=8801712345678&senderid=8801000000000'
+            );
+        });
+
+        SiteSetting::create(['key' => 'sms_enabled', 'value' => '1']);
+        SiteSetting::create(['key' => 'sms_url', 'value' => 'http://gateway.test/api/sendsms']);
+        SiteSetting::create(['key' => 'sms_api_key', 'value' => SmsService::encryptSecret('live-secret-key')]);
+        SiteSetting::create(['key' => 'sms_sender_id', 'value' => '8801000000000']);
+        SiteSetting::flushCache();
+
+        Log::spy();
+
+        $this->assertFalse(app(SmsService::class)->send('01712345678', 'Test message.'));
+
+        Log::shouldHaveReceived('error')->withArgs(function (string $message) {
+            $this->assertStringNotContainsString('live-secret-key', $message);
+            $this->assertStringContainsString('[redacted]', $message);
+
+            return true;
+        });
     }
 
     /** A token written by hand before this existed must still work. */
