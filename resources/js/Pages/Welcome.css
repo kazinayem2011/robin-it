@@ -1480,3 +1480,31 @@
     line-height: 1.5;
     color: var(--gray-400);
 }
+
+/* ---------------------------------------------------------------------------
+ * The hero's controls, on a phone.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    /*
+     * The dots go. Six of them at 32px each want 230px, and the row is inset
+     * 48px from both edges — so on a 390px screen there was no room left for
+     * the arrows and the right one hung off the slide. They are a progress
+     * readout rather than a control anyone taps on a phone, where the slide is
+     * swiped instead.
+     */
+    .slide-dots-indicator {
+        display: none;
+    }
+
+    /*
+     * Which leaves the arrows, at the corner rather than stranded on the left
+     * by a `space-between` with nothing to space against, and inset the 16px
+     * everything else on the page uses instead of 48.
+     */
+    .slider-bottom-controls {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        justify-content: flex-end;
+    }
+}
