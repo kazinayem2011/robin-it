@@ -158,28 +158,28 @@ export const Footer = () => {
                     <h5>Popular Categories</h5>
                     <ul>
                         <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('laptops')}>
+                            <Link href={ROUTES.SHOP_CATEGORY('laptop')}>
                                 Gaming Laptops & MacBooks
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('components')}>
+                            <Link href={ROUTES.SHOP_CATEGORY('component')}>
                                 Processors & Graphics Cards
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('desktops')}>
-                                Custom Built Gaming PCs
+                            <Link href={ROUTES.SHOP_CATEGORY('desktop')}>
+                                Desktops & Gaming PCs
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('monitors')}>
+                            <Link href={ROUTES.SHOP_CATEGORY('monitor')}>
                                 OLED & 240Hz Monitors
                             </Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SHOP_CATEGORY('gaming')}>
-                                Mechanical Keyboards & Mice
+                            <Link href={ROUTES.SHOP_CATEGORY('accessories')}>
+                                Keyboards, Mice &amp; Headsets
                             </Link>
                         </li>
                         <li>
@@ -206,7 +206,7 @@ export const Footer = () => {
                             <Link href={ROUTES.CONTACT}>Careers & Join Us</Link>
                         </li>
                         <li>
-                            <Link href={ROUTES.SHOP}>
+                            <Link href={ROUTES.BLOGS}>
                                 Tech Journal & Buying Guides
                             </Link>
                         </li>

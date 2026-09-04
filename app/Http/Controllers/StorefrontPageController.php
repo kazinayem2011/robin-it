@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Banner;
 use App\Models\BlogPost;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\ContentPage;
 use App\Models\Order;
 use App\Models\Product;
@@ -42,8 +43,21 @@ class StorefrontPageController extends Controller
         return Inertia::render('Products/Index');
     }
 
+    /**
+     * A slug that names no category used to render the ordinary listing, which
+     * then asked the API for that category and got nothing back: a 200 with an
+     * empty grid, identical to a category that is genuinely out of stock. Five
+     * footer links and a homepage promo had been pointing at slugs the
+     * catalogue never had ("laptops" for "laptop") and nothing said so. Making
+     * the miss a 404 is what turns the next such typo into something visible.
+     */
     public function shopCategory(string $categorySlug): Response
     {
+        abort_unless(
+            Category::where('slug', $categorySlug)->where('is_active', true)->exists(),
+            404
+        );
+
         return Inertia::render('Products/Index', ['categorySlug' => $categorySlug]);
     }
 

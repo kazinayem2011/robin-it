@@ -527,7 +527,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                       image_path:
                                           '/images/promo_banner_special_deals.jpg',
                                       link_url:
-                                          ROUTES.SHOP_CATEGORY('components'),
+                                          ROUTES.SHOP_CATEGORY('component'),
                                       button_text: 'Shop Bundles',
                                   },
                                   {
