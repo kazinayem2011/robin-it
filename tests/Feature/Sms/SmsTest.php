@@ -431,6 +431,38 @@ class SmsTest extends TestCase
      * A new message must reach the Settings screen, or it can never be
      * switched off — which is the whole point of having switches.
      */
+    /**
+     * Every SMS setting must be one the Settings screen may write.
+     *
+     * SettingsUpdateRequest rejects any key not in SiteSetting::editableKeys(),
+     * so a field added to the form but not to that list renders perfectly and
+     * cannot be saved. That is what happened to `sms_provider`: the dropdown
+     * looked right and the save came back "not a setting this site stores".
+     * Caught by being asked whether the form had actually been tested.
+     */
+    public function test_every_sms_setting_can_be_saved_from_the_screen(): void
+    {
+        $editable = SiteSetting::editableKeys();
+
+        foreach (SmsService::KEYS as $key) {
+            $this->assertContains(
+                $key,
+                $editable,
+                "[{$key}] is on the SMS form but SettingsUpdateRequest would reject it."
+            );
+        }
+    }
+
+    /** ...and none of them may be published to the browser. */
+    public function test_no_sms_setting_is_sent_to_the_storefront(): void
+    {
+        $public = SiteSetting::publicKeys();
+
+        foreach (SmsService::KEYS as $key) {
+            $this->assertNotContains($key, $public, "[{$key}] would be readable by any visitor.");
+        }
+    }
+
     public function test_every_message_has_a_switch_on_the_settings_screen(): void
     {
         foreach (array_keys(SmsService::EVENTS) as $event) {

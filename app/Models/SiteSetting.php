@@ -100,6 +100,9 @@ class SiteSetting extends Model
         // page source would let anyone send messages on the shop's account.
         'sms' => [
             'sms_enabled',
+            // Which gateway sends. Not a credential, but it belongs with them
+            // rather than in a public group: it names the shop's provider.
+            'sms_provider',
             'sms_token',
             'sms_url',
             'sms_api_key',
