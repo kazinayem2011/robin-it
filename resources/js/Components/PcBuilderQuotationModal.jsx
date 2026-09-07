@@ -333,7 +333,7 @@ export const PcBuilderQuotationModal = ({
                     <div className="quotation-footer-signatures">
                         <div className="signature-box">Customer Acceptance</div>
                         <div className="signature-box">
-                            Authorized Representative
+                            Authorised Representative
                             <div
                                 style={{
                                     fontSize: '0.7rem',

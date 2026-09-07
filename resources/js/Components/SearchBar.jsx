@@ -408,10 +408,16 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
                                                     {prod.name}
                                                 </h6>
                                                 <div className="search-item-meta">
-                                                    <span className="search-item-brand">
-                                                        {prod.brand?.name ||
-                                                            siteConfig.name}
-                                                    </span>
+                                                    {/* Was the shop's own
+                                                        name when the product
+                                                        had no brand. */}
+                                                    {(prod.brand?.name ||
+                                                        prod.brand) && (
+                                                        <span className="search-item-brand">
+                                                            {prod.brand?.name ||
+                                                                prod.brand}
+                                                        </span>
+                                                    )}
                                                     <span className="search-item-price">
                                                         {formatBdt(
                                                             prod.discount_price ||

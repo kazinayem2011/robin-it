@@ -123,9 +123,13 @@ export default function QuickViewModal({ show, onClose, product }) {
                 {/* Right: Info & Actions */}
                 <div className="quick-view-info-box">
                     <div>
-                        <span className="quick-view-brand">
-                            {product.brand?.name || 'Authorized Hardware'}
-                        </span>
+                        {/* Was 'Authorized Hardware' when no brand was
+                            recorded — see the note in ProductCard. */}
+                        {product.brand?.name && (
+                            <span className="quick-view-brand">
+                                {product.brand.name}
+                            </span>
+                        )}
                         <h3 className="quick-view-title">{product.name}</h3>
 
                         {/* Price */}

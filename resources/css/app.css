@@ -2357,6 +2357,15 @@ textarea.has-error:focus,
     letter-spacing: 0.5px;
     color: var(--text-subtle);
     margin-bottom: 4px;
+    /*
+     * Holds its line when the product has no brand recorded.
+     *
+     * The tag used to print 'Authorized Brand' rather than admit it did not
+     * know, so it was never empty and never needed this. Now that it can be,
+     * an unbranded product in a row of branded ones would otherwise pull its
+     * title a line higher than the three beside it.
+     */
+    min-height: 1em;
     /* Two columns of cards on a phone leaves about 137px for this, and
        "ROBINS COMPUTER" wants 145 — it was being cut off mid-letter at the
        card edge rather than shortened. */

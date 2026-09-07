@@ -226,14 +226,20 @@ export default function SelectComponent({ categorySlug }) {
                                                 {product.name}
                                             </h4>
                                             <div className="component-select-meta-row">
-                                                <span>
-                                                    Brand:{' '}
-                                                    <strong>
-                                                        {product.brand ||
-                                                            'Genuine'}
-                                                    </strong>
-                                                </span>
-                                                <span>•</span>
+                                                {/* Was 'Genuine' when none
+                                                    was recorded — a claim in
+                                                    place of a missing fact. */}
+                                                {product.brand && (
+                                                    <>
+                                                        <span>
+                                                            Brand:{' '}
+                                                            <strong>
+                                                                {product.brand}
+                                                            </strong>
+                                                        </span>
+                                                        <span>•</span>
+                                                    </>
+                                                )}
                                                 <span
                                                     className="component-select-stock-tag"
                                                     style={

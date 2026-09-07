@@ -428,7 +428,17 @@ class ProductService
             'id' => $product->id,
             'name' => $product->name,
             'slug' => $product->slug,
-            'brand' => $product->brand ? $product->brand->name : 'Robins Computer',
+            /*
+             * Null when there is none, rather than the shop's own name.
+             *
+             * This read `: 'Robins Computer'`, so every product with no brand
+             * recorded went out to the storefront labelled as the shop's own —
+             * including third-party stock the shop did not make. It was
+             * hardcoded too, so it did not even follow site_name. The card, the
+             * search list and the builder all show nothing when this is null,
+             * which is what an unknown brand looks like.
+             */
+            'brand' => $product->brand?->name,
             'category' => $product->category ? $product->category->name : 'Hardware',
             'price' => '৳'.number_format($currentPrice),
             'raw_price' => (float) $currentPrice,

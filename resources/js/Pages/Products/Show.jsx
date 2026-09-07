@@ -371,10 +371,16 @@ export default function ProductDetails(props) {
         name: product.name,
         image: images[0],
         description: product.short_description || product.name,
-        brand: {
-            '@type': 'Brand',
-            name: product.brand?.name || 'Genuine Brand',
-        },
+        /*
+         * Omitted entirely when unknown, rather than named 'Genuine Brand'.
+         *
+         * schema.org treats brand as optional, and this block is machine-read:
+         * a placeholder here publishes a brand that does not exist straight
+         * into search results, for every product with none recorded.
+         */
+        ...(product.brand?.name
+            ? { brand: { '@type': 'Brand', name: product.brand.name } }
+            : {}),
         offers: {
             '@type': 'Offer',
             priceCurrency: 'BDT',

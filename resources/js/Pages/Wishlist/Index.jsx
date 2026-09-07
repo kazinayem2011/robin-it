@@ -163,10 +163,13 @@ export default function Wishlist() {
                                     </Link>
 
                                     <div className="wishlist-info-box">
-                                        <span className="wishlist-brand">
-                                            {product.brand?.name ||
-                                                'Authorized'}
-                                        </span>
+                                        {/* Was 'Authorized' when no brand
+                                            was recorded — see ProductCard. */}
+                                        {product.brand?.name && (
+                                            <span className="wishlist-brand">
+                                                {product.brand.name}
+                                            </span>
+                                        )}
                                         <Link
                                             href={ROUTES.PRODUCT_DETAIL(
                                                 product.slug,

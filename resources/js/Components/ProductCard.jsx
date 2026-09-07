@@ -240,8 +240,10 @@ export const ProductCard = ({
 
                     {/* Body Content */}
                     <div className="product-body">
+                        {/* Was 'Hardware' when none was recorded. The row
+                            keeps the line either way — see the note below. */}
                         <div className="product-brand-tag">
-                            {product.brand?.name || product.brand || 'Hardware'}
+                            {product.brand?.name || product.brand || ''}
                         </div>
                         <h4 className="product-title">
                             <Link href={ROUTES.PRODUCT_DETAIL(product.slug)}>
@@ -427,10 +429,18 @@ export const ProductCard = ({
 
                 {/* Content Details */}
                 <div className="product-body">
+                    {/*
+                     * Empty when there is no brand, not filled in.
+                     *
+                     * This said 'Authorized Brand' when the field was empty — a
+                     * claim invented to fill a gap, and made precisely about
+                     * the products the shop knows least about. It says nothing
+                     * now, but the element stays: the line is reserved in CSS,
+                     * so one unbranded product in a row does not pull its title
+                     * up out of line with the three beside it.
+                     */}
                     <div className="product-brand-tag">
-                        {product.brand?.name ||
-                            product.brand ||
-                            'Authorized Brand'}
+                        {product.brand?.name || product.brand || ''}
                     </div>
                     <h4 className="product-title">
                         <Link href={ROUTES.PRODUCT_DETAIL(product.slug)}>

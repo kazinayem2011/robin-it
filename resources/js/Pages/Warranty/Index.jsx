@@ -197,8 +197,11 @@ export default function WarrantyIndex() {
                         className="badge-pill"
                         style={{ margin: '0 auto 8px' }}
                     >
-                        <ShieldCheck size={14} /> Official Authorized Warranty
-                        Protection
+                        {/* Was "Official Authorized Warranty Protection".
+                            The page under it checks manufacturer cover, so
+                            this says that rather than a vaguer word that
+                            sounds like a status the shop holds. */}
+                        <ShieldCheck size={14} /> Official Manufacturer Warranty
                     </div>
                     <h1>Warranty Check &amp; RMA Service Center</h1>
                     <p>
@@ -314,9 +317,16 @@ export default function WarrantyIndex() {
                                                 margin: '4px 0 0 0',
                                             }}
                                         >
+                                            {/* Was 'Genuine Authorized
+                                                Hardware', which named a
+                                                customer's own item — the one
+                                                they are checking cover on —
+                                                with a claim, on the branch
+                                                where the shop has no record of
+                                                what it is. The reference above
+                                                identifies it. */}
                                             {warrantyData.existing_claim
-                                                ?.product_name ||
-                                                'Genuine Authorized Hardware'}
+                                                ?.product_name || 'This unit'}
                                         </h3>
                                     </div>
                                     <div>

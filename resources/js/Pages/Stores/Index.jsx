@@ -53,7 +53,7 @@ export default function StoresIndex() {
                         <span className="stores-badge">
                             NATIONWIDE PRESENCE
                         </span>
-                        <h1>Showrooms &amp; Authorized Experience Centers</h1>
+                        <h1>Showrooms &amp; Authorised Experience Centres</h1>
                         <p>
                             Visit any of our official outlets across Bangladesh
                             for live hardware demonstrations, instant PC
