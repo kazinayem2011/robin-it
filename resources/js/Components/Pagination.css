@@ -49,17 +49,7 @@
     justify-content: center;
 }
 
-@media (max-width: 480px) {
-    .pagination-btns {
-        gap: 4px;
-    }
 
-    /* The box keeps its 34px, so the target stays thumb-sized; only the air
-       around the digits goes. */
-    .pagination-btn {
-        padding: 0 6px;
-    }
-}
 
 .pagination-btn {
     min-width: 34px;
@@ -110,4 +100,64 @@
     padding: 0 6px;
     color: var(--gray-400);
     font-weight: 700;
+}
+
+/*
+ * A phone draws five page slots rather than seven — Pagination asks for one
+ * sibling fewer at this width — which is seven controls in all. They come to
+ * 266px, and a card footer with 20px of padding each side offers 238, so the
+ * row still broke and left "64" and "next" stranded underneath. The padding is
+ * where the difference is: a footer bar does not need a desktop's margins to
+ * sit in on a screen this size.
+ *
+ * This block sits at the end of the file on purpose. It was above the rules
+ * it means to override, which have the same specificity, so the narrower
+ * padding it asked for had never once been applied.
+ */
+@media (max-width: 640px) {
+    .pagination-wrapper {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+
+    .pagination-summary {
+        font-size: 0.76rem;
+    }
+
+    .pagination-btns {
+        gap: 4px;
+    }
+
+    /* The box keeps its 34px, so the target stays thumb-sized; only the air
+       around the digits goes. */
+    .pagination-btn {
+        padding: 0 6px;
+    }
+
+    /* It stands for a run of pages, not a page, so it does not need a page's
+       width — and here it is the difference between one row and two. */
+    .pagination-ellipsis {
+        padding: 0 2px;
+    }
+}
+
+/*
+ * The narrowest phones still in use — 360px is ordinary on Android — leave the
+ * card about 228px to put seven controls in, against the 247 they take at the
+ * sizes above. The row keeps its 34px height, so the target stays as tall as
+ * a thumb needs; it is only the width either side of a digit that goes.
+ */
+@media (max-width: 400px) {
+    .pagination-wrapper {
+        padding: 12px 6px;
+    }
+
+    .pagination-btns {
+        gap: 3px;
+    }
+
+    .pagination-btn {
+        min-width: 30px;
+        padding: 0 4px;
+    }
 }

@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, Search, X } from 'lucide-react';
+import { useMediaQuery, PHONE } from '../hooks/useMediaQuery';
 import './Select.css';
 
 /**
@@ -61,7 +62,6 @@ const normalise = (options) =>
 /* Roughly where a native list stops being scannable and starts being a haystack. */
 const SEARCH_FROM = 8;
 
-const PHONE = '(max-width: 640px)';
 
 export default function Select({
     label,
@@ -111,9 +111,7 @@ export default function Select({
     const [open, setOpen] = useState(false);
     const [term, setTerm] = useState('');
     const [active, setActive] = useState(-1);
-    const [phone, setPhone] = useState(
-        () => typeof window !== 'undefined' && window.matchMedia(PHONE).matches,
-    );
+    const phone = useMediaQuery(PHONE);
     const [pos, setPos] = useState(null);
 
     const triggerRef = useRef(null);
@@ -139,17 +137,6 @@ export default function Select({
 
         return items.filter((o) => o.label.toLowerCase().includes(needle));
     }, [items, term]);
-
-    /* Follow the window across the breakpoint — a tablet turned sideways
-       crosses it, and the panel and the sheet are different components. */
-    useEffect(() => {
-        const mq = window.matchMedia(PHONE);
-        const onChangeMq = (e) => setPhone(e.matches);
-
-        mq.addEventListener('change', onChangeMq);
-
-        return () => mq.removeEventListener('change', onChangeMq);
-    }, []);
 
     const close = useCallback(({ refocus = true } = {}) => {
         setOpen(false);

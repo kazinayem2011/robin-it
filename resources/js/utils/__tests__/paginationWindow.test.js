@@ -114,4 +114,39 @@ describe('readLinks', () => {
 
         expect(totalPages).toBe(4);
     });
+
+    /*
+     * A phone asks for one sibling fewer. Seven page slots and two arrows is
+     * nine controls, which does not fit across a phone: on the 1,269-product
+     * list the last page and the next arrow were pushed onto a second row.
+     */
+    describe('the narrower window a phone asks for', () => {
+        it('keeps the first, the current and the last page and nothing else', () => {
+            expect(paginationWindow(25, 64, 0)).toEqual([
+                1,
+                ELLIPSIS,
+                25,
+                ELLIPSIS,
+                64,
+            ]);
+        });
+
+        it('shows the run at the start without a gap in front of it', () => {
+            expect(paginationWindow(1, 64, 0)).toEqual([1, 2, 3, ELLIPSIS, 64]);
+        });
+
+        it('shows the run at the end the same way', () => {
+            expect(paginationWindow(64, 64, 0)).toEqual([1, ELLIPSIS, 62, 63, 64]);
+        });
+
+        it('never asks for more than five slots, however many pages there are', () => {
+            for (const page of [1, 2, 3, 50, 100, 199, 200]) {
+                expect(paginationWindow(page, 200, 0).length).toBeLessThanOrEqual(5);
+            }
+        });
+
+        it('still lists every page when they all fit', () => {
+            expect(paginationWindow(2, 5, 0)).toEqual([1, 2, 3, 4, 5]);
+        });
+    });
 });

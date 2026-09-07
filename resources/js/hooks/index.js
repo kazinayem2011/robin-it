@@ -3,3 +3,4 @@ export { useMarqueeDuration } from './useMarqueeDuration';
 export { useFlashToasts } from './useFlashToasts';
 export { useWishlist } from './useWishlist';
 export { useAddToCart } from './useAddToCart';
+export { useMediaQuery, useIsPhone, PHONE } from './useMediaQuery';

@@ -7,6 +7,7 @@ import {
     readLinks,
     ELLIPSIS,
 } from '../utils/paginationWindow';
+import { useIsPhone } from '../hooks/useMediaQuery';
 import './Pagination.css';
 
 /**
@@ -34,6 +35,18 @@ export const Pagination = ({
     total = null,
     className = '',
 }) => {
+    /*
+     * Seven page slots plus the two arrows is nine controls, and nine will not
+     * fit across a phone: on a 1,269-row list the last page and the next arrow
+     * were pushed onto a second line under the other seven.
+     *
+     * A phone gets one sibling fewer, which is five slots — first, current,
+     * last and the gaps between them — and seven controls in all. The pages
+     * that go are the ones nobody taps: on page 1 of 64 the way forward is the
+     * arrow or the jump to the end, not page 4.
+     */
+    const phone = useIsPhone();
+
     const usingLinks = links && links.length > 3;
 
     const resolved = usingLinks
@@ -46,7 +59,7 @@ export const Pagination = ({
     if (pageCount <= 1) return null;
 
     const urlFor = usingLinks ? pageUrlFactory(links) : () => null;
-    const slots = paginationWindow(page, pageCount);
+    const slots = paginationWindow(page, pageCount, phone ? 0 : 1);
 
     const summary = total !== null && (
         <div className="pagination-summary">
