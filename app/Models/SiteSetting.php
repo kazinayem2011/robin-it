@@ -23,6 +23,29 @@ class SiteSetting extends Model
     private const TTL = 3600;
 
     /**
+     * Any write to a setting drops its cached copy.
+     *
+     * set() flushed the cache itself, so a change made through the admin form
+     * was fine — but a change made on the model was not, and reads keep their
+     * value for an hour. Clearing an SMS credential straight off the row left
+     * SmsService still holding it and still willing to send with it: the row
+     * read empty, isSecretSet() answered true, and nothing connected the two.
+     *
+     * A stale colour or shop name is a nuisance. A credential that outlives
+     * the moment it was deleted is the reason this hangs off the model rather
+     * than off the one method that happened to remember.
+     *
+     * Note it cannot see query-builder writes — SiteSetting::where(...)
+     * ->update(...) fires no model events — so flushCache() stays public for
+     * those, and set() keeps its own call.
+     */
+    protected static function booted(): void
+    {
+        static::saved(static fn (self $setting) => self::flushCache([$setting->key]));
+        static::deleted(static fn (self $setting) => self::flushCache([$setting->key]));
+    }
+
+    /**
      * Every setting the admin form is allowed to write, grouped as the form
      * groups them.
      *
