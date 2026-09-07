@@ -2642,6 +2642,26 @@ a.admin-card:hover,
 }
 
 /*
+ * The gutters were a desktop's and never narrowed.
+ *
+ * 32px around the content body and another 24px inside every card is 56px of
+ * each margin, so a 390px phone spent 112px of itself — nearly a third — on
+ * air before an order row, a form field or a chart got any. Both come down
+ * here, to roughly what the storefront's own panels stop at, which puts the
+ * content back up from 278px to 330.
+ */
+@media (max-width: 640px) {
+    .admin-content-body {
+        padding: 18px 14px;
+    }
+
+    .admin-card {
+        padding: 18px 16px;
+        margin-bottom: 16px;
+    }
+}
+
+/*
  * Below 640px each row becomes a card instead of a line in a table.
  *
  * The table asked for 520px minimum, which is under what any of these
