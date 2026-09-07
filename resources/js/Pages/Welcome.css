@@ -1262,11 +1262,30 @@
     align-items: center;
 }
 
+/*
+ * The partner pill keeps a light ground in both themes.
+ *
+ * These are fourteen third-party marks drawn for light backgrounds, and most
+ * are solid black wordmarks: on the dark theme's surface AMD, NVIDIA, ASUS,
+ * Apple and Logitech all but disappeared, and the two that carry a baked white
+ * background became white boxes. None of that is fixable from here —
+ * recolouring somebody else's logo is not ours to do, and a filter that lifted
+ * the black would take Razer's green and Lenovo's red with it.
+ *
+ * So the artwork sits on the ground it was drawn for, whatever the page is
+ * doing. The email templates already settle this the same way: see the note in
+ * emails/layouts/master.blade.php, where the header band is deliberately held
+ * light in dark mode so the logo stays readable.
+ *
+ * This is why the two colours below are exempt from the theme rule rather than
+ * being an oversight: the constraint comes from the artwork, not the design
+ * system, and it applies in both themes rather than switching between them.
+ */
 .brand-logo-pill {
     height: 68px;
     padding: 12px 18px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
+    background: var(--white); /* theme-exempt: third-party artwork needs a light ground */
+    border: 1px solid var(--gray-200); /* theme-exempt: an edge for that light ground */
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -1275,18 +1294,33 @@
     transition: all var(--transition-normal);
 }
 
+/*
+ * Sized by the space it is given, not by a height cap.
+ *
+ * This was `max-height: 32px` with `width: auto`, which sizes every mark by
+ * one dimension — and the marks are not one shape. A wordmark like NVIDIA is
+ * 5:1, so 32px tall made it 124px wide and it filled a third of its pill; a
+ * square mark like Dell became 32x32 and filled a twelfth of the same pill,
+ * three and a half times smaller for no reason a reader could see.
+ *
+ * Filling the box and letting object-fit: contain do the scaling means each
+ * mark is as large as its own proportions allow, and the pill decides the
+ * size rather than the artwork's aspect ratio. A square mark comes out 44px
+ * tall against a wordmark's ~30px, which is about right: a square logo has to
+ * be taller than a wordmark to read as the same size beside it.
+ */
 .brand-logo-pill .brand-svg {
-    max-height: 32px;
-    max-width: 100%;
-    width: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     transition: transform var(--transition-normal);
 }
 
 .brand-logo-pill:hover {
     border-color: var(--primary);
-    background: var(--bg-surface);
+    /* No background here: it repeated the resting colour, and once that became
+       a fixed light one this was the rule that put it back to the themed
+       surface — turning the pill dark under the cursor in the dark theme. */
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     transform: translateY(-4px);
 }
