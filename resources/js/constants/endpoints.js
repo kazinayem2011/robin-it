@@ -301,6 +301,7 @@ export const ROUTES = {
     ADMIN_SUPPLIERS: '/admin/suppliers',
     ADMIN_BRANDS: '/admin/brands',
     ADMIN_CATEGORIES: '/admin/categories',
+    ADMIN_PC_BUILDER: '/admin/pc-builder',
     ADMIN_BANNERS: '/admin/banners',
     ADMIN_COUPONS: '/admin/coupons',
     ADMIN_WARRANTY: '/admin/warranty',

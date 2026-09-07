@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\CampaignController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\PcBuilderController as AdminPcBuilderController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\ContentPageController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
@@ -179,6 +180,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'index'])->name('products')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_BRANDS, [AdminBrandController::class, 'index'])->name('brands')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'index'])->name('categories')->middleware('can:catalogue');
+        Route::get(ApiEndpoints::ADMIN_PC_BUILDER, [AdminPcBuilderController::class, 'index'])->name('pc-builder')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'index'])->name('banners')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_COUPONS, [AdminCouponController::class, 'index'])->name('coupons')->middleware('can:marketing');
         Route::get(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'index'])->name('stores')->middleware('can:settings');

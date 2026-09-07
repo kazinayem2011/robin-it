@@ -6,6 +6,7 @@ import ThemeToggle from '../Components/ThemeToggle';
 import UserMenu from '../Components/UserMenu';
 import { useFlashToasts } from '../hooks';
 import {
+    Cpu,
     LayoutDashboard,
     Package,
     Boxes,
@@ -121,6 +122,14 @@ const NAV_GROUPS = [
                 label: 'Brands',
                 href: ROUTES.ADMIN_BRANDS,
                 icon: Tag,
+                ability: 'catalogue',
+            },
+            {
+                /* Read-only. It sits under Catalogue because everything it
+                   reports is fixed on a product or a category. */
+                label: 'PC Builder',
+                href: ROUTES.ADMIN_PC_BUILDER,
+                icon: Cpu,
                 ability: 'catalogue',
             },
         ],

@@ -354,6 +354,9 @@ class ApiEndpoints
 
     public const ADMIN_BRANDS = 'brands';
 
+    /** Read-only: what the PC Builder is offering, and why. */
+    public const ADMIN_PC_BUILDER = 'pc-builder';
+
     public const ADMIN_BRANDS_ITEM = 'brands/{id}';
 
     public const ADMIN_BANNERS = 'banners';

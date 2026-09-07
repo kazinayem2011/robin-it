@@ -1,0 +1,165 @@
+/* The PC Builder's own state, read-only: which parts each slot offers and
+   what is stopping one appearing. */
+
+.admin-pcb {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/*
+ * The rule nobody could discover, said once at the top.
+ *
+ * "Category and Active, not stock" is the whole mental model, and until this
+ * screen existed it was written down only in the service that implements it.
+ */
+.admin-pcb-intro {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--info-light);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius-md);
+    color: var(--info-text);
+}
+
+.admin-pcb-intro svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-pcb-intro strong {
+    display: block;
+    font-size: 0.86rem;
+    margin-bottom: 3px;
+}
+
+.admin-pcb-intro p {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.admin-pcb-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-md);
+    color: var(--warning-text);
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.admin-pcb-banner svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-pcb-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    font-size: 0.84rem;
+}
+
+.admin-pcb-table th {
+    text-align: left;
+    padding: 11px 14px;
+    background: var(--bg-surface-subtle);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.admin-pcb-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-body);
+    vertical-align: top;
+}
+
+.admin-pcb-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-pcb-table .num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.admin-pcb-table td strong {
+    color: var(--text-primary);
+}
+
+/* A row worth doing something about, tinted rather than shouted at: most of
+   these are "add a spec", not "this is broken". */
+.admin-pcb-table tr.has-trouble td {
+    background: var(--state-wash);
+}
+
+.admin-pcb-table code {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 2px 6px;
+    background: var(--bg-muted);
+    border-radius: var(--radius-xs);
+    color: var(--text-secondary);
+}
+
+.admin-pcb-required {
+    margin-left: 8px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--danger-text);
+}
+
+.admin-pcb-warn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--warning-text);
+    font-weight: 700;
+}
+
+.admin-pcb-ok {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--success-text);
+    font-weight: 700;
+}
+
+.admin-pcb-muted {
+    color: var(--text-subtle);
+}
+
+.admin-pcb-foot {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.admin-pcb-foot a {
+    color: var(--primary-ink);
+    font-weight: 700;
+}
+
+/* The table is six columns of mostly numbers; on a phone it scrolls rather
+   than wrapping each cell into an unreadable stack. */
+@media (max-width: 860px) {
+    .admin-pcb-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}

@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductReview;
 use App\Models\User;
 use App\Models\WarrantyClaim;
+use App\Support\PcBuilderHealth;
 use App\Support\ProfitAndLoss;
 use App\Support\QueueHealth;
 use App\Support\SalesMargin;
@@ -112,6 +113,14 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $items = [
+            [
+                'ability' => 'catalogue',
+                'label' => 'Parts the builder cannot check',
+                'hint' => 'Missing the specs compatibility reads',
+                'count' => app(PcBuilderHealth::class)->summary()['spec_gaps'],
+                'url' => '/admin/pc-builder',
+                'tone' => 'warn',
+            ],
             [
                 'ability' => 'stock',
                 'label' => 'Low stock',

@@ -46,6 +46,80 @@ class PcCompatibilityService
     public const SLOT_CASE = 'pc-case';
 
     /**
+     * The shelf slugs each slot answers to, canonical name first.
+     *
+     * The constants above are the old taxonomy's names, and everything in this
+     * class keys off them — the selection it is handed, the required-spec
+     * table, the walk up a product's categories. The catalogue was renamed to
+     * component-processor, component-casing and the rest, so the builder sends
+     * a selection keyed by those and this class recognised none of it: every
+     * check returned "unknown" and the flagship "Instant Compatibility Check"
+     * quietly passed every build, including an AM5 chip on an LGA1700 board.
+     * missingSpecsFor() went the same way, so the admin's "Add spec" warning
+     * never appeared for any product either.
+     *
+     * getPcBuilderCategories() hit this and was given candidate lists;
+     * getBuilderQuickSpecs() hit it later and was given the same. This is the
+     * third place, and it gets candidates rather than a rename so a shop on
+     * either tree works and neither has to be migrated for the other's sake.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const SLOT_ALIASES = [
+        self::SLOT_CPU => ['cpu', 'component-processor'],
+        self::SLOT_MOTHERBOARD => ['motherboard', 'component-motherboard'],
+        self::SLOT_RAM => ['ram', 'component-ram-desktop', 'component-ram'],
+        self::SLOT_GPU => ['graphics-card', 'component-graphics-card'],
+        self::SLOT_PSU => ['power-supply', 'component-power-supply'],
+        self::SLOT_COOLER => ['cpu-cooler', 'component-cpu-cooler'],
+        self::SLOT_CASE => ['pc-case', 'component-casing', 'component-case'],
+    ];
+
+    /**
+     * The canonical slot a shelf slug belongs to, or null if it is not one the
+     * compatibility engine reasons about.
+     */
+    public static function slotFor(?string $slug): ?string
+    {
+        if ($slug === null || $slug === '') {
+            return null;
+        }
+
+        foreach (self::SLOT_ALIASES as $slot => $aliases) {
+            if (in_array($slug, $aliases, true)) {
+                return $slot;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Re-key a selection onto the canonical slot names.
+     *
+     * Every check below reads $selection['cpu'] and friends, so this is the one
+     * place the builder's own component ids have to be translated. Anything not
+     * recognised is dropped rather than passed through: a key this class does
+     * not understand cannot take part in a check, and keeping it would only
+     * make a selection look larger than it is.
+     *
+     * @param  array<string, Product>  $selection
+     * @return array<string, Product>
+     */
+    public static function normaliseSelection(array $selection): array
+    {
+        $normalised = [];
+
+        foreach ($selection as $key => $product) {
+            if ($slot = self::slotFor((string) $key)) {
+                $normalised[$slot] = $product;
+            }
+        }
+
+        return $normalised;
+    }
+
+    /**
      * Headroom over measured draw before we consider a PSU adequate.
      *
      * The figures being summed are already peak values (Intel MTP, GPU TGP), so
@@ -72,6 +146,10 @@ class PcCompatibilityService
      */
     public function analyse(array $selection): array
     {
+        // Whatever the caller keys its build by, the checks below read the
+        // canonical names. Translating once here covers every one of them.
+        $selection = self::normaliseSelection($selection);
+
         $checks = array_values(array_filter([
             $this->checkCpuSocket($selection),
             $this->checkCoolerSocket($selection),
@@ -102,9 +180,12 @@ class PcCompatibilityService
      */
     public function annotateCandidates(string $slot, Collection $candidates, array $selection): Collection
     {
+        // The picker asks by the builder's own component id.
+        $slot = self::slotFor($slot) ?? $slot;
+
         return $candidates->map(function (Product $candidate) use ($slot, $selection) {
             // Test the candidate as though it were chosen for this slot.
-            $hypothetical = array_merge($selection, [$slot => $candidate]);
+            $hypothetical = array_merge(self::normaliseSelection($selection), [$slot => $candidate]);
             $result = $this->analyse($hypothetical);
 
             // Only conflicts that actually involve this slot matter here.
@@ -207,8 +288,8 @@ class PcCompatibilityService
         $guard = 0;
 
         while ($category && $guard++ < 6) {
-            if (isset(self::REQUIRED_SPECS[$category->slug])) {
-                return $category->slug;
+            if ($slot = self::slotFor($category->slug)) {
+                return $slot;
             }
 
             $category = $category->parent;
