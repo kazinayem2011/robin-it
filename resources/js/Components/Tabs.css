@@ -33,7 +33,7 @@
     padding: 12px 24px;
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -43,11 +43,11 @@
 }
 
 .reusable-tabs-container.variant-line .reusable-tab-btn:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .reusable-tabs-container.variant-line .reusable-tab-btn.active {
-    color: var(--primary);
+    color: var(--primary-ink);
     border-bottom-color: var(--primary);
 }
 
@@ -69,7 +69,7 @@
 
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -80,13 +80,13 @@
 
 .reusable-tabs-container.variant-pills .reusable-tab-btn:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     background: var(--primary-light);
 }
 
 .reusable-tabs-container.variant-pills .reusable-tab-btn.active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     box-shadow: 0 4px 12px var(--primary-glow);
 }
@@ -109,7 +109,7 @@
 
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -127,16 +127,16 @@
 }
 
 .reusable-tabs-container.variant-enclosed .reusable-tab-btn.active {
-    background: var(--white);
+    background: var(--bg-surface);
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     box-shadow: var(--shadow-sm);
 }
 
 /* Reusable Badges inside Tabs */
 .reusable-tab-badge {
     background: var(--bg-surface-subtle);
-    color: var(--gray-600);
+    color: var(--text-body);
     padding: 2px 8px;
     border-radius: var(--radius-full);
     font-size: 0.75rem;
@@ -147,7 +147,7 @@
 
 .reusable-tab-btn.active .reusable-tab-badge {
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     border-color: rgba(234, 72, 79, 0.25);
 }
 
@@ -155,7 +155,7 @@
     .reusable-tab-btn.active
     .reusable-tab-badge {
     background: rgba(255, 255, 255, 0.25);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: transparent;
 }
 

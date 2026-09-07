@@ -5,11 +5,11 @@
 .warranty-hero-banner {
     background: linear-gradient(
         135deg,
-        var(--dark-950) 0%,
-        var(--dark-900) 50%,
+        var(--bg-inverse-deep) 0%,
+        var(--bg-inverse) 50%,
         #1e1b4b 100%
     );
-    color: var(--white);
+    color: var(--text-on-accent);
     padding: 48px 0;
     margin-bottom: 36px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -25,12 +25,12 @@
     font-size: 2.25rem;
     font-weight: 900;
     margin: 12px 0 10px;
-    color: var(--white);
+    color: var(--text-on-accent);
     letter-spacing: -0.5px;
 }
 
 .warranty-hero-inner p {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-size: 1rem;
     line-height: 1.6;
 }
@@ -44,13 +44,13 @@
 }
 
 .warranty-tab-btn {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     padding: 10px 24px;
     border-radius: var(--radius-full);
     font-weight: 700;
     font-size: 0.92rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -60,20 +60,20 @@
 
 .warranty-tab-btn:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     background: var(--primary-light);
 }
 
 .warranty-tab-btn.tab-active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     box-shadow: 0 4px 14px var(--primary-glow);
 }
 
 /* Lookup Search Surface */
 .warranty-lookup-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 36px;
@@ -109,7 +109,7 @@
 
 /* Status Result Card */
 .warranty-result-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 28px 32px;
@@ -130,7 +130,7 @@
 
 .warranty-badge-active {
     background: var(--success-light);
-    color: var(--success);
+    color: var(--success-ink);
     padding: 6px 16px;
     border-radius: var(--radius-full);
     font-weight: 800;
@@ -148,7 +148,7 @@
  */
 .warranty-badge-expired {
     background: var(--danger-light);
-    color: var(--danger);
+    color: var(--danger-ink);
     padding: 6px 16px;
     border-radius: var(--radius-full);
     font-weight: 800;
@@ -166,7 +166,7 @@
 }
 
 .warranty-metric-item {
-    background: var(--gray-50);
+    background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 14px 16px;
@@ -175,7 +175,7 @@
 .warranty-metric-label {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-transform: uppercase;
     margin-bottom: 4px;
 }
@@ -183,7 +183,7 @@
 .warranty-metric-value {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* 5-Step RMA Progress Tracker */
@@ -217,7 +217,7 @@
     gap: 8px;
     position: relative;
     z-index: 2;
-    background: var(--white);
+    background: var(--bg-surface);
     padding: 0 8px;
 }
 
@@ -225,44 +225,44 @@
     width: 34px;
     height: 34px;
     border-radius: var(--radius-full);
-    background: var(--gray-100);
+    background: var(--bg-muted);
     border: 2px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.82rem;
     font-weight: 800;
-    color: var(--gray-500);
+    color: var(--text-muted);
     transition: all var(--transition-fast);
 }
 
 .rma-step-item.step-done .rma-step-circle {
     background: var(--success);
     border-color: var(--success);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .rma-step-item.step-current .rma-step-circle {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: 0 0 0 4px var(--primary-light);
 }
 
 .rma-step-label {
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
     text-align: center;
 }
 
 .rma-step-item.step-current .rma-step-label {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* Claim Submission Form */
 .warranty-claim-form-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 36px;
@@ -275,7 +275,7 @@
     font-size: 1.45rem;
     font-weight: 800;
     margin: 0 0 8px 0;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .claim-confirmed-box {
@@ -290,7 +290,7 @@
 .claim-code-pill {
     display: inline-block;
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 900;
@@ -310,7 +310,7 @@
 }
 
 .warranty-trust-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
@@ -325,7 +325,7 @@
     height: 44px;
     border-radius: var(--radius-sm);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -336,12 +336,12 @@
     font-size: 1rem;
     font-weight: 800;
     margin: 0 0 6px 0;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .warranty-trust-card p {
     font-size: 0.85rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     margin: 0;
     line-height: 1.5;
 }
@@ -396,7 +396,7 @@
         padding: 0 !important;
         border: 0 !important;
         box-shadow: none !important;
-        background: var(--white) !important;
+        background: var(--bg-surface) !important;
         max-width: none !important;
     }
 
@@ -420,7 +420,7 @@
  */
 .warranty-badge-unsold {
     background: var(--info-light);
-    color: var(--info);
+    color: var(--info-ink);
     padding: 6px 16px;
     border-radius: var(--radius-full);
     font-weight: 800;

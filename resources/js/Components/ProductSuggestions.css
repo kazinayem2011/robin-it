@@ -14,7 +14,7 @@
     margin: 0 0 16px;
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 

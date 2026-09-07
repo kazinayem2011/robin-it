@@ -60,6 +60,15 @@ class HandleInertiaRequests extends Middleware
             'brand_name' => fn () => BrandDetails::name(),
 
             /*
+             * The mark to draw on a dark background, resolved here for the
+             * same reason: which file that is depends on an override setting,
+             * on what DarkLogo managed to draw, and on what is actually on
+             * disk. The browser can see none of those, and a footer that
+             * guessed wrong would ask for a 404 on every page.
+             */
+            'brand_logo_dark' => fn () => BrandDetails::darkLogoWebPath(),
+
+            /*
              * Controllers flash a message on nearly every write —
              * back()->with('success', ...) — and none of them were reaching
              * the browser, because this was never shared.

@@ -7,12 +7,12 @@
 .stores-header-card {
     background: linear-gradient(
         135deg,
-        var(--dark-950) 0%,
-        var(--dark-900) 100%
+        var(--bg-inverse-deep) 0%,
+        var(--bg-inverse) 100%
     );
     border-radius: var(--radius-lg);
     padding: 36px 32px;
-    color: var(--white);
+    color: var(--text-on-accent);
     margin-bottom: 32px;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -20,7 +20,7 @@
 .stores-badge {
     font-size: 0.68rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     background: rgba(234, 72, 79, 0.15);
     padding: 3px 10px;
     border-radius: var(--radius-full);
@@ -34,12 +34,12 @@
     font-weight: 900;
     font-family: var(--font-heading);
     margin-bottom: 10px;
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .stores-header-card p {
     font-size: 0.92rem;
-    color: var(--gray-300);
+    color: var(--text-faint);
     max-width: 720px;
     line-height: 1.6;
     margin-bottom: 24px;
@@ -54,7 +54,7 @@
 .city-pill {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-size: 0.82rem;
     font-weight: 600;
     padding: 6px 14px;
@@ -67,7 +67,7 @@
 .city-pill.active {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /* Stores Grid */
@@ -84,7 +84,7 @@
 }
 
 .store-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px;
@@ -113,7 +113,7 @@
     gap: 4px;
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-ink);
     background: rgba(234, 72, 79, 0.08);
     padding: 2px 8px;
     border-radius: var(--radius-xs);
@@ -123,13 +123,13 @@
 .store-city-label {
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .store-name {
     font-size: 1.12rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 16px;
 }
 
@@ -146,12 +146,12 @@
     align-items: flex-start;
     gap: 10px;
     font-size: 0.84rem;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
     line-height: 1.4;
 }
 
 .detail-icon {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     flex-shrink: 0;
     /*
      * Centred on the first line, computed rather than nudged. The row is
@@ -180,7 +180,7 @@
 
 .store-phone-link,
 .store-email-link {
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-weight: 600;
     text-decoration: none;
     transition: color 0.14s ease;
@@ -188,7 +188,7 @@
 
 .store-phone-link:hover,
 .store-email-link:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .store-card-actions {
@@ -215,7 +215,7 @@
 
 .store-map-btn {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .store-map-btn:hover {
@@ -224,14 +224,14 @@
 
 .store-call-btn {
     background: var(--bg-surface-subtle);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     border: 1px solid var(--border-color);
 }
 
 .store-call-btn:hover {
-    background: var(--white);
+    background: var(--bg-surface);
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .stores-loading-box {

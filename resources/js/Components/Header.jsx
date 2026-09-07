@@ -13,6 +13,7 @@ import {
 import { BrandLogo } from './BrandLogo';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
+import ThemeToggle from './ThemeToggle';
 import { SearchBar } from './SearchBar';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
@@ -226,6 +227,21 @@ export const Header = () => {
                                 <MapPin size={13} className="ticker-icon" />
                                 <span>Showrooms</span>
                             </Link>
+                            <span className="ticker-divider"></span>
+                            {/*
+                             * Light or dark, for everyone — a guest included,
+                             * which is why it is here and not in the account
+                             * menu. Icon only: this row is the densest thing on
+                             * the page and a label would make it the widest
+                             * item in it.
+                             *
+                             * Two things hide this one, and the footer's copy
+                             * is the answer to both: the whole right-hand group
+                             * goes below 768px, and the bar itself is gone
+                             * entirely when an admin switches the announcement
+                             * off.
+                             */}
+                            <ThemeToggle variant="bar" />
                         </div>
                     </div>
                 </div>

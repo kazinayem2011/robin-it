@@ -42,7 +42,7 @@
     font-size: 3rem;
     font-weight: 900;
     line-height: 1;
-    color: var(--dark-900);
+    color: var(--text-primary);
     letter-spacing: -1px;
     margin-bottom: 8px;
 }
@@ -56,19 +56,19 @@
 
 .rating-star-icon.star-filled,
 .rating-star-label .star-filled {
-    fill: var(--accent-amber);
-    color: var(--accent-amber);
+    fill: var(--accent-amber-ink);
+    color: var(--accent-amber-ink);
 }
 
 .rating-star-icon.star-empty {
-    fill: var(--gray-200);
-    color: var(--gray-300);
+    fill: var(--bg-muted-strong);
+    color: var(--text-faint);
 }
 
 .rating-total-text {
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .rating-bars-box {
@@ -88,7 +88,7 @@
     width: 50px;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -119,5 +119,5 @@
     text-align: right;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }

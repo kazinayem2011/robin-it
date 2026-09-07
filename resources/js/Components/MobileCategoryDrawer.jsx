@@ -15,6 +15,7 @@ import {
 import { ROUTES } from '../constants/endpoints';
 import { getCategoryIcon } from '../utils/iconMap';
 import siteConfig from '../constants/siteConfig';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Reusable Accordion Toggle Button (DRY helper)
@@ -355,6 +356,22 @@ export const MobileCategoryDrawer = ({ isOpen, onClose, categories = [] }) => {
                                 <strong>{siteConfig.hotline}</strong>
                             </span>
                         </a>
+
+                        {/*
+                         * The theme, on a phone.
+                         *
+                         * The header's copy is hidden at this width — four
+                         * tools and a logo do not fit the row, same reason the
+                         * wishlist goes — so this drawer is where the choice
+                         * lives on a phone. It is the hamburger's menu, which
+                         * is where somebody looks for a setting.
+                         */}
+                        <div className="mobile-drawer-theme">
+                            <span className="mobile-drawer-theme-label">
+                                Appearance
+                            </span>
+                            <ThemeToggle variant="inline" />
+                        </div>
                     </div>
                 </div>
             </div>

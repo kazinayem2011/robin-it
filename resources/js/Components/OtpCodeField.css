@@ -28,11 +28,11 @@
     margin: 0;
     font-size: 0.85rem;
     line-height: 1.5;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .otp-step-sent strong {
-    color: var(--dark-800);
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
@@ -43,7 +43,7 @@
     background: none;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--primary);
+    color: var(--primary-ink);
     cursor: pointer;
 }
 
@@ -59,7 +59,7 @@
 }
 
 .otp-step-resend-button:disabled {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: default;
 }
 
@@ -90,12 +90,12 @@
 
 .otp-step-countdown {
     font-size: 0.8rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .otp-step-note {
     margin: 8px 0 0;
     font-size: 0.8rem;
     text-align: center;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }

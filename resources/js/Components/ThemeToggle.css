@@ -1,0 +1,89 @@
+/* The theme picker: one cycling icon in the top bar and the footer, and a flat
+   three-across control in the phone drawer. */
+
+/*
+ * The cycling icon.
+ *
+ * Both strips it lives in — the announcement bar and the footer's bottom rule —
+ * are dark in *both* themes, so this is deliberately built against that dark
+ * ground rather than against a surface: it takes the same faint colour the
+ * links beside it use, and lights up to white on hover exactly as they do.
+ * That is why it names --text-faint and --text-on-accent instead of the
+ * surface tokens a button on a card would use.
+ */
+.theme-toggle-bar {
+    display: inline-grid;
+    place-items: center;
+    /* 26px, not 38: it sits in a 7px-padded strip beside 13px glyphs, and a
+       full-size control would set the height of the whole bar. */
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    padding: 0;
+    color: var(--text-faint);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.theme-toggle-bar:hover {
+    color: var(--text-on-accent);
+    background: var(--white-alpha-10);
+    border-color: var(--white-alpha-20);
+}
+
+.theme-toggle-bar:focus-visible {
+    outline: none;
+    color: var(--text-on-accent);
+    box-shadow: var(--focus-ring);
+}
+
+/*
+ * The flat, side-by-side form used in the phone drawer, which is the only
+ * place the choice is reachable above the fold on a phone: the top bar's whole
+ * right-hand group is hidden below 768px, and the footer is a page away.
+ */
+.theme-toggle-inline {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.theme-toggle-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.theme-toggle-segment:hover {
+    color: var(--text-primary);
+}
+
+/* The chosen segment lifts onto its own surface, which is what makes the row
+   read as one control with a position in it rather than three buttons. */
+.theme-toggle-segment.is-active {
+    color: var(--primary-ink);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.theme-toggle-segment:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}

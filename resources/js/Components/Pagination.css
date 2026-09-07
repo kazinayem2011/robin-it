@@ -27,11 +27,11 @@
 
 .pagination-summary {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .pagination-summary strong {
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
@@ -49,8 +49,6 @@
     justify-content: center;
 }
 
-
-
 .pagination-btn {
     min-width: 34px;
     height: 34px;
@@ -62,7 +60,7 @@
     font-weight: 600;
     /* Was --gray-700, which this project never defines — the label fell back
        to whatever it inherited. The scale stops at 600. */
-    color: var(--gray-600);
+    color: var(--text-body);
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -73,13 +71,13 @@
 
 .pagination-btn:hover:not(.disabled):not(:disabled):not(.active) {
     background: var(--bg-surface-subtle);
-    color: var(--dark-900);
-    border-color: var(--gray-400);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 .pagination-btn.active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     font-weight: 800;
 }
@@ -98,7 +96,7 @@
 
 .pagination-ellipsis {
     padding: 0 6px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 700;
 }
 

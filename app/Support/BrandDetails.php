@@ -130,6 +130,48 @@ class BrandDetails
     }
 
     /**
+     * The logo to use on a dark background, as a browser-resolved path.
+     *
+     * Three places want this and only one of them is the dark theme: the
+     * footer and the admin sidebar are dark whatever the theme, so the
+     * strapline has been unreadable in both of those since long before there
+     * was a theme to switch. Everything that draws the mark on something dark
+     * asks here.
+     *
+     * In order of preference:
+     *
+     *   1. `site_logo_dark`, if an admin has uploaded one. A designer's own
+     *      dark-background mark beats anything generated, always.
+     *   2. The twin DarkLogo draws beside the logo, if it is on disk.
+     *   3. The ordinary logo — no worse than what was there before, so a shop
+     *      whose logo cannot be converted simply keeps today's behaviour.
+     */
+    public static function darkLogoWebPath(): ?string
+    {
+        $override = trim((string) SiteSetting::get('site_logo_dark', ''));
+
+        if ($override !== '') {
+            return preg_match('#^https?://#i', $override)
+                ? $override
+                : '/'.ltrim($override, '/');
+        }
+
+        $logo = self::logoWebPath();
+
+        if ($logo === null || preg_match('#^https?://#i', $logo)) {
+            return $logo;
+        }
+
+        $twin = DarkLogo::twinFor($logo);
+
+        if ($twin !== null && is_file(public_path(ltrim($twin, '/')))) {
+            return $twin;
+        }
+
+        return $logo;
+    }
+
+    /**
      * Filesystem path of the logo when it is a local file, otherwise null.
      *
      * Emails embed this directly rather than linking to it. A URL only works if

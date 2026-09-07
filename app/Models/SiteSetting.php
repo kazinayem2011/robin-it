@@ -64,6 +64,17 @@ class SiteSetting extends Model
             'site_name',
             'site_tagline',
             'site_logo',
+            /*
+             * The mark for a dark background, and optional.
+             *
+             * The shop's logo has its strapline baked in as black ink, which
+             * is invisible on the footer, the admin sidebar and the whole dark
+             * theme. Leaving this empty is the normal case: DarkLogo draws a
+             * twin beside the logo automatically, lifting only that ink. This
+             * key is the override for a shop whose designer has supplied a
+             * proper dark-background mark, and it always wins.
+             */
+            'site_logo_dark',
             'site_legal_name',
             'site_address',
             'footer_note',

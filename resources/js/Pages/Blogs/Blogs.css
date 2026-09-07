@@ -6,10 +6,10 @@
     background: linear-gradient(
         135deg,
         #090d16 0%,
-        var(--dark-900) 50%,
+        var(--bg-inverse) 50%,
         #1e1b4b 100%
     );
-    color: var(--white);
+    color: var(--text-on-accent);
     padding: 48px 0;
     margin-bottom: 36px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -46,11 +46,11 @@
     font-weight: 900;
     margin: 8px 0 10px;
     letter-spacing: -0.5px;
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .journal-hero-title-group p {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-size: 1rem;
     max-width: 580px;
     margin: 0;
@@ -72,14 +72,14 @@
     background: transparent;
     border: none;
     outline: none;
-    color: var(--white);
+    color: var(--text-on-accent);
     font-size: 0.88rem;
     width: 100%;
     padding: 6px;
 }
 
 .journal-search-pillbox input::placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Category Filter Tabs Strip */
@@ -94,13 +94,13 @@
 }
 
 .journal-cat-tab {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     padding: 8px 18px;
     border-radius: var(--radius-full);
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     white-space: nowrap;
     transition: all var(--transition-fast);
@@ -108,13 +108,13 @@
 
 .journal-cat-tab:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     background: var(--primary-light);
 }
 
 .journal-cat-tab.tab-active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     box-shadow: 0 4px 12px var(--primary-glow);
 }
@@ -124,7 +124,7 @@
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     gap: 28px;
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -156,7 +156,7 @@
 .featured-lead-badge {
     align-self: flex-start;
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.75rem;
     font-weight: 800;
     padding: 4px 12px;
@@ -169,14 +169,14 @@
 .featured-story-content h2 {
     font-size: 1.65rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 0 0 14px 0;
     line-height: 1.3;
 }
 
 .featured-story-content p {
     font-size: 0.95rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     line-height: 1.6;
     margin-bottom: 22px;
 }
@@ -186,7 +186,7 @@
     align-items: center;
     gap: 16px;
     font-size: 0.8rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-weight: 600;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .journal-article-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -221,7 +221,7 @@
     position: relative;
     width: 100%;
     padding-top: 56.25%; /* 16:9 Aspect Ratio */
-    background: var(--dark-900);
+    background: var(--bg-inverse);
     overflow: hidden;
 }
 
@@ -243,7 +243,7 @@
     top: 12px;
     left: 12px;
     background: rgba(15, 23, 42, 0.85);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 3px 10px;
@@ -261,7 +261,7 @@
 .article-card-body h3 {
     font-size: 1.12rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 0 0 10px 0;
     line-height: 1.4;
     display: -webkit-box;
@@ -272,7 +272,7 @@
 
 .article-card-body p {
     font-size: 0.88rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     line-height: 1.5;
     margin-bottom: 16px;
     display: -webkit-box;
@@ -289,12 +289,12 @@
     padding-top: 14px;
     border-top: 1px solid var(--border-light);
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .article-card-author {
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 /* Single Article Reader View */
@@ -314,7 +314,7 @@
 .article-reader-badge {
     display: inline-block;
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.75rem;
     font-weight: 800;
     padding: 4px 12px;
@@ -325,7 +325,7 @@
 .article-reader-header h1 {
     font-size: 2.35rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.25;
     margin-bottom: 18px;
     letter-spacing: -0.5px;
@@ -336,7 +336,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    background: var(--gray-50);
+    background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     margin-bottom: 28px;
@@ -353,7 +353,7 @@
     height: 44px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -371,13 +371,13 @@
 .article-rich-body {
     font-size: 1.05rem;
     line-height: 1.8;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
 }
 
 .article-rich-body h2 {
     font-size: 1.6rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 36px 0 16px;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--primary);
@@ -387,7 +387,7 @@
 .article-rich-body h3 {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 24px 0 12px;
 }
 
@@ -407,11 +407,11 @@
 
 .article-rich-body blockquote {
     border-left: 4px solid var(--primary);
-    background: var(--gray-50);
+    background: var(--bg-surface-subtle);
     padding: 16px 20px;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-style: italic;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin: 28px 0;
 }
 

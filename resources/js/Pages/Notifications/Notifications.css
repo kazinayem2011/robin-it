@@ -35,8 +35,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--gray-100, #f1f5f9);
-    color: var(--gray-500, #64748b);
+    background: var(--bg-muted);
+    color: var(--text-muted);
 }
 
 /*
@@ -45,8 +45,8 @@
  * rather than a list.
  */
 .notif-cell.is-unread .notif-cell-icon {
-    background: var(--primary-light, #fef2f2);
-    color: var(--primary, #d12127);
+    background: var(--primary-light);
+    color: var(--primary-ink);
 }
 
 .notif-cell-text {
@@ -59,25 +59,25 @@
 .notif-cell-text strong {
     font-size: 0.84rem;
     font-weight: 600;
-    color: var(--gray-700, #334155);
+    color: var(--text-tertiary);
     overflow-wrap: anywhere;
 }
 
 .notif-cell.is-unread .notif-cell-text strong {
     font-weight: 800;
-    color: var(--dark-900, #0f172a);
+    color: var(--text-primary);
 }
 
 .notif-cell-text span {
     font-size: 0.78rem;
     line-height: 1.4;
-    color: var(--gray-500, #64748b);
+    color: var(--text-muted);
     overflow-wrap: anywhere;
 }
 
 .notif-when {
     font-size: 0.78rem;
-    color: var(--gray-500, #64748b);
+    color: var(--text-muted);
     white-space: nowrap;
     /* The exact date is the title attribute; this is the glanceable half. */
     cursor: help;

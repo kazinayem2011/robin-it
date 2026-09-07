@@ -20,12 +20,12 @@
     font-size: 1.9rem;
     font-weight: 800;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .support-header p {
     margin: 0;
-    color: var(--gray-600);
+    color: var(--text-body);
     font-size: 0.95rem;
 }
 
@@ -33,7 +33,7 @@
     margin: 0 0 14px;
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* Contact channels */
@@ -74,7 +74,7 @@
     flex-shrink: 0;
     border-radius: var(--radius-sm);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .support-channel-body {
@@ -87,19 +87,19 @@
 .support-channel-body strong {
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .support-channel-value {
     font-size: 0.95rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     overflow-wrap: anywhere;
 }
 
 .support-channel-hint {
     font-size: 0.76rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Self-service tools */
@@ -137,14 +137,14 @@
     margin-bottom: 10px;
     border-radius: var(--radius-sm);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .support-tool strong {
     display: block;
     font-size: 0.94rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
@@ -152,7 +152,7 @@
     margin: 0;
     font-size: 0.82rem;
     line-height: 1.5;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 /* FAQ */
@@ -185,19 +185,19 @@
     text-align: left;
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     cursor: pointer;
 }
 
 .support-faq-question svg {
     flex-shrink: 0;
-    color: var(--gray-500);
+    color: var(--text-muted);
     transition: transform var(--transition-fast);
 }
 
 .support-faq-item.is-open .support-faq-question svg {
     transform: rotate(180deg);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .support-faq-answer {
@@ -205,7 +205,7 @@
     padding: 0 18px 16px;
     font-size: 0.88rem;
     line-height: 1.6;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 @media (max-width: 600px) {

@@ -16,6 +16,17 @@ The user has explicitly granted "auto allow" permission for the StarTech E-Comme
    Tailwind is not installed — `postcss.config.js` runs autoprefixer only. Every
    border-radius must be a `--radius` token; `npm run lint:radius` enforces it.
 
+3a. **Name the job, not the colour.** There are two themes, and only the
+   semantic tokens move between them. `--white`, `--dark-900` and `--gray-400`
+   are the *palette* and never change; `--bg-surface`, `--text-primary`,
+   `--text-muted`, `--border-color` and `--text-on-accent` are the *jobs* and do.
+   A rule that paints with a palette token keeps its light value in the dark
+   theme and fails silently — near-black text on a near-black card. Both themes
+   are defined in one block each at the top of `resources/css/app.css`; a
+   component never carries a theme rule of its own. `npm run lint:theme`
+   enforces it, with a stated `/* theme-exempt: reason */` for the few colours
+   that really are fixed — a white button on a photographic hero, say.
+
 4. **Thin Controllers:** Offload complex business logic to Service classes.
    A controller resolves the request, calls a service, and shapes a response.
 

@@ -22,8 +22,8 @@
     font: inherit;
     font-size: 13px;
     font-weight: 600;
-    color: var(--gray-400);
-    background: var(--white);
+    color: var(--text-subtle);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
     cursor: pointer;
@@ -34,14 +34,14 @@
 }
 
 .pl-preset:hover {
-    color: var(--dark-900);
-    border-color: var(--gray-400);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 .pl-preset.is-active {
-    color: var(--white);
-    background: var(--dark-900);
-    border-color: var(--dark-900);
+    color: var(--text-on-accent);
+    background: var(--bg-inverse);
+    border-color: var(--text-primary);
 }
 
 .pl-custom-range {
@@ -51,14 +51,14 @@
     /* Two dates and the word between them, on one line at 326px. */
     flex-wrap: wrap;
     font-size: 13px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .pl-custom-range input {
     padding: 6px 10px;
     font: inherit;
     font-size: 13px;
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
@@ -69,11 +69,11 @@
 }
 
 .pl-stat-headline.is-profit .admin-stock-stat-value {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .pl-stat-headline.is-loss .admin-stock-stat-value {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 /* ── The statement ─────────────────────────────────────────────────────────── */
@@ -116,7 +116,7 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -129,24 +129,24 @@
     padding-top: 14px;
     font-size: 17px;
     font-weight: 700;
-    border-top: 2px solid var(--dark-900);
+    border-top: 2px solid var(--text-primary);
 }
 
 .pl-total.is-profit td:last-child {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .pl-total.is-loss td:last-child {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 /* Costs read as costs at a glance, without needing the label. */
 .pl-table .is-negative {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .pl-empty {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-style: italic;
 }
 
@@ -158,12 +158,12 @@
     gap: 8px;
     padding: 48px 24px;
     text-align: center;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .pl-blank strong {
     font-size: 15px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .pl-blank span {
@@ -182,7 +182,7 @@
     border: 1px solid var(--warning-border);
     border-radius: var(--radius-md);
     background: var(--warning-light);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .pl-caveat strong {
@@ -193,7 +193,7 @@
 .pl-caveat span {
     font-size: 13px;
     line-height: 1.6;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /*
@@ -201,5 +201,5 @@
  * above it so it cannot be read as part of the total it sits under.
  */
 .pl-passthrough td {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }

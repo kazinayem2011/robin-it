@@ -12,14 +12,14 @@
 .contact-head h1 {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     letter-spacing: -0.6px;
     margin-bottom: 6px;
 }
 
 .contact-head p {
     font-size: 0.95rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     max-width: 56ch;
 }
 
@@ -47,7 +47,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-bottom: 14px;
 }
 
@@ -77,7 +77,7 @@
 .contact-count {
     flex-shrink: 0;
     font-size: 0.74rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-variant-numeric: tabular-nums;
 }
 
@@ -92,12 +92,12 @@
     border-radius: var(--radius-md);
     background: var(--success-light);
     font-size: 0.88rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .contact-sent-note svg {
     flex-shrink: 0;
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .contact-line {
@@ -106,7 +106,7 @@
     gap: 11px;
     padding: 11px 0;
     border-top: 1px solid var(--border-light);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     text-decoration: none;
 }
 
@@ -127,12 +127,12 @@
 .contact-line svg {
     flex-shrink: 0;
     height: 1.4rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 a.contact-line:hover svg,
 a.contact-line:hover strong {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .contact-line span {
@@ -151,7 +151,7 @@ a.contact-line:hover strong {
 
 .contact-line small {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 @media (max-width: 900px) {
@@ -176,7 +176,7 @@ a.contact-line:hover strong {
     margin-top: 12px;
     font-size: 0.92rem;
     line-height: 1.75;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .contact-intro p {

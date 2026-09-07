@@ -173,7 +173,9 @@ export default function AccountLayout({
                                                     size={13}
                                                 />
                                                 <Link
-                                                    href={ROUTES.DASHBOARD_PROFILE}
+                                                    href={
+                                                        ROUTES.DASHBOARD_PROFILE
+                                                    }
                                                 >
                                                     {missingContact.label}
                                                 </Link>

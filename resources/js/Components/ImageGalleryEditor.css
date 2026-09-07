@@ -30,7 +30,7 @@
 .gallery-editor-count {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-variant-numeric: tabular-nums;
 }
 
@@ -39,7 +39,7 @@
     padding: 18px 12px;
     text-align: center;
     font-size: 0.8rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     background: var(--bg-surface-subtle);
     border: 1px dashed var(--border-color);
     border-radius: var(--radius-sm);
@@ -98,7 +98,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--white);
+    color: var(--text-on-accent);
     background: var(--primary);
     border-radius: var(--radius-full);
 }
@@ -116,7 +116,7 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    color: var(--gray-500);
+    color: var(--text-muted);
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xs);
@@ -125,12 +125,12 @@
 }
 
 .gallery-editor-tools button:hover:not(:disabled) {
-    color: var(--primary);
+    color: var(--primary-ink);
     border-color: var(--primary);
 }
 
 .gallery-editor-tools button.is-danger:hover:not(:disabled) {
-    color: var(--danger);
+    color: var(--danger-ink);
     border-color: var(--danger);
 }
 
@@ -144,7 +144,7 @@
     min-width: 0;
     padding: 3px 6px;
     font-size: 0.7rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xs);

@@ -32,15 +32,15 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    background: var(--dark-900, #0f172a);
-    color: var(--white, #fff);
+    background: var(--bg-inverse);
+    color: var(--text-on-accent);
     text-decoration: none;
     transition: background var(--transition-fast, 0.15s);
 }
 
 .quick-dock-btn:hover,
 .quick-dock-btn:focus-visible {
-    background: var(--primary, #d12127);
+    background: var(--primary);
 }
 
 .quick-dock-label {
@@ -65,8 +65,8 @@
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-full, 999px);
-    background: var(--primary, #d12127);
-    color: var(--white, #fff);
+    background: var(--primary);
+    color: var(--text-on-accent);
     font-size: 0.62rem;
     font-weight: 800;
     line-height: 1;
@@ -76,8 +76,8 @@
 .quick-dock-btn:hover .quick-dock-count,
 .quick-dock-btn:focus-visible .quick-dock-count {
     /* The tile has taken the accent, so the badge steps back off it. */
-    background: var(--white, #fff);
-    color: var(--primary, #d12127);
+    background: var(--bg-surface);
+    color: var(--primary-ink);
 }
 
 /*

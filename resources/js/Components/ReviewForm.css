@@ -13,7 +13,7 @@
 .write-review-card h4 {
     font-size: 1.15rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 18px;
 }
 
@@ -32,7 +32,7 @@
 .review-form-label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .star-rating-picker {
@@ -57,13 +57,13 @@
 }
 
 .star-pick-btn .star-filled {
-    fill: var(--accent-amber);
-    color: var(--accent-amber);
+    fill: var(--accent-amber-ink);
+    color: var(--accent-amber-ink);
 }
 
 .star-pick-btn .star-empty {
-    fill: var(--gray-200);
-    color: var(--gray-300);
+    fill: var(--bg-muted-strong);
+    color: var(--text-faint);
 }
 
 .review-form-row {

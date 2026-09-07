@@ -5,13 +5,13 @@
 .profile-section-title {
     font-size: 1.15rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .profile-section-desc {
     font-size: 0.85rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-top: 4px;
 }
 
@@ -38,11 +38,11 @@
 
 .profile-unverified-text {
     font-size: 0.85rem;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
 }
 
 .profile-verify-link {
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: underline;
     cursor: pointer;
     background: none;
@@ -56,7 +56,7 @@
     margin-top: 8px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 /* ---------------------------------------------------------------
@@ -93,21 +93,21 @@
     justify-content: center;
     border-radius: var(--radius-md);
     background: var(--primary-light, rgba(209, 33, 39, 0.08));
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .profile-page-title {
     font-size: 1.5rem;
     font-weight: 800;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 0 0 2px;
 }
 
 .profile-page-sub {
     margin: 0;
     font-size: 0.88rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .profile-sections {
@@ -119,7 +119,7 @@
 
 /* Destructive section, visually separated from the routine settings. */
 .profile-danger-box {
-    border-color: #f5c2c7;
+    border-color: var(--danger-border);
 }
 
 .profile-delete-modal {

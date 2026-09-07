@@ -37,22 +37,22 @@
     height: 42px;
     margin-bottom: 14px;
     border-radius: var(--radius-md);
-    background: var(--primary-light, #fdeaea);
-    color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-ink);
 }
 
 .rep-index-card h3 {
     margin: 0 0 6px;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .rep-index-card p {
     margin: 0 0 14px;
     font-size: 0.85rem;
     line-height: 1.6;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .rep-index-go {
@@ -61,7 +61,7 @@
     gap: 5px;
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* ── The period ─────────────────────────────────────────────────────────── */
@@ -88,7 +88,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-period-dates input {
@@ -117,7 +117,7 @@
     background: var(--bg-surface);
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--gray-600);
+    color: var(--text-body);
     cursor: pointer;
 }
 
@@ -125,7 +125,7 @@
 .rep-period-shortcuts button.is-on {
     border-color: var(--primary);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /* ── Headline figures ───────────────────────────────────────────────────── */
@@ -156,14 +156,14 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-figure-value {
     font-size: 1.4rem;
     font-weight: 800;
     line-height: 1.2;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /*
@@ -179,20 +179,20 @@
 }
 
 .rep-figure-change.is-up {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .rep-figure-change.is-down {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .rep-figure-change.is-flat {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-figure-hint {
     font-size: 0.72rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* ── Bars ───────────────────────────────────────────────────────────────── */
@@ -249,7 +249,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-align: left;
     white-space: nowrap;
 }
@@ -271,7 +271,7 @@
 .rep-sub {
     margin-top: 2px;
     font-size: 0.75rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-split {
@@ -291,7 +291,7 @@
     margin: 0 0 10px;
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .rep-buckets {
@@ -315,7 +315,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-bucket strong {
@@ -325,7 +325,7 @@
 
 .rep-bucket small {
     font-size: 0.72rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* ── Notes, tags and unknowns ───────────────────────────────────────────── */
@@ -337,7 +337,7 @@
     margin: 0 0 18px;
     font-size: 0.8rem;
     line-height: 1.6;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .rep-note svg {
@@ -349,7 +349,7 @@
     padding: 30px 0;
     font-size: 0.88rem;
     text-align: center;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .rep-tag {
@@ -358,28 +358,28 @@
     gap: 4px;
     padding: 2px 8px;
     border-radius: var(--radius-full);
-    background: var(--gray-100);
+    background: var(--bg-muted);
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .rep-tag.is-ok {
-    background: var(--success-light, #e6f6ed);
-    color: var(--success);
+    background: var(--success-light);
+    color: var(--success-ink);
 }
 
 .rep-tag.is-warn {
-    background: var(--warning-light, #fff4e0);
-    color: var(--warning);
+    background: var(--warning-light);
+    color: var(--warning-ink);
 }
 
 /* A figure the shop genuinely cannot know, rather than a zero pretending. */
 .rep-unknown {
     font-size: 0.78rem;
-    color: var(--gray-300);
+    color: var(--text-faint);
 }
 
 .rep-alarm {
-    color: var(--danger);
+    color: var(--danger-ink);
 }

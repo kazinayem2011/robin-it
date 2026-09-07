@@ -12,7 +12,7 @@
     display: block;
     margin-bottom: 2px;
     font-size: 13px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .courier-credentials > .admin-field-hint {
@@ -49,7 +49,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-align: left;
 }
 
@@ -75,7 +75,7 @@
 
 .courier-zone-table code {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* How many areas a courier has mapped, on its row. */
@@ -83,5 +83,5 @@
     margin-left: 4px;
     font-size: 0.68rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-ink);
 }

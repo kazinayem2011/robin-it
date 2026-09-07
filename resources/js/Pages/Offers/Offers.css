@@ -23,23 +23,23 @@
     gap: 6px;
     margin-bottom: 6px;
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .offers-page .breadcrumbs a {
-    color: var(--gray-600);
+    color: var(--text-body);
     text-decoration: none;
 }
 
 .offers-page .breadcrumbs a:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .offers-page .breadcrumbs a + a::before,
 .offers-page .breadcrumbs .current::before {
     content: '/';
     margin-right: 6px;
-    color: var(--gray-300);
+    color: var(--text-faint);
 }
 
 /*
@@ -104,7 +104,7 @@
     padding: 4px 11px;
     border-radius: var(--radius-full);
     background: rgba(209, 33, 39, 0.1);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.09em;
@@ -115,14 +115,14 @@
     font-size: 2.1rem;
     font-weight: 800;
     letter-spacing: -0.6px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .offers-head p {
     max-width: 52ch;
     font-size: 0.92rem;
     line-height: 1.55;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* ---- what is on, counted ---- */
@@ -152,7 +152,7 @@
     font-size: 1.9rem;
     font-weight: 800;
     line-height: 1;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
 }
 
@@ -161,7 +161,7 @@
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* What is on today is the number the page is about. */
@@ -171,7 +171,7 @@
 }
 
 .offers-stat.is-running strong {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /*
@@ -231,11 +231,11 @@
     background-size: cover;
     background-position: center;
     /* Never a blank white block while an offer is still being written. */
-    background-color: var(--dark-800);
+    background-color: var(--bg-inverse-soft);
     background-image: linear-gradient(
         135deg,
-        var(--dark-800) 0%,
-        var(--dark-900) 100%
+        var(--bg-inverse-soft) 0%,
+        var(--bg-inverse) 100%
     );
 }
 
@@ -249,7 +249,7 @@
     font-weight: 800;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: var(--white);
+    color: var(--text-on-accent);
     background: rgba(15, 23, 42, 0.85);
 }
 
@@ -261,8 +261,16 @@
     background: rgba(15, 23, 42, 0.72);
 }
 
+/*
+ * A finished offer's badge: a flat mid-grey carrying white text, and it reads
+ * as "over" at that one weight in both themes. Following the surface would
+ * make it either a pale chip on a pale card or a dark one on a dark card —
+ * the badge's whole job is to be the thing that is not the card.
+ */
 .offer-card-badge.is-ended {
-    background: var(--gray-500);
+    background: var(
+        --gray-500
+    ); /* theme-exempt: a fixed grey fill under white text */
 }
 
 .offer-card-body {
@@ -278,7 +286,7 @@
     gap: 4px 16px;
     font-size: 0.74rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .offer-card-meta > span {
@@ -294,18 +302,18 @@
 }
 
 .offer-card-body h2 a {
-    color: var(--dark-900);
+    color: var(--text-primary);
     text-decoration: none;
 }
 
 .offer-card-body h2 a:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .offer-card-desc {
     font-size: 0.84rem;
     line-height: 1.5;
-    color: var(--gray-500);
+    color: var(--text-muted);
     /* Two lines, so a long summary cannot make one card taller than its
        neighbours and leave the row ragged. */
     display: -webkit-box;
@@ -338,12 +346,12 @@
     margin-bottom: 14px;
     font-size: 0.84rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-decoration: none;
 }
 
 .offer-back:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /*
@@ -378,7 +386,7 @@
     gap: 6px 18px;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .offer-detail-meta span {
@@ -392,7 +400,7 @@
     font-size: 1.75rem;
     font-weight: 800;
     line-height: 1.25;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .offer-detail-image {
@@ -404,7 +412,7 @@
     margin: 14px 0 4px;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .offer-detail-cta {
@@ -417,21 +425,21 @@
     margin-top: 18px;
     font-size: 1rem;
     line-height: 1.8;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
 }
 
 .offer-detail-body h2 {
     margin: 28px 0 12px;
     font-size: 1.3rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .offer-detail-body h3 {
     margin: 22px 0 10px;
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* Terms are written with h4 sub-headings — "Gift details", "Terms &
@@ -441,7 +449,7 @@
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.01em;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .offer-detail-body p {
@@ -459,7 +467,7 @@
 }
 
 .offer-detail-body a {
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 600;
 }
 
@@ -469,7 +477,7 @@
 }
 
 .offer-detail-body strong {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .offer-detail-body hr {
@@ -506,7 +514,7 @@
 .offer-detail-body th {
     background: var(--bg-surface-subtle);
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     white-space: nowrap;
 }
 
@@ -534,10 +542,10 @@
     border-bottom: 2px solid var(--primary);
     background: linear-gradient(
         135deg,
-        var(--dark-900) 0%,
-        var(--dark-800) 100%
+        var(--bg-inverse) 0%,
+        var(--bg-inverse-soft) 100%
     );
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .offer-countdown-left {
@@ -554,7 +562,7 @@
     padding: 6px 13px;
     border-radius: var(--radius-sm);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-family: var(--font-heading);
     font-size: 0.82rem;
     font-weight: 800;
@@ -577,7 +585,7 @@
     background: var(--bg-surface-subtle);
     font-size: 0.86rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* ---- waiting for the list ---------------------------------------------- */

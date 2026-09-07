@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
 import siteConfig, {
+    setBrandLogoDark,
     setBrandName,
     setSiteSettings,
 } from './constants/siteConfig';
@@ -42,6 +43,7 @@ createInertiaApp({
         // has already applied its own fallback to it.
         setSiteSettings(props.initialPage?.props?.site_settings);
         setBrandName(props.initialPage?.props?.brand_name);
+        setBrandLogoDark(props.initialPage?.props?.brand_logo_dark);
 
         const root = createRoot(el);
 

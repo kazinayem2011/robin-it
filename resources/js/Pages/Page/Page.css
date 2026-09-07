@@ -15,27 +15,27 @@
     font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.6px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 6px;
 }
 
 .doc-head p {
     font-size: 0.98rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .doc-updated {
     display: inline-block;
     margin-top: 10px;
     font-size: 0.78rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Long-form prose: wider line height, room between blocks. */
 .doc-body {
     font-size: 0.97rem;
     line-height: 1.8;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .doc-body h2 {
@@ -43,14 +43,14 @@
     font-size: 1.2rem;
     font-weight: 800;
     letter-spacing: -0.3px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .doc-body h3 {
     margin: 24px 0 8px;
     font-size: 1.02rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .doc-body p {
@@ -68,17 +68,17 @@
 }
 
 .doc-body a {
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
 .doc-body strong {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .doc-body em {
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .doc-body table {

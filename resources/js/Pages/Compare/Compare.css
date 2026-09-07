@@ -16,13 +16,13 @@
 .compare-title {
     font-size: 1.6rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .compare-count {
     font-size: 0.84rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .compare-table-wrapper {
@@ -49,7 +49,7 @@
     width: 220px;
     font-size: 0.88rem;
     font-weight: 800;
-    color: var(--gray-600);
+    color: var(--text-body);
     text-transform: uppercase;
 }
 
@@ -75,8 +75,8 @@
     text-align: center;
     gap: 10px;
     padding: 16px 14px;
-    background: var(--bg-surface, #fff);
-    border: 1px solid var(--border-color, #e2e8f0);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md, 12px);
     /* Fills the cell so every column's card is the same height, whatever the
        name below it does. */
@@ -94,10 +94,10 @@
     justify-content: center;
     /* A disc rather than a bare glyph: it sits over the corner of the picture,
        where an unbacked icon disappears into whatever the photo is. */
-    background: var(--gray-100, #f1f5f9);
+    background: var(--bg-muted);
     border: none;
     border-radius: 50%;
-    color: var(--gray-500, #64748b);
+    color: var(--text-muted);
     cursor: pointer;
     transition:
         background var(--transition-fast, 0.15s),
@@ -105,8 +105,8 @@
 }
 
 .compare-remove-btn:hover {
-    background: var(--danger-light, #fef2f2);
-    color: var(--danger, #dc2626);
+    background: var(--danger-light);
+    color: var(--danger-ink);
 }
 
 /*
@@ -122,13 +122,13 @@
     height: 130px;
     object-fit: contain;
     border-radius: var(--radius-sm, 8px);
-    background: var(--white, #fff);
+    background: var(--bg-surface);
 }
 
 .compare-product-name {
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--dark-900, #0f172a);
+    color: var(--text-primary);
     line-height: 1.35;
     /* Two lines, then an ellipsis. A full product name is long enough to make
        one column three lines taller than its neighbour, which is the thing a
@@ -148,7 +148,7 @@
 .compare-product-price {
     font-size: 1.05rem;
     font-weight: 900;
-    color: var(--primary, #d12127);
+    color: var(--primary-ink);
     font-family: var(--font-heading);
     font-variant-numeric: tabular-nums;
     /* Pushed to the bottom, so the prices line up across the row however tall
@@ -169,18 +169,18 @@
     padding: 14px 20px;
     font-weight: 700;
     font-size: 0.84rem;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .compare-td-val {
     padding: 14px 20px;
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .compare-stock-val {
-    color: var(--success);
+    color: var(--success-ink);
     font-weight: 700;
 }
 
@@ -194,7 +194,7 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-decoration: none;
     transition: all var(--transition-fast);
     min-height: 280px;
@@ -202,7 +202,7 @@
 
 .compare-empty-slot:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     background: var(--primary-light);
 }
 
@@ -210,14 +210,14 @@
     width: 48px;
     height: 48px;
     border-radius: var(--radius-full);
-    background: var(--gray-100);
+    background: var(--bg-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .compare-empty-slot:hover .compare-empty-slot-icon {
-    background: var(--white);
-    color: var(--primary);
+    background: var(--bg-surface);
+    color: var(--primary-ink);
 }

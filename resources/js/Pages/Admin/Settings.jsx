@@ -77,7 +77,9 @@ export default function AdminSettings({
         return () => window.removeEventListener('popstate', onPop);
     }, []);
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [uploadingLogoDark, setUploadingLogoDark] = useState(false);
     const logoInputRef = useRef(null);
+    const logoDarkInputRef = useRef(null);
     const [uploadingOg, setUploadingOg] = useState(false);
     const ogInputRef = useRef(null);
     const [testEmail, setTestEmail] = useState('');
@@ -142,6 +144,9 @@ export default function AdminSettings({
             vat_inclusive: initialMap.vat_inclusive !== '0',
             site_tagline: initialMap.site_tagline || 'The Store of Technology',
             site_logo: initialMap.site_logo || '/images/logo.png',
+            // Blank is the normal case: an empty box means "use the twin
+            // the shop draws automatically", not "show nothing".
+            site_logo_dark: initialMap.site_logo_dark || '',
             meta_title: initialMap.meta_title || '',
             meta_description: initialMap.meta_description || '',
             meta_keywords: initialMap.meta_keywords || '',
@@ -265,6 +270,29 @@ export default function AdminSettings({
             );
         } finally {
             setUploadingOg(false);
+            event.target.value = '';
+        }
+    };
+
+    const handleLogoDarkUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadingLogoDark(true);
+        try {
+            const { path } = await uploadService.uploadImage(file, 'brands');
+            formik.setFieldValue('site_logo_dark', path);
+            toast.success(
+                'Dark-background logo uploaded. Save to apply it.',
+                'Upload Complete',
+            );
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not upload that logo.',
+                'Upload Failed',
+            );
+        } finally {
+            setUploadingLogoDark(false);
             event.target.value = '';
         }
     };
@@ -431,6 +459,66 @@ export default function AdminSettings({
                                         every email. A wide PNG with a
                                         transparent background works best —
                                         around 540&times;110.
+                                    </small>
+                                </div>
+
+                                {/*
+                                 * Optional, and usually left alone.
+                                 *
+                                 * A logo with dark lettering disappears on the
+                                 * footer, down the side of this admin and in
+                                 * the dark theme, so the shop draws itself a
+                                 * copy with that lettering lifted to near-white
+                                 * whenever the logo above is saved. This is
+                                 * only for a shop that has a proper
+                                 * dark-background mark from a designer — and if
+                                 * one is set here, it wins.
+                                 */}
+                                <div className="admin-image-field">
+                                    <FormInput
+                                        label="Logo for dark backgrounds (optional)"
+                                        name="site_logo_dark"
+                                        formik={formik}
+                                        placeholder="Leave blank to use the one drawn for you"
+                                    />
+                                    <div className="admin-image-field-actions">
+                                        {formik.values.site_logo_dark && (
+                                            <img
+                                                src={
+                                                    formik.values.site_logo_dark
+                                                }
+                                                alt="Dark-background logo preview"
+                                                className="admin-logo-preview is-on-dark"
+                                            />
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            icon={Upload}
+                                            loading={uploadingLogoDark}
+                                            disabled={uploadingLogoDark}
+                                            onClick={() =>
+                                                logoDarkInputRef.current?.click()
+                                            }
+                                        >
+                                            {uploadingLogoDark
+                                                ? 'Uploading…'
+                                                : 'Upload Dark Logo'}
+                                        </Button>
+                                        <input
+                                            ref={logoDarkInputRef}
+                                            type="file"
+                                            accept="image/png,image/webp"
+                                            style={{ display: 'none' }}
+                                            onChange={handleLogoDarkUpload}
+                                        />
+                                    </div>
+                                    <small className="admin-field-hint">
+                                        Used on the footer, this sidebar and the
+                                        dark theme. Leave it empty and the shop
+                                        makes one from the logo above, lifting
+                                        only the dark lettering and leaving the
+                                        brand colours exactly as they are.
                                     </small>
                                 </div>
 

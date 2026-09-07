@@ -29,12 +29,12 @@
     gap: 6px;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .role-lock {
     display: inline-flex;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .role-people {
@@ -42,14 +42,14 @@
     align-items: center;
     gap: 4px;
     font-size: 0.76rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .role-desc {
     margin-bottom: 14px;
     font-size: 0.83rem;
     line-height: 1.6;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 /* Why a card cannot be changed, rather than a disabled box with no reason. */
@@ -60,7 +60,7 @@
     border: 1px solid var(--border-color);
     font-size: 0.79rem;
     line-height: 1.6;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 /* What the role covers, as a list to read rather than a form to fill in. */
@@ -79,17 +79,17 @@
     align-items: center;
     gap: 7px;
     font-size: 0.83rem;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .role-abilities svg {
     flex-shrink: 0;
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .role-none {
     font-style: italic;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .role-modal-abilities {
@@ -114,5 +114,5 @@
     background: var(--bg-surface-subtle);
     font-size: 0.81rem;
     line-height: 1.6;
-    color: var(--gray-600);
+    color: var(--text-body);
 }

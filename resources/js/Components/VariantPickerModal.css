@@ -34,28 +34,40 @@
  * The panel's whole palette, in one place.
  *
  * This file briefly carried a prefers-color-scheme block, which was a mistake:
- * the shop is light throughout and has no dark theme, so the picker rendered
- * dark over a light page. Worse, that block redefined the text but not the
- * chosen row's background, which stayed a pale pink — so the selected
- * option's label was pale on pale and the only easily readable row was the
- * one nobody had picked.
+ * the shop had no dark theme then, so the picker rendered dark over a light
+ * page. Worse, that block redefined the text but not the chosen row's
+ * background, which stayed a pale pink — so the selected option's label was
+ * pale on pale and the only easily readable row was the one nobody had picked.
+ *
+ * There is a dark theme now, and this block is how the panel reaches it: every
+ * name below resolves to a semantic token, so both themes move together and
+ * neither can be redefined halfway.
  *
  * Naming the colours here rather than reaching for globals inline is what
  * makes a future theme a change to this block instead of a change to twenty
  * rules — and what would have made that half-a-theme impossible.
  */
 .variant-picker-panel {
-    --vp-surface: var(--bg-surface, #fff);
-    --vp-option-bg: var(--bg-surface, #fff);
-    --vp-option-border: var(--border-color, #e2e8f0);
-    --vp-option-hover: var(--gray-400, #94a3b8);
-    --vp-chosen-bg: #fef2f2;
-    --vp-chosen-border: var(--primary, #d12127);
-    --vp-accent: var(--primary, #d12127);
-    --vp-text: var(--dark-900, #0f172a);
-    --vp-muted: var(--gray-500, #64748b);
-    --vp-chip: var(--gray-100, #f1f5f9);
-    --vp-chip-hover: var(--gray-200, #e2e8f0);
+    --vp-surface: var(--bg-elevated);
+    --vp-option-bg: var(--bg-surface);
+    --vp-option-border: var(--border-color);
+    --vp-option-hover: var(--border-hover);
+    /*
+     * The chosen row. This is the exact colour the note above is about: the
+     * abandoned theme block darkened --vp-text and left this a pale pink, so
+     * the one row that mattered was the one you could not read. It is a
+     * semantic token now, so it can only ever move together with the text on
+     * top of it.
+     */
+    --vp-chosen-bg: var(--primary-light);
+    --vp-chosen-border: var(--primary);
+    /* An outline and a tick drawn on the surface, so it takes the readable
+       step of the brand red rather than the fill. */
+    --vp-accent: var(--primary-ink);
+    --vp-text: var(--text-primary);
+    --vp-muted: var(--text-muted);
+    --vp-chip: var(--bg-muted);
+    --vp-chip-hover: var(--bg-muted-strong);
 
     width: 100%;
     max-width: 440px;

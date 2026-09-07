@@ -17,7 +17,7 @@
     display: flex;
     min-height: 100vh;
     background-color: var(--bg-surface-subtle);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-body);
 }
 
@@ -61,7 +61,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: 0 4px 12px rgba(234, 72, 79, 0.25);
 }
 
@@ -70,11 +70,11 @@
     font-weight: 900;
     font-family: var(--font-heading);
     letter-spacing: -0.3px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-brand-title span {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-role-pill {
@@ -84,7 +84,7 @@
     letter-spacing: 0.5px;
     background: rgba(37, 99, 235, 0.08);
     border: 1px solid rgba(37, 99, 235, 0.3);
-    color: var(--info);
+    color: var(--info-ink);
     padding: 2px 7px;
     border-radius: var(--radius-xs);
     white-space: nowrap;
@@ -106,7 +106,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     padding: 10px 12px 4px 12px;
 }
 
@@ -120,7 +120,7 @@
     justify-content: space-between;
     padding: 9px 12px;
     border-radius: var(--radius-sm);
-    color: var(--gray-600);
+    color: var(--text-body);
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
@@ -128,7 +128,7 @@
 }
 
 .admin-nav-link:hover {
-    color: var(--dark-900);
+    color: var(--text-primary);
     background: var(--bg-surface-subtle);
 }
 
@@ -138,7 +138,7 @@
         rgba(234, 72, 79, 0.08) 0%,
         rgba(234, 72, 79, 0.03) 100%
     );
-    color: var(--primary);
+    color: var(--primary-ink);
     border-left: 3px solid var(--primary);
     font-weight: 700;
 }
@@ -176,7 +176,7 @@
     justify-content: center;
     font-weight: 800;
     font-size: 0.9rem;
-    color: var(--white);
+    color: var(--text-on-accent);
     flex-shrink: 0;
 }
 
@@ -189,7 +189,7 @@
 .admin-user-name {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -197,14 +197,14 @@
 
 .admin-user-role {
     font-size: 0.7rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 600;
 }
 
 .admin-logout-btn {
     background: none;
     border: none;
-    color: var(--primary);
+    color: var(--primary-ink);
     cursor: pointer;
     padding: 4px;
     /* 4px around a 16px icon is a 24px target — the smallest thing on every
@@ -263,14 +263,14 @@
 .admin-page-title-group h2 {
     font-size: 1.1rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 1px;
     font-family: var(--font-heading);
 }
 
 .admin-page-title-group p {
     font-size: 0.75rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-topbar-actions {
@@ -287,7 +287,7 @@
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
@@ -297,7 +297,7 @@
 .admin-live-store-btn:hover {
     background: var(--primary-light);
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* ── Content Body ────────────────────────────────────────────────────────────── */
@@ -342,7 +342,7 @@
 .admin-kpi-label {
     font-size: 0.72rem;
     font-weight: 800;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -363,7 +363,7 @@
 
 .admin-kpi-icon-blue {
     background: rgba(37, 99, 235, 0.1);
-    color: var(--info);
+    color: var(--info-ink);
 }
 
 .admin-kpi-icon-amber {
@@ -373,18 +373,18 @@
 
 .admin-kpi-icon-red {
     background: rgba(234, 72, 79, 0.1);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-kpi-icon-purple {
     background: rgba(124, 58, 237, 0.1);
-    color: var(--accent-purple);
+    color: var(--accent-purple-ink);
 }
 
 .admin-kpi-val {
     font-size: 1.55rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
@@ -402,7 +402,7 @@
 }
 
 .admin-kpi-trend.blue {
-    color: var(--info);
+    color: var(--info-ink);
 }
 
 .admin-kpi-trend.amber {
@@ -410,7 +410,7 @@
 }
 
 .admin-kpi-trend.red {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* ── Cards & Tables ─────────────────────────────────────────────────────────── */
@@ -452,7 +452,7 @@ a.admin-card:hover,
 .admin-card-title {
     font-size: 1rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
@@ -460,7 +460,7 @@ a.admin-card:hover,
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.82rem;
     font-weight: 700;
     text-decoration: none;
@@ -508,7 +508,7 @@ a.admin-card:hover,
     text-align: left;
     padding: 11px 14px;
     background: var(--bg-surface-subtle);
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 800;
     text-transform: uppercase;
     font-size: 0.7rem;
@@ -519,7 +519,7 @@ a.admin-card:hover,
 .admin-table td {
     padding: 13px 14px;
     border-bottom: 1px solid var(--border-light);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     vertical-align: middle;
 }
 
@@ -546,26 +546,26 @@ a.admin-card:hover,
 .admin-table-item-title {
     font-size: 0.84rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     display: block;
 }
 
 .admin-table-item-sub {
     font-size: 0.74rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-table-price-strong {
     font-size: 0.88rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-family: var(--font-heading);
 }
 
 .admin-status-dropdown {
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     padding: 4px 8px;
     border-radius: var(--radius-xs);
     font-size: 0.74rem;
@@ -581,7 +581,7 @@ a.admin-card:hover,
 
 .admin-badge-stock-danger {
     background: rgba(234, 72, 79, 0.08);
-    color: var(--primary);
+    color: var(--primary-ink);
     border: 1px solid rgba(234, 72, 79, 0.3);
     padding: 2px 8px;
     border-radius: var(--radius-xs);
@@ -628,7 +628,7 @@ a.admin-card:hover,
     padding: 6px 14px;
     border-radius: var(--radius-sm);
     background: none;
-    color: var(--gray-500);
+    color: var(--text-muted);
     border: none;
     font-size: 0.78rem;
     font-weight: 700;
@@ -638,13 +638,13 @@ a.admin-card:hover,
 }
 
 .admin-tab-btn:hover {
-    color: var(--dark-900);
+    color: var(--text-primary);
     background: var(--bg-surface);
 }
 
 .admin-tab-btn.active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /*
@@ -728,7 +728,7 @@ a.admin-card:hover,
 }
 
 .admin-card-title-inline .admin-card-icon {
-    color: var(--primary);
+    color: var(--primary-ink);
     flex-shrink: 0;
 }
 
@@ -954,7 +954,7 @@ a.admin-card:hover,
 .admin-search-icon {
     position: absolute;
     left: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     pointer-events: none;
     z-index: 2;
 }
@@ -966,7 +966,7 @@ a.admin-card:hover,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 8px 32px 8px 36px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.82rem;
     transition: all var(--transition-fast);
 }
@@ -980,7 +980,7 @@ a.admin-card:hover,
     background: transparent;
     border: none;
     cursor: pointer;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -990,11 +990,11 @@ a.admin-card:hover,
 }
 
 .admin-search-clear-btn:hover {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-search-input::placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-search-input:focus {
@@ -1009,7 +1009,7 @@ a.admin-card:hover,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 0 12px;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     font-size: 0.82rem;
     cursor: pointer;
 }
@@ -1022,7 +1022,7 @@ a.admin-card:hover,
 
 .admin-btn-primary {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 8px 16px;
@@ -1050,7 +1050,7 @@ a.admin-card:hover,
 .admin-icon-btn {
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
-    color: var(--gray-500);
+    color: var(--text-muted);
     padding: 6px;
     border-radius: var(--radius-xs);
     cursor: pointer;
@@ -1061,13 +1061,13 @@ a.admin-card:hover,
 }
 
 .admin-icon-btn:hover {
-    color: var(--dark-900);
+    color: var(--text-primary);
     background: var(--bg-surface);
     border-color: var(--border-color);
 }
 
 .admin-icon-btn.danger:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
     border-color: var(--primary);
     background: rgba(234, 72, 79, 0.06);
 }
@@ -1107,7 +1107,7 @@ a.admin-card:hover,
 .admin-stock-alert-name {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1115,7 +1115,7 @@ a.admin-card:hover,
 
 .admin-stock-alert-qty {
     font-size: 0.74rem;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
 }
 
@@ -1129,29 +1129,29 @@ a.admin-card:hover,
 
 .admin-order-id-strong {
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .admin-order-user-name {
-    color: var(--dark-800);
+    color: var(--text-secondary);
     font-weight: 700;
     display: block;
 }
 
 .admin-order-phone {
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-family: monospace;
 }
 
 .admin-order-date {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-size: 0.78rem;
 }
 
 .admin-order-total-price {
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-family: var(--font-heading);
 }
 
@@ -1162,7 +1162,7 @@ a.admin-card:hover,
 .admin-order-detail-btn {
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
-    color: var(--info);
+    color: var(--info-ink);
     padding: 6px 10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -1191,7 +1191,7 @@ a.admin-card:hover,
 
 .admin-modal-inspect-date {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /*
@@ -1216,7 +1216,7 @@ a.admin-card:hover,
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-detail-grid {
@@ -1238,14 +1238,14 @@ a.admin-card:hover,
     margin: 0 0 2px;
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-detail-grid dd {
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.45;
 }
 
@@ -1253,7 +1253,7 @@ a.admin-card:hover,
     font-size: 0.88rem;
     font-weight: 800;
     margin-bottom: 8px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-modal-items-list {
@@ -1276,7 +1276,7 @@ a.admin-card:hover,
     justify-content: space-between;
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     border-top: 1px solid var(--border-light);
     padding-top: 12px;
     font-family: var(--font-heading);
@@ -1300,7 +1300,7 @@ a.admin-card:hover,
 }
 
 .admin-product-item-title {
-    color: var(--dark-900);
+    color: var(--text-primary);
     display: block;
     max-width: 280px;
     white-space: nowrap;
@@ -1311,13 +1311,13 @@ a.admin-card:hover,
 
 .admin-product-item-sku {
     font-size: 0.72rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-product-special-price {
     display: block;
     font-size: 0.72rem;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 700;
 }
 
@@ -1331,7 +1331,7 @@ a.admin-card:hover,
 }
 
 .admin-product-status-inactive {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -1359,7 +1359,7 @@ a.admin-card:hover,
     align-items: center;
     gap: 6px;
     font-size: 0.8rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     font-weight: 600;
 }
@@ -1399,7 +1399,7 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-parent-card:hover {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
 }
 
 .admin-cat-tree-parent-header {
@@ -1423,7 +1423,7 @@ a.admin-card:hover,
     height: 34px;
     border-radius: var(--radius-sm);
     background: rgba(234, 72, 79, 0.08);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1432,14 +1432,14 @@ a.admin-card:hover,
 
 .admin-cat-tree-parent-title {
     font-size: 1.02rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-weight: 700;
     line-height: 1.2;
 }
 
 .admin-cat-tree-parent-slug {
     font-size: 0.74rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     margin-left: 0;
     font-family: monospace;
     line-height: 1.2;
@@ -1455,7 +1455,7 @@ a.admin-card:hover,
 
 .admin-cat-tree-parent-count {
     font-size: 0.75rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     background: var(--bg-surface-subtle);
     padding: 0 10px;
     height: 32px;
@@ -1474,7 +1474,7 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
-    color: var(--gray-600);
+    color: var(--text-body);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1485,8 +1485,8 @@ a.admin-card:hover,
 
 .admin-cat-collapse-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--dark-900);
-    border-color: var(--gray-400);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 .admin-cat-title-group {
@@ -1505,9 +1505,9 @@ a.admin-card:hover,
 .admin-cat-inactive-pill {
     font-size: 0.65rem;
     font-weight: 700;
-    color: var(--gray-500);
-    background: var(--gray-100);
-    border: 1px solid var(--gray-300);
+    color: var(--text-muted);
+    background: var(--bg-muted);
+    border: 1px solid var(--border-strong);
     padding: 2px 7px;
     border-radius: var(--radius-md);
     text-transform: uppercase;
@@ -1530,19 +1530,19 @@ a.admin-card:hover,
     /* Orange: the only badge colour with no token, and deliberately not the
        amber warning tone — this one shouts rather than cautions. */
     background: #ea580c;
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 .badge-popular {
     background: var(--info);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 .badge-new {
     background: var(--success);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 .badge-sale {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .admin-cat-action-btn {
@@ -1554,7 +1554,7 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
-    color: var(--gray-600);
+    color: var(--text-body);
     font-size: 0.76rem;
     font-weight: 600;
     cursor: pointer;
@@ -1564,14 +1564,14 @@ a.admin-card:hover,
 
 .admin-cat-action-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--dark-900);
-    border-color: var(--gray-400);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 .admin-cat-action-btn.btn-danger-sm {
-    color: var(--danger);
+    color: var(--danger-ink);
     border-color: var(--danger-border);
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 .admin-cat-action-btn.btn-danger-sm:hover {
@@ -1582,7 +1582,7 @@ a.admin-card:hover,
 
 .admin-cat-action-btn.btn-primary-sm {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     height: 32px;
     box-sizing: border-box;
@@ -1609,7 +1609,7 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-sub-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 14px 16px;
@@ -1621,7 +1621,7 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-sub-card:hover {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
     box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
@@ -1638,7 +1638,7 @@ a.admin-card:hover,
     gap: 8px;
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-sub-icon-badge {
@@ -1646,7 +1646,7 @@ a.admin-card:hover,
     height: 24px;
     border-radius: var(--radius-xs);
     background: rgba(234, 72, 79, 0.08);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1656,7 +1656,7 @@ a.admin-card:hover,
 .admin-sub-name {
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-sub-action-group {
@@ -1671,7 +1671,7 @@ a.admin-card:hover,
     border-radius: var(--radius-xs);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
-    color: var(--gray-500);
+    color: var(--text-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1681,19 +1681,19 @@ a.admin-card:hover,
 
 .admin-sub-icon-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--dark-900);
-    border-color: var(--gray-400);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
 }
 
 .admin-sub-icon-btn.btn-danger:hover {
     background: var(--danger-tint);
-    color: var(--danger);
+    color: var(--danger-ink);
     border-color: var(--danger-tint-border);
 }
 
 .admin-sub-slug-tag {
     font-size: 0.7rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-family: monospace;
 }
 
@@ -1707,8 +1707,8 @@ a.admin-card:hover,
 
 .admin-cat-tree-l3-chip {
     font-size: 0.72rem;
-    background: var(--gray-50);
-    color: var(--dark-700);
+    background: var(--bg-surface-subtle);
+    color: var(--text-tertiary);
     border: 1px solid var(--border-color);
     padding: 3px 8px;
     border-radius: var(--radius-sm);
@@ -1720,8 +1720,8 @@ a.admin-card:hover,
 }
 
 .admin-cat-tree-l3-chip:hover {
-    background: var(--white);
-    border-color: var(--gray-400);
+    background: var(--bg-surface);
+    border-color: var(--border-hover);
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
@@ -1732,11 +1732,11 @@ a.admin-card:hover,
 }
 
 .l3-chip-label:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .l3-chip-remove-btn {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     background: none;
     border: none;
     padding: 0;
@@ -1749,12 +1749,12 @@ a.admin-card:hover,
 }
 
 .l3-chip-remove-btn:hover {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .admin-cat-tree-l3-add-chip {
     font-size: 0.7rem;
-    color: var(--primary);
+    color: var(--primary-ink);
     background: rgba(234, 72, 79, 0.05);
     border: 1px dashed var(--primary);
     padding: 3px 8px;
@@ -1774,7 +1774,7 @@ a.admin-card:hover,
 
 .admin-empty-sub-notice {
     padding: 16px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-size: 0.82rem;
     font-style: italic;
 }
@@ -1785,7 +1785,7 @@ a.admin-card:hover,
     height: 32px;
     border-radius: 50%;
     background: rgba(37, 99, 235, 0.1);
-    color: var(--info);
+    color: var(--info-ink);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1794,44 +1794,44 @@ a.admin-card:hover,
 }
 
 .admin-customer-name {
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-weight: 700;
 }
 
 .admin-customer-email {
     font-size: 0.8rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-customer-phone {
     font-size: 0.82rem;
-    color: var(--info);
+    color: var(--info-ink);
     font-weight: 600;
 }
 
 .admin-customer-orders-count {
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .admin-customer-total-spent {
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
     font-family: var(--font-heading);
 }
 
 .admin-customer-date {
     font-size: 0.78rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-customer-count-label {
     font-size: 0.82rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-customer-count-label strong {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* ── Modal Form ──────────────────────────────────────────────────────────────── */
@@ -1850,7 +1850,7 @@ a.admin-card:hover,
     display: block;
     font-size: 0.8rem;
     font-weight: 700;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
     margin-bottom: 6px;
 }
 
@@ -1861,13 +1861,13 @@ a.admin-card:hover,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 8px 12px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.85rem;
     transition: border-color var(--transition-fast);
 }
 
 .admin-modal-input::placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-modal-input:focus {
@@ -1883,14 +1883,14 @@ a.admin-card:hover,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 10px 12px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.85rem;
     resize: vertical;
     transition: border-color var(--transition-fast);
 }
 
 .admin-modal-textarea::placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-modal-textarea:focus {
@@ -1938,7 +1938,7 @@ a.admin-card:hover,
     font-size: 0.82rem;
     font-weight: 700;
     margin-bottom: 6px;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .admin-modal-action-row {
@@ -1961,7 +1961,7 @@ a.admin-card:hover,
 
 .admin-summary-box-row {
     font-size: 0.85rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
@@ -1973,12 +1973,12 @@ a.admin-card:hover,
     display: block;
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-table-desc-sub {
     font-size: 0.76rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1988,7 +1988,7 @@ a.admin-card:hover,
 
 .admin-table-mono-sub {
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-family: monospace;
 }
 
@@ -2061,7 +2061,7 @@ a.admin-card:hover,
 }
 
 .admin-modal-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border-radius: var(--radius-md);
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
     width: 100%;
@@ -2095,13 +2095,13 @@ a.admin-card:hover,
     align-items: center;
     padding: 16px 22px;
     border-bottom: 1px solid var(--border-color);
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 .admin-modal-header h3 {
     font-size: 1.1rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -2110,7 +2110,7 @@ a.admin-card:hover,
     border: none;
     font-size: 1.4rem;
     line-height: 1;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: pointer;
     padding: 4px 8px;
     border-radius: var(--radius-xs);
@@ -2118,8 +2118,8 @@ a.admin-card:hover,
 }
 
 .admin-modal-close:hover {
-    color: var(--dark-900);
-    background: var(--gray-100);
+    color: var(--text-primary);
+    background: var(--bg-muted);
 }
 
 .admin-modal-form {
@@ -2137,7 +2137,7 @@ a.admin-card:hover,
     gap: 10px;
     padding: 16px 22px;
     border-top: 1px solid var(--border-color);
-    background: var(--gray-50);
+    background: var(--bg-surface-subtle);
 }
 
 /* Coupon Badges */
@@ -2146,7 +2146,7 @@ a.admin-card:hover,
     align-items: center;
     gap: 6px;
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     padding: 4px 10px;
     border-radius: var(--radius-xs);
     font-family: var(--font-heading);
@@ -2158,7 +2158,7 @@ a.admin-card:hover,
 .coupon-desc-sub {
     display: block;
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-top: 3px;
 }
 
@@ -2174,7 +2174,7 @@ a.admin-card:hover,
 }
 
 .admin-confirm-text {
-    color: var(--dark-800);
+    color: var(--text-secondary);
     font-size: 0.92rem;
     line-height: 1.5;
     margin: 0;
@@ -2204,7 +2204,7 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
-    color: var(--gray-600);
+    color: var(--text-body);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2215,7 +2215,7 @@ a.admin-card:hover,
 
 .admin-table-icon-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--primary);
+    color: var(--primary-ink);
     border-color: var(--primary);
 }
 
@@ -2233,7 +2233,7 @@ a.admin-card:hover,
 
 .admin-table-icon-btn.btn-danger:hover {
     background: var(--danger-tint);
-    color: var(--danger);
+    color: var(--danger-ink);
     border-color: var(--danger-tint-border);
     box-shadow: none;
 }
@@ -2263,7 +2263,7 @@ a.admin-card:hover,
 }
 
 .admin-banner-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -2274,7 +2274,7 @@ a.admin-card:hover,
 
 .admin-banner-preview {
     height: 180px;
-    background: var(--dark-900);
+    background: var(--bg-inverse);
     position: relative;
     overflow: hidden;
 }
@@ -2294,7 +2294,7 @@ a.admin-card:hover,
     padding: 3px 8px;
     border-radius: var(--radius-xs);
     background: rgba(15, 23, 42, 0.85);
-    color: var(--white);
+    color: var(--text-on-accent);
     backdrop-filter: blur(4px);
 }
 
@@ -2314,7 +2314,7 @@ a.admin-card:hover,
     align-self: flex-start;
     font-size: 0.68rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     background: rgba(234, 72, 79, 0.1);
     padding: 2px 6px;
     border-radius: var(--radius-xs);
@@ -2323,13 +2323,13 @@ a.admin-card:hover,
 .admin-banner-info h4 {
     font-size: 0.98rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 0;
 }
 
 .banner-sub {
     font-size: 0.82rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     margin: 0;
     line-height: 1.4;
 }
@@ -2339,7 +2339,7 @@ a.admin-card:hover,
     justify-content: space-between;
     font-size: 0.76rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-top: auto;
     padding-top: 10px;
     border-top: 1px solid var(--border-light);
@@ -2363,7 +2363,7 @@ a.admin-card:hover,
     border-radius: var(--radius-xs);
     overflow: hidden;
     border: 1px solid var(--border-color);
-    background: var(--dark-900);
+    background: var(--bg-inverse);
 }
 
 .admin-banner-preview-box img {
@@ -2387,7 +2387,7 @@ a.admin-card:hover,
     align-items: center;
     gap: 6px;
     background: rgba(234, 72, 79, 0.08);
-    color: var(--primary);
+    color: var(--primary-ink);
     padding: 4px 10px;
     border-radius: var(--radius-xs);
     font-family: monospace;
@@ -2398,7 +2398,7 @@ a.admin-card:hover,
 .branch-type-sub {
     display: block;
     font-size: 0.76rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-top: 2px;
 }
 
@@ -2437,7 +2437,7 @@ a.admin-card:hover,
 .form-checkbox-row label {
     font-size: 0.86rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
 }
 
@@ -2467,35 +2467,35 @@ a.admin-card:hover,
     border-radius: var(--radius-xs);
     font-size: 0.84rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.14s ease;
     white-space: nowrap;
 }
 
 .admin-settings-tab-btn:hover {
-    background: var(--white);
-    border-color: var(--gray-400);
+    background: var(--bg-surface);
+    border-color: var(--border-hover);
 }
 
 .admin-settings-tab-btn.active {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /* ── Review Moderation ──────────────────────────────────────────────────────── */
 .admin-review-cell strong {
     display: block;
     font-size: 0.85rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 2px;
 }
 
 .admin-review-cell p {
     margin: 0 0 3px;
     font-size: 0.82rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     /* Long reviews must not stretch the table out of the viewport. */
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -2506,7 +2506,7 @@ a.admin-card:hover,
 
 .admin-review-cell small {
     font-size: 0.72rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-review-rating {
@@ -2564,7 +2564,20 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-light);
     /* The logo artwork is dark, so preview it on the light ground it is used on. */
-    background: var(--white);
+    background: var(--bg-surface);
+}
+
+/*
+ * The dark-background mark, previewed on a dark ground.
+ *
+ * Its lettering is near-white, so on the light preview above it is an all but
+ * blank rectangle — an admin checking their upload would see nothing and
+ * reasonably conclude it had failed. Fixed dark rather than themed, because
+ * the point is to show the surface this file is actually for.
+ */
+.admin-logo-preview.is-on-dark {
+    background: var(--bg-inverse-deep);
+    border-color: var(--border-strong);
 }
 
 /*
@@ -2590,7 +2603,7 @@ a.admin-card:hover,
     margin-top: 6px;
     font-size: 0.75rem;
     line-height: 1.5;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Inside the flex column of an image field, the gap already spaces it. */
@@ -2742,7 +2755,7 @@ a.admin-card:hover,
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: var(--gray-400);
+        color: var(--text-subtle);
     }
 
     /*
@@ -2855,7 +2868,7 @@ a.admin-card:hover,
 }
 
 .admin-stock-variant-tick {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-size: 13px;
 }
 
@@ -2867,8 +2880,8 @@ a.admin-card:hover,
     font-size: 11px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--gray-400);
-    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-subtle);
+    background: var(--state-hover);
     padding: 2px 6px;
     border-radius: var(--radius-md);
 }
@@ -2914,12 +2927,12 @@ a.admin-card:hover,
     border-radius: var(--radius-md);
     padding: 8px;
     cursor: pointer;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     transition: all 0.15s ease;
 }
 
 .admin-receive-line-remove:hover:not(:disabled) {
-    color: var(--danger);
+    color: var(--danger-ink);
     border-color: var(--danger);
 }
 
@@ -2939,7 +2952,7 @@ a.admin-card:hover,
 
 .admin-receive-total {
     font-size: 14px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* ── Adjustments ───────────────────────────────────────────────────────────── */
@@ -3018,7 +3031,7 @@ a.admin-card:hover,
     padding: 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--state-wash);
 }
 
 .admin-variant-list {
@@ -3046,7 +3059,7 @@ a.admin-card:hover,
     padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 .admin-variant-gallery {
@@ -3071,8 +3084,8 @@ a.admin-card:hover,
     border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     font-size: 13px;
-    color: var(--gray-400);
-    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-subtle);
+    background: var(--state-wash);
 }
 
 .admin-variant-allocation {
@@ -3111,7 +3124,7 @@ a.admin-card:hover,
     padding: 9px 12px;
     border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--state-wash);
 }
 
 .admin-stock-readonly-qty {
@@ -3121,7 +3134,7 @@ a.admin-card:hover,
 
 .admin-stock-readonly-link {
     font-size: 12px;
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: none;
     white-space: nowrap;
 }
@@ -3151,7 +3164,7 @@ a.admin-card:hover,
     padding: 14px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--state-wash);
 }
 
 .admin-coupon-scope-list {
@@ -3170,7 +3183,7 @@ a.admin-card:hover,
     padding: 6px 11px;
     border: 1.5px solid var(--border-color);
     border-radius: var(--radius-full);
-    background: var(--white);
+    background: var(--bg-surface);
     font-size: 13px;
     cursor: pointer;
     user-select: none;
@@ -3236,7 +3249,7 @@ a.admin-card:hover,
     margin-top: 4px;
     padding: 4px 8px;
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--state-strong);
     font-size: 12px;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     max-width: 100%;
@@ -3257,15 +3270,15 @@ a.admin-card:hover,
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
     object-fit: cover;
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 .admin-variant-thumb-empty {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-400);
-    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-subtle);
+    background: var(--state-hover);
 }
 
 .admin-variant-image-actions {
@@ -3281,7 +3294,7 @@ a.admin-card:hover,
     padding: 0;
     font-size: 12px;
     text-align: left;
-    color: var(--primary);
+    color: var(--primary-ink);
     cursor: pointer;
 }
 
@@ -3295,7 +3308,7 @@ a.admin-card:hover,
 }
 
 .admin-variant-image-clear {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Delivery history: a row expands to show what was on that invoice. */
@@ -3304,7 +3317,7 @@ a.admin-card:hover,
 }
 
 .admin-receipt-row:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--state-wash);
 }
 
 .admin-receipt-lines {
@@ -3344,7 +3357,7 @@ a.admin-card:hover,
     padding: 12px 14px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
+    background: var(--bg-surface);
     text-align: left;
 }
 
@@ -3356,7 +3369,7 @@ a.admin-card:hover,
 
 .admin-stock-stat-label {
     font-size: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     line-height: 1.4;
 }
 
@@ -3379,7 +3392,7 @@ a.admin-card:hover,
 }
 
 .admin-stock-stat-action.is-active .admin-stock-stat-value {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* Short column headings should not wrap onto two lines in a narrow column. */
@@ -3415,7 +3428,7 @@ a.admin-card:hover,
 }
 
 .searchable-select-placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .searchable-select-panel {
@@ -3426,7 +3439,7 @@ a.admin-card:hover,
     right: 0;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
+    background: var(--bg-surface);
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
     overflow: hidden;
 }
@@ -3437,7 +3450,7 @@ a.admin-card:hover,
     gap: 8px;
     padding: 9px 11px;
     border-bottom: 1px solid var(--border-color);
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .searchable-select-search input {
@@ -3485,25 +3498,25 @@ a.admin-card:hover,
 }
 
 .searchable-select-option.is-highlighted {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--state-hover);
 }
 
 .searchable-select-option.is-selected {
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 600;
 }
 
 .searchable-select-hint {
     flex-shrink: 0;
     font-size: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .searchable-select-empty,
 .searchable-select-more {
     padding: 10px 12px;
     font-size: 13px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .searchable-select-more {
@@ -3515,8 +3528,8 @@ a.admin-card:hover,
     margin-left: 8px;
     padding: 2px 7px;
     border-radius: var(--radius-full);
-    background: rgba(0, 0, 0, 0.06);
-    color: var(--gray-400);
+    background: var(--state-strong);
+    color: var(--text-subtle);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -3539,12 +3552,12 @@ a.admin-card:hover,
     border-radius: var(--radius-full);
     font-size: 11px;
     white-space: nowrap;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-branch-chip strong {
     font-size: 12px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-stock-branch-filter {
@@ -3559,7 +3572,7 @@ a.admin-card:hover,
     font: inherit;
     font-size: 13px;
     /* Not the shorthand: it would clear the arrow's background-image. */
-    background-color: var(--white);
+    background-color: var(--bg-surface);
 }
 
 /* A builder component the compatibility engine cannot check, because a spec it
@@ -3595,8 +3608,8 @@ a.admin-card:hover,
     margin-right: 12px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
-    color: var(--dark-900);
+    background: var(--bg-surface);
+    color: var(--text-primary);
     cursor: pointer;
 }
 
@@ -3765,7 +3778,7 @@ a.admin-card:hover,
 .admin-modal-inspect-date {
     display: block;
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* The figure people opened the record to see, sized accordingly. */
@@ -3775,7 +3788,7 @@ a.admin-card:hover,
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-modal-items-title {
@@ -3784,7 +3797,7 @@ a.admin-card:hover,
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /*
@@ -3804,7 +3817,7 @@ a.admin-card:hover,
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-align: left;
     white-space: nowrap;
 }
@@ -3829,7 +3842,7 @@ a.admin-card:hover,
 
 .admin-modal-items-table td strong {
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* Explains why the single/variant toggle is unavailable, rather than leaving
@@ -3862,7 +3875,7 @@ a.admin-card:hover,
 }
 
 .admin-th-sort:hover {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-th-sort svg {
@@ -3872,7 +3885,7 @@ a.admin-card:hover,
 
 .admin-th-sort.is-active svg {
     opacity: 1;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* This month's profit and loss, on the overview. */
@@ -3895,12 +3908,12 @@ a.admin-card:hover,
 .admin-pl-head h2 {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-pl-head span {
     font-size: 0.79rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-pl-link {
@@ -3910,11 +3923,11 @@ a.admin-card:hover,
     flex-shrink: 0;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .admin-pl-link:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-pl-figures {
@@ -3937,20 +3950,20 @@ a.admin-card:hover,
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-pl-figure strong {
     font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.2;
 }
 
 .admin-pl-figure small {
     font-size: 0.75rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* The one number the card exists for. */
@@ -3967,7 +3980,7 @@ a.admin-card:hover,
 }
 
 .admin-pl-net.is-loss strong {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 /* Orders the statement cannot account for, said plainly. */
@@ -3982,7 +3995,7 @@ a.admin-card:hover,
     background: var(--warning-light);
     font-size: 0.82rem;
     line-height: 1.6;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .admin-pl-excluded svg {
@@ -4006,7 +4019,7 @@ a.admin-card:hover,
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-attention-grid {
@@ -4030,7 +4043,7 @@ a.admin-card:hover,
 }
 
 .admin-attention-card:hover {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
     transform: translateY(-1px);
 }
 
@@ -4039,18 +4052,18 @@ a.admin-card:hover,
     font-size: 1.6rem;
     font-weight: 900;
     line-height: 1.1;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .admin-attention-label {
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .admin-attention-hint {
     font-size: 0.76rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Colour is for the ones with something in them. A pile of zeroes lit up in
@@ -4060,7 +4073,7 @@ a.admin-card:hover,
 }
 
 .admin-attention-card.tone-info .admin-attention-count {
-    color: var(--info);
+    color: var(--info-ink);
 }
 
 .admin-attention-card.is-clear {
@@ -4069,14 +4082,14 @@ a.admin-card:hover,
 
 .admin-attention-card.is-clear .admin-attention-count,
 .admin-attention-card.is-clear .admin-attention-label {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* The branch a storekeeper is confined to: stated, not offered as a choice. */
 .admin-stock-branch-fixed {
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* Delivery rows in the history modal open; the arrow says so. */
@@ -4084,13 +4097,13 @@ a.admin-card:hover,
     display: inline-block;
     margin-right: 7px;
     vertical-align: -2px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     transition: transform var(--transition-fast);
 }
 
 .admin-receipt-chevron.is-open {
     transform: rotate(180deg);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-receipt-row {
@@ -4109,7 +4122,7 @@ a.admin-card:hover,
     margin-top: 2px;
     font-size: 0.74rem;
     font-weight: 700;
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 /* The running total in the record-payment modal. */
@@ -4129,12 +4142,12 @@ a.admin-card:hover,
     justify-content: space-between;
     gap: 12px;
     font-size: 0.86rem;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .pay-summary strong {
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
 }
 
@@ -4153,7 +4166,7 @@ a.admin-card:hover,
 }
 
 .pay-summary .pay-settled strong {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 /* Serial numbers on a delivery line: optional, and out of the way until asked for. */
@@ -4167,19 +4180,19 @@ a.admin-card:hover,
     background: var(--bg-surface);
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
     cursor: pointer;
 }
 
 .admin-receive-line-serials:hover {
-    border-color: var(--gray-300);
-    color: var(--dark-900);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
 }
 
 .admin-receive-line-serials.has-serials {
     border-color: var(--primary);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-receive-serials {
@@ -4195,7 +4208,7 @@ a.admin-card:hover,
     display: block;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .admin-receive-serials textarea {
@@ -4207,7 +4220,7 @@ a.admin-card:hover,
     font-family: var(--font-mono, monospace);
     font-size: 0.84rem;
     line-height: 1.6;
-    color: var(--dark-900);
+    color: var(--text-primary);
     resize: vertical;
 }
 
@@ -4244,7 +4257,7 @@ a.admin-card:hover,
     font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .admin-sms-event {
@@ -4283,7 +4296,7 @@ a.admin-card:hover,
 .admin-sms-event small {
     font-size: 0.75rem;
     line-height: 1.5;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* "N more need attention" — the tail of a capped alert list. */
@@ -4297,7 +4310,7 @@ a.admin-card:hover,
     border-top: 1px solid var(--border-color);
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .admin-stock-alert-more:hover {
@@ -4337,7 +4350,7 @@ a.admin-card:hover,
     padding: 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--state-wash);
 }
 
 .admin-spec-header {
@@ -4366,7 +4379,7 @@ a.admin-card:hover,
     font-size: 0.72rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-spec-handle {
@@ -4374,7 +4387,7 @@ a.admin-card:hover,
     align-items: center;
     justify-content: center;
     width: 18px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-spec-remove-head {
@@ -4432,7 +4445,7 @@ a.admin-card:hover,
     padding: 12px 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--state-wash);
 }
 
 .admin-seo-block > summary {
@@ -4521,8 +4534,8 @@ a.admin-card:hover,
     padding: 4px;
     list-style: none;
     overflow-y: auto;
-    background: var(--surface, #fff);
-    border: 1px solid var(--border-color, #e2e8f0);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.25);
 }
@@ -4540,7 +4553,7 @@ a.admin-card:hover,
 }
 
 .category-picker-results button:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--state-hover);
 }
 
 .category-picker-empty {
@@ -4563,7 +4576,7 @@ a.admin-card:hover,
     padding: 3px 8px;
     font-size: 0.78rem;
     border-radius: var(--radius-full);
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--state-strong);
 }
 
 .category-picker-chip button {
@@ -4582,10 +4595,10 @@ a.admin-card:hover,
 /* Rich text editor. Wears the same box as a text input so it sits in the same
    column as the other fields without announcing itself as something else. */
 .rte {
-    border: 1px solid var(--border-color, #e2e8f0);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: var(--surface, #fff);
+    background: var(--bg-surface);
 }
 
 .rte.input-error {
@@ -4597,8 +4610,8 @@ a.admin-card:hover,
     flex-wrap: wrap;
     gap: 2px;
     padding: 5px 6px;
-    border-bottom: 1px solid var(--border-color, #e2e8f0);
-    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--state-wash);
 }
 
 .rte-toolbar button {
@@ -4615,7 +4628,7 @@ a.admin-card:hover,
 }
 
 .rte-toolbar button:hover {
-    background: rgba(0, 0, 0, 0.07);
+    background: var(--state-strong);
     opacity: 1;
 }
 
@@ -4657,7 +4670,7 @@ a.admin-card:hover,
 }
 
 .rte-surface a {
-    color: var(--primary-color, #c1121f);
+    color: var(--primary-ink);
     text-decoration: underline;
 }
 
@@ -4731,7 +4744,7 @@ a.admin-card:hover,
     display: block;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin-bottom: 7px;
 }
 
@@ -4740,7 +4753,7 @@ a.admin-card:hover,
     font-style: normal;
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .admin-attr-options {
@@ -4758,20 +4771,20 @@ a.admin-card:hover,
     border-radius: var(--radius-full);
     background: var(--bg-surface);
     font-size: 0.79rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
     transition: all var(--transition-fast);
 }
 
 .admin-attr-chip:hover {
-    border-color: var(--gray-400);
+    border-color: var(--border-hover);
 }
 
 .admin-attr-chip.is-on {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-weight: 600;
 }
 
@@ -4833,7 +4846,7 @@ a.admin-card:hover,
     list-style: none;
     margin: 12px 0 0;
     padding: 12px 0 0;
-    border-top: 1px solid var(--border-light, #e2e8f0);
+    border-top: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
     gap: 7px;
@@ -4845,7 +4858,7 @@ a.admin-card:hover,
     justify-content: space-between;
     gap: 12px;
     font-size: 0.78rem;
-    color: var(--gray-600, #475569);
+    color: var(--text-body);
 }
 
 .admin-money-log li > span:last-child {
@@ -4855,11 +4868,11 @@ a.admin-card:hover,
 }
 
 .admin-money-in {
-    color: var(--success, #16a34a);
+    color: var(--success-ink);
 }
 
 .admin-money-out {
-    color: var(--danger, #dc2626);
+    color: var(--danger-ink);
 }
 
 @media (max-width: 560px) {

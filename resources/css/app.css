@@ -159,12 +159,107 @@
     --gray-100: #f1f5f9;
     --gray-50: #f8fafc;
 
-    /* Surfaces & Background */
+    /* ==========================================================================
+       SEMANTIC LAYER — the only tokens a rule should name for a colour.
+       ==========================================================================
+       Everything above this comment is the *palette*: a fixed ladder of slate
+       and a brand red, each name describing the colour it holds. Nothing in a
+       component may reach for those directly any more, because "white" and
+       "dark-900" describe a colour and not a job — and the moment there are two
+       themes, the job is the only thing that survives.
+
+       So: --bg-surface is "the colour a card sits on", which is white in the
+       light theme and near-black in the dark one. --text-primary is "the colour
+       a heading is written in", which is the reverse. A rule that names the job
+       needs no dark-mode block of its own; a rule that names the colour needs
+       one for every property it sets, which is how a half-finished theme like
+       the one that was pulled out of VariantPickerModal.css happens.
+
+       Every token here resolves to exactly what the rule that used to name the
+       palette directly resolved to, so switching the light theme over was a
+       rename and nothing more.
+       ========================================================================== */
+
+    /* Surfaces, back to front: the page, a card on it, a panel floating above. */
     --bg-page: #f1f4f8;
     --bg-surface: var(--white);
     --bg-surface-subtle: var(--gray-50);
+    --bg-muted: var(--gray-100);
+    --bg-muted-strong: var(--gray-200);
+    --bg-elevated: var(--white);
+
+    /*
+     * Deliberately dark furniture — the footer, the category bar, the admin
+     * sidebar — which is dark in the light theme by choice rather than by
+     * accident. In the dark theme it cannot simply stay put: dark-900 against
+     * a dark-950 page is the same surface with a seam in it, so these lift
+     * instead of dropping, and keep separating themselves from the page.
+     */
+    --bg-inverse: var(--dark-900);
+    --bg-inverse-soft: var(--dark-800);
+    --bg-inverse-raised: var(--dark-700);
+    --bg-inverse-deep: var(--dark-950);
+
+    /* Text, brightest to faintest. */
+    --text-primary: var(--dark-900);
+    --text-secondary: var(--dark-800);
+    --text-tertiary: var(--dark-700);
+    --text-body: var(--gray-600);
+    --text-muted: var(--gray-500);
+    --text-subtle: var(--gray-400);
+    --text-faint: var(--gray-300);
+
+    /*
+     * Writing on a filled brand or status colour. Stays white in both themes:
+     * a red button is red in the dark theme too, and the label on it is still
+     * white. This is the one token that must NOT invert, which is exactly why
+     * it needs a name — `color: var(--white)` and `background: var(--white)`
+     * look like the same intent and are opposites.
+     */
+    --text-on-accent: var(--white);
+
+    /* Borders: the hairline between two surfaces, and the heavier one. */
     --border-color: var(--gray-200);
     --border-light: #edf2f7;
+    --border-strong: var(--gray-300);
+    --border-hover: var(--gray-400);
+
+    /*
+     * Brand and status *as writing*, which is not the same colour as the fill.
+     *
+     * --primary is a fill that carries white text at 5.31:1. As writing on the
+     * dark theme's surface it manages 3.31:1, under the 4.5 body text needs, so
+     * the dark theme lifts these to a brighter step of the same hue while the
+     * fills stay on brand. In the light theme every one of them is its base
+     * colour, unchanged.
+     */
+    --primary-ink: var(--primary);
+    --danger-ink: var(--danger);
+    --success-ink: var(--success);
+    --warning-ink: var(--warning);
+    --info-ink: var(--info);
+
+    /* The decorative accents, same rule: these are what the status pills are
+       written in, and a pill's label is body text however small it is. */
+    --accent-purple-ink: var(--accent-purple);
+    --accent-blue-ink: var(--accent-blue);
+    --accent-emerald-ink: var(--accent-emerald);
+    --accent-amber-ink: var(--accent-amber);
+    --accent-cyan-ink: var(--accent-cyan);
+
+    /*
+     * The chevron drawn into every <select> as a data URI. It is a stroke
+     * colour inside a URL, so it cannot be a var() — the whole URL has to be
+     * swapped, which is what this token is for.
+     */
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+    /*
+     * Tells the browser which way round the theme is, so the things it paints
+     * itself — scrollbars, a date picker's calendar, the caret, spinner arrows,
+     * an unstyled form control — follow the page instead of staying light.
+     */
+    color-scheme: light;
 
     /* Typography */
     --font-heading:
@@ -213,7 +308,9 @@
      * on a white row, a grey panel and a red button alike, and that a surface
      * under the cursor still looks like itself.
      */
+    --state-wash: rgba(15, 23, 42, 0.02);
     --state-hover: rgba(15, 23, 42, 0.04);
+    --state-strong: rgba(15, 23, 42, 0.06);
     --state-pressed: rgba(15, 23, 42, 0.08);
     --state-selected: rgba(209, 33, 39, 0.07);
 
@@ -262,6 +359,176 @@
     --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ==========================================================================
+   THE DARK THEME
+   ==========================================================================
+   One block, and the whole site follows — which is the entire reason the
+   semantic layer above exists. Nothing here is a component rule: every value
+   is a token the rest of the stylesheet already names, so a card is dark
+   because --bg-surface is dark, not because a .card rule was written twice.
+
+   Selected by a data-theme attribute on <html>, stamped by an inline script in
+   app.blade.php before the first paint. There is deliberately no
+   prefers-color-scheme block beside it, for two reasons. The machine's own
+   preference is not consulted at all — this is a light shop, and a customer
+   with a dark laptop should not have that decided for them on a first visit;
+   dark is a choice made in the toggle and remembered. And this is an Inertia
+   app, so nothing renders without JavaScript anyway: a media query that could
+   disagree with the attribute for one frame would be a flash of the wrong
+   theme rather than a fallback. The attribute is the single source of truth.
+
+   The palette ladder above is NOT redefined. --white stays white and
+   --dark-900 stays near-black, because a handful of things are genuinely those
+   colours in both themes: the label on a red button, the tick in a checkbox,
+   a photographic hero's glass overlay. Inverting the ladder would have taken
+   those with it.
+   ========================================================================== */
+
+:root[data-theme='dark'] {
+    /*
+     * Surfaces. A shade under 5% lightness apart at each step, which is enough
+     * to read as a stack in a dark room and not so much that the page looks
+     * striped. The page is the darkest thing on it, so a card reads as lifted
+     * rather than as a hole.
+     */
+    --bg-page: #0a0e17;
+    --bg-surface: #131926;
+    --bg-surface-subtle: #0f1420;
+    --bg-muted: #1a2130;
+    --bg-muted-strong: #232b3b;
+    --bg-elevated: #1a2130;
+
+    /*
+     * The furniture that is dark on purpose in both themes — the footer, the
+     * category bar, the admin sidebar. Here it goes *up*, not down: at
+     * dark-900 against a dark-950 page the footer stopped being a band and
+     * became the same darkness as everything else with a hairline in it.
+     */
+    --bg-inverse: #151c2b;
+    --bg-inverse-soft: #1e2636;
+    --bg-inverse-raised: #2a3346;
+    --bg-inverse-deep: #0d121c;
+
+    /*
+     * Text. Not pure white at the top: #fff on a dark surface haloes, and the
+     * ladder needs headroom above the brightest body text anyway.
+     *
+     * The ladder compresses towards the bottom rather than continuing down.
+     * In the light theme the two faintest steps came from --gray-300 and
+     * --gray-400, which are *pale* — on the dark ticker bar and the footer
+     * they were the light text, not the dim text, and carrying them straight
+     * down put the shop's address and the ticker at 4.03:1 on the deepest
+     * surface. Every step here clears 4.5:1 against every surface the theme
+     * defines, checked against the darkest of them rather than the page.
+     */
+    --text-primary: #e8ecf3;
+    --text-secondary: #d3dae5;
+    --text-tertiary: #c3cbd9;
+    --text-body: #aab4c4;
+    --text-muted: #97a1b3;
+    --text-subtle: #919bad;
+    --text-faint: #8a94a6;
+
+    /* Borders. A dark theme separates with light, so these lighten as they
+       strengthen where the light theme's darken. */
+    --border-color: #232b3b;
+    --border-light: #1b2231;
+    --border-strong: #303a4d;
+    --border-hover: #414d63;
+
+    /*
+     * Brand and status as writing.
+     *
+     * The fills do not move — a red button is still #d12127, still carrying
+     * white at 5.31:1, and the shop still looks like itself. But that same red
+     * *as text* on --bg-surface manages only 3.31:1, so every one of these
+     * steps up to a brighter tint of its own hue. --primary-ink clears 6.3:1.
+     */
+    --primary-ink: #ff6b70;
+    --danger-ink: #ff7b7b;
+    --success-ink: #34d399;
+    --warning-ink: #fbbf24;
+    --info-ink: #7aa5ff;
+    --accent-purple-ink: #a78bfa;
+    --accent-blue-ink: #7aa5ff;
+    --accent-emerald-ink: #34d399;
+    --accent-amber-ink: #fbbf24;
+    --accent-cyan-ink: #22d3ee;
+
+    /*
+     * Status tints and the writing on them. In the light theme a warning is
+     * dark amber on cream; here it is bright amber on a deep, desaturated
+     * amber that is barely lighter than the surface it sits on. Tints have to
+     * stay near the background in a dark theme — a mid-tone panel reads as a
+     * filled button and invites a click.
+     */
+    --primary-light: #2a1518;
+    --danger-light: #2a1416;
+    --danger-border: #4a2226;
+    --danger-tint: #35181b;
+    --danger-tint-border: #5c2a2f;
+    --danger-text: #ff9b9b;
+    --success-light: #0d2620;
+    --success-border: #1c4a3c;
+    --success-text: #6ee7b7;
+    --warning-light: #2b1f0a;
+    --warning-border: #4d3a12;
+    --warning-text: #fcd34d;
+    --info-light: #101c33;
+    --info-border: #234170;
+    --info-text: #a8c5ff;
+
+    /*
+     * Elevation, inverted in principle.
+     *
+     * The light theme's shadows are slate at 4–22% — invisible against a black
+     * page, so a modal lost its edge entirely and floated with nothing under
+     * it. Here the drop is near-opaque black, which still darkens a dark
+     * surface, and the ring that draws the edge is *light* instead: on a dark
+     * theme it is the highlight along the top of a raised thing that says it
+     * is raised, not the shadow beneath it.
+     */
+    --shadow-xs:
+        0 0 0 1px rgba(148, 163, 184, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.6);
+    --shadow-sm:
+        0 0 0 1px rgba(148, 163, 184, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.6),
+        0 1px 2px -1px rgba(0, 0, 0, 0.4);
+    --shadow-md:
+        0 0 0 1px rgba(148, 163, 184, 0.09),
+        0 6px 12px -4px rgba(0, 0, 0, 0.65), 0 2px 5px -2px rgba(0, 0, 0, 0.45);
+    --shadow-lg:
+        0 0 0 1px rgba(148, 163, 184, 0.1), 0 14px 28px -8px rgba(0, 0, 0, 0.7),
+        0 5px 10px -4px rgba(0, 0, 0, 0.5);
+    --shadow-xl:
+        0 0 0 1px rgba(148, 163, 184, 0.12),
+        0 26px 50px -12px rgba(0, 0, 0, 0.8),
+        0 10px 20px -8px rgba(0, 0, 0, 0.55);
+
+    /*
+     * A wash of light rather than of dark, for the same reason — and this is
+     * the one place where a component that hardcoded its own faint grey really
+     * does break. A table striped with 2% black over a white row is a visible
+     * band; over a near-black one it is nothing at all, and every zebra row and
+     * hover in the admin simply stopped existing. Inverted here, they work
+     * again everywhere at once.
+     */
+    --state-wash: rgba(255, 255, 255, 0.03);
+    --state-hover: rgba(255, 255, 255, 0.06);
+    --state-strong: rgba(255, 255, 255, 0.08);
+    --state-pressed: rgba(255, 255, 255, 0.1);
+    --state-selected: rgba(255, 107, 112, 0.14);
+
+    --focus-ring: 0 0 0 3px rgba(255, 107, 112, 0.35);
+    --focus-ring-offset:
+        0 0 0 2px var(--bg-surface), 0 0 0 5px rgba(255, 107, 112, 0.35);
+
+    /* Same chevron, redrawn in the muted text colour: the light theme's slate
+       grey all but disappeared against a dark field. */
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2397a1b3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+    color-scheme: dark;
+}
+
 /* Base Resets */
 *,
 *::before,
@@ -290,7 +557,7 @@ html {
 body {
     font-family: var(--font-body);
     background-color: var(--bg-page);
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -304,7 +571,7 @@ h4,
 h5,
 h6 {
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-weight: 700;
     line-height: 1.25;
 }
@@ -345,7 +612,7 @@ textarea:focus {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    border: 2px solid var(--gray-200);
+    border: 2px solid var(--border-color);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -370,7 +637,7 @@ select {
     background-color: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.88rem;
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -388,13 +655,13 @@ select:not([multiple]) {
     appearance: none;
     -webkit-appearance: none;
     padding-right: 36px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: var(--select-chevron);
     background-repeat: no-repeat;
     background-position: right 13px center;
 }
 
 select:not([multiple]):hover:not(:disabled) {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
 }
 
 /*
@@ -415,13 +682,13 @@ select:not([multiple]):focus-visible {
 select:disabled {
     cursor: not-allowed;
     background-color: var(--bg-surface-subtle);
-    color: var(--gray-400);
+    color: var(--text-subtle);
     opacity: 1;
 }
 
 /* An unchosen placeholder option should read as a prompt, not as an answer. */
 select:not([multiple]):has(option[value='']:checked:first-child) {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 input.has-error:focus,
@@ -478,7 +745,7 @@ textarea.has-error:focus,
 
 .btn-primary {
     background: var(--primary-gradient);
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: 0 4px 14px var(--primary-glow);
 }
 
@@ -493,21 +760,21 @@ textarea.has-error:focus,
 }
 
 .btn-secondary {
-    background: var(--gray-100);
-    color: var(--dark-900);
+    background: var(--bg-muted);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-xs);
 }
 
 .btn-secondary:hover {
-    background: var(--gray-200);
-    border-color: var(--gray-300);
+    background: var(--bg-muted-strong);
+    border-color: var(--border-strong);
     transform: translateY(-2px);
 }
 
 .btn-danger {
     background: var(--danger);
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: none;
 }
 
@@ -518,20 +785,20 @@ textarea.has-error:focus,
 }
 
 .btn-dark {
-    background: var(--dark-900);
-    color: var(--white);
+    background: var(--bg-inverse);
+    color: var(--text-on-accent);
     box-shadow: var(--shadow-sm);
 }
 
 .btn-dark:hover {
-    background: var(--dark-800);
+    background: var(--bg-inverse-soft);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
 .btn-outline {
     background: transparent;
-    color: var(--primary);
+    color: var(--primary-ink);
     border: 1px solid var(--primary);
 }
 
@@ -540,30 +807,39 @@ textarea.has-error:focus,
     transform: translateY(-2px);
 }
 
+/*
+ * The glass button for a photographic hero.
+ *
+ * Genuinely white in both themes, which is why it is named for the colour
+ * rather than the job: it is never on a surface, it is on a photograph, and a
+ * photograph does not get lighter when the theme does. Flipping it with the
+ * rest would have put a near-black button with near-white writing over a dark
+ * product shot, which is neither readable nor what the button is for.
+ */
 .btn-outline-white {
     background: var(--white-alpha-10);
-    color: var(--white);
+    color: var(--white); /* theme-exempt: sits on a photo, not on a surface */
     border: 1px solid var(--white-alpha-40);
     backdrop-filter: blur(8px);
 }
 
 .btn-outline-white:hover {
-    background: var(--white);
-    color: var(--dark-900);
-    border-color: var(--white);
+    background: var(--white); /* theme-exempt: as above */
+    color: var(--dark-900); /* theme-exempt: as above */
+    border-color: var(--white); /* theme-exempt: as above */
     transform: translateY(-2px);
 }
 
 .btn-ghost {
     background: transparent;
-    color: var(--gray-600);
+    color: var(--text-body);
     border: none;
     box-shadow: none;
 }
 
 .btn-ghost:hover {
-    background: var(--gray-100);
-    color: var(--dark-900);
+    background: var(--bg-muted);
+    color: var(--text-primary);
 }
 
 .btn-sm {
@@ -607,7 +883,7 @@ textarea.has-error:focus,
     cursor: pointer;
     user-select: none;
     font-size: 0.88rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .custom-checkbox-input {
@@ -615,9 +891,9 @@ textarea.has-error:focus,
     -webkit-appearance: none;
     width: 18px;
     height: 18px;
-    border: 1px solid var(--gray-300);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
-    background-color: var(--white);
+    background-color: var(--bg-surface);
     display: grid;
     place-content: center;
     cursor: pointer;
@@ -634,8 +910,8 @@ textarea.has-error:focus,
     content: '';
     width: 10px;
     height: 6px;
-    border-left: 2px solid var(--white);
-    border-bottom: 2px solid var(--white);
+    border-left: 2px solid var(--text-on-accent);
+    border-bottom: 2px solid var(--text-on-accent);
     transform: rotate(-45deg) translate(1px, -1px);
 }
 
@@ -645,8 +921,8 @@ textarea.has-error:focus,
 }
 
 .custom-checkbox-input:disabled {
-    background-color: var(--gray-100);
-    border-color: var(--gray-200);
+    background-color: var(--bg-muted);
+    border-color: var(--border-color);
     cursor: not-allowed;
 }
 
@@ -656,7 +932,7 @@ textarea.has-error:focus,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background-color: var(--bg-surface);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.92rem;
     font-family: var(--font-body);
     transition: all var(--transition-fast);
@@ -704,14 +980,14 @@ textarea.has-error:focus,
     font-family: var(--font-heading);
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
 .form-control-error {
     display: block;
     font-size: 0.78rem;
-    color: var(--danger);
+    color: var(--danger-ink);
     font-weight: 500;
     margin-top: 4px;
 }
@@ -733,13 +1009,13 @@ textarea.has-error:focus,
 
 .badge-discount {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: 0 2px 8px var(--primary-glow);
 }
 
 .badge-save {
     background: var(--danger-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     border: 1px solid var(--danger-border);
     font-weight: 700;
 }
@@ -752,7 +1028,7 @@ textarea.has-error:focus,
 
 .badge-hot {
     background: linear-gradient(135deg, var(--accent-amber) 0%, #ea580c 100%);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .badge-new {
@@ -761,7 +1037,7 @@ textarea.has-error:focus,
         var(--accent-blue) 0%,
         var(--accent-purple) 100%
     );
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /* ==========================================================================
@@ -930,7 +1206,7 @@ textarea.has-error:focus,
 }
 
 .required-asterisk {
-    color: var(--primary);
+    color: var(--primary-ink);
     margin-left: 3px;
     font-weight: 700;
 }
@@ -947,13 +1223,26 @@ textarea.has-error:focus,
     display: block;
 }
 
+/*
+ * No plate behind it any more.
+ *
+ * This carried a surface-coloured panel with padding and a corner radius, and
+ * it was there for one reason: the footer is dark, the mark's strapline is
+ * black ink, and a light rectangle behind it was the only way to make that
+ * legible without a second image. There is a second image now — see
+ * App\Support\DarkLogo — so the mark sits on the footer directly, as it was
+ * always meant to.
+ *
+ * Removing it is not tidying. The plate is painted with --bg-surface, which
+ * follows the theme: white in the light one. Keeping it would have put the
+ * new near-white strapline on a white panel and hidden it all over again,
+ * which is the exact bug being fixed, one step further along.
+ */
 .brand-logo-img-footer {
     height: 38px;
     width: auto;
-    background: var(--white);
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    display: inline-block;
+    object-fit: contain;
+    display: block;
 }
 
 .brand-logo-img-auth {
@@ -989,7 +1278,7 @@ textarea.has-error:focus,
     height: 64px;
     border-radius: var(--radius-full);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -999,14 +1288,14 @@ textarea.has-error:focus,
 .empty-state-title {
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 8px;
     font-family: var(--font-heading);
 }
 
 .empty-state-desc {
     font-size: 0.88rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     max-width: 420px;
     line-height: 1.5;
 }
@@ -1055,7 +1344,7 @@ textarea.has-error:focus,
 
 .pagination-ellipsis {
     padding: 0 4px;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* 5. Status Badges */
@@ -1072,31 +1361,31 @@ textarea.has-error:focus,
 
 .status-pending {
     background: rgba(245, 158, 11, 0.12);
-    color: var(--accent-amber);
+    color: var(--accent-amber-ink);
     border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .status-processing {
     background: rgba(37, 99, 235, 0.12);
-    color: var(--accent-blue);
+    color: var(--accent-blue-ink);
     border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .status-shipped {
     background: rgba(124, 58, 237, 0.12);
-    color: var(--accent-purple);
+    color: var(--accent-purple-ink);
     border: 1px solid rgba(124, 58, 237, 0.3);
 }
 
 .status-delivered {
     background: rgba(16, 185, 129, 0.12);
-    color: var(--accent-emerald);
+    color: var(--accent-emerald-ink);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-cancelled {
     background: rgba(239, 68, 68, 0.12);
-    color: var(--danger);
+    color: var(--danger-ink);
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -1108,7 +1397,7 @@ textarea.has-error:focus,
     justify-content: center;
     gap: 12px;
     padding: 20px;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .loading-spinner-wrapper.full-height {
@@ -1118,7 +1407,7 @@ textarea.has-error:focus,
 
 .loading-spinner-text {
     font-size: 0.9rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     font-weight: 500;
 }
 
@@ -1202,19 +1491,19 @@ textarea.has-error:focus,
 }
 
 .toast-success .toast-icon-box {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .toast-error .toast-icon-box {
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .toast-warning .toast-icon-box {
-    color: var(--warning);
+    color: var(--warning-ink);
 }
 
 .toast-info .toast-icon-box {
-    color: var(--info);
+    color: var(--info-ink);
 }
 
 .toast-content {
@@ -1383,7 +1672,7 @@ textarea.has-error:focus,
     font-size: 1.0625rem;
     font-weight: 700;
     letter-spacing: -0.01em;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
     margin: 0;
     min-width: 0;
@@ -1392,7 +1681,7 @@ textarea.has-error:focus,
 .modal-close-btn {
     background: none;
     border: none;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: pointer;
     flex-shrink: 0;
     width: 32px;
@@ -1406,7 +1695,7 @@ textarea.has-error:focus,
 
 .modal-close-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .modal-body-content {
@@ -1436,9 +1725,9 @@ textarea.has-error:focus,
 .skeleton-shimmer {
     background: linear-gradient(
         90deg,
-        var(--gray-200) 25%,
-        var(--gray-100) 50%,
-        var(--gray-200) 75%
+        var(--bg-muted-strong) 25%,
+        var(--bg-muted) 50%,
+        var(--bg-muted-strong) 75%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
@@ -1555,7 +1844,7 @@ textarea.has-error:focus,
     margin: 0 0 14px;
     font-size: 0.9rem;
     line-height: 1.5;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .share-link-row {
@@ -1575,7 +1864,7 @@ textarea.has-error:focus,
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.88rem;
     font-family: var(--font-mono, ui-monospace, SFMono-Regular, monospace);
     text-overflow: ellipsis;
@@ -1598,10 +1887,10 @@ textarea.has-error:focus,
     gap: 12px;
     margin-top: 20px;
     padding: 14px 16px;
-    border: 1px solid #f0d391;
+    border: 1px solid var(--warning-border);
     border-radius: var(--radius-sm);
-    background: #fdf6e3;
-    color: #7a5c12;
+    background: var(--warning-light);
+    color: var(--warning-text);
 }
 
 .pdp-preorder-notice svg {
@@ -1631,7 +1920,7 @@ textarea.has-error:focus,
 @media (prefers-reduced-motion: reduce) {
     .skeleton-shimmer {
         animation: none;
-        background: var(--gray-200);
+        background: var(--bg-muted-strong);
     }
 }
 
@@ -1675,7 +1964,7 @@ textarea.has-error:focus,
 
 .quick-view-brand {
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-transform: uppercase;
     font-weight: 700;
 }
@@ -1683,7 +1972,7 @@ textarea.has-error:focus,
 .quick-view-title {
     font-size: 1.15rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-top: 2px;
     line-height: 1.3;
 }
@@ -1698,18 +1987,18 @@ textarea.has-error:focus,
 .quick-view-current-price {
     font-size: 1.25rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .quick-view-old-price {
     font-size: 0.88rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-decoration: line-through;
 }
 
 .quick-view-desc {
     font-size: 0.84rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     line-height: 1.5;
     margin-bottom: 16px;
 }
@@ -1724,7 +2013,7 @@ textarea.has-error:focus,
 .quick-view-qty-label {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .quick-view-qty-control {
@@ -1740,7 +2029,7 @@ textarea.has-error:focus,
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--dark-900);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1755,7 +2044,7 @@ textarea.has-error:focus,
     padding: 0 10px;
     font-weight: 700;
     font-size: 0.88rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .quick-view-cta-row {
@@ -1920,7 +2209,7 @@ textarea.has-error:focus,
 
 .discount-badge {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -1948,27 +2237,27 @@ textarea.has-error:focus,
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-xs);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-500);
+    color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
 .card-action-btn:hover {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
     transform: scale(1.1);
 }
 
 .card-action-btn.active {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border-color: var(--primary);
 }
 
@@ -1992,7 +2281,7 @@ textarea.has-error:focus,
     cursor: not-allowed;
     opacity: 0.45;
     background: var(--bg-surface-subtle);
-    color: var(--gray-400);
+    color: var(--text-subtle);
     border-color: var(--border-color);
 }
 
@@ -2066,7 +2355,7 @@ textarea.has-error:focus,
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     margin-bottom: 4px;
     /* Two columns of cards on a phone leaves about 137px for this, and
        "ROBINS COMPUTER" wants 145 — it was being cut off mid-letter at the
@@ -2079,7 +2368,7 @@ textarea.has-error:focus,
 .product-title {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.35;
     margin-bottom: 8px;
     min-height: 2.7em;
@@ -2096,7 +2385,7 @@ textarea.has-error:focus,
 }
 
 .product-title a:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* Key Specifications */
@@ -2111,7 +2400,7 @@ textarea.has-error:focus,
 
 .product-specs-list li {
     font-size: 0.72rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2131,12 +2420,12 @@ textarea.has-error:focus,
     gap: 3px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .review-count {
     font-size: 0.7rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Stock Status Pill */
@@ -2159,7 +2448,7 @@ textarea.has-error:focus,
     gap: 4px;
     font-size: 0.72rem;
     font-weight: 700;
-    color: var(--accent-amber);
+    color: var(--accent-amber-ink);
 }
 
 /* Stock Progress for Flash Sale */
@@ -2171,7 +2460,7 @@ textarea.has-error:focus,
     display: flex;
     justify-content: space-between;
     font-size: 0.72rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
@@ -2183,13 +2472,13 @@ textarea.has-error:focus,
 
 .sold-count {
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .progress-track {
     width: 100%;
     height: 6px;
-    background: var(--gray-200);
+    background: var(--bg-muted-strong);
     border-radius: var(--radius-full);
     overflow: hidden;
 }
@@ -2254,13 +2543,13 @@ textarea.has-error:focus,
     font-size: 1.15rem;
     font-weight: 800;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.2;
 }
 
 .old-price {
     font-size: 0.75rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-decoration: line-through;
 }
 
@@ -2272,7 +2561,7 @@ textarea.has-error:focus,
     width: 100%;
     gap: 6px;
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     padding: 8px 14px;
@@ -2284,8 +2573,8 @@ textarea.has-error:focus,
 }
 
 .btn-add-cart:disabled {
-    background: var(--gray-200);
-    color: var(--gray-500);
+    background: var(--bg-muted-strong);
+    color: var(--text-muted);
     cursor: not-allowed;
 }
 
@@ -2318,7 +2607,7 @@ textarea.admin-form-input {
     display: block;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
@@ -2332,7 +2621,7 @@ textarea.admin-form-input {
 .auth-input-icon {
     position: absolute;
     left: 14px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     pointer-events: none;
     z-index: 2;
 }
@@ -2345,10 +2634,10 @@ textarea.admin-form-input {
     gap: 4px;
     font-size: 0.84rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
     pointer-events: none;
     z-index: 2;
-    background: var(--gray-100);
+    background: var(--bg-muted);
     padding: 3px 8px;
     border-radius: var(--radius-xs);
     border: 1px solid var(--border-color);
@@ -2363,7 +2652,7 @@ textarea.admin-form-input {
     border-radius: var(--radius-sm);
     font-size: 0.88rem;
     font-family: var(--font-body);
-    color: var(--dark-900);
+    color: var(--text-primary);
     outline: none;
     transition: all var(--transition-fast);
 }
@@ -2374,7 +2663,7 @@ textarea.admin-form-input {
  * form felt inert to everyone else.
  */
 .auth-text-input:hover:not(:focus):not(:disabled) {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
 }
 
 .auth-text-input:focus {
@@ -2384,12 +2673,12 @@ textarea.admin-form-input {
 }
 
 .auth-text-input::placeholder {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .auth-text-input:disabled {
     background: var(--bg-surface-subtle);
-    color: var(--gray-500);
+    color: var(--text-muted);
     cursor: not-allowed;
 }
 
@@ -2424,7 +2713,7 @@ textarea.admin-form-input {
     min-height: 36px;
     background: none;
     border: none;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: pointer;
     padding: 4px;
     display: flex;
@@ -2434,14 +2723,14 @@ textarea.admin-form-input {
 }
 
 .password-toggle-btn:hover {
-    color: var(--dark-700);
+    color: var(--text-tertiary);
 }
 
 .auth-field-error {
     display: block;
     font-size: 0.76rem;
     font-weight: 600;
-    color: var(--danger);
+    color: var(--danger-ink);
     margin-top: 5px;
 }
 
@@ -2451,7 +2740,7 @@ textarea.admin-form-input {
     margin-top: 6px;
     font-size: 0.75rem;
     line-height: 1.5;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* ==========================================================================
@@ -2494,7 +2783,7 @@ textarea.admin-form-input {
 }
 
 .cropper-modal-dialog {
-    background: var(--white);
+    background: var(--bg-surface);
     border-radius: var(--radius-lg);
     box-shadow: 0 20px 48px rgba(15, 23, 42, 0.25);
     width: 820px;
@@ -2526,13 +2815,13 @@ textarea.admin-form-input {
 }
 
 .cropper-icon-accent {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .cropper-title-group h3 {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
     margin: 0;
 }
@@ -2540,7 +2829,7 @@ textarea.admin-form-input {
 .cropper-close-btn {
     background: none;
     border: none;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: pointer;
     padding: 4px;
     border-radius: var(--radius-xs);
@@ -2551,7 +2840,7 @@ textarea.admin-form-input {
 }
 
 .cropper-close-btn:hover {
-    color: var(--danger);
+    color: var(--danger-ink);
     background: rgba(234, 72, 79, 0.08);
 }
 
@@ -2609,25 +2898,25 @@ textarea.admin-form-input {
 }
 
 .empty-upload-icon {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cropper-upload-empty p {
     font-size: 0.88rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin: 0;
 }
 
 .cropper-upload-limits-text {
     font-size: 0.74rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 600;
 }
 
 .cropper-error-banner {
     background: rgba(234, 72, 79, 0.1);
     border: 1px solid rgba(234, 72, 79, 0.3);
-    color: var(--danger);
+    color: var(--danger-ink);
     font-size: 0.78rem;
     font-weight: 700;
     padding: 6px 12px;
@@ -2637,7 +2926,7 @@ textarea.admin-form-input {
 
 .cropper-file-upload-btn {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-size: 0.84rem;
     font-weight: 700;
     padding: 8px 16px;
@@ -2652,7 +2941,7 @@ textarea.admin-form-input {
 
 .cropper-canvas-tip {
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Sidebar Controls */
@@ -2673,7 +2962,7 @@ textarea.admin-form-input {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .control-label-row {
@@ -2685,7 +2974,7 @@ textarea.admin-form-input {
 .zoom-value {
     font-size: 0.78rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .aspect-ratio-btn-grid {
@@ -2701,21 +2990,21 @@ textarea.admin-form-input {
     border-radius: var(--radius-xs);
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.14s ease;
     text-align: center;
 }
 
 .aspect-btn:hover {
-    border-color: var(--gray-400);
-    background: var(--white);
+    border-color: var(--border-hover);
+    background: var(--bg-surface);
 }
 
 .aspect-btn.active {
     background: rgba(234, 72, 79, 0.08);
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
 }
 
@@ -2739,8 +3028,8 @@ textarea.admin-form-input {
     padding: 6px 10px;
     font-size: 0.75rem;
     font-weight: 800;
-    color: var(--gray-400);
-    background: rgba(15, 23, 42, 0.04);
+    color: var(--text-subtle);
+    background: var(--state-hover);
     border-right: 1px solid var(--border-color);
 }
 
@@ -2751,12 +3040,12 @@ textarea.admin-form-input {
     outline: none;
     font-size: 0.84rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
     background: transparent;
 }
 
 .dim-separator {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 800;
 }
 
@@ -2764,7 +3053,7 @@ textarea.admin-form-input {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .zoom-slider {
@@ -2791,15 +3080,15 @@ textarea.admin-form-input {
     border-radius: var(--radius-xs);
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.14s ease;
 }
 
 .tool-action-btn:hover {
     border-color: var(--primary);
-    color: var(--primary);
-    background: var(--white);
+    color: var(--primary-ink);
+    background: var(--bg-surface);
 }
 
 .cropper-modal-footer {
@@ -2825,15 +3114,15 @@ textarea.admin-form-input {
 
 /* Colour */
 .text-primary {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .text-muted {
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .text-gray-400 {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Type scale */

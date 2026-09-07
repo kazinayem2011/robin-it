@@ -28,6 +28,7 @@ const FALLBACKS = {
     serviceCenter: 'Multiplan Center, Dhaka-1205',
     footerNote: 'Built with Precision & Care.',
     logoSrc: '/images/logo.png',
+    logoDarkSrc: '/images/logo-dark.png',
 };
 
 /** Which setting key backs each field. */
@@ -72,6 +73,20 @@ export const setSiteSettings = (settings) => {
         } else if (CLEARABLE.has(field) && typeof settings[key] === 'string') {
             resolved[field] = '';
         }
+    }
+};
+
+/**
+ * The mark for a dark background, resolved server-side.
+ *
+ * Which file this is depends on an override setting, on what DarkLogo managed
+ * to draw and on what is actually on disk — none of which the browser can
+ * see, so it is handed over rather than worked out here. A blank keeps the
+ * bundled default, exactly as the logo itself does.
+ */
+export const setBrandLogoDark = (path) => {
+    if (usable(path)) {
+        resolved.logoDarkSrc = path.trim();
     }
 };
 
@@ -126,6 +141,12 @@ export const siteConfig = {
     get logo() {
         return {
             src: resolved.logoSrc,
+            /*
+             * The mark to use on something dark. Not a theme question: the
+             * footer and the admin sidebar are dark whichever theme is on, and
+             * that is where the black strapline has always been unreadable.
+             */
+            darkSrc: resolved.logoDarkSrc,
             alt: `${resolved.name} — ${resolved.tagline}`,
         };
     },

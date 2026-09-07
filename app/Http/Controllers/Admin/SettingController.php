@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\TestEmailRequest;
 use App\Mail\TestConfigurationMail;
 use App\Models\SiteSetting;
 use App\Services\SmsService;
+use App\Support\DarkLogo;
 use App\Support\MailSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
@@ -95,6 +96,21 @@ class SettingController extends Controller
         }
 
         SiteSetting::flushCache(array_keys($settings));
+
+        /*
+         * Draw the dark-background twin for a newly saved logo.
+         *
+         * After the flush, so it reads the logo that was just stored rather
+         * than the cached previous one. It only ever writes the conventional
+         * `-dark.png` name beside the logo, so it cannot overwrite a mark an
+         * admin uploaded into site_logo_dark — and it is deliberately not
+         * allowed to fail the save: a logo that will not convert leaves the
+         * strapline where it already was, which is a cosmetic problem, not a
+         * reason to lose a page of settings.
+         */
+        if (array_key_exists('site_logo', $settings)) {
+            DarkLogo::generate((string) $settings['site_logo']);
+        }
 
         return $this->successResponse([], 'Settings saved successfully.');
     }

@@ -126,6 +126,13 @@ jobs:
       - name: Check corner rounding
         run: npm run lint:radius
 
+      # The shop has two themes, and only the semantic tokens flip between
+      # them. A rule that names a palette colour directly keeps its light
+      # value in the dark theme, and the failure is silent — near-black text
+      # on a near-black card, on whichever page nobody happened to open.
+      - name: Check theme tokens
+        run: npm run lint:theme
+
       # React component and hook behaviour. The admin search box once fired an
       # unbounded request loop — 280 requests in 6 seconds — which was likewise
       # invisible to the PHP suite.

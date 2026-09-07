@@ -13,6 +13,7 @@
         "lint:fix": "eslint resources/js --no-warn-ignored --fix",
         "lint:css-classes": "node scripts/find-unstyled-classes.mjs",
         "lint:radius": "node scripts/check-radius.mjs",
+        "lint:theme": "node scripts/check-theme-tokens.mjs",
         "check:menu": "node scripts/check-menu-overflow.mjs"
     },
     "devDependencies": {

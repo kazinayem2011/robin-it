@@ -20,22 +20,22 @@
     border-radius: var(--radius-full);
     font-size: 0.72rem;
     font-weight: 700;
-    background: var(--gray-100);
-    color: var(--gray-600);
+    background: var(--bg-muted);
+    color: var(--text-body);
 }
 
 .cmp-sending {
-    background: var(--info-light, #e8f1fd);
-    color: var(--accent-blue, #1d6fd0);
+    background: var(--info-light);
+    color: var(--accent-blue);
 }
 
 .cmp-sent {
-    background: var(--success-light, #e6f6ed);
-    color: var(--success);
+    background: var(--success-light);
+    color: var(--success-ink);
 }
 
 .cmp-failed {
-    color: var(--danger);
+    color: var(--danger-ink);
     font-size: 0.75rem;
 }
 
@@ -62,7 +62,7 @@
     padding-left: 18px;
     font-size: 0.85rem;
     line-height: 1.9;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .cmp-warning {
@@ -74,7 +74,7 @@
     border-top: 1px solid var(--border-color);
     font-size: 0.8rem;
     line-height: 1.55;
-    color: var(--warning);
+    color: var(--warning-ink);
 }
 
 .cmp-warning svg {
@@ -118,7 +118,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface);
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-picker-search input {
@@ -142,7 +142,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-picker ul {
@@ -173,12 +173,12 @@
 
 .cmp-picker li > button:first-child:hover {
     background: var(--bg-surface);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .cmp-picker li small {
     font-size: 0.72rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-picker li s {
@@ -188,7 +188,7 @@
 .cmp-none {
     padding: 8px;
     font-size: 0.78rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Pinning a product and a code together to build one offer. */
@@ -197,14 +197,14 @@
     border: 0;
     border-radius: var(--radius-sm);
     background: none;
-    color: var(--gray-300);
+    color: var(--text-faint);
     cursor: pointer;
 }
 
 .cmp-pin:hover,
 .cmp-pin.is-on {
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .cmp-deal {
@@ -227,17 +227,17 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .cmp-deal span {
     font-size: 0.78rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-deal span.is-set {
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 /* ── The preview: what actually lands ─────────────────────────────────────── */
@@ -255,7 +255,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-reach {
@@ -264,7 +264,7 @@
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
     font-size: 0.85rem;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .cmp-email-frame {
@@ -285,7 +285,7 @@
     padding: 20px;
     font-size: 0.88rem;
     line-height: 1.65;
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 /* A phone renders it as typed: no wrapping cleverness, no markup. */
@@ -323,7 +323,7 @@
 .cmp-history-filters button.is-on {
     border-color: var(--primary);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .cmp-history {
@@ -343,11 +343,11 @@
 }
 
 .cmp-history small {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .cmp-pending {
-    background: var(--gray-100);
+    background: var(--bg-muted);
 }
 
 /* Previewing: the picker is put away, so what lands gets the whole width. */

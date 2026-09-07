@@ -12,7 +12,7 @@
             rgba(234, 72, 79, 0.05) 0px,
             transparent 50%
         ),
-        radial-gradient(at 90% 80%, rgba(15, 23, 42, 0.04) 0px, transparent 50%);
+        radial-gradient(at 90% 80%, var(--state-hover) 0px, transparent 50%);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -69,14 +69,14 @@
 .auth-header-title {
     font-size: 1.35rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 6px;
     font-family: var(--font-heading);
 }
 
 .auth-header-sub {
     font-size: 0.84rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     line-height: 1.4;
 }
 
@@ -88,7 +88,7 @@
 .auth-status-alert {
     background: var(--success-light);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    color: var(--success);
+    color: var(--success-ink);
     font-size: 0.82rem;
     font-weight: 600;
     padding: 10px 14px;
@@ -110,7 +110,7 @@
 .forgot-link {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
@@ -125,7 +125,7 @@
     margin-top: 24px;
     text-align: center;
     font-size: 0.84rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .auth-footer-note.mt-20 {
@@ -134,7 +134,7 @@
 
 .auth-footer-note a {
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
@@ -150,13 +150,13 @@
     gap: 6px;
     font-size: 0.84rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
 
 .auth-back-link:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* Inertia renders `as="button"` links as real buttons, which pick up the
@@ -193,11 +193,11 @@ button.auth-back-link {
     border-radius: var(--radius-md);
     font-size: 0.88rem;
     line-height: 1.6;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .auth-verify-copy svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: var(--primary);
+    color: var(--primary-ink);
 }

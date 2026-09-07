@@ -150,4 +150,45 @@ class BrandDetailsTest extends TestCase
 
         $this->assertSame('Acme Tech Trading PLC', $props['site_settings']['site_legal_name']);
     }
+
+    /*
+     * Which mark gets drawn on something dark.
+     *
+     * Not only a dark-theme question: the footer and the admin sidebar are
+     * dark in the light theme too, so a logo with black lettering has been
+     * unreadable in both of those for as long as they have existed.
+     */
+    public function test_the_dark_logo_falls_back_to_the_ordinary_one(): void
+    {
+        SiteSetting::set('site_logo', '/images/nothing-generated.png');
+
+        // No override and no twin on disk: exactly today's behaviour, rather
+        // than a broken image.
+        $this->assertSame('/images/nothing-generated.png', BrandDetails::darkLogoWebPath());
+    }
+
+    public function test_an_uploaded_dark_logo_beats_anything_generated(): void
+    {
+        SiteSetting::set('site_logo', '/images/logo.png');
+        SiteSetting::set('site_logo_dark', '/uploads/brands/designer-dark.png');
+
+        $this->assertSame('/uploads/brands/designer-dark.png', BrandDetails::darkLogoWebPath());
+    }
+
+    public function test_the_generated_twin_is_used_when_it_exists(): void
+    {
+        // The bundled logo ships with its twin beside it.
+        SiteSetting::set('site_logo', '/images/logo.png');
+
+        $this->assertSame('/images/logo-dark.png', BrandDetails::darkLogoWebPath());
+    }
+
+    public function test_every_page_is_told_which_dark_mark_to_use(): void
+    {
+        SiteSetting::set('site_logo', '/images/logo.png');
+
+        $props = $this->get('/')->assertStatus(200)->viewData('page')['props'];
+
+        $this->assertSame('/images/logo-dark.png', $props['brand_logo_dark']);
+    }
 }

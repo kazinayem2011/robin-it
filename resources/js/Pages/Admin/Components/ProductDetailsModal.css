@@ -17,7 +17,7 @@
 .pd-failed {
     padding: 28px 4px;
     text-align: center;
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-size: 0.9rem;
 }
 
@@ -67,16 +67,16 @@
 
 .pd-price strong {
     font-size: 1.15rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .pd-price s {
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .pd-price em {
     font-style: normal;
-    color: var(--success);
+    color: var(--success-ink);
     font-weight: 600;
 }
 
@@ -117,14 +117,14 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .pd-section h5 {
     margin: 12px 0 6px;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .pd-section dl {
@@ -149,17 +149,17 @@
 }
 
 .pd-row dt {
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .pd-row dd {
     margin: 0;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     overflow-wrap: anywhere;
 }
 
 .pd-empty {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-style: italic;
 }
 
@@ -179,12 +179,12 @@
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
-    color: var(--dark-700);
+    color: var(--text-tertiary);
 }
 
 .pd-chip em {
     font-style: normal;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* ------------------------------------------------------------------ tables */
@@ -211,12 +211,12 @@
 
 .pd-table th {
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
     background: var(--bg-surface-subtle);
 }
 
 .pd-table td {
-    color: var(--dark-800);
+    color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
 }
 
@@ -225,7 +225,7 @@
 .pd-rich {
     font-size: 0.84rem;
     line-height: 1.65;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
     max-height: 260px;
     overflow-y: auto;
     padding-right: 6px;
@@ -246,7 +246,7 @@
 .pd-rich h4 {
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin: 12px 0 4px;
 }
 

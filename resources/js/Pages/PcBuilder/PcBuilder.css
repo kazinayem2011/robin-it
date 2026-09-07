@@ -12,14 +12,14 @@
     justify-content: space-between;
     background: linear-gradient(
         135deg,
-        var(--dark-900) 0%,
-        var(--dark-800) 100%
+        var(--bg-inverse) 0%,
+        var(--bg-inverse-soft) 100%
     );
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 24px 32px;
     margin-bottom: 28px;
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: var(--shadow-md);
 }
 
@@ -32,19 +32,19 @@
 
 .pc-builder-tagline {
     font-size: 0.82rem;
-    color: var(--gray-300);
+    color: var(--text-faint);
 }
 
 .pc-builder-main-title {
     font-size: 1.75rem;
     font-weight: 900;
-    color: var(--white);
+    color: var(--text-on-accent);
     font-family: var(--font-heading);
 }
 
 .pc-builder-subtitle {
     font-size: 0.86rem;
-    color: var(--gray-300);
+    color: var(--text-faint);
     margin-top: 4px;
 }
 
@@ -65,7 +65,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .stat-pill-value {
@@ -76,7 +76,7 @@
 }
 
 .stat-pill-value.price-val {
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 /* A finished set of essentials reads as done rather than as another number. */
@@ -89,7 +89,7 @@
  * "No component selected" says nothing about whether that matters.
  */
 .empty-component-placeholder.is-required {
-    color: var(--primary);
+    color: var(--primary-ink);
     font-style: normal;
     font-weight: 600;
 }
@@ -101,10 +101,10 @@
     gap: 10px;
     padding: 14px 16px;
     margin: 20px 24px 0;
-    border: 1px solid #f0d391;
+    border: 1px solid var(--warning-border);
     border-radius: var(--radius-sm);
-    background: #fdf6e3;
-    color: #7a5c12;
+    background: var(--warning-light);
+    color: var(--warning-text);
 }
 
 .build-gap-notice svg {
@@ -136,7 +136,7 @@
     background: var(--bg-surface-subtle);
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .build-gap-list li::before {
@@ -185,7 +185,7 @@
     height: 42px;
     border-radius: var(--radius-sm);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -199,12 +199,12 @@
     flex-wrap: wrap;
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .component-type-info span {
     font-size: 0.72rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     display: block;
 }
 
@@ -217,7 +217,7 @@
     margin: 3px 0 0;
     font-size: 0.74rem;
     line-height: 1.4;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Reads as a label rather than a bare asterisk orphaned on its own line. */
@@ -225,7 +225,7 @@
     padding: 1px 7px;
     border-radius: var(--radius-full);
     background: rgba(209, 32, 47, 0.1);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -233,7 +233,7 @@
 }
 
 .component-unavailable {
-    color: var(--primary) !important;
+    color: var(--primary-ink) !important;
     font-weight: 600;
 }
 
@@ -250,14 +250,14 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .pc-builder-group-head span {
     display: block;
     margin-top: 2px;
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /*
@@ -307,7 +307,7 @@
     font-size: 0.88rem;
     font-weight: 700;
     line-height: 1.35;
-    color: var(--dark-900);
+    color: var(--text-primary);
     /* Two lines is enough for a full product name at this width. */
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -325,30 +325,30 @@
     font-weight: 700;
     letter-spacing: 0.02em;
     background: rgba(22, 163, 74, 0.12);
-    color: #15803d;
+    color: var(--success-text);
 }
 
 .selected-product-badge.is-out {
     background: rgba(209, 33, 39, 0.12);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* Neither on the shelf nor unavailable — it can be ordered, it just waits. */
 .selected-product-badge.is-preorder {
     background: rgba(217, 119, 6, 0.12);
-    color: #b45309;
+    color: var(--warning-text);
 }
 
 .empty-component-placeholder {
     font-size: 0.84rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-style: italic;
 }
 
 .component-price-col {
     font-weight: 800;
     font-size: 0.95rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
     text-align: right;
     padding-right: 16px;
 }
@@ -372,7 +372,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface);
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-size: 0.84rem;
     font-weight: 700;
     line-height: 1;
@@ -385,7 +385,7 @@
 .btn-choose-component:hover {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .btn-choose-component svg {
@@ -402,7 +402,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface);
-    color: var(--gray-500);
+    color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -410,17 +410,17 @@
 .btn-remove-component:hover {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .component-live-price {
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     white-space: nowrap;
 }
 
 .price-dash {
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 600;
 }
 
@@ -428,13 +428,13 @@
     position: sticky;
     bottom: 20px;
     margin-top: 24px;
-    background: var(--dark-900);
+    background: var(--bg-inverse);
     border-radius: var(--radius-md);
     padding: 16px 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: var(--shadow-xl);
     z-index: 100;
 }
@@ -447,7 +447,7 @@
 
 .pc-builder-floating-count {
     font-size: 0.78rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .pc-builder-floating-total {
@@ -464,7 +464,7 @@
 }
 
 .btn-text-light {
-    color: var(--gray-300) !important;
+    color: var(--text-faint) !important;
 }
 
 /* Select Component Page */
@@ -490,13 +490,13 @@
     font-size: 1.35rem;
     font-weight: 800;
     text-transform: capitalize;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .component-select-count {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .component-select-search-box {
@@ -510,7 +510,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .component-select-search-input {
@@ -567,7 +567,7 @@
 .component-select-item-title {
     font-size: 0.96rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
@@ -575,11 +575,11 @@
     display: flex;
     gap: 12px;
     font-size: 0.78rem;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .component-select-stock-tag {
-    color: var(--success);
+    color: var(--success-ink);
     font-weight: 600;
 }
 
@@ -607,7 +607,7 @@
 .component-select-price {
     font-size: 1.15rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
@@ -615,7 +615,7 @@
     display: block;
     font-size: 0.78rem;
     text-decoration: line-through;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 @media (max-width: 900px) {
@@ -695,21 +695,21 @@
 /* A genuine conflict — these parts cannot be used together. */
 .pc-compat-panel.is-error {
     background: var(--primary-light);
-    border-color: #f5c2c7;
-    color: #842029;
+    border-color: var(--danger-border);
+    color: var(--danger-text);
 }
 
 /* Missing spec data: not a conflict, but not verified either. */
 .pc-compat-panel.is-warning {
-    background: #fff8e6;
-    border-color: #f5d78e;
-    color: #7a5b00;
+    background: var(--warning-light);
+    border-color: var(--warning-border);
+    color: var(--warning-text);
 }
 
 .pc-compat-panel.is-ok {
-    background: #f0fdf4;
-    border-color: #a7e3bf;
-    color: #14653a;
+    background: var(--success-light);
+    border-color: var(--success-border);
+    color: var(--success-text);
 }
 
 /* Toggle for revealing parts that do not fit the current build. */
@@ -729,11 +729,11 @@
 
 .component-select-card.is-incompatible {
     opacity: 0.6;
-    border-color: #f5c2c7;
+    border-color: var(--danger-border);
 }
 
 .component-select-card.is-unverified {
-    border-color: #f5d78e;
+    border-color: var(--warning-border);
 }
 
 .component-compat-note {
@@ -744,21 +744,23 @@
 }
 
 .component-compat-note.is-error {
-    color: #b42318;
+    color: var(--danger-text);
 }
 
 .component-compat-note.is-warning {
-    color: #8a6100;
+    color: var(--warning-text);
 }
 
 /*
- * No dark-mode block here on purpose.
+ * Still no dark-mode block here, and now for a better reason.
  *
- * The site has no dark palette — body keeps its light background whatever the
- * OS asks for — so a component that darkened on its own became a dark panel on
- * a light page. These compatibility panels used to do exactly that. If a real
- * dark theme is ever built, it belongs in the token layer in app.css, not in
- * one component at a time.
+ * There *is* a dark theme, and this panel follows it — because every colour in
+ * these rules names a job rather than a colour, and the job is what the token
+ * layer in app.css swaps. That is where the theme lives. A prefers-color-scheme
+ * block here would be a second, competing answer that only this one component
+ * knew about, which is exactly what the block that used to sit here was: it
+ * darkened the panel on a light page, and it darkened the text without
+ * darkening the tint underneath it.
  */
 
 /*

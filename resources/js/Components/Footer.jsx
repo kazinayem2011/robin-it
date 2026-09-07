@@ -7,6 +7,7 @@ import { ROUTES } from '../constants/endpoints';
 import { contactService } from '../services';
 import useAppStore from '../store/useAppStore';
 import { toast } from './Toast';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Reusable Site Footer Component (SSOT).
@@ -27,7 +28,10 @@ export const Footer = () => {
      * grid. The tree only contains categories that exist and hold stock, so a
      * link built from it cannot go nowhere.
      */
-    const popularCategories = useAppStore((state) => state.categories).slice(0, 5);
+    const popularCategories = useAppStore((state) => state.categories).slice(
+        0,
+        5,
+    );
     const fetchCategories = useAppStore((state) => state.fetchCategories);
 
     // The header asks for the same tree and the store lets only the first
@@ -180,7 +184,9 @@ export const Footer = () => {
                     <ul>
                         {popularCategories.map((category) => (
                             <li key={category.slug}>
-                                <Link href={ROUTES.SHOP_CATEGORY(category.slug)}>
+                                <Link
+                                    href={ROUTES.SHOP_CATEGORY(category.slug)}
+                                >
                                     {category.name}
                                 </Link>
                             </li>
@@ -285,6 +291,15 @@ export const Footer = () => {
                             ? ` ${siteConfig.footerNote}`
                             : ''}
                     </p>
+
+                    {/*
+                     * The theme, again, and this is the copy that is always
+                     * reachable: the top bar's is hidden below 768px and
+                     * disappears with the announcement, whereas the footer is
+                     * on every page at every width. Same dark strip, so the
+                     * same control fits without restyling.
+                     */}
+                    <ThemeToggle variant="bar" />
                 </div>
             </div>
         </footer>

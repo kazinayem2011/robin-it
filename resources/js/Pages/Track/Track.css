@@ -22,7 +22,7 @@
     height: 64px;
     border-radius: var(--radius-full);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -32,13 +32,13 @@
 .tracking-hero-title {
     font-size: 1.6rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .tracking-hero-desc {
     font-size: 0.86rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     margin-top: 4px;
     margin-bottom: 24px;
 }
@@ -78,20 +78,20 @@
 
 .tracking-order-id-label {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-weight: 600;
 }
 
 .tracking-order-id-val {
     font-size: 1.3rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .tracking-order-date {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .tracking-header-right {
@@ -101,7 +101,7 @@
 .tracking-order-total {
     font-size: 1.15rem;
     font-weight: 900;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-top: 6px;
     font-family: var(--font-heading);
 }
@@ -121,7 +121,7 @@
     left: 40px;
     right: 40px;
     height: 4px;
-    background: var(--gray-200);
+    background: var(--bg-muted-strong);
     z-index: 1;
 }
 
@@ -144,34 +144,34 @@
     height: 40px;
     border-radius: var(--radius-full);
     background: var(--bg-surface);
-    border: 3px solid var(--gray-300);
+    border: 3px solid var(--border-strong);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
     font-size: 0.9rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
     transition: all var(--transition-fast);
 }
 
 .tracking-step-circle.active {
     border-color: var(--primary);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     box-shadow: 0 0 12px var(--primary-glow);
 }
 
 .tracking-step-circle.completed {
     border-color: var(--success);
     background: var(--success);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .tracking-step-label {
     font-size: 0.78rem;
     font-weight: 700;
     margin-top: 8px;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     text-align: center;
 }
 
@@ -184,14 +184,14 @@
 }
 
 .tracking-status-label-strong {
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.92rem;
 }
 
 .tracking-status-desc-text {
     margin: 4px 0 0 0;
     font-size: 0.84rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .tracking-info-grid {
@@ -209,7 +209,7 @@
     display: block;
     font-size: 0.76rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
@@ -218,12 +218,12 @@
 .tracking-info-item span {
     font-size: 0.92rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .tracking-meta-icon-text {
     font-size: 0.82rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     margin-top: 4px;
     display: flex;
     align-items: center;
@@ -235,7 +235,7 @@
     font-weight: 800;
     margin-bottom: 12px;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .tracking-items-list {
@@ -271,18 +271,18 @@
 .tracking-item-name {
     font-size: 0.86rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .tracking-item-qty {
     display: block;
     font-size: 0.74rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .tracking-item-total-price {
     font-size: 0.92rem;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
     font-family: var(--font-heading);
 }
@@ -327,12 +327,12 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .tracking-courier-head span {
     font-size: 12.5px;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .tracking-courier-number {
@@ -341,16 +341,16 @@
     gap: 8px;
     margin-top: 8px;
     font-size: 12.5px;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .tracking-courier-number code {
     padding: 3px 8px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    background: var(--white);
+    background: var(--bg-surface);
     font-size: 13px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     letter-spacing: 0.02em;
 }
 
@@ -391,12 +391,12 @@
     gap: 9px;
     min-width: 0;
     font-size: 0.9rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .tracking-found-text svg {
     flex-shrink: 0;
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 .tracking-found-text strong {

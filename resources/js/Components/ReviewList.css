@@ -5,7 +5,7 @@
 .reviews-feed-list h4 {
     font-size: 1.15rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 20px;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .review-item-card:hover {
-    border-color: var(--gray-300);
+    border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
 }
 
@@ -43,7 +43,7 @@
 
 .review-author-info strong {
     font-size: 0.95rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .verified-badge {
@@ -51,7 +51,7 @@
     align-items: center;
     gap: 4px;
     background: var(--success-light);
-    color: var(--success);
+    color: var(--success-ink);
     padding: 2px 8px;
     border-radius: var(--radius-full);
     font-size: 0.72rem;
@@ -65,32 +65,32 @@
 }
 
 .review-stars-pill .star-filled {
-    fill: var(--accent-amber);
-    color: var(--accent-amber);
+    fill: var(--accent-amber-ink);
+    color: var(--accent-amber-ink);
 }
 
 .review-stars-pill .star-empty {
-    fill: var(--gray-200);
-    color: var(--gray-300);
+    fill: var(--bg-muted-strong);
+    color: var(--text-faint);
 }
 
 .review-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 6px;
 }
 
 .review-comment {
     font-size: 0.88rem;
-    color: var(--dark-700);
+    color: var(--text-tertiary);
     line-height: 1.6;
     margin: 0 0 8px 0;
 }
 
 .review-date-text {
     font-size: 0.76rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     font-weight: 600;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .no-reviews-box p {
-    color: var(--gray-600);
+    color: var(--text-body);
     font-size: 0.92rem;
     margin: 0;
 }

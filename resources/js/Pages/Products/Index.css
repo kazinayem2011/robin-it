@@ -34,7 +34,7 @@
 
 .plp-item-count {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .plp-breadcrumbs-spacer {
@@ -45,28 +45,28 @@
 }
 
 .plp-breadcrumbs-spacer .current {
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .plp-breadcrumbs-spacer .current::before {
     content: '/';
     margin-right: 6px;
-    color: var(--gray-300);
+    color: var(--text-faint);
 }
 
 .plp-breadcrumbs-spacer {
     margin-bottom: 6px;
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .plp-breadcrumbs-spacer a {
-    color: var(--gray-600);
+    color: var(--text-body);
     text-decoration: none;
 }
 
 .plp-breadcrumbs-spacer a:hover {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .plp-title {
@@ -74,14 +74,14 @@
     font-weight: 900;
     text-transform: capitalize;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
     line-height: 1.2;
     margin-bottom: 4px;
 }
 
 .plp-item-count {
     font-size: 0.84rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .plp-controls {
@@ -93,7 +93,7 @@
 .plp-sort-label {
     font-size: 0.84rem;
     font-weight: 700;
-    color: var(--gray-600);
+    color: var(--text-body);
     display: flex;
     align-items: center;
     gap: 5px;
@@ -115,7 +115,7 @@
     padding: 0 14px;
     font-size: 0.84rem;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
     cursor: pointer;
     transition: border-color var(--transition-fast);
 }
@@ -197,7 +197,7 @@
     padding: 18px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
+    background: var(--bg-surface);
 }
 
 .plp-filters-head {
@@ -222,7 +222,7 @@
     background: none;
     padding: 0;
     font-size: 12px;
-    color: var(--primary);
+    color: var(--primary-ink);
     cursor: pointer;
 }
 
@@ -254,7 +254,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .plp-filter-legend svg {
@@ -267,7 +267,7 @@
 
 .plp-filter-legend:hover h4,
 .plp-filter-legend:hover svg {
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .plp-filter-group h4 {
@@ -276,7 +276,7 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Searching a list is only worth offering when the list is long. */
@@ -291,7 +291,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .plp-filter-search:focus-within {
@@ -308,7 +308,7 @@
     background: none;
     outline: none;
     font-size: 12.5px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 /* Chrome draws its own clear button on type=search; it fights the icon. */
@@ -319,7 +319,7 @@
 .plp-filter-empty {
     margin: 4px 0 0;
     font-size: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* Category tree */
@@ -335,7 +335,7 @@
 }
 
 .plp-category-tree::-webkit-scrollbar-thumb {
-    background: var(--gray-200);
+    background: var(--bg-muted-strong);
     border-radius: var(--radius-sm);
 }
 
@@ -361,7 +361,7 @@
     border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     text-decoration: none;
     transition: background var(--transition-fast);
 }
@@ -369,34 +369,34 @@
 .plp-category-link.is-child {
     font-weight: 500;
     font-size: 12.5px;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .plp-category-link:hover {
     background: var(--bg-surface-subtle);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .plp-category-link.is-current {
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .plp-facet-count {
     flex-shrink: 0;
     font-size: 11px;
     font-weight: 600;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .plp-category-link.is-current .plp-facet-count {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .plp-filter-hint {
     margin: 0 0 10px;
     font-size: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .plp-filter-total {
@@ -424,7 +424,7 @@
 .plp-price-inputs span {
     flex-shrink: 0;
     font-size: 12px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .plp-filter-options {
@@ -445,7 +445,7 @@
 }
 
 .plp-filter-scroll::-webkit-scrollbar-thumb {
-    background: var(--gray-200);
+    background: var(--bg-muted-strong);
     border-radius: var(--radius-sm);
 }
 
@@ -483,7 +483,7 @@
     font-style: normal;
     font-size: 11.5px;
     font-variant-numeric: tabular-nums;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* How many answers are ticked, on a group that is collapsed. */
@@ -497,7 +497,7 @@
     padding: 0 5px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-style: normal;
     font-size: 10.5px;
     font-weight: 700;
@@ -515,7 +515,7 @@
     padding: 10px 14px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background: var(--white);
+    background: var(--bg-surface);
     font: inherit;
     font-size: 14px;
     font-weight: 600;
@@ -527,7 +527,7 @@
     padding: 1px 8px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
     font-size: 12px;
 }
 
@@ -573,11 +573,11 @@
     background: var(--bg-surface-subtle);
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
 }
 
 .plp-search-chip:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
 }

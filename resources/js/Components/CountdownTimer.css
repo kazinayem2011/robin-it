@@ -38,13 +38,13 @@
 .countdown-box.box-accent {
     background: var(--primary);
     border-color: var(--primary);
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .digit-val {
     font-size: 0.875rem;
     font-weight: 800;
-    color: var(--white);
+    color: var(--text-on-accent);
     font-variant-numeric: tabular-nums;
 }
 
@@ -79,7 +79,7 @@
 
 .timer-variant-badge .countdown-timer-label {
     font-size: 0.7rem;
-    color: var(--gray-300);
+    color: var(--text-faint);
 }
 
 /* Variant: Pill (For promotional top tickers & offer strips) */
@@ -91,16 +91,16 @@
 }
 
 .timer-variant-pill .countdown-timer-label {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .timer-variant-pill .countdown-box {
-    background: var(--dark-900);
+    background: var(--bg-inverse);
     border-color: rgba(209, 33, 39, 0.4);
 }
 
 .timer-variant-pill .digit-val {
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .countdown-icon-flame {

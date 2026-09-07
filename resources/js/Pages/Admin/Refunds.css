@@ -25,7 +25,7 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .refund-not-paid span {
@@ -54,15 +54,15 @@
 
 .refund-summary span {
     font-size: 11.5px;
-    color: var(--gray-600);
+    color: var(--text-body);
 }
 
 .refund-summary strong {
     font-size: 15px;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-variant-numeric: tabular-nums;
 }
 
 .refund-summary .is-remaining strong {
-    color: var(--primary);
+    color: var(--primary-ink);
 }

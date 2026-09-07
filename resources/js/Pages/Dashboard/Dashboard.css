@@ -44,7 +44,7 @@
     justify-content: center;
     font-size: 1.45rem;
     font-weight: 900;
-    color: var(--white);
+    color: var(--text-on-accent);
     /*
      * A ring rather than a coloured glow. The glow was the one element here
      * that read as dated, and it also bled colour into the panel's whitespace.
@@ -75,8 +75,8 @@
     height: 28px;
     border-radius: 50%;
     border: 2px solid var(--bg-surface);
-    background: var(--dark-900);
-    color: var(--white);
+    background: var(--bg-inverse);
+    color: var(--text-on-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -97,19 +97,19 @@
     border: none;
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--gray-500);
+    color: var(--text-muted);
     cursor: pointer;
 }
 
 .account-avatar-remove:hover:not(:disabled) {
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .account-identity-name {
     margin: 10px 0 0;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     /* A long name must wrap rather than widen the sidebar. */
     overflow-wrap: anywhere;
 }
@@ -122,7 +122,7 @@
     padding: 3px 10px;
     border-radius: var(--radius-full);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -147,7 +147,7 @@
     justify-content: center;
     gap: 6px;
     font-size: 0.75rem;
-    color: var(--gray-600);
+    color: var(--text-body);
     /* A flex child will not shrink below its content, and an email address is
        one long unbreakable word in a 260px column. */
     min-width: 0;
@@ -161,7 +161,7 @@
 
 .account-identity-meta li svg {
     flex-shrink: 0;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /*
@@ -170,7 +170,7 @@
  * and the nav underneath it. The tick still carries the meaning.
  */
 .account-identity-meta .is-verified svg {
-    color: var(--success);
+    color: var(--success-ink);
 }
 
 /*
@@ -180,7 +180,7 @@
  * that is asking to be pressed.
  */
 .account-identity-meta .is-unverified {
-    background: var(--warning-soft, #fef3c7);
+    background: var(--warning-light);
     border-radius: var(--radius-sm, 6px);
     padding: 4px 8px;
     /* Sits proud of the plain contact lines it follows. */
@@ -188,11 +188,11 @@
 }
 
 .account-identity-meta .is-unverified svg {
-    color: var(--warning, #b45309);
+    color: var(--warning-ink);
 }
 
 .account-identity-meta .is-unverified a {
-    color: var(--warning-strong, #92400e);
+    color: var(--warning-text);
     font-weight: 600;
     text-decoration: none;
     overflow: hidden;
@@ -208,7 +208,7 @@
 /* The one row that is a link. Underlined on hover only — a permanent underline
    in a column of plain contact lines reads as an error state. */
 .account-identity-missing a {
-    color: var(--primary);
+    color: var(--primary-ink);
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -241,7 +241,7 @@
 
 /* Sidebar Navigation */
 .dashboard-sidebar-card {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     /* No padding of its own: the member panel needs to reach the card's edges
@@ -289,7 +289,7 @@
     font-size: 0.88rem;
     font-weight: 600;
     font-family: var(--font-heading);
-    color: var(--dark-800);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast);
     text-align: left;
@@ -298,12 +298,12 @@
 
 .dash-nav-item-btn:hover {
     background: var(--bg-surface-subtle);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .dash-nav-item-btn.active-tab {
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
     box-shadow: inset 3px 0 0 var(--primary);
 }
@@ -315,8 +315,8 @@
 }
 
 .dash-nav-badge {
-    background: var(--dark-900);
-    color: var(--white);
+    background: var(--bg-inverse);
+    color: var(--text-on-accent);
     font-size: 0.68rem;
     font-weight: 800;
     padding: 2px 7px;
@@ -330,7 +330,9 @@
 }
 
 .dash-admin-link {
-    color: var(--primary-dark) !important;
+    /* --primary-dark is a fill, and at 2.14:1 on the dark theme's surface it
+       was the least readable item in the account menu. */
+    color: var(--primary-ink) !important;
     font-weight: 800;
 }
 
@@ -339,7 +341,7 @@
 }
 
 .dash-logout-btn {
-    color: #ef4444 !important;
+    color: var(--danger-ink) !important;
 }
 
 .dash-logout-btn:hover {
@@ -348,7 +350,7 @@
 
 /* Main Content Surface */
 .dashboard-main-surface {
-    background: var(--white);
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 28px;
@@ -368,13 +370,13 @@
 .dash-tab-header h2 {
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
 .dash-tab-header p {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .dash-section-title {
@@ -382,7 +384,7 @@
     font-weight: 800;
     margin-bottom: 14px;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-empty-box {
@@ -394,12 +396,12 @@
 
 .dash-empty-icon {
     margin: 0 auto 12px auto;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .dash-empty-text {
     font-weight: 700;
-    color: var(--dark-800);
+    color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
@@ -431,7 +433,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--white);
+    color: var(--text-on-accent);
 }
 
 .dash-kpi-icon.bg-blue {
@@ -460,7 +462,7 @@
 .dash-kpi-info span {
     font-size: 0.72rem;
     font-weight: 700;
-    color: var(--gray-500);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
@@ -468,7 +470,7 @@
 .dash-kpi-info strong {
     font-size: 1.25rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     font-family: var(--font-heading);
 }
 
@@ -502,23 +504,25 @@
 }
 
 .dash-order-num-label {
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-size: 0.78rem;
 }
 
 .dash-order-num-strong {
     font-size: 0.92rem;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-order-divider {
     margin: 0 8px;
-    color: var(--border-color);
+    /* A separator glyph is text, not a rule: on --border-color it vanished
+       against the card in the dark theme. */
+    color: var(--text-faint);
 }
 
 .dash-order-date {
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-size: 0.78rem;
 }
 
@@ -544,7 +548,7 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     object-fit: cover;
-    background: var(--white);
+    background: var(--bg-surface);
     flex-shrink: 0;
 }
 
@@ -555,19 +559,19 @@
 .order-item-name {
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 2px;
 }
 
 .order-item-sub {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .order-item-price {
     font-size: 0.92rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-family: var(--font-heading);
 }
 
@@ -582,12 +586,12 @@
 
 .dash-order-total-label {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .dash-order-total-val {
     font-size: 1rem;
-    color: var(--primary);
+    color: var(--primary-ink);
     font-weight: 800;
     font-family: var(--font-heading);
 }
@@ -609,14 +613,14 @@
 
 .dash-modal-invoice-date {
     font-size: 0.82rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .dash-modal-items-heading {
     font-size: 0.92rem;
     font-weight: 800;
     margin-bottom: 10px;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-modal-items-list {
@@ -636,17 +640,17 @@
 
 .dash-modal-item-info strong {
     font-size: 0.86rem;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-modal-item-meta {
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-size: 0.78rem;
 }
 
 .dash-modal-item-total {
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-modal-summary-box {
@@ -660,7 +664,7 @@
     justify-content: space-between;
     margin-bottom: 6px;
     font-size: 0.85rem;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .dash-modal-summary-total {
@@ -668,7 +672,7 @@
     justify-content: space-between;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--primary);
+    color: var(--primary-ink);
     border-top: 1px solid var(--border-light);
     padding-top: 8px;
     font-family: var(--font-heading);
@@ -712,7 +716,7 @@
     flex-shrink: 0;
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .address-row-main {
@@ -733,19 +737,19 @@
 .address-row-name {
     font-size: 0.88rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .address-row-phone {
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .address-default-badge {
     padding: 2px 8px;
     border-radius: var(--radius-full);
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--primary-ink);
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -756,13 +760,13 @@
     margin: 0;
     font-size: 0.84rem;
     line-height: 1.45;
-    color: var(--dark-800);
+    color: var(--text-secondary);
 }
 
 .address-row-region {
     margin: 2px 0 0;
     font-size: 0.78rem;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* Destructive, so it stays quiet until reached for. */
@@ -776,7 +780,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface);
-    color: var(--gray-400);
+    color: var(--text-subtle);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -784,11 +788,11 @@
 .address-row-remove:hover {
     border-color: var(--danger);
     background: var(--danger-light);
-    color: var(--danger);
+    color: var(--danger-ink);
 }
 
 .dash-address-remove-btn {
-    color: var(--danger) !important;
+    color: var(--danger-ink) !important;
 }
 
 /* Profile and Password Form */
@@ -802,7 +806,7 @@
     font-weight: 800;
     margin-bottom: 16px;
     font-family: var(--font-heading);
-    color: var(--dark-900);
+    color: var(--text-primary);
 }
 
 .dash-password-form {
@@ -839,8 +843,8 @@
 
 /* Cancel action on an order card — destructive, so visually distinct. */
 .dash-order-cancel-btn {
-    color: #b42318;
-    border-color: #f5c2c7;
+    color: var(--danger-text);
+    border-color: var(--danger-border);
 }
 
 .dash-order-cancel-btn:hover:not(:disabled) {
@@ -864,13 +868,13 @@
     border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 600;
-    color: var(--dark-900);
+    color: var(--text-primary);
     text-decoration: none;
 }
 
 .dash-invoice-link:hover {
     border-color: var(--primary);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 /* ---------------------------------------------------------------------------
@@ -881,8 +885,8 @@
  * the link.
  * ------------------------------------------------------------------------- */
 .contact-verify-card {
-    background: var(--warning-soft, #fffbeb);
-    border: 1px solid var(--warning-border, #fde68a);
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
     border-radius: var(--radius-md, 10px);
     padding: 18px 20px;
     margin: 0 0 24px;
@@ -894,14 +898,14 @@
     align-items: center;
     gap: 8px;
     background: transparent;
-    border-color: var(--gray-200, #e2e8f0);
+    border-color: var(--border-color);
     padding: 12px 16px;
-    color: var(--gray-600, #475569);
+    color: var(--text-body);
     font-size: 0.85rem;
 }
 
 .contact-verify-card.is-settled svg {
-    color: var(--success, #16a34a);
+    color: var(--success-ink);
     flex-shrink: 0;
 }
 
@@ -912,7 +916,7 @@
 .contact-verify-intro {
     margin: 0 0 14px;
     font-size: 0.85rem;
-    color: var(--gray-600, #475569);
+    color: var(--text-body);
 }
 
 .contact-verify-row {
@@ -922,7 +926,7 @@
     gap: 14px;
     flex-wrap: wrap;
     padding: 12px 0;
-    border-top: 1px solid var(--warning-border, #fde68a);
+    border-top: 1px solid var(--warning-border);
 }
 
 /* The code step needs its own line: an OTP field beside a button wraps into
@@ -942,13 +946,13 @@
 .contact-verify-what svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: var(--gray-500, #64748b);
+    color: var(--text-muted);
 }
 
 .contact-verify-what strong {
     display: block;
     font-size: 0.9rem;
-    color: var(--gray-900, #0f172a);
+    color: var(--text-primary);
     overflow-wrap: anywhere;
 }
 
@@ -959,7 +963,7 @@
     margin-top: 2px;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--warning-strong, #92400e);
+    color: var(--warning-text);
 }
 
 .contact-verify-state svg {

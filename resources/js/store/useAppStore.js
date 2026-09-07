@@ -1,9 +1,34 @@
 import { create } from 'zustand';
 import { cartService, categoryService, compareService } from '../services';
 import { readCachedMenu, writeCachedMenu } from '../utils/menuCache';
+import { applyTheme, readThemeChoice, writeThemeChoice } from '../utils/theme';
 
 const useAppStore = create((set, get) => ({
     // Client UI State
+
+    /*
+     * The theme, held here rather than in each toggle's own state.
+     *
+     * Three copies of the control can be on one page — the top bar, the
+     * footer, and the drawer on a phone — and they must not be able to
+     * disagree about what is showing. Held in the store they read one value
+     * and any write repaints all of them.
+     *
+     * The initial value comes from the same reader the inline script in
+     * app.blade.php used, so the store agrees with the attribute already on
+     * <html> and the first render does not repaint the page it was given.
+     */
+    theme: readThemeChoice(),
+    setTheme: (choice) => {
+        writeThemeChoice(choice);
+
+        // applyTheme both stamps <html> and hands back what was applied, so
+        // the store cannot drift from the document.
+        set({ theme: applyTheme(choice) });
+    },
+    toggleTheme: () =>
+        get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
+
     isMobileMenuOpen: false,
     toggleMobileMenu: () =>
         set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),

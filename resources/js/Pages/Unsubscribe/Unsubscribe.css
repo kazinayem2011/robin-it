@@ -24,19 +24,19 @@
     margin-bottom: 18px;
     border-radius: 50%;
     background: var(--bg-surface-subtle);
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 .unsub-card h1 {
     font-size: 1.5rem;
     font-weight: 800;
-    color: var(--dark-900);
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .unsub-card p {
     font-size: 0.92rem;
     line-height: 1.7;
-    color: var(--gray-600);
+    color: var(--text-body);
     margin-bottom: 24px;
 }

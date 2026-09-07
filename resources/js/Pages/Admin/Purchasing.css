@@ -20,23 +20,23 @@
     border-radius: var(--radius-full);
     font-size: 0.72rem;
     font-weight: 700;
-    background: var(--gray-100);
-    color: var(--gray-600);
+    background: var(--bg-muted);
+    color: var(--text-body);
 }
 
 .po-sent {
-    background: var(--info-light, #e8f1fd);
-    color: var(--accent-blue, #1d6fd0);
+    background: var(--info-light);
+    color: var(--accent-blue);
 }
 
 .po-partial {
-    background: var(--warning-light, #fff4e0);
-    color: var(--warning);
+    background: var(--warning-light);
+    color: var(--warning-ink);
 }
 
 .po-received {
-    background: var(--success-light, #e6f6ed);
-    color: var(--success);
+    background: var(--success-light);
+    color: var(--success-ink);
 }
 
 .po-cancelled {
@@ -45,7 +45,7 @@
 
 /* What the supplier still owes — the number the screen exists for. */
 .po-outstanding {
-    color: var(--warning);
+    color: var(--warning-ink);
 }
 
 .po-results {
@@ -71,8 +71,8 @@
 }
 
 .po-results button:hover {
-    background: var(--gray-100);
-    color: var(--primary);
+    background: var(--bg-muted);
+    color: var(--primary-ink);
 }
 
 .po-lines {
@@ -89,7 +89,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--gray-400);
+    color: var(--text-subtle);
     text-align: left;
 }
 
@@ -118,7 +118,7 @@
 
 .po-lines tfoot td {
     border-bottom: 0;
-    color: var(--gray-500);
+    color: var(--text-muted);
 }
 
 /* A line being taken off an order reads as struck through before it is saved. */
@@ -142,7 +142,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--bg-surface);
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 .no-search input {
@@ -184,7 +184,7 @@
 
 .no-results button:hover {
     background: var(--state-hover);
-    color: var(--primary);
+    color: var(--primary-ink);
 }
 
 .no-results span {
@@ -196,7 +196,7 @@
 .no-results small,
 .no-chosen-customer small {
     font-size: 0.74rem;
-    color: var(--gray-400);
+    color: var(--text-subtle);
 }
 
 /* The account this order will be filed against, once one is chosen. */
