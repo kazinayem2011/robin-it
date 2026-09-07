@@ -63,7 +63,20 @@ class CatalogSeeder extends Seeder
             'thermalt' => 'Thermaltake',
             'robinit' => 'Robin IT Signature',
         ] as $key => $name) {
-            $b[$key] = Brand::create(['name' => $name, 'slug' => str_replace('_', '-', $key)]);
+            $slug = str_replace('_', '-', $key);
+
+            /*
+             * With the homepage brand row reading this table, a fresh install
+             * with no logo_path anywhere shows a row of names. The files that
+             * ship with the repo are attached here so it looks the way it does
+             * on an install that has been running — the migration does the same
+             * for those, from the same map on the model.
+             */
+            $b[$key] = Brand::create([
+                'name' => $name,
+                'slug' => $slug,
+                'logo_path' => Brand::BUNDLED_LOGOS[$slug] ?? null,
+            ]);
         }
 
         // ─────────────────────────────────────────────────────────────────

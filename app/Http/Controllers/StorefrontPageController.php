@@ -36,6 +36,22 @@ class StorefrontPageController extends Controller
         return Inertia::render('Welcome', [
             'banners' => Banner::active()->orderBy('sort_order')->get(),
             'blogs' => BlogPost::published()->orderBy('published_at', 'desc')->take(3)->get(),
+
+            /*
+             * The brand row, from the table rather than from a constant.
+             *
+             * It was fourteen names and fourteen file paths hardcoded in
+             * BrandLogos.jsx, kept entirely separately from the brands an admin
+             * manages — so uploading a logo changed the mega menu and could
+             * never touch the homepage, and five of those files turned out to
+             * be the wrong company's marks with nobody able to correct them
+             * without a deploy.
+             *
+             * Which brands appear is the featured flag, ordered by name, so it
+             * is curated in /admin/brands. A brand with no logo on file draws
+             * its name instead of a broken image.
+             */
+            'brands' => Brand::featured()->get(['id', 'name', 'slug', 'logo_path']),
         ]);
     }
 

@@ -10,19 +10,33 @@ vi.mock('@inertiajs/react', () => ({
     ),
 }));
 
-const { BrandMarquee, BRAND_PARTNERS } = await import('../BrandLogos');
+const { BrandMarquee } = await import('../BrandLogos');
 
 /**
- * A pill showing the wrong company's logo is worse than one showing no logo.
+ * The row reads the brands table now.
  *
- * Five of these files were another brand's artwork — intel.png was PayTrace's
- * mark, msi.png was Pacific Telesis, and so on — sitting under a heading about
- * the brands this shop stocks. They are gone, and until real artwork is
- * supplied those entries draw their name instead.
+ * It used to be a hardcoded list of names and file paths, separate from the
+ * brands an admin manages — so uploading a logo changed the mega menu and
+ * never this row, and five of the files turned out to be the wrong company's
+ * marks with no way to correct them short of a deploy.
+ *
+ * A pill showing the wrong company's logo is worse than one showing no logo,
+ * so a brand with nothing on file draws its name.
  */
 describe('BrandMarquee', () => {
+    const brands = [
+        {
+            id: 1,
+            name: 'AMD',
+            slug: 'amd',
+            logo_path: '/images/brands/amd.png',
+        },
+        { id: 2, name: 'Intel', slug: 'intel', logo_path: null },
+        { id: 3, name: 'Gigabyte', slug: 'gigabyte', logo_path: '' },
+    ];
+
     it('draws the mark for a brand that has one', () => {
-        render(<BrandMarquee />);
+        render(<BrandMarquee brands={brands} />);
 
         expect(screen.getByAltText('AMD logo')).toHaveAttribute(
             'src',
@@ -30,21 +44,24 @@ describe('BrandMarquee', () => {
         );
     });
 
-    it('draws the name for a brand that has none', () => {
-        render(<BrandMarquee />);
+    it.each([
+        ['null', 'Intel'],
+        ['an empty string', 'Gigabyte'],
+    ])('draws the name when logo_path is %s', (_, name) => {
+        render(<BrandMarquee brands={brands} />);
 
-        expect(screen.getByText('Intel')).toBeInTheDocument();
-        expect(screen.queryByAltText('Intel logo')).not.toBeInTheDocument();
+        expect(screen.getByText(name)).toBeInTheDocument();
+        expect(screen.queryByAltText(`${name} logo`)).not.toBeInTheDocument();
     });
 
-    it('renders every partner either way', () => {
-        render(<BrandMarquee />);
+    it('renders every brand it is given, either way', () => {
+        render(<BrandMarquee brands={brands} />);
 
-        expect(screen.getAllByRole('link')).toHaveLength(BRAND_PARTNERS.length);
+        expect(screen.getAllByRole('link')).toHaveLength(brands.length);
     });
 
     it('links each one to its own products', () => {
-        render(<BrandMarquee />);
+        render(<BrandMarquee brands={brands} />);
 
         expect(screen.getByTitle('Shop Intel')).toHaveAttribute(
             'href',
@@ -52,28 +69,29 @@ describe('BrandMarquee', () => {
         );
     });
 
-    /*
-     * The five removed files are the reason this exists: a logo path that
-     * points at nothing renders a broken image, and one that points at the
-     * wrong company renders something worse. An entry either has artwork on
-     * disk or it has none — never a path to a file that is not there.
-     */
-    it('never points at artwork that is not on disk', async () => {
-        const { existsSync } = await import('node:fs');
+    /* The tooltip says what the link does. It used to claim "<Brand> Official
+       Partner" for all fourteen, on a shop authorised for only some. */
+    it('claims no partnership', () => {
+        render(<BrandMarquee brands={brands} />);
 
-        const missing = BRAND_PARTNERS.filter(
-            (b) => b.logo && !existsSync(`public${b.logo}`),
-        );
-
-        expect(missing.map((b) => b.slug)).toEqual([]);
+        for (const link of screen.getAllByRole('link')) {
+            expect(link.getAttribute('title')).not.toMatch(
+                /partner|official|authoris|authoriz/i,
+            );
+        }
     });
 
-    /* Every entry claims nothing beyond taking you to that brand's products. */
-    it('does not claim a partnership in the tooltip', () => {
-        const claims = BRAND_PARTNERS.filter((b) =>
-            /partner|official|authoris|authoriz/i.test(b.title),
-        );
+    /* An empty featured list is a section that should not be on the page,
+       not an empty grid with a heading over it. */
+    it('renders nothing at all when no brand is featured', () => {
+        const { container } = render(<BrandMarquee brands={[]} />);
 
-        expect(claims.map((b) => b.title)).toEqual([]);
+        expect(container).toBeEmptyDOMElement();
+    });
+
+    it('does not fall over when given no brands prop', () => {
+        const { container } = render(<BrandMarquee />);
+
+        expect(container).toBeEmptyDOMElement();
     });
 });

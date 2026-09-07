@@ -41,7 +41,7 @@ import { ROUTES } from '../constants/endpoints';
 import { useWishlist, useAddToCart } from '../hooks';
 import './Welcome.css';
 
-export default function Welcome({ banners = [], blogs = [] }) {
+export default function Welcome({ banners = [], blogs = [], brands = [] }) {
     const [bannersList, setBannersList] = useState(banners);
     const [blogsList, setBlogsList] = useState(blogs);
     const [flashSaleProducts, setFlashSaleProducts] = useState([]);
@@ -966,7 +966,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                                 every one of them is that the shop stocks it. */}
                             <h3>BRANDS WE STOCK</h3>
                         </div>
-                        <BrandMarquee />
+                        <BrandMarquee brands={brands} />
                     </div>
                 </section>
 
