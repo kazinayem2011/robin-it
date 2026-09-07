@@ -249,7 +249,7 @@ export default function WarrantyIndex() {
                             </h3>
                             <p
                                 style={{
-                                    color: 'var(--gray-600)',
+                                    color: 'var(--text-body)',
                                     fontSize: '0.9rem',
                                     marginTop: '6px',
                                 }}
@@ -303,7 +303,7 @@ export default function WarrantyIndex() {
                                         <span
                                             style={{
                                                 fontSize: '0.78rem',
-                                                color: 'var(--gray-500)',
+                                                color: 'var(--text-muted)',
                                                 fontWeight: 700,
                                                 textTransform: 'uppercase',
                                             }}
@@ -393,7 +393,7 @@ export default function WarrantyIndex() {
                                                         display: 'block',
                                                         fontSize: '0.75rem',
                                                         fontWeight: 600,
-                                                        color: 'var(--gray-500)',
+                                                        color: 'var(--text-muted)',
                                                     }}
                                                 >
                                                     (
@@ -420,7 +420,7 @@ export default function WarrantyIndex() {
                                             <strong
                                                 style={{
                                                     fontSize: '0.92rem',
-                                                    color: 'var(--dark-900)',
+                                                    color: 'var(--text-primary)',
                                                 }}
                                             >
                                                 Live RMA Ticket: #
@@ -475,7 +475,8 @@ export default function WarrantyIndex() {
                                                 style={{
                                                     marginTop: '20px',
                                                     padding: '14px',
-                                                    background: '#f8fafc',
+                                                    background:
+                                                        'var(--bg-surface-subtle)',
                                                     borderRadius:
                                                         'var(--radius-sm)',
                                                     border: '1px solid var(--border-color)',
@@ -484,7 +485,7 @@ export default function WarrantyIndex() {
                                                 <strong
                                                     style={{
                                                         fontSize: '0.82rem',
-                                                        color: 'var(--gray-600)',
+                                                        color: 'var(--text-body)',
                                                         display: 'block',
                                                         marginBottom: '4px',
                                                     }}
@@ -495,7 +496,7 @@ export default function WarrantyIndex() {
                                                     style={{
                                                         margin: 0,
                                                         fontSize: '0.88rem',
-                                                        color: 'var(--dark-800)',
+                                                        color: 'var(--text-secondary)',
                                                     }}
                                                 >
                                                     {
@@ -526,7 +527,7 @@ export default function WarrantyIndex() {
                                 <h2>RMA Ticket Logged Successfully!</h2>
                                 <p
                                     style={{
-                                        color: 'var(--gray-600)',
+                                        color: 'var(--text-body)',
                                         maxWidth: '520px',
                                         margin: '0 auto',
                                     }}
@@ -542,7 +543,7 @@ export default function WarrantyIndex() {
                                 <p
                                     style={{
                                         fontSize: '0.9rem',
-                                        color: 'var(--dark-800)',
+                                        color: 'var(--text-secondary)',
                                     }}
                                 >
                                     <strong>
@@ -585,7 +586,7 @@ export default function WarrantyIndex() {
                                 <h2>File a Warranty Service / RMA Claim</h2>
                                 <p
                                     style={{
-                                        color: 'var(--gray-600)',
+                                        color: 'var(--text-body)',
                                         fontSize: '0.92rem',
                                         marginBottom: '24px',
                                     }}

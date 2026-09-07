@@ -299,7 +299,7 @@ export default function Compare() {
                                                     </strong>
                                                     <small
                                                         style={{
-                                                            color: 'var(--gray-500)',
+                                                            color: 'var(--text-muted)',
                                                         }}
                                                     >
                                                         Slot{' '}
@@ -332,7 +332,9 @@ export default function Compare() {
                                         <td
                                             key={`empty-brand-${idx}`}
                                             className="compare-td-val"
-                                            style={{ color: 'var(--gray-400)' }}
+                                            style={{
+                                                color: 'var(--text-subtle)',
+                                            }}
                                         >
                                             —
                                         </td>
@@ -358,7 +360,9 @@ export default function Compare() {
                                         <td
                                             key={`empty-cat-${idx}`}
                                             className="compare-td-val"
-                                            style={{ color: 'var(--gray-400)' }}
+                                            style={{
+                                                color: 'var(--text-subtle)',
+                                            }}
                                         >
                                             —
                                         </td>
@@ -393,7 +397,9 @@ export default function Compare() {
                                         <td
                                             key={`empty-stock-${idx}`}
                                             className="compare-td-val"
-                                            style={{ color: 'var(--gray-400)' }}
+                                            style={{
+                                                color: 'var(--text-subtle)',
+                                            }}
                                         >
                                             —
                                         </td>
@@ -427,7 +433,9 @@ export default function Compare() {
                                         <td
                                             key={`empty-warranty-${idx}`}
                                             className="compare-td-val"
-                                            style={{ color: 'var(--gray-400)' }}
+                                            style={{
+                                                color: 'var(--text-subtle)',
+                                            }}
                                         >
                                             —
                                         </td>
@@ -483,7 +491,7 @@ export default function Compare() {
                                                 key={`empty-row-${name}-${idx}`}
                                                 className="compare-td-val"
                                                 style={{
-                                                    color: 'var(--gray-400)',
+                                                    color: 'var(--text-subtle)',
                                                 }}
                                             >
                                                 —

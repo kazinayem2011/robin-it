@@ -50,8 +50,14 @@ createInertiaApp({
         root.render(<App {...props} />);
     },
     progress: {
-        // The brand red, same as --primary. A grey bar at the top of the page
-        // reads as chrome; this one is the shop telling you it heard you.
-        color: '#d12127',
+        /*
+         * The brand red, same as --primary. A grey bar at the top of the page
+         * reads as chrome; this one is the shop telling you it heard you.
+         *
+         * A literal on purpose, and the same in both themes: Inertia paints
+         * this bar itself, outside the document's styles, so a var() would
+         * resolve to nothing.
+         */
+        color: '#d12127', // theme-exempt: a config value, not a themed surface
     },
 });

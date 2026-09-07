@@ -22,7 +22,6 @@ export default function BlogsIndex() {
     const { categories = [] } = usePage().props;
     const tabs = [ALL_ARTICLES, ...categories];
 
-
     const [blogs, setBlogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('all');
@@ -110,7 +109,7 @@ export default function BlogsIndex() {
                         <p
                             style={{
                                 marginTop: '16px',
-                                color: 'var(--gray-500)',
+                                color: 'var(--text-muted)',
                                 fontWeight: 600,
                             }}
                         >
@@ -123,7 +122,7 @@ export default function BlogsIndex() {
                         style={{
                             padding: '60px',
                             textAlign: 'center',
-                            background: '#fff',
+                            background: 'var(--bg-surface)',
                             border: '1px solid var(--border-color)',
                             borderRadius: 'var(--radius-md)',
                         }}
@@ -134,7 +133,7 @@ export default function BlogsIndex() {
                             style={{ margin: '0 auto 16px' }}
                         />
                         <h3>No Articles Found</h3>
-                        <p style={{ color: 'var(--gray-600)' }}>
+                        <p style={{ color: 'var(--text-body)' }}>
                             No technical articles matched your search query. Try
                             another keyword.
                         </p>

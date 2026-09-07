@@ -67,7 +67,7 @@ export default function BlogShow({ slug }) {
                     <p
                         style={{
                             marginTop: '16px',
-                            color: 'var(--gray-500)',
+                            color: 'var(--text-muted)',
                             fontWeight: 600,
                         }}
                     >
@@ -88,7 +88,7 @@ export default function BlogShow({ slug }) {
                     <h2>Article Not Found</h2>
                     <p
                         style={{
-                            color: 'var(--gray-600)',
+                            color: 'var(--text-body)',
                             marginBottom: '24px',
                         }}
                     >
@@ -133,7 +133,7 @@ export default function BlogShow({ slug }) {
                         <p
                             style={{
                                 fontSize: '1.15rem',
-                                color: 'var(--gray-600)',
+                                color: 'var(--text-body)',
                                 lineHeight: '1.6',
                             }}
                         >
@@ -153,12 +153,12 @@ export default function BlogShow({ slug }) {
                                 <strong
                                     style={{
                                         display: 'block',
-                                        color: 'var(--dark-900)',
+                                        color: 'var(--text-primary)',
                                     }}
                                 >
                                     {blog.author_name}
                                 </strong>
-                                <small style={{ color: 'var(--gray-500)' }}>
+                                <small style={{ color: 'var(--text-muted)' }}>
                                     {blog.author_role ||
                                         'Systems Engineer & Hardware Specialist'}
                                 </small>
@@ -228,7 +228,7 @@ export default function BlogShow({ slug }) {
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             padding: '20px',
-                            background: '#f8fafc',
+                            background: 'var(--bg-surface-subtle)',
                             borderRadius: 'var(--radius-md)',
                             border: '1px solid var(--border-color)',
                             margin: '48px 0',

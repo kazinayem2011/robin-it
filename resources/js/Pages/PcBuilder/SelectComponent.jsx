@@ -246,7 +246,7 @@ export default function SelectComponent({ categorySlug }) {
                                                         product.inStock
                                                             ? undefined
                                                             : {
-                                                                  color: '#b42318',
+                                                                  color: 'var(--danger-text)',
                                                               }
                                                     }
                                                 >

@@ -59,7 +59,7 @@ const walk = (dir, out = []) => {
         if (entry === 'node_modules' || entry === 'vendor' || entry[0] === '.') continue;
         const full = join(dir, entry);
         if (statSync(full).isDirectory()) walk(full, out);
-        else if (full.endsWith('.css')) out.push(full);
+        else if (/\.(css|jsx)$/.test(full)) out.push(full);
     }
     return out;
 };
@@ -89,14 +89,46 @@ for (const file of walk(join(ROOT, 'resources'))) {
     }
 
     source.split('\n').forEach((line, i) => {
+        if (exempt.has(i + 1)) return;
+
         const decl = line.match(/([-a-zA-Z]+)\s*:\s*(.+)$/);
-        if (!decl) return;
 
-        const [, prop, value] = decl;
-        if (prop.startsWith('--') || !THEMED.has(prop)) return;
-        if (!PALETTE.test(value) || exempt.has(i + 1)) return;
+        if (decl) {
+            const [, prop, value] = decl;
 
-        offenders.push({ file: relative(ROOT, file), line: i + 1, prop, value: value.trim() });
+            if (
+                !prop.startsWith('--') &&
+                THEMED.has(prop) &&
+                PALETTE.test(value)
+            ) {
+                offenders.push({
+                    file: relative(ROOT, file),
+                    line: i + 1,
+                    prop,
+                    value: value.trim(),
+                });
+            }
+        }
+
+        /*
+         * Inline styles in a component, which this used to walk straight past.
+         *
+         * The quotation sheet wrote `style={{ color: '#16a34a' }}` four times —
+         * a green scoring 3.30 against white, under the 4.5 its size needs —
+         * and every one sailed through, because the check only ever opened
+         * .css files. A colour written in a component is exactly as unthemed
+         * as one written in a stylesheet, and rather harder to find later.
+         */
+        for (const m of line.matchAll(
+            /\b(color|background|backgroundColor|borderColor|fill|stroke)\s*:\s*'(#[0-9a-fA-F]{3,8})'/g,
+        )) {
+            offenders.push({
+                file: relative(ROOT, file),
+                line: i + 1,
+                prop: m[1],
+                value: `${m[2]}  (inline style — name a token instead)`,
+            });
+        }
     });
 }
 

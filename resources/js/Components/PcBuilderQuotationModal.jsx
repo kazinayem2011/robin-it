@@ -163,7 +163,10 @@ export const PcBuilderQuotationModal = ({
                             </div>
                             <div
                                 className="quotation-date-text"
-                                style={{ color: '#16a34a', fontWeight: 600 }}
+                                style={{
+                                    color: 'var(--success-text)',
+                                    fontWeight: 600,
+                                }}
                             >
                                 Validity: 7 Days
                             </div>
@@ -208,7 +211,7 @@ export const PcBuilderQuotationModal = ({
                                         style={{
                                             textAlign: 'center',
                                             padding: '30px',
-                                            color: '#64748b',
+                                            color: 'var(--text-muted)',
                                         }}
                                     >
                                         No components selected in PC Builder.
@@ -266,7 +269,7 @@ export const PcBuilderQuotationModal = ({
                                 style={{
                                     fontSize: '0.75rem',
                                     marginTop: '2px',
-                                    color: '#475569',
+                                    color: 'var(--text-body)',
                                 }}
                             >
                                 Recommended PSU:{' '}
@@ -287,7 +290,9 @@ export const PcBuilderQuotationModal = ({
                                 <span>
                                     Professional Assembly &amp; Thermal Pasting:
                                 </span>
-                                <strong style={{ color: '#16a34a' }}>
+                                <strong
+                                    style={{ color: 'var(--success-text)' }}
+                                >
                                     FREE (৳0)
                                 </strong>
                             </div>
@@ -295,7 +300,9 @@ export const PcBuilderQuotationModal = ({
                                 <span>
                                     Stress Test &amp; 24H Burn-in Diagnostic:
                                 </span>
-                                <strong style={{ color: '#16a34a' }}>
+                                <strong
+                                    style={{ color: 'var(--success-text)' }}
+                                >
                                     FREE (৳0)
                                 </strong>
                             </div>
@@ -337,7 +344,7 @@ export const PcBuilderQuotationModal = ({
                             <div
                                 style={{
                                     fontSize: '0.7rem',
-                                    color: '#16a34a',
+                                    color: 'var(--success-text)',
                                     fontWeight: 600,
                                     marginTop: '2px',
                                 }}

@@ -1081,7 +1081,7 @@ export default function ProductDetails(props) {
                                                     <Link
                                                         href={ROUTES.LOGIN}
                                                         style={{
-                                                            color: 'var(--primary)',
+                                                            color: 'var(--primary-ink)',
                                                             fontWeight: 700,
                                                         }}
                                                     >
