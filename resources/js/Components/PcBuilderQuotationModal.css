@@ -191,8 +191,24 @@
 }
 
 /* Client Info Bar */
+/*
+ * The gap is not optional here, and space-between was doing the job by luck.
+ *
+ * The bar holds two entries with nothing typed — who it is for, and the build
+ * type — and space-between pushed them to either end, so it looked correctly
+ * spaced. Entering a phone number adds a third, the three together fill the
+ * width, and space-between then has nothing left to distribute: the text ran
+ * together as "Kazi NayemContact Phone: 01712345678Custom Build Type:".
+ *
+ * So filling the field in was what made the sheet look broken — the one case
+ * nobody checks, because the empty state reads fine. A real gap holds whatever
+ * the count happens to be, and wrapping keeps a long name off the row's edge
+ * rather than squeezing the entries beside it.
+ */
 .quotation-client-bar {
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px 28px;
     justify-content: space-between;
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
