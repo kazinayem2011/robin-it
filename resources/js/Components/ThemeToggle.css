@@ -41,6 +41,29 @@
 }
 
 /*
+ * In the admin topbar it is a chip, not a bare glyph.
+ *
+ * The two strips above are dark in both themes, so the button borrows their
+ * faint-on-dark treatment. The topbar is an ordinary surface with a row of
+ * bordered controls on it, and the bell sits directly beside this one — so it
+ * matches .notif-trigger exactly rather than looking like the one control
+ * somebody forgot to finish.
+ */
+.theme-toggle-admin {
+    width: 38px;
+    height: 38px;
+    color: var(--text-body);
+    background: var(--bg-surface);
+    border-color: var(--border-color);
+}
+
+.theme-toggle-admin:hover {
+    color: var(--primary-ink);
+    background: var(--bg-surface);
+    border-color: var(--primary);
+}
+
+/*
  * The flat, side-by-side form used in the phone drawer, which is the only
  * place the choice is reachable above the fold on a phone: the top bar's whole
  * right-hand group is hidden below 768px, and the footer is a page away.

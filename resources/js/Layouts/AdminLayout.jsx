@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import ToastContainer from '../Components/Toast';
 import NotificationBell from '../Components/NotificationBell';
+import ThemeToggle from '../Components/ThemeToggle';
 import UserMenu from '../Components/UserMenu';
 import { useFlashToasts } from '../hooks';
 import {
@@ -490,6 +491,18 @@ export default function AdminLayout({
                     </div>
 
                     <div className="admin-topbar-actions">
+                        {/*
+                         * The admin's only way to the theme.
+                         *
+                         * The storefront carries this in the announcement bar
+                         * and the footer, and the admin has neither — so while
+                         * it lived only there, somebody working in here could
+                         * not switch without walking out to the shop and back.
+                         * Which is backwards: this is the screen staff sit in
+                         * all day, and the one dark mode is most for.
+                         */}
+                        <ThemeToggle variant="admin" />
+
                         <NotificationBell userId={user.id} />
 
                         <Link
