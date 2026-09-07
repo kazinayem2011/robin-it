@@ -15,7 +15,9 @@ export const BRAND_PARTNERS = [
         slug: 'intel',
         name: 'Intel',
         title: 'Shop Intel',
-        logo: '/images/brands/intel.png',
+        /* No logo: /images/brands/intel.png was PayTrace's mark, not this
+           one's. Removed rather than shown — the name is drawn
+           instead until real artwork is supplied. */
     },
     {
         slug: 'amd',
@@ -39,25 +41,33 @@ export const BRAND_PARTNERS = [
         slug: 'msi',
         name: 'MSI',
         title: 'Shop MSI',
-        logo: '/images/brands/msi.png',
+        /* No logo: /images/brands/msi.png was Pacific Telesis's mark, not this
+           one's. Removed rather than shown — the name is drawn
+           instead until real artwork is supplied. */
     },
     {
         slug: 'gigabyte',
         name: 'Gigabyte',
         title: 'Shop Gigabyte',
-        logo: '/images/brands/gigabyte.png',
+        /* No logo: /images/brands/gigabyte.png was Comcast Business's mark, not this
+           one's. Removed rather than shown — the name is drawn
+           instead until real artwork is supplied. */
     },
     {
         slug: 'corsair',
         name: 'Corsair',
         title: 'Shop Corsair',
-        logo: '/images/brands/corsair.png',
+        /* No logo: /images/brands/corsair.png was Orange's mark, not this
+           one's. Removed rather than shown — the name is drawn
+           instead until real artwork is supplied. */
     },
     {
         slug: 'samsung',
         name: 'Samsung',
         title: 'Shop Samsung',
-        logo: '/images/brands/samsung.png',
+        /* No logo: /images/brands/samsung.png was Visa's mark, not this
+           one's. Removed rather than shown — the name is drawn
+           instead until real artwork is supplied. */
     },
     {
         slug: 'razer',
@@ -109,12 +119,26 @@ export const BrandMarquee = ({ className = '' }) => (
                 className="brand-logo-pill"
                 title={title}
             >
-                <img
-                    src={logo}
-                    alt={`${name} Official Logo`}
-                    className="brand-svg brand-real-logo"
-                    loading="lazy"
-                />
+                {/*
+                 * The brand's own mark where the shop has one, and its name
+                 * where it does not — the same rule BrandMark applies in the
+                 * menu, and for the same reason: a pill that shows the wrong
+                 * company's logo is worse than one that shows no logo at all.
+                 *
+                 * Five of these had exactly that problem. The name is set
+                 * rather than a lettermark because this pill is 124px wide and
+                 * "INTEL" fits where "IN" would only puzzle.
+                 */}
+                {logo ? (
+                    <img
+                        src={logo}
+                        alt={`${name} logo`}
+                        className="brand-svg brand-real-logo"
+                        loading="lazy"
+                    />
+                ) : (
+                    <span className="brand-wordmark">{name}</span>
+                )}
             </Link>
         ))}
     </div>
