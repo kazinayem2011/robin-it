@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\ApiCode;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
@@ -122,7 +123,18 @@ class AppServiceProvider extends ServiceProvider
     {
         $flush = static fn () => CategoryService::flush();
 
-        foreach ([Category::class, Product::class] as $model) {
+        /*
+         * Brand belongs here as much as the other two.
+         *
+         * The cached tree does not merely list categories: every third-level
+         * entry is looked up against `brands` and carries that brand's logo, so
+         * a brand write changes the menu just as surely as a category write
+         * does. It was not on this list, so uploading a logo in /admin/brands
+         * left the menu drawing a lettermark for that brand for up to six hours
+         * — long enough to look like the upload had silently failed, which is
+         * exactly what it looked like.
+         */
+        foreach ([Category::class, Product::class, Brand::class] as $model) {
             $model::saved($flush);
             $model::deleted($flush);
         }
