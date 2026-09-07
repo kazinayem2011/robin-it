@@ -83,26 +83,57 @@ export default function PcBuilderIndex() {
                 /*
                  * Picks carried over from the homepage's three-step widget.
                  *
-                 * It has always linked here as ?cpu=&gpu=&ram=, and nothing
-                 * read them — so choosing a processor, a card and memory on
-                 * the front page and pressing "Finalize this rig" landed you
-                 * on an empty builder with the work thrown away.
+                 * It links here as ?cpu=&gpu=&ram=, and for a while nothing
+                 * read them at all — so choosing a processor, a card and
+                 * memory on the front page and pressing "Finalize this rig"
+                 * landed you on an empty builder with the work thrown away.
                  *
-                 * The widget's names are not the builder's: it says gpu where
-                 * the catalogue says graphics-card.
+                 * Reading them was only half of it. The values on the right
+                 * are the builder's own component ids, and they were guessed
+                 * rather than taken from it: the catalogue calls these
+                 * component-processor, component-graphics-card and
+                 * component-ram-desktop, so every lookup asked for a slot that
+                 * does not exist, found nothing, and carried nothing. It
+                 * looked exactly like the original bug, which is presumably
+                 * why it survived the fix for it.
                  */
                 const carriedOver = {
-                    cpu: 'cpu',
-                    gpu: 'graphics-card',
-                    ram: 'ram',
+                    cpu: ['component-processor', 'cpu'],
+                    gpu: ['component-graphics-card', 'graphics-card', 'gpu'],
+                    ram: ['component-ram-desktop', 'ram', 'memory'],
                 };
 
+                /*
+                 * Candidates, matched against the slots actually served.
+                 *
+                 * The server resolves each slot from a list like
+                 * ['component-processor', 'cpu'] so a shop on either taxonomy
+                 * keeps working — which means the id it sends back is whichever
+                 * candidate matched, and naming one of them here would break
+                 * again on the other tree. Reading it from `data` is the only
+                 * spelling that cannot drift from what the builder is showing.
+                 */
                 const wanted = Object.entries(carriedOver)
-                    .map(([param, componentId]) => [
-                        componentId,
-                        params.get(param),
-                    ])
-                    .filter(([, id]) => id);
+                    .map(([param, candidates]) => {
+                        const productId = params.get(param);
+
+                        if (!productId) return null;
+
+                        const slot = (data || []).find((c) =>
+                            candidates.includes(c.id),
+                        );
+
+                        if (!slot) {
+                            console.warn(
+                                `PC builder: no slot for "${param}" among ${candidates.join(', ')}.`,
+                            );
+
+                            return null;
+                        }
+
+                        return [slot.id, productId];
+                    })
+                    .filter(Boolean);
 
                 if (wanted.length) {
                     await Promise.all(
@@ -117,10 +148,25 @@ export default function PcBuilderIndex() {
                                 );
                                 if (match) {
                                     setPcBuilderItem(componentId, match);
+                                } else {
+                                    /*
+                                     * A part that has sold out since the front
+                                     * page rendered is simply not carried, and
+                                     * that is fine. A slot the builder does not
+                                     * have is not fine, and silence is what let
+                                     * a wrong id sit here unnoticed — every
+                                     * carry-over failed and looked like the
+                                     * shopper had picked nothing.
+                                     */
+                                    console.warn(
+                                        `PC builder: nothing matched product ${productId} in "${componentId}".`,
+                                    );
                                 }
-                            } catch {
-                                // A part that has sold out since the front page
-                                // rendered is simply not carried; the rest are.
+                            } catch (error) {
+                                console.warn(
+                                    `PC builder: could not load "${componentId}" to carry a pick over.`,
+                                    error,
+                                );
                             }
                         }),
                     );

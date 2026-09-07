@@ -658,6 +658,33 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                         builderSpecs?.ram?.[builderRam] ||
                         Object.values(builderSpecs?.ram || {})[0];
 
+                    /*
+                     * One link for both buttons.
+                     *
+                     * "Finalize this rig" carried the three picks and "Open
+                     * full PC builder" carried nothing, so which of the two
+                     * you pressed decided whether the configuration you had
+                     * just made survived the click. Nothing on screen
+                     * distinguishes them that way — they sit either end of the
+                     * same panel, above and below the same three choices.
+                     *
+                     * Empty ids are dropped rather than sent as `cpu=`, so
+                     * arriving with nothing chosen is a clean /pc-builder.
+                     */
+                    const builderHref = (() => {
+                        const picks = Object.entries({
+                            cpu: selectedCpu?.id,
+                            gpu: selectedGpu?.id,
+                            ram: selectedRam?.id,
+                        }).filter(([, id]) => id);
+
+                        return picks.length
+                            ? `${ROUTES.PC_BUILDER}?${picks
+                                  .map(([key, id]) => `${key}=${id}`)
+                                  .join('&')}`
+                            : ROUTES.PC_BUILDER;
+                    })();
+
                     const cpuPrice = selectedCpu?.price || 0;
                     const gpuPrice = selectedGpu?.price || 0;
                     const ramPrice = selectedRam?.price || 0;
@@ -699,7 +726,7 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                         </p>
                                     </div>
                                     <Link
-                                        href={ROUTES.PC_BUILDER}
+                                        href={builderHref}
                                         className="btn btn-primary"
                                     >
                                         OPEN FULL PC BUILDER{' '}
@@ -859,7 +886,7 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                         </div>
 
                                         <Link
-                                            href={`${ROUTES.PC_BUILDER}?cpu=${selectedCpu?.id || ''}&gpu=${selectedGpu?.id || ''}&ram=${selectedRam?.id || ''}`}
+                                            href={builderHref}
                                             className="btn btn-primary w-100 mt-3"
                                         >
                                             FINALIZE THIS RIG{' '}
