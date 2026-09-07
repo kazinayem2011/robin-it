@@ -78,7 +78,19 @@ export default function AdminBrands({
 
         setUploading(true);
         try {
-            const path = await uploadService.uploadImage(file, 'brands');
+            /*
+             * Destructured, like every other upload screen.
+             *
+             * uploadImage resolves to the whole payload — { path, disk_path,
+             * name, size } — and this took the object itself as the path. The
+             * upload succeeded and said so, then saving the brand was rejected
+             * with "The logo path field must be a string", because logo_path
+             * is validated as one. So no brand could ever be given a logo:
+             * all twenty-eight rows still have none, and the mega menu falls
+             * back to a lettermark for every one of them — the very thing this
+             * screen was built to fix.
+             */
+            const { path } = await uploadService.uploadImage(file, 'brands');
             setForm((f) => ({ ...f, logo_path: path }));
             toast.success('Logo uploaded.');
         } catch (error) {
