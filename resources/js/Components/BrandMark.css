@@ -22,7 +22,38 @@
     line-height: 1;
 }
 
+/*
+ * The logo sits on a fixed light chip, in both themes.
+ *
+ * This was --bg-surface, which follows the theme — so in the dark one the
+ * plate went dark behind artwork that is mostly solid black, and ASUS,
+ * Logitech and Apple became a brand name with an empty square beside it.
+ *
+ * Fixed light rather than themed, for the same reason the homepage pills are:
+ * these are third-party marks drawn for a light ground, recolouring somebody
+ * else's logo is not ours to do, and a filter that lifted the black would take
+ * HP's blue and Razer's green with it.
+ *
+ * It also puts logo and lettermark on the same footing. The lettermark already
+ * paints itself a light tint inline, so it reads identically in both themes;
+ * the logo was the only mark in the list whose ground moved, which is what
+ * made it the odd one out rather than the theme itself.
+ */
 .brand-mark-logo {
     object-fit: contain;
-    background: var(--bg-surface);
+    background: var(--white); /* theme-exempt: third-party artwork needs a light ground */
+    /*
+     * Breathing room inside the chip. Without it the artwork runs edge to edge
+     * while the lettermark beside it is comfortably inset, so the two read as
+     * different sizes at the same box. box-sizing is border-box globally, so
+     * the chip stays exactly the size the caller asked for.
+     */
+    padding: 2px;
+    /*
+     * A hairline, so a light chip has an edge on the dark menu rather than
+     * appearing to float, and still separates from a white surface in the
+     * light one. Inset rather than a border: a border would eat into the
+     * width/height the caller set.
+     */
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
 }

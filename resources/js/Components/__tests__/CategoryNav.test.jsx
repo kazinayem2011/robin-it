@@ -108,4 +108,40 @@ describe('BrandMark', () => {
         // it twice only slows a screen reader down.
         expect(img.getAttribute('alt')).toBe('');
     });
+    /*
+     * The chip has to be a square whatever shape the artwork is.
+     *
+     * app.css sets `img { height: auto }` for every image on the site, which
+     * beats the height attribute — so a wide wordmark like ASUS collapsed to
+     * 16x7 beside a round 16x16 lettermark, and half the list rendered as
+     * pills. The inline size is what holds it.
+     */
+    it('keeps a logo square however wide the artwork is', () => {
+        render(
+            <BrandMark name="ASUS" logo="/images/brands/asus.png" size={30} />,
+        );
+
+        const img = document.querySelector('.brand-mark-logo');
+
+        expect(img.style.width).toBe('30px');
+        expect(img.style.height).toBe('30px');
+    });
+
+    /*
+     * The plate under a logo does not follow the theme. These are third-party
+     * marks drawn for a light ground and most are solid black, so a themed
+     * plate went dark behind them and ASUS became a name with an empty circle
+     * beside it. The lettermark already paints itself a fixed light tint, so
+     * this puts the two on the same footing.
+     */
+    it('does not let the logo plate follow the theme', async () => {
+        const css = await import('node:fs').then((fs) =>
+            fs.readFileSync('resources/js/Components/BrandMark.css', 'utf8'),
+        );
+
+        const rule = css.slice(css.indexOf('.brand-mark-logo'));
+
+        expect(rule).not.toMatch(/background:\s*var\(--bg-surface\)/);
+        expect(rule).toMatch(/background:\s*var\(--white\)/);
+    });
 });

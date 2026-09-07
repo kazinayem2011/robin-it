@@ -72,6 +72,16 @@ export default function BrandMark({ name = '', logo = null, size = 18 }) {
                 className="brand-mark brand-mark-logo"
                 width={size}
                 height={size}
+                /*
+                 * The size again, inline, because the attributes alone do not
+                 * hold it: app.css sets `img { height: auto }` for every image
+                 * on the site, which beats the height attribute and let the
+                 * chip collapse to the artwork's aspect. A wide wordmark like
+                 * ASUS or Lenovo came out 16x7 next to a round 16x16
+                 * lettermark, so half the list was pills and half was circles.
+                 * The lettermark below sizes itself inline for the same reason.
+                 */
+                style={{ width: size, height: size }}
                 loading="lazy"
             />
         );
