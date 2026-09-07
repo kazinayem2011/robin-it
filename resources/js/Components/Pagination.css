@@ -120,8 +120,21 @@
         gap: 8px;
     }
 
+    /*
+     * Text on one side and controls on the other is a footer bar for a wide
+     * table. There is no width to hold them apart here — they wrap onto their
+     * own lines — so space-between leaves the count against the left edge and
+     * the buttons under it, both hanging off the same side. Stacked, they read
+     * as one block down the middle instead.
+     */
+    .pagination-wrapper.has-summary {
+        justify-content: center;
+    }
+
     .pagination-summary {
         font-size: 0.76rem;
+        width: 100%;
+        text-align: center;
     }
 
     .pagination-btns {
