@@ -37,10 +37,31 @@
     max-height: 90vh;
 }
 
+/*
+ * Wraps on its own content, not on the window's width.
+ *
+ * The row is a title, two inputs and two buttons inside a container capped at
+ * 820px — and at 772px of usable width they come to 321 + 320 + 243, which
+ * does not fit. Flexbox obliged by crushing the inputs from 150px to 100px, so
+ * their placeholders read "Customer nam" and "Contact phor" and the title sat
+ * flush against the first box with no gap at all.
+ *
+ * There was a rule to wrap them, under @media (max-width: 720px) — but that
+ * asks about the viewport, and the container is 820px whatever the viewport
+ * does. On a 1440px screen the toolbar was 820px and the query never fired, so
+ * the one rule that would have fixed this could only ever apply on a phone,
+ * where the layout was not the problem.
+ *
+ * flex-wrap here needs no breakpoint: the fields carry a flex-basis wide
+ * enough for both inputs, so they drop to their own line exactly when the row
+ * cannot hold them, at any container width.
+ */
 .quotation-sheet-toolbar {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 10px 16px;
     padding: 14px 24px;
     background: var(--bg-inverse);
     color: var(--text-on-accent);
@@ -51,15 +72,27 @@
 .quotation-client-fields {
     display: flex;
     gap: 8px;
-    flex: 1;
+    /* Wide enough for both boxes at their intended size. Below that the pair
+       wraps rather than shrinking, which is the whole point. */
+    flex: 1 1 320px;
     /* A flex child will not shrink below its content otherwise, and this sits
        between a title and two buttons. */
     min-width: 0;
-    justify-content: flex-end;
+    /*
+     * Last, so the pair that wraps is this one and Print and Close keep the
+     * top-right corner they have always had. Ordered rather than moved in the
+     * markup: between the title and the buttons is where they belong when the
+     * row is wide enough to hold all three.
+     */
+    order: 3;
+    justify-content: flex-start;
 }
 
 .quotation-client-fields input {
-    width: 150px;
+    /* Share whatever the row gives them, never below a usable 150px — the
+       placeholder is the only label these have. */
+    flex: 1 1 150px;
+    max-width: 280px;
     min-width: 0;
     height: 32px;
     padding: 0 10px;
@@ -84,23 +117,13 @@
     display: flex;
     gap: 10px;
     flex-shrink: 0;
+    order: 2;
 }
 
+/* On a phone the boxes take the whole row rather than stopping at 280px. */
 @media (max-width: 720px) {
-    .quotation-sheet-toolbar {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .quotation-client-fields {
-        order: 3;
-        width: 100%;
-        justify-content: stretch;
-    }
-
     .quotation-client-fields input {
-        flex: 1;
-        width: auto;
+        max-width: none;
     }
 }
 

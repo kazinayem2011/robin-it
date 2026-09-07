@@ -952,8 +952,16 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                     href={`tel:${siteConfig.hotline}`}
                                     className="btn btn-outline"
                                 >
+                                    {/* The hours come from Site Settings like
+                                        the number does. Written out here as
+                                        "9AM - 8PM", this contradicted the
+                                        ticker at the top of the same page,
+                                        which has been reading the setting —
+                                        "9:00 AM – 9:00 PM (Everyday)" — all
+                                        along. */}
                                     <Headset size={16} /> CALL{' '}
-                                    {siteConfig.hotline} (9AM - 8PM)
+                                    {siteConfig.hotline} (
+                                    {siteConfig.hotlineHours})
                                 </a>
                             </div>
                         </div>
