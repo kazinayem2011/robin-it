@@ -2756,20 +2756,7 @@
     opacity: 0.75;
 }
 
-.brand-mark {
-    flex: none;
-    display: inline-grid;
-    place-items: center;
-    border-radius: var(--radius-md);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1;
-}
-
-.brand-mark-logo {
-    object-fit: contain;
-    background: #fff;
-}
+/* .brand-mark moved to Components/BrandMark.css, which the admin can see too. */
 
 /* Below this a three-column brand panel is wider than the room beside the row
    that opens it, so it gets taller and narrower instead. */

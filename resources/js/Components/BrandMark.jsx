@@ -1,4 +1,5 @@
 import React from 'react';
+import './BrandMark.css';
 
 /**
  * The mark beside a brand in the menu.

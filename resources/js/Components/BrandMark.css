@@ -1,0 +1,28 @@
+/*
+ * The mark's rules travel with the component.
+ *
+ * They lived in MainLayout.css, which only the storefront layout imports, so
+ * in the admin none of them applied: the lettermark span fell back to an
+ * inline box and its two letters sat against the top-left corner of the
+ * tinted square instead of in the middle of it — five pixels left and six up,
+ * on every brand in the list.
+ *
+ * Pagination had the same problem in the other direction, with admin- rules
+ * that the shop could not see. A component used by both layouts cannot keep
+ * its appearance in either one's stylesheet.
+ */
+
+.brand-mark {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.brand-mark-logo {
+    object-fit: contain;
+    background: #fff;
+}
