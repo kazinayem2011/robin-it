@@ -172,7 +172,11 @@ export const siteConfig = {
         {
             id: 'warranty',
             title: '100% Genuine Warranty',
-            sub: 'Authorized direct brand distributors',
+            /* Was 'Authorized direct brand distributors'. The shop does not buy
+               direct, and a perk shown on every page has to be true of every
+               item — so this says what the customer actually gets rather than
+               who it was bought from. */
+            sub: "Manufacturer's own warranty, every item",
             icon: 'ShieldCheck',
         },
         {

@@ -418,7 +418,7 @@ export default function Compare() {
                                                     marginRight: 4,
                                                 }}
                                             />
-                                            Official Direct Brand Warranty
+                                            Official Brand Warranty
                                         </td>
                                     ))}
                                     {Array.from({

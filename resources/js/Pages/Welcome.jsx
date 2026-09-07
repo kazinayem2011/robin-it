@@ -333,7 +333,7 @@ export default function Welcome({ banners = [], blogs = [] }) {
                             </div>
                             <div className="trust-tile-text">
                                 <strong>100% Genuine Products</strong>
-                                <span>Direct official brand warranty</span>
+                                <span>Official brand warranty</span>
                             </div>
                         </div>
                         <div className="trust-tile card-hover">
@@ -949,10 +949,22 @@ export default function Welcome({ banners = [], blogs = [] }) {
                 <section className="container section-gap">
                     <div className="brands-marquee-wrapper">
                         <div className="brands-marquee-header">
+                            {/*
+                             * "Selected brands", and it matters. The shop is
+                             * an authorised reseller for some of the fourteen
+                             * marks below, not all of them, and a badge over a
+                             * grid of logos is read as covering every logo in
+                             * it. It previously said DIRECT FROM MANUFACTURERS,
+                             * which the shop cannot back at all — it does not
+                             * buy from the manufacturers.
+                             */}
                             <span className="marquee-badge">
-                                DIRECT FROM MANUFACTURERS
+                                AUTHORISED RESELLER FOR SELECTED BRANDS
                             </span>
-                            <h3>AUTHORISED BRAND PARTNERS</h3>
+                            {/* Was AUTHORISED BRAND PARTNERS, which asserts a
+                                formal status for all fourteen. What is true of
+                                every one of them is that the shop stocks it. */}
+                            <h3>BRANDS WE STOCK</h3>
                         </div>
                         <BrandMarquee />
                     </div>

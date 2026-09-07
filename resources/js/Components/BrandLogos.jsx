@@ -3,91 +3,96 @@ import { Link } from '@inertiajs/react';
 import { ROUTES } from '../constants/endpoints';
 
 /**
- * Top Authorized Brand Partners Configuration (SSOT)
+ * The brands the shop stocks (SSOT).
+ *
+ * Every entry used to hover as "<Brand> Official Partner" — a formal status
+ * claimed fourteen times over, on a shop that is an authorised reseller for
+ * some of these and not all. The tooltip says what the link does instead,
+ * which is take you to that brand's products.
  */
 export const BRAND_PARTNERS = [
     {
         slug: 'intel',
         name: 'Intel',
-        title: 'Intel Official Partner',
+        title: 'Shop Intel',
         logo: '/images/brands/intel.png',
     },
     {
         slug: 'amd',
         name: 'AMD',
-        title: 'AMD Official Partner',
+        title: 'Shop AMD',
         logo: '/images/brands/amd.png',
     },
     {
         slug: 'nvidia',
         name: 'NVIDIA',
-        title: 'NVIDIA Official Partner',
+        title: 'Shop NVIDIA',
         logo: '/images/brands/nvidia.png',
     },
     {
         slug: 'asus',
         name: 'ASUS',
-        title: 'ASUS ROG Official Partner',
+        title: 'Shop ASUS',
         logo: '/images/brands/asus.png',
     },
     {
         slug: 'msi',
         name: 'MSI',
-        title: 'MSI Gaming Partner',
+        title: 'Shop MSI',
         logo: '/images/brands/msi.png',
     },
     {
         slug: 'gigabyte',
         name: 'Gigabyte',
-        title: 'Gigabyte Partner',
+        title: 'Shop Gigabyte',
         logo: '/images/brands/gigabyte.png',
     },
     {
         slug: 'corsair',
         name: 'Corsair',
-        title: 'Corsair Partner',
+        title: 'Shop Corsair',
         logo: '/images/brands/corsair.png',
     },
     {
         slug: 'samsung',
         name: 'Samsung',
-        title: 'Samsung Partner',
+        title: 'Shop Samsung',
         logo: '/images/brands/samsung.png',
     },
     {
         slug: 'razer',
         name: 'Razer',
-        title: 'Razer Gaming Partner',
+        title: 'Shop Razer',
         logo: '/images/brands/razer.png',
     },
     {
         slug: 'apple',
         name: 'Apple',
-        title: 'Apple Authorised Reseller',
+        title: 'Shop Apple',
         logo: '/images/brands/apple.png',
     },
     {
         slug: 'dell',
         name: 'Dell',
-        title: 'Dell Official Partner',
+        title: 'Shop Dell',
         logo: '/images/brands/dell.png',
     },
     {
         slug: 'logitech',
         name: 'Logitech',
-        title: 'Logitech Partner',
+        title: 'Shop Logitech',
         logo: '/images/brands/logitech.png',
     },
     {
         slug: 'hp',
         name: 'HP',
-        title: 'HP Official Partner',
+        title: 'Shop HP',
         logo: '/images/brands/hp.png',
     },
     {
         slug: 'lenovo',
         name: 'Lenovo',
-        title: 'Lenovo Official Partner',
+        title: 'Shop Lenovo',
         logo: '/images/brands/lenovo.png',
     },
 ];
