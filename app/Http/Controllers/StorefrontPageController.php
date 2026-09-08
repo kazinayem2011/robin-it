@@ -13,6 +13,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\AddressBook;
 use App\Services\ProductService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -55,8 +56,43 @@ class StorefrontPageController extends Controller
         ]);
     }
 
-    public function shop(): Response
+    /**
+     * The shop listing.
+     *
+     * A legacy ?brand=<slug> is turned into the ?brand_ids=<id> the listing
+     * actually filters on. The homepage's brand tiles and the search box's
+     * brand pills both linked with the slug, and the page does not read it:
+     * the request went through as an unmatched filter and came back 0 of 0 —
+     * an empty shop, not an unfiltered one. Those links are corrected, but
+     * anything already shared, bookmarked or indexed still carries the slug,
+     * and a redirect is what makes those work rather than 404 quietly with a
+     * page full of nothing.
+     */
+    public function shop(Request $request): Response|RedirectResponse
     {
+        $slug = trim((string) $request->query('brand', ''));
+
+        if ($slug !== '' && ! $request->has('brand_ids')) {
+            $id = Brand::where('slug', $slug)->value('id');
+
+            // An unknown brand drops the parameter rather than filtering on
+            // nothing: the whole shop is a better answer than an empty one.
+            $query = $request->query();
+            unset($query['brand']);
+
+            if ($id) {
+                $query['brand_ids'] = (string) $id;
+            }
+
+            // Built by hand rather than with fullUrlWithQuery, which leaves a
+            // bare "?" on the end when nothing survives — /shop? in the
+            // address bar of everyone who follows a link to a brand the shop
+            // no longer carries.
+            return redirect()->to(
+                $request->url().($query ? '?'.http_build_query($query) : '')
+            );
+        }
+
         return Inertia::render('Products/Index');
     }
 

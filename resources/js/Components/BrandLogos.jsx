@@ -34,7 +34,14 @@ export const BrandMarquee = ({ brands = [], className = '' }) => {
             {brands.map(({ id, name, slug, logo_path: logo }) => (
                 <Link
                     key={id ?? slug}
-                    href={`${ROUTES.SHOP}?brand=${slug}`}
+                    /*
+                     * brand_ids, which is the filter the shop actually reads.
+                     * This linked to ?brand=<slug> and the listing came back
+                     * empty — not unfiltered, empty: 0 of 0 where the shop has
+                     * 1,269 products. Every tile in this row led to "no
+                     * products found".
+                     */
+                    href={`${ROUTES.SHOP}?brand_ids=${id}`}
                     className="brand-logo-pill"
                     /* What the link does. Every entry used to claim "<Brand>
                        Official Partner" here, for all fourteen, on a shop that

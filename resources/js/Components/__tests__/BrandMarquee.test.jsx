@@ -60,13 +60,19 @@ describe('BrandMarquee', () => {
         expect(screen.getAllByRole('link')).toHaveLength(brands.length);
     });
 
+    /*
+     * brand_ids, which is what the shop listing filters on. These linked with
+     * the slug — ?brand=intel — and the listing does not read it: the request
+     * went through as a filter matching nothing and came back 0 of 0, so every
+     * tile in this row led to an empty shop rather than to that brand.
+     */
     it('links each one to its own products', () => {
         render(<BrandMarquee brands={brands} />);
 
-        expect(screen.getByTitle('Shop Intel')).toHaveAttribute(
-            'href',
-            expect.stringContaining('brand=intel'),
-        );
+        const href = screen.getByTitle('Shop Intel').getAttribute('href');
+
+        expect(href).toContain('brand_ids=2');
+        expect(href).not.toMatch(/brand=intel/);
     });
 
     /* The tooltip says what the link does. It used to claim "<Brand> Official

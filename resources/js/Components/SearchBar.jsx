@@ -367,7 +367,9 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
                                             {suggestions.brands.map((br) => (
                                                 <Link
                                                     key={br.id}
-                                                    href={`${ROUTES.SHOP}?brand=${br.slug}`}
+                                                    /* brand_ids: ?brand=<slug>
+                                                       returns an empty grid. */
+                                                    href={`${ROUTES.SHOP}?brand_ids=${br.id}`}
                                                     className="facet-pill"
                                                     onClick={() =>
                                                         setSearchFocused(false)
