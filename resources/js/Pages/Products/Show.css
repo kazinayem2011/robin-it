@@ -147,12 +147,19 @@
     margin-bottom: 20px;
 }
 
+/*
+ * A filled pill and nothing else.
+ *
+ * The border was doing the outlining that the fill already does, and at this
+ * size two edges around a short label reads as a form control rather than a
+ * fact. Roomier and a size up, because the row now carries the price and was
+ * set small enough to be skimmed past.
+ */
 .meta-item {
     background-color: var(--bg-surface-subtle);
-    border: 1px solid var(--border-light);
-    padding: 6px 12px;
+    padding: 9px 18px;
     border-radius: var(--radius-full);
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -163,25 +170,17 @@
     font-weight: 500;
 }
 
+/*
+ * One weight and one colour for every value in the row, price included.
+ *
+ * Regular Price was struck through and greyed, and Status was green. Both were
+ * the page editorialising: the labels already say which number is which, and a
+ * row of facts where two of them are styled as commentary reads as three
+ * different kinds of thing.
+ */
 .meta-value {
     font-weight: 700;
     color: var(--text-primary);
-}
-
-.stock-status {
-    color: var(--success-hover);
-}
-
-/* The price is the reason the row exists, so it carries the weight the old
-   standalone price block used to. Still a chip, still in line with the rest. */
-.meta-price {
-    font-size: 0.95rem;
-}
-
-.meta-regular {
-    color: var(--text-subtle);
-    text-decoration: line-through;
-    font-weight: 600;
 }
 
 /* The countdown sat inside the price block. With the price moved up into the

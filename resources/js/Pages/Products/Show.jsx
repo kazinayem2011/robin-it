@@ -532,7 +532,7 @@ export default function ProductDetails(props) {
                             <div className="pdp-meta">
                                 <div className="meta-item">
                                     <span className="meta-label">Price:</span>
-                                    <span className="meta-value meta-price">
+                                    <span className="meta-value">
                                         {formatBdt(cashPrice)}
                                     </span>
                                 </div>
@@ -545,7 +545,7 @@ export default function ProductDetails(props) {
                                         <span className="meta-label">
                                             Regular Price:
                                         </span>
-                                        <span className="meta-value meta-regular">
+                                        <span className="meta-value">
                                             {formatBdt(regularPrice)}
                                         </span>
                                     </div>
@@ -553,21 +553,29 @@ export default function ProductDetails(props) {
 
                                 <div className="meta-item">
                                     <span className="meta-label">Status:</span>
-                                    <span className="meta-value stock-status">
-                                        {/* The label is the server's, so a shop
-                                            can say "2-3 Days" or "Call for
-                                            Price" rather than only in/out. The
-                                            count is still ours: it depends on
-                                            the chosen option, which the server
-                                            does not know. */}
+                                    <span className="meta-value">
+                                        {/* Just the status, the way the
+                                            reference reads it. The count used
+                                            to be appended — "In Stock (25
+                                            available)" — which is a different
+                                            question from the one this row
+                                            answers, and it is on the page
+                                            already where the quantity is
+                                            chosen.
+
+                                            The label is the server's where it
+                                            has one, so a shop can say "2-3
+                                            Days" or "Call for Price" rather
+                                            than only in or out. */}
                                         {needsVariantChoice
                                             ? 'Choose an option'
                                             : availableStock > 0
-                                              ? `In Stock (${availableStock} available)`
-                                              : product.stock_status_label ||
-                                                (isPreorder
-                                                    ? 'Pre-Order'
-                                                    : 'Out of Stock')}
+                                              ? product.stock_status_label ||
+                                                'In Stock'
+                                              : isPreorder
+                                                ? 'Pre-Order'
+                                                : product.stock_status_label ||
+                                                  'Out of Stock'}
                                     </span>
                                 </div>
 
