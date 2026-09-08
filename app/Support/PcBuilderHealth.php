@@ -79,11 +79,11 @@ class PcBuilderHealth
         if ($starved->isNotEmpty()) {
             $problems[] = [
                 'tone' => 'danger',
-                'title' => $starved->count() === 1
-                    ? $starved->first()['label'].' has no parts at all'
-                    : $starved->count().' required slots have no parts at all',
-                'detail' => 'Nobody can finish a build without them. Add products to '
-                    .$starved->pluck('label')->join(', ', ' and ').'.',
+                'title' => 'A build cannot be completed at all',
+                'detail' => 'There is nothing to choose from in '
+                    .$starved->pluck('label')->join(', ', ' and ')
+                    .', which every build must have. Nobody can reach the end of the builder '
+                    .'until a product is filed there.',
                 'url' => '/admin/products',
             ];
         }
@@ -91,11 +91,28 @@ class PcBuilderHealth
         $gaps = (int) $slots->sum('missing_specs');
 
         if ($gaps > 0) {
+            /*
+             * Named in the customer's terms, not the code's.
+             *
+             * This read "101 parts cannot be compatibility-checked", which says
+             * what the software failed to do rather than what a shopper ends up
+             * seeing — and "compatibility-checked" is not a phrase anybody
+             * outside this codebase uses. It says what breaks, and which
+             * shelves to start on.
+             */
+            $worst = $slots->where('missing_specs', '>', 0)
+                ->sortByDesc('missing_specs')
+                ->take(3)
+                ->pluck('label');
+
             $problems[] = [
                 'tone' => 'warn',
-                'title' => $gaps.' '.($gaps === 1 ? 'part cannot' : 'parts cannot').' be compatibility-checked',
-                'detail' => 'They are missing the specifications the check reads, so those builds '
-                    .'are reported to the customer as unverified rather than as passing.',
+                'title' => $gaps.' '.($gaps === 1 ? 'product is' : 'products are')
+                    .' missing details the builder needs',
+                'detail' => 'Without them the builder cannot tell a customer whether their chosen '
+                    .'parts fit together — it says it could not confirm the build, instead of passing '
+                    .'or failing it. Mostly '.$worst->join(', ', ' and ')
+                    .'. Open a product and fill in its Specifications.',
                 'url' => '/admin/products',
             ];
         }
@@ -105,13 +122,21 @@ class PcBuilderHealth
         $dry = $slots->where('required', true)->where('parts', '>', 0)->where('in_stock', 0);
 
         if ($dry->isNotEmpty()) {
+            /*
+             * "5 required slots have nothing in stock" said it in the builder's
+             * own vocabulary — a slot is an idea from the code, not something
+             * an admin has ever been shown. What matters is that a customer
+             * cannot buy the machine they just designed, so that is the line.
+             */
             $problems[] = [
                 'tone' => 'warn',
-                'title' => $dry->count() === 1
-                    ? 'Nothing is in stock for '.$dry->first()['label']
-                    : $dry->count().' required slots have nothing in stock',
-                'detail' => 'The parts are still offered and marked out of stock, so a build can be '
-                    .'planned but not bought.',
+                'title' => 'Customers cannot buy a PC at the moment',
+                'detail' => 'Every product is out of stock in '
+                    .($dry->count() === 1
+                        ? 'one part a build must have: '
+                        : $dry->count().' of the parts a build must have: ')
+                    .$dry->pluck('label')->join(', ', ' and ')
+                    .'. A customer can still design a build and see the price, but not order it.',
                 'url' => '/admin/stock',
             ];
         }

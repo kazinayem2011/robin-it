@@ -26,7 +26,7 @@ export default function AdminPcBuilder({ problems = [], slots = [] }) {
     return (
         <AdminLayout
             title="PC Builder"
-            subtitle="Which parts each slot offers, and what stops one appearing"
+            subtitle="What customers can choose from, and what is stopping them"
         >
             <Head title="PC Builder" />
 
@@ -39,8 +39,9 @@ export default function AdminPcBuilder({ problems = [], slots = [] }) {
                 {problems.length === 0 ? (
                     <p className="admin-pcb-clear">
                         <CheckCircle2 size={16} /> Nothing needs attention.
-                        Every slot has parts, and they carry the specifications
-                        the compatibility check reads.
+                        Every kind of part has products a customer can choose
+                        from, and they carry the details the builder needs to
+                        check a build fits together.
                     </p>
                 ) : (
                     <ul className="admin-pcb-problems">
@@ -62,15 +63,16 @@ export default function AdminPcBuilder({ problems = [], slots = [] }) {
 
                 <details className="admin-pcb-fold">
                     <summary>
-                        All {slots.length} slots — what each one offers
+                        All {slots.length} kinds of part — what a customer can
+                        choose from
                     </summary>
 
                     <table className="admin-pcb-table">
                         <thead>
                             <tr>
-                                <th>Slot</th>
+                                <th>Kind of part</th>
                                 <th>Category to file it under</th>
-                                <th className="num">Parts</th>
+                                <th className="num">Products</th>
                                 <th className="num">In stock</th>
                                 <th className="num">Checkable</th>
                                 <th>Needs these specs</th>
@@ -281,7 +283,7 @@ export default function AdminPcBuilder({ problems = [], slots = [] }) {
                             <h3>Reading the table</h3>
                             <ul>
                                 <li>
-                                    <strong>Parts</strong> — how many products a
+                                    <strong>Products</strong> — how many a
                                     customer can choose from here.{' '}
                                     <span className="admin-pcb-warn">none</span>{' '}
                                     on a required row means nobody can finish a

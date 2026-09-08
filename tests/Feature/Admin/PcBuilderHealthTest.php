@@ -250,7 +250,10 @@ class PcBuilderHealthTest extends TestCase
         $problems = app(PcBuilderHealth::class)->problems();
 
         $this->assertCount(1, $problems);
-        $this->assertStringContainsString('cannot be compatibility-checked', $problems[0]['title']);
+        // Said in the customer's terms: what a shopper ends up seeing, not
+        // what the check failed to do.
+        $this->assertStringContainsString('missing details the builder needs', $problems[0]['title']);
+        $this->assertStringNotContainsString('compatibility-checked', $problems[0]['title']);
         $this->assertSame('warn', $problems[0]['tone']);
     }
 
@@ -262,7 +265,8 @@ class PcBuilderHealthTest extends TestCase
         $problems = app(PcBuilderHealth::class)->problems();
 
         $this->assertSame('danger', $problems[0]['tone']);
-        $this->assertStringContainsString('no parts at all', $problems[0]['title']);
+        $this->assertStringContainsString('cannot be completed', $problems[0]['title']);
+        $this->assertStringNotContainsString('slot', $problems[0]['title']);
     }
 
     /**
@@ -279,6 +283,9 @@ class PcBuilderHealthTest extends TestCase
             ->firstWhere('url', '/admin/stock');
 
         $this->assertNotNull($stock, 'nothing reported the empty shelves');
-        $this->assertStringContainsString('3 required slots', $stock['title']);
+        // "Slot" is the code's word, never shown to an admin; the line names
+        // the shelves instead.
+        $this->assertStringNotContainsString('slot', $stock['title']);
+        $this->assertStringContainsString('Processor', $stock['detail']);
     }
 }
