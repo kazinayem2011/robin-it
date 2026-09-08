@@ -136,12 +136,20 @@ describe('readLinks', () => {
         });
 
         it('shows the run at the end the same way', () => {
-            expect(paginationWindow(64, 64, 0)).toEqual([1, ELLIPSIS, 62, 63, 64]);
+            expect(paginationWindow(64, 64, 0)).toEqual([
+                1,
+                ELLIPSIS,
+                62,
+                63,
+                64,
+            ]);
         });
 
         it('never asks for more than five slots, however many pages there are', () => {
             for (const page of [1, 2, 3, 50, 100, 199, 200]) {
-                expect(paginationWindow(page, 200, 0).length).toBeLessThanOrEqual(5);
+                expect(
+                    paginationWindow(page, 200, 0).length,
+                ).toBeLessThanOrEqual(5);
             }
         });
 

@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@inertiajs/react', () => ({
-    Link: ({ children, href, ...rest }) => <a href={href} {...rest}>{children}</a>,
+    Link: ({ children, href, ...rest }) => (
+        <a href={href} {...rest}>
+            {children}
+        </a>
+    ),
 }));
 
 const { Pagination } = await import('../Pagination');
@@ -11,7 +15,9 @@ const { Pagination } = await import('../Pagination');
 /** Stand in for a viewport of the given width against a max-width query. */
 const viewport = (width) => {
     window.matchMedia = vi.fn().mockImplementation((query) => {
-        const limit = Number(/max-width:\s*(\d+)px/.exec(query)?.[1] ?? Infinity);
+        const limit = Number(
+            /max-width:\s*(\d+)px/.exec(query)?.[1] ?? Infinity,
+        );
         return {
             matches: width <= limit,
             media: query,
@@ -23,8 +29,16 @@ const viewport = (width) => {
 
 const pages = (n) => (page) =>
     Array.from({ length: n + 2 }, (_, i) => {
-        if (i === 0) return { url: page > 1 ? `/x?page=${page - 1}` : null, label: '&laquo; Previous' };
-        if (i === n + 1) return { url: page < n ? `/x?page=${page + 1}` : null, label: 'Next &raquo;' };
+        if (i === 0)
+            return {
+                url: page > 1 ? `/x?page=${page - 1}` : null,
+                label: '&laquo; Previous',
+            };
+        if (i === n + 1)
+            return {
+                url: page < n ? `/x?page=${page + 1}` : null,
+                label: 'Next &raquo;',
+            };
         return { url: `/x?page=${i}`, label: String(i), active: i === page };
     });
 

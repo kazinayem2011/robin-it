@@ -43,9 +43,7 @@ describe('QuickViewModal', () => {
     beforeEach(() => vi.clearAllMocks());
 
     const open = (product) =>
-        render(
-            <QuickViewModal show onClose={() => {}} product={product} />,
-        );
+        render(<QuickViewModal show onClose={() => {}} product={product} />);
 
     const plain = {
         id: 3,
@@ -62,7 +60,9 @@ describe('QuickViewModal', () => {
         await person.click(
             screen.getByRole('button', { name: /increase quantity/i }),
         );
-        await person.click(screen.getByRole('button', { name: /add to cart/i }));
+        await person.click(
+            screen.getByRole('button', { name: /add to cart/i }),
+        );
 
         // The third argument is the option, null for a product without one.
         expect(addToCart).toHaveBeenCalledWith(3, 2, null);
@@ -93,7 +93,9 @@ describe('QuickViewModal', () => {
         const person = userEvent.setup();
         open(plain);
 
-        await person.click(screen.getByRole('button', { name: /add to cart/i }));
+        await person.click(
+            screen.getByRole('button', { name: /add to cart/i }),
+        );
 
         expect(toastError).toHaveBeenCalledWith(
             'Only 2 left in stock.',
@@ -110,7 +112,9 @@ describe('QuickViewModal', () => {
         await person.click(more);
         expect(more).toBeDisabled();
 
-        await person.click(screen.getByRole('button', { name: /add to cart/i }));
+        await person.click(
+            screen.getByRole('button', { name: /add to cart/i }),
+        );
         // The third argument is the option, null for a product without one.
         expect(addToCart).toHaveBeenCalledWith(3, 2, null);
     });

@@ -41,7 +41,9 @@
  */
 .brand-mark-logo {
     object-fit: contain;
-    background: var(--white); /* theme-exempt: third-party artwork needs a light ground */
+    /* Marker must stay on the declaration's own line: both linters match it
+       by line number, and Prettier wraps the value if the line runs past 80. */
+    background: var(--white); /* theme-exempt: needs a light ground */
     /*
      * Breathing room inside the chip. Without it the artwork runs edge to edge
      * while the lettermark beside it is comfortably inset, so the two read as

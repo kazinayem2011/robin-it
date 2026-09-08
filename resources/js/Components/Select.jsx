@@ -62,7 +62,6 @@ const normalise = (options) =>
 /* Roughly where a native list stops being scannable and starts being a haystack. */
 const SEARCH_FROM = 8;
 
-
 export default function Select({
     label,
     id,

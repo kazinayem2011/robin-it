@@ -8,7 +8,9 @@ const addToCart = vi.fn(() => Promise.resolve({}));
 const openVariantPicker = vi.fn();
 const fetchCartCount = vi.fn();
 
-vi.mock('@inertiajs/react', () => ({ router: { visit: (...a) => visit(...a) } }));
+vi.mock('@inertiajs/react', () => ({
+    router: { visit: (...a) => visit(...a) },
+}));
 
 vi.mock('../../services', () => ({
     cartService: { addToCart: (...a) => addToCart(...a) },

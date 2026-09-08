@@ -76,7 +76,7 @@
     display: flex;
     flex-direction: column;
     background: var(--vp-surface);
-    border-radius: 18px;
+    border-radius: var(--radius-md);
     /* Two shadows: a wide soft one for depth, a tight one to seat the edge.
        A single large blur reads as a smudge under the panel. */
     box-shadow:
@@ -190,7 +190,7 @@
     gap: 12px;
     padding: 13px 15px;
     border: 1.5px solid var(--vp-option-border);
-    border-radius: 12px;
+    border-radius: var(--radius-sm);
     background: var(--vp-option-bg);
     cursor: pointer;
     text-align: left;

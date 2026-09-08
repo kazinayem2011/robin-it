@@ -189,7 +189,8 @@ export const DataTable = ({
                                              * no text to borrow.
                                              */
                                             data-label={
-                                                typeof col.header === 'string' &&
+                                                typeof col.header ===
+                                                    'string' &&
                                                 col.header.trim()
                                                     ? col.header
                                                     : undefined

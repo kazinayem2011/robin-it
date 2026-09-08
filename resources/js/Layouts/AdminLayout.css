@@ -3807,7 +3807,7 @@ a.admin-card:hover,
 
     .admin-header-actions .admin-tabs-bar::-webkit-scrollbar-thumb {
         background: var(--border-color);
-        border-radius: 3px;
+        border-radius: var(--radius-sm);
     }
 
     .admin-summary-strip,

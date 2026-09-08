@@ -21,13 +21,15 @@ describe('boundsFor', () => {
     const cartWith = (cap) => ({ max_quantity_per_item: cap });
 
     it('stops at the stock on the line', () => {
-        expect(boundsFor(line({ stock_quantity: 3 }), cartWith(20)).max).toBe(3);
+        expect(boundsFor(line({ stock_quantity: 3 }), cartWith(20)).max).toBe(
+            3,
+        );
     });
 
     it('stops at the per-item cap when stock is deeper than it', () => {
-        expect(
-            boundsFor(line({ stock_quantity: 500 }), cartWith(20)).max,
-        ).toBe(20);
+        expect(boundsFor(line({ stock_quantity: 500 }), cartWith(20)).max).toBe(
+            20,
+        );
     });
 
     /* Stock and price live on the option for a variant product, so the

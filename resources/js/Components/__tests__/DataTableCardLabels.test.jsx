@@ -3,7 +3,11 @@ import { render } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@inertiajs/react', () => ({
-    Link: ({ children, href, ...rest }) => <a href={href} {...rest}>{children}</a>,
+    Link: ({ children, href, ...rest }) => (
+        <a href={href} {...rest}>
+            {children}
+        </a>
+    ),
     router: { visit: vi.fn() },
     usePage: () => ({ url: '/' }),
 }));
@@ -53,7 +57,11 @@ describe('DataTable cell labels', () => {
 
     it('skips a header that is not text, having nothing to quote from it', () => {
         const { container } = renderWith([
-            { key: 'pick', header: <input type="checkbox" aria-label="Select" />, render: () => 'x' },
+            {
+                key: 'pick',
+                header: <input type="checkbox" aria-label="Select" />,
+                render: () => 'x',
+            },
             { key: 'blank', header: '   ', render: () => 'y' },
         ]);
 
