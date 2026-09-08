@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import {
@@ -26,6 +26,7 @@ import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
+import { detailsPanelFor } from '../../utils/detailsPanel';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -94,6 +95,15 @@ export default function ProductDetails(props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('specifications');
+
+    /*
+     * Which of the two payment options is selected. Presentational for now —
+     * both routes end at the same checkout, where the method is chosen again
+     * against whatever the gateway offers on the day. It is a radio because it
+     * reads as a choice and one of them is cheaper, so which is selected has
+     * to be visible rather than implied by shading.
+     */
+    const [payMethod, setPayMethod] = useState('cash');
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
@@ -118,6 +128,53 @@ export default function ProductDetails(props) {
     const availableStock = product?.has_variants
         ? (selectedVariant?.stock_quantity ?? 0)
         : (product?.stock_quantity ?? 0);
+
+    /*
+     * The two figures the page quotes: what this costs paid outright, and the
+     * list price it is measured against.
+     *
+     * `checkout_price` is the cash-and-online figure and the one headed
+     * "Price", the same way the shop's own paperwork reads. It is a product
+     * field rather than a variant one, so an option falls back to its own
+     * effective price instead of quoting the parent's discount for a different
+     * option. Regular is the undiscounted list price, and is only ever shown
+     * when it is actually higher.
+     */
+    const priced = selectedVariant ?? product;
+    const cashPrice =
+        (selectedVariant ? null : product?.checkout_price) ??
+        priced?.effective_price ??
+        priced?.price ??
+        0;
+    const regularPrice = priced?.price ?? 0;
+
+    /*
+     * "View More Info" jumps to the panels at the foot of the page.
+     *
+     * A hash link would do the scrolling but not the second half of the job:
+     * the tab is a piece of state, and whoever last read the reviews would be
+     * carried down to the reviews. So the panel is chosen first, and the link
+     * is only drawn when there is a panel worth landing on.
+     */
+    const detailsRef = useRef(null);
+    const detailsPanel = detailsPanelFor(product);
+
+    const showFullDetails = () => {
+        if (!detailsPanel) {
+            return;
+        }
+
+        setActiveTab(detailsPanel);
+
+        // Let the chosen panel render before measuring where to scroll to;
+        // switching from a short panel to a long one moves the target.
+        requestAnimationFrame(() => {
+            detailsRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        });
+    };
 
     // A variant product with nothing chosen yet cannot be bought.
     const needsVariantChoice =
@@ -462,20 +519,38 @@ export default function ProductDetails(props) {
                         <div className="pdp-summary">
                             <h1 className="pdp-title">{product.name}</h1>
 
+                            {/* One row of facts, in the order a shopper checks
+                                them: what it costs, what it usually costs,
+                                whether it can be had, what to quote on the
+                                phone, who makes it.
+
+                                The price leads here rather than sitting in its
+                                own block underneath, because it is the first
+                                thing being looked for and the Payment Options
+                                below already carry it at size. Two places, not
+                                three. */}
                             <div className="pdp-meta">
-                                {/* Only when there is one. "Brand: N/A" is a
-                                    row that answers nothing and pushes the two
-                                    that do along. */}
-                                {product.brand?.name && (
+                                <div className="meta-item">
+                                    <span className="meta-label">Price:</span>
+                                    <span className="meta-value meta-price">
+                                        {formatBdt(cashPrice)}
+                                    </span>
+                                </div>
+
+                                {/* Only when it is genuinely a different
+                                    number. "Regular Price" repeating the price
+                                    beside it reads as a mistake. */}
+                                {regularPrice > cashPrice && (
                                     <div className="meta-item">
                                         <span className="meta-label">
-                                            Brand:
+                                            Regular Price:
                                         </span>
-                                        <span className="meta-value">
-                                            {product.brand.name}
+                                        <span className="meta-value meta-regular">
+                                            {formatBdt(regularPrice)}
                                         </span>
                                     </div>
                                 )}
+
                                 <div className="meta-item">
                                     <span className="meta-label">Status:</span>
                                     <span className="meta-value stock-status">
@@ -495,6 +570,7 @@ export default function ProductDetails(props) {
                                                     : 'Out of Stock')}
                                     </span>
                                 </div>
+
                                 <div className="meta-item">
                                     <span className="meta-label">
                                         Product Code:
@@ -503,39 +579,35 @@ export default function ProductDetails(props) {
                                         RC-{product.id}
                                     </span>
                                 </div>
-                            </div>
 
-                            <div className="pdp-pricing">
-                                {(selectedVariant ?? product).has_discount ? (
-                                    <>
-                                        <div className="price-current">
-                                            {formatBdt(
-                                                (selectedVariant ?? product)
-                                                    .effective_price,
-                                            )}
-                                        </div>
-                                        <div className="price-old">
-                                            {formatBdt(
-                                                selectedVariant?.price ??
-                                                    product.price,
-                                            )}
-                                        </div>
-                                        <CountdownTimer
-                                            label="LIMITED DEAL:"
-                                            variant="pill"
-                                            showIcon={true}
-                                            iconType="flame"
-                                        />
-                                    </>
-                                ) : (
-                                    <div className="price-current">
-                                        {formatBdt(
-                                            selectedVariant?.effective_price ??
-                                                product.price,
-                                        )}
+                                {/* Only when there is one. "Brand: N/A" is a
+                                    chip that answers nothing and pushes the
+                                    ones that do along. */}
+                                {product.brand?.name && (
+                                    <div className="meta-item">
+                                        <span className="meta-label">
+                                            Brand:
+                                        </span>
+                                        <span className="meta-value">
+                                            {product.brand.name}
+                                        </span>
                                     </div>
                                 )}
                             </div>
+
+                            {/* The clock stays with the deal it is counting
+                                down, now that the price it belonged to has
+                                moved up into the row above. */}
+                            {(selectedVariant ?? product).has_discount && (
+                                <div className="pdp-deal-clock">
+                                    <CountdownTimer
+                                        label="LIMITED DEAL:"
+                                        variant="pill"
+                                        showIcon={true}
+                                        iconType="flame"
+                                    />
+                                </div>
+                            )}
 
                             {/* Option picker. Each option carries its own stock,
                                 so one being sold out says nothing about another. */}
@@ -606,6 +678,10 @@ export default function ProductDetails(props) {
                                 every product written before the field existed.
                                 Sanitised server-side through RichText. */}
                             <div className="pdp-short-desc">
+                                <h2 className="pdp-section-heading">
+                                    Key Features
+                                </h2>
+
                                 {product.key_features ? (
                                     <div
                                         className="pdp-key-features"
@@ -626,6 +702,26 @@ export default function ProductDetails(props) {
                                             </li>
                                         )}
                                     </ul>
+                                )}
+
+                                {/* The summary above is the headline; the full
+                                    table is a long way down the page past the
+                                    suggestions. This carries the reader there
+                                    and opens the right panel, rather than
+                                    leaving them to scroll and then find the
+                                    tab still on whatever they last touched.
+                                    Specifications when there are any, the
+                                    description when there are not — landing on
+                                    an empty table is worse than not offering
+                                    the jump. */}
+                                {detailsPanel && (
+                                    <button
+                                        type="button"
+                                        className="pdp-more-info"
+                                        onClick={showFullDetails}
+                                    >
+                                        View More Info
+                                    </button>
                                 )}
                             </div>
 
@@ -664,47 +760,71 @@ export default function ProductDetails(props) {
                                 are. The discount rewards paying now and the
                                 instalment is on the regular price — presenting
                                 one figure would misprice one of the two. */}
-                            {(product.checkout_price <
-                                product.effective_price ||
-                                product.emi_monthly) && (
-                                <div className="pdp-payment-options">
-                                    <div className="pdp-pay-option active">
-                                        <span className="pdp-pay-price">
-                                            {formatBdt(product.checkout_price)}
-                                        </span>
-                                        {product.checkout_price <
-                                            product.effective_price && (
-                                            <span className="pdp-pay-tag">
-                                                {formatBdt(
-                                                    product.effective_price -
-                                                        product.checkout_price,
-                                                )}{' '}
-                                                off on checkout
-                                            </span>
-                                        )}
-                                        <span className="pdp-pay-note">
-                                            Online / Cash payment
-                                        </span>
-                                    </div>
+                            <h2 className="pdp-section-heading">
+                                Payment Options
+                            </h2>
 
-                                    {product.emi_monthly && (
-                                        <div className="pdp-pay-option">
+                            <div
+                                className="pdp-payment-options"
+                                role="radiogroup"
+                                aria-label="Payment Options"
+                            >
+                                {/* Always drawn, even with nothing to compare
+                                    it against: this is where the price is
+                                    shown at size, so a product with no
+                                    instalment plan would otherwise have none. */}
+                                <label
+                                    className={`pdp-pay-option ${payMethod === 'cash' ? 'active' : ''}`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="pdp-pay"
+                                        value="cash"
+                                        checked={payMethod === 'cash'}
+                                        onChange={() => setPayMethod('cash')}
+                                    />
+                                    <span className="pdp-pay-body">
+                                        <span className="pdp-pay-price">
+                                            {formatBdt(cashPrice)}
+                                        </span>
+                                        <span className="pdp-pay-tag">
+                                            Cash Discount Price
+                                        </span>
+                                        <span className="pdp-pay-note">
+                                            Online / Cash Payment
+                                        </span>
+                                    </span>
+                                </label>
+
+                                {product.emi_monthly && (
+                                    <label
+                                        className={`pdp-pay-option ${payMethod === 'emi' ? 'active' : ''}`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="pdp-pay"
+                                            value="emi"
+                                            checked={payMethod === 'emi'}
+                                            onChange={() => setPayMethod('emi')}
+                                        />
+                                        <span className="pdp-pay-body">
                                             <span className="pdp-pay-price">
                                                 {formatBdt(product.emi_monthly)}
                                                 /month
                                             </span>
                                             <span className="pdp-pay-tag">
-                                                Regular price:{' '}
+                                                Regular Price:{' '}
                                                 {formatBdt(product.price)}
                                             </span>
                                             <span className="pdp-pay-note">
-                                                0% EMI up to{' '}
-                                                {product.emi_max_months} months
+                                                0% EMI for up to{' '}
+                                                {product.emi_max_months} Months
+                                                ***
                                             </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                                        </span>
+                                    </label>
+                                )}
+                            </div>
 
                             <div className="pdp-actions">
                                 {/*
@@ -912,7 +1032,11 @@ export default function ProductDetails(props) {
                     </section>
 
                     {/* Bottom Section: Reusable Tabs */}
-                    <div className="pdp-tabs-section">
+                    <div
+                        className="pdp-tabs-section"
+                        ref={detailsRef}
+                        id="product-details"
+                    >
                         <Tabs
                             tabs={[
                                 {

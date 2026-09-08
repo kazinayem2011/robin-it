@@ -172,36 +172,64 @@
     color: var(--success-hover);
 }
 
-/* Pricing Row */
-.pdp-pricing {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 20px;
-    padding: 16px 0;
-    border-top: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
-    /*
-     * Price, old price and the countdown pill together came to 505px, which on
-     * a 325px column took the product page sideways. They wrap now instead.
-     */
-    flex-wrap: wrap;
-    row-gap: 10px;
+/* The price is the reason the row exists, so it carries the weight the old
+   standalone price block used to. Still a chip, still in line with the rest. */
+.meta-price {
+    font-size: 0.95rem;
 }
 
-.price-current {
-    font-size: 2.1rem;
-    font-weight: 900;
-    font-family: var(--font-heading);
-    /* Same ink as the price on the card the shopper clicked to get here. Size
-       and weight already make it the biggest thing on the page. */
-    color: var(--text-primary);
-}
-
-.price-old {
-    font-size: 1.15rem;
+.meta-regular {
     color: var(--text-subtle);
     text-decoration: line-through;
+    font-weight: 600;
+}
+
+/* The countdown sat inside the price block. With the price moved up into the
+   chips, the clock needs its own line rather than being wedged into the row. */
+.pdp-deal-clock {
+    margin: -6px 0 18px;
+}
+
+/* "Key Features" and "Payment Options" — the two headings inside the summary
+   column. Smaller than the product title above them and set apart from the
+   body text they introduce. */
+.pdp-section-heading {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 10px;
+}
+
+/*
+ * The jump down to the full table.
+ *
+ * A button rather than an anchor: it also decides which panel opens, so it is
+ * doing something rather than going somewhere. Styled as the link it reads as,
+ * underline and all, because that is what makes it obviously clickable.
+ */
+.pdp-more-info {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--primary-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.pdp-more-info:hover {
+    text-decoration-thickness: 2px;
+}
+
+.pdp-more-info:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
 }
 
 /* Short Description Bullet Points */
@@ -1002,22 +1030,56 @@
     margin: 16px 0;
 }
 
+/* A label wrapping its radio, so the whole card is the hit area rather than
+   the 16px dot inside it. */
 .pdp-pay-option {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 12px 14px;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 14px 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    cursor: pointer;
+}
+
+.pdp-pay-option:hover {
+    border-color: var(--text-subtle);
 }
 
 .pdp-pay-option.active {
     border-color: var(--primary);
+    /* Two signals rather than one: the ring reads at a glance where a 1px
+       border change on a pale card does not, and the selected option is the
+       cheaper one, so it has to be unmistakable which is picked. */
+    box-shadow: 0 0 0 1px var(--primary);
+}
+
+.pdp-pay-option input[type='radio'] {
+    margin: 3px 0 0;
+    accent-color: var(--primary);
+    flex: none;
+    cursor: pointer;
+}
+
+.pdp-pay-option:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.pdp-pay-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .pdp-pay-price {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    line-height: 1.15;
 }
 
 .pdp-pay-tag {
