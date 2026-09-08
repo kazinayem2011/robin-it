@@ -14,7 +14,20 @@ class ComparisonController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Comparison::with(['product.images', 'product.specifications']);
+        /*
+         * `category` and `categories` are loaded because the comparison table
+         * draws a Category row. Neither was, so `p.category?.name` was always
+         * undefined and every product in the table read "Hardware" — the
+         * fallback, not the product's category. Both are here rather than just
+         * the primary: a product listed under several is worth seeing as such
+         * when the whole point of the screen is telling two of them apart.
+         */
+        $query = Comparison::with([
+            'product.images',
+            'product.specifications',
+            'product.category:id,name,slug',
+            'product.categories:id,name,slug',
+        ]);
 
         if (Auth::check()) {
             $query->where('user_id', Auth::id());

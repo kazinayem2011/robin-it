@@ -351,7 +351,29 @@ export default function Compare() {
                                             key={p.id}
                                             className="compare-td-val"
                                         >
-                                            {p.category?.name || 'Hardware'}
+                                            {p.category?.name || '—'}
+                                            {/*
+                                                A product can be listed in more
+                                                than one category. The primary
+                                                one names the row; the rest are
+                                                worth seeing on a screen whose
+                                                job is telling two products
+                                                apart.
+                                            */}
+                                            {(p.categories || []).length >
+                                                1 && (
+                                                <span className="compare-td-extra">
+                                                    also in{' '}
+                                                    {(p.categories || [])
+                                                        .filter(
+                                                            (c) =>
+                                                                c.id !==
+                                                                p.category?.id,
+                                                        )
+                                                        .map((c) => c.name)
+                                                        .join(', ')}
+                                                </span>
+                                            )}
                                         </td>
                                     ))}
                                     {Array.from({

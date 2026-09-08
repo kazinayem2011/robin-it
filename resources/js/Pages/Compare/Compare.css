@@ -179,6 +179,19 @@
     color: var(--text-primary);
 }
 
+/*
+ * The categories beyond the primary one, under it rather than beside it: the
+ * column is as narrow as the widest product name, and a second category set
+ * inline pushed the cell wider than the picture above it.
+ */
+.compare-td-extra {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
 .compare-stock-val {
     color: var(--success-ink);
     font-weight: 700;

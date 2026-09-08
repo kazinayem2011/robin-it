@@ -242,6 +242,39 @@ class MultiCategoryProductTest extends TestCase
     }
 
     /**
+     * The comparison table draws a Category row, and nothing loaded a category
+     * for it to draw — `product.category` was not in the eager loads, so every
+     * cell fell through to the literal "Hardware" the component ends with. The
+     * row looked filled in and told the shopper nothing.
+     */
+    public function test_the_comparison_payload_carries_the_categories(): void
+    {
+        $desktop = $this->category('Desktop', 'desktop');
+        $gaming = $this->category('Gaming PC', 'gaming-pc');
+
+        $product = $this->product($desktop);
+        $product->syncCategories([$gaming->id]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/compare', ['product_id' => $product->id])
+            ->assertOk();
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/compare')
+            ->assertOk()
+            ->json('data.0.product');
+
+        $this->assertSame($desktop->name, $payload['category']['name'] ?? null);
+
+        $this->assertEqualsCanonicalizing(
+            [$desktop->name, $gaming->name],
+            collect($payload['categories'] ?? [])->pluck('name')->all(),
+        );
+    }
+
+    /**
      * A slot's figure is the union over its descendants, not the sum.
      *
      * One part sitting in two sub-categories of the same slot is one part to
