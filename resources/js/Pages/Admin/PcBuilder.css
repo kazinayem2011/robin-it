@@ -185,6 +185,13 @@
     background: var(--state-wash);
 }
 
+/* The category as the product form writes it. Not code: an admin is going to
+   read this and go and pick it from a list, not type it anywhere. */
+.admin-pcb-path {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
 .admin-pcb-table code {
     font-family: var(--font-mono);
     font-size: 0.78rem;

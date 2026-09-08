@@ -58,9 +58,13 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                                 </li>
                                 <li>
                                     Set its <strong>Category</strong> to the one
-                                    named in the <em>Filled from</em> column
-                                    below — a processor goes in the processor
-                                    category, and so on.
+                                    shown in the{' '}
+                                    <em>Category to file it under</em> column of
+                                    the table below. It is written exactly as
+                                    the category box on the product form writes
+                                    it, so a processor reads{' '}
+                                    <code>Component › Processor</code> in both
+                                    places.
                                 </li>
                                 <li>
                                     Make sure <strong>Active</strong> is ticked.
@@ -119,11 +123,11 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                                 </tbody>
                             </table>
                             <p className="admin-pcb-note">
-                                The <em>Needs these specs</em> column below
-                                tells you which names each kind of part wants.
-                                Write wattages with the W — <code>120W</code>,
-                                not <code>120</code> — or the power estimate
-                                cannot read them.
+                                The <em>Needs these specs</em> column in the
+                                table below tells you which names each kind of
+                                part wants. Write wattages with the W —{' '}
+                                <code>120W</code>, not <code>120</code> — or the
+                                power estimate cannot read them.
                             </p>
                         </section>
 
@@ -173,7 +177,7 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                     <thead>
                         <tr>
                             <th>Slot</th>
-                            <th>Filled from</th>
+                            <th>Category to file it under</th>
                             <th className="num">Parts</th>
                             <th className="num">In stock</th>
                             <th className="num">Checkable</th>
@@ -196,7 +200,16 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                                 </td>
 
                                 <td>
-                                    <code>{slot.category}</code>
+                                    {/* Written as the product form's category
+                                        picker writes it, so the two can be
+                                        matched without translating. The slug
+                                        is the hover, for developers. */}
+                                    <span
+                                        className="admin-pcb-path"
+                                        title={slot.category_slug}
+                                    >
+                                        {slot.category}
+                                    </span>
                                 </td>
 
                                 <td className="num">

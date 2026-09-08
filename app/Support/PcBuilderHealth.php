@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
 use App\Services\PcCompatibilityService;
@@ -87,8 +88,21 @@ class PcBuilderHealth
             'required' => (bool) ($slot['required'] ?? false),
             'group' => $slot['group'] ?? 'other',
 
-            // Where the parts come from. The thing no screen has ever said.
-            'category' => $slot['category_slug'] ?? $id,
+            /*
+             * Where the parts come from, written the way the product form
+             * writes it.
+             *
+             * This showed the slug — component-processor — which is a
+             * developer's name for the shelf and appears nowhere an admin can
+             * see. The category picker on the product form shows an ancestry,
+             * "Component › Processor", so that is what this shows: the thing
+             * they are about to go and click, spelled identically.
+             *
+             * The slug stays as the hover title, for whoever is reading this
+             * to debug rather than to file a product.
+             */
+            'category' => $this->categoryPath($slot['category_slug'] ?? $id),
+            'category_slug' => $slot['category_slug'] ?? $id,
 
             /*
              * A required slot with nothing in it is kept by the builder and
@@ -107,6 +121,30 @@ class PcBuilderHealth
             'over_cap' => $parts->count() > self::SHOWN_PER_SLOT,
             'shown' => min($parts->count(), self::SHOWN_PER_SLOT),
         ];
+    }
+
+    /**
+     * A shelf written as the product form's category picker writes it, so an
+     * admin can match one against the other without translating.
+     */
+    private function categoryPath(string $slug): string
+    {
+        $category = Category::where('slug', $slug)->first();
+
+        if (! $category) {
+            return $slug;
+        }
+
+        $names = [$category->name];
+        $parent = $category->parent;
+        $guard = 0;
+
+        while ($parent && $guard++ < 6) {
+            array_unshift($names, $parent->name);
+            $parent = $parent->parent;
+        }
+
+        return implode(' › ', $names);
     }
 
     /**

@@ -25,9 +25,31 @@ class PcBuilderHealthTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * A shelf shaped like the real ones: "Processor" sitting under
+     * "Component", rather than a category named after its own slug. The path
+     * this produces is what the product form's picker shows, and what the
+     * screen has to print for the two to be matched by eye.
+     */
     private function shelf(string $slug): Category
     {
-        return Category::create(['name' => $slug, 'slug' => $slug, 'is_active' => true]);
+        $parent = null;
+
+        if (str_starts_with($slug, 'component-')) {
+            $parent = Category::firstOrCreate(
+                ['slug' => 'component'],
+                ['name' => 'Component', 'is_active' => true]
+            );
+        }
+
+        $name = ucwords(str_replace('-', ' ', preg_replace('/^component-/', '', $slug)));
+
+        return Category::create([
+            'name' => $name,
+            'slug' => $slug,
+            'is_active' => true,
+            'parent_id' => $parent?->id,
+        ]);
     }
 
     private function part(Category $shelf, string $name, array $specs = [], int $stock = 4, bool $active = true): Product
@@ -63,7 +85,14 @@ class PcBuilderHealthTest extends TestCase
 
         $slot = $this->slot('component-processor');
 
-        $this->assertSame('component-processor', $slot['category']);
+        /*
+         * The path the product form's category picker shows, not the slug.
+         * This reported "component-processor", which is a developer's name for
+         * the shelf and appears nowhere an admin can see — so the guide told
+         * them to match it against a picker listing "Component › Processor".
+         */
+        $this->assertSame('component-processor', $slot['category_slug']);
+        $this->assertSame('Component › Processor', $slot['category']);
         $this->assertSame(1, $slot['parts']);
         $this->assertFalse($slot['starved']);
     }
@@ -191,6 +220,7 @@ class PcBuilderHealthTest extends TestCase
             'Specifications',  // what the compatibility check reads
             'Socket',          // a name that has to match exactly
             '120W',            // and the format the wattage parser needs
+            'Component › Processor', // the category written as the picker writes it
         ] as $term) {
             $this->assertStringContainsString(
                 $term,
