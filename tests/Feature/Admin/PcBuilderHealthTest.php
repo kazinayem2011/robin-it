@@ -174,4 +174,29 @@ class PcBuilderHealthTest extends TestCase
         );
         $this->assertNull(PcCompatibilityService::slotFor('accessories-mouse'));
     }
+
+    /*
+     * The guide is the point of the screen as much as the table is: the rules
+     * it states existed only inside the service that implements them. It has
+     * to name the fields as the product form labels them, or it is describing
+     * a form nobody can find.
+     */
+    public function test_the_screen_explains_the_rules_in_plain_terms(): void
+    {
+        $guide = file_get_contents(resource_path('js/Pages/Admin/PcBuilder.jsx'));
+
+        foreach ([
+            'Active',          // the only switch involved
+            'Category',        // what actually files a part into a slot
+            'Specifications',  // what the compatibility check reads
+            'Socket',          // a name that has to match exactly
+            '120W',            // and the format the wattage parser needs
+        ] as $term) {
+            $this->assertStringContainsString(
+                $term,
+                $guide,
+                "the guide no longer mentions \"{$term}\", which an admin has no other way to learn"
+            );
+        }
+    }
 }

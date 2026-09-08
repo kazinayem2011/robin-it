@@ -31,20 +31,127 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
             <Head title="PC Builder" />
 
             <div className="admin-pcb">
-                <div className="admin-pcb-intro">
-                    <Cpu size={18} />
-                    <div>
-                        <strong>How a part reaches the builder</strong>
-                        <p>
-                            A product appears in a slot when it sits in that
-                            slot&apos;s category and is ticked Active. Stock is
-                            not a filter — an out-of-stock part is still
-                            offered, labelled. To take something out of the
-                            builder, untick Active or move it to another
-                            category.
-                        </p>
+                {/*
+                 * Written for whoever actually keeps the catalogue, who has
+                 * no reason to know what a category slug is. It names the
+                 * exact fields on the product form — Group, Name, Value — and
+                 * gives values that can be copied, because "add a socket
+                 * specification" is not an instruction anyone can follow if
+                 * the check is matching on a field they cannot see.
+                 *
+                 * Open by default: the whole reason this screen exists is
+                 * that none of it was written down anywhere.
+                 */}
+                <details className="admin-pcb-guide" open>
+                    <summary>
+                        <Cpu size={16} />
+                        <span>How the PC Builder picks up your products</span>
+                    </summary>
+
+                    <div className="admin-pcb-guide-body">
+                        <section>
+                            <h3>To put a product in the builder</h3>
+                            <ol>
+                                <li>
+                                    Open the product in{' '}
+                                    <strong>Products</strong>.
+                                </li>
+                                <li>
+                                    Set its <strong>Category</strong> to the one
+                                    named in the <em>Filled from</em> column
+                                    below — a processor goes in the processor
+                                    category, and so on.
+                                </li>
+                                <li>
+                                    Make sure <strong>Active</strong> is ticked.
+                                    That is the only switch involved.
+                                </li>
+                            </ol>
+                            <p className="admin-pcb-note">
+                                Being out of stock does <strong>not</strong>{' '}
+                                hide a part. It still appears, marked out of
+                                stock, so a customer can plan a build around
+                                something you are restocking. To take a part out
+                                of the builder altogether, untick Active or move
+                                it to a different category.
+                            </p>
+                        </section>
+
+                        <section>
+                            <h3>To make the compatibility check work</h3>
+                            <p>
+                                The builder warns a customer when two parts do
+                                not fit — a processor and a motherboard with
+                                different sockets, for instance. It can only do
+                                that when the parts carry the right{' '}
+                                <strong>Specifications</strong>. Without them it
+                                says &ldquo;could not confirm&rdquo; rather than
+                                passing or failing the build.
+                            </p>
+                            <p>
+                                On the product form, each specification row has
+                                three boxes. Only the middle one has to match
+                                exactly:
+                            </p>
+                            <table className="admin-pcb-example">
+                                <thead>
+                                    <tr>
+                                        <th>Group</th>
+                                        <th>Name — must match</th>
+                                        <th>Value — yours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Processor</td>
+                                        <td>
+                                            <code>Socket</code>
+                                        </td>
+                                        <td>AM5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Processor</td>
+                                        <td>
+                                            <code>TDP</code>
+                                        </td>
+                                        <td>120W</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p className="admin-pcb-note">
+                                The <em>Needs these specs</em> column below
+                                tells you which names each kind of part wants.
+                                Write wattages with the W — <code>120W</code>,
+                                not <code>120</code> — or the power estimate
+                                cannot read them.
+                            </p>
+                        </section>
+
+                        <section>
+                            <h3>Reading the table</h3>
+                            <ul>
+                                <li>
+                                    <strong>Parts</strong> — how many products a
+                                    customer can choose from here.{' '}
+                                    <span className="admin-pcb-warn">none</span>{' '}
+                                    on a required row means nobody can finish a
+                                    build.
+                                </li>
+                                <li>
+                                    <strong>Checkable</strong> — how many of
+                                    those carry the specifications the
+                                    compatibility check reads. The rest are
+                                    reported to the customer as unverified.
+                                </li>
+                                <li>
+                                    <strong>n/a</strong> — nothing to check on
+                                    this kind of part. A mouse cannot clash with
+                                    anything.
+                                </li>
+                            </ul>
+                        </section>
                     </div>
-                </div>
+                </details>
 
                 {summary.spec_gaps > 0 && (
                     <div className="admin-pcb-banner">

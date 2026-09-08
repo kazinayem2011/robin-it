@@ -13,31 +13,110 @@
  * "Category and Active, not stock" is the whole mental model, and until this
  * screen existed it was written down only in the service that implements it.
  */
-.admin-pcb-intro {
-    display: flex;
-    gap: 12px;
-    padding: 14px 16px;
+/*
+ * The guide. Collapsible, and open to begin with — the whole reason this
+ * screen exists is that none of these rules were written down anywhere, so
+ * hiding them behind a click would only half-solve it. Whoever has read it can
+ * fold it away and the browser remembers nothing, which is fine: it costs one
+ * click and the table underneath is unaffected.
+ */
+.admin-pcb-guide {
     background: var(--info-light);
     border: 1px solid var(--info-border);
     border-radius: var(--radius-md);
     color: var(--info-text);
 }
 
-.admin-pcb-intro svg {
-    flex-shrink: 0;
-    margin-top: 2px;
+.admin-pcb-guide > summary {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    list-style: none;
 }
 
-.admin-pcb-intro strong {
-    display: block;
-    font-size: 0.86rem;
-    margin-bottom: 3px;
+/* Safari draws its own triangle through the flex row otherwise. */
+.admin-pcb-guide > summary::-webkit-details-marker {
+    display: none;
 }
 
-.admin-pcb-intro p {
+.admin-pcb-guide > summary::after {
+    content: '▾';
+    margin-left: auto;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.admin-pcb-guide[open] > summary::after {
+    content: '▴';
+}
+
+.admin-pcb-guide-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+    padding: 0 16px 16px;
+}
+
+.admin-pcb-guide-body h3 {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+}
+
+.admin-pcb-guide-body p,
+.admin-pcb-guide-body li {
     font-size: 0.82rem;
-    line-height: 1.5;
-    margin: 0;
+    line-height: 1.55;
+    margin: 0 0 8px;
+}
+
+.admin-pcb-guide-body ol,
+.admin-pcb-guide-body ul {
+    margin: 0 0 8px;
+    padding-left: 18px;
+}
+
+.admin-pcb-guide-body code {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    padding: 1px 5px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-xs);
+}
+
+/* The caveats, quieter than the steps they qualify. */
+.admin-pcb-note {
+    opacity: 0.85;
+}
+
+/* A worked example, so "add a Socket specification" is something somebody can
+   actually copy rather than guess at. */
+.admin-pcb-example {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+}
+
+.admin-pcb-example th {
+    text-align: left;
+    padding: 5px 8px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--info-border);
+}
+
+.admin-pcb-example td {
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--info-border);
 }
 
 .admin-pcb-banner {
