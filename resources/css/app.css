@@ -2315,13 +2315,21 @@ textarea.has-error:focus,
     border-radius: 0;
     width: auto;
     /*
-     * Scales with the card instead of a flat 200px. In a three- or four-column
-     * grid the card is only ~238px wide, so a fixed 200px image was nearly
-     * square and took 42% of the card's height. The cap keeps it from growing
-     * unreasonably on a wide card.
+     * The frame scales with the card rather than sitting at a flat 200px: in a
+     * three- or four-column grid the card is only ~238px wide, so a fixed
+     * height made the image nearly square and took 42% of the card.
+     *
+     * The ratio is the whole rule, and it used to share this space with a
+     * max-height of 200px meant to stop the image growing on a wide card. A
+     * height bound on a box whose height comes from its width does not limit
+     * that box — it reshapes it. Above about 267px of card the cap won and the
+     * frame quietly stopped being 4:3: measured, the shop's card is 253 wide
+     * and the frame came out 253x189, a true 1.333, while the homepage's is
+     * 322 and the frame came out 322x200, a 1.607 that nothing is ever cut to
+     * fill. One component, one class, two shapes — which is why cropping
+     * uploads to 4:3 showed on the shop and not on the homepage.
      */
     aspect-ratio: 4 / 3;
-    max-height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;

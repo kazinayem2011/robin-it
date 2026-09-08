@@ -16,14 +16,36 @@ import { readFileSync } from 'node:fs';
 describe('product image shape', () => {
     const RATIO = 4 / 3;
 
-    it('draws the card frame at 4:3', () => {
+    /* The rule's declarations, with prose stripped — the comment beside them
+       explains the cap that was removed, and would match a search for it. */
+    const frameRule = () => {
         const css = readFileSync('resources/css/app.css', 'utf8');
         const rule = css.slice(
             css.indexOf('.product-image-box {'),
             css.indexOf('}', css.indexOf('.product-image-box {')),
         );
 
-        expect(rule).toMatch(/aspect-ratio:\s*4\s*\/\s*3/);
+        return rule.replace(/\/\*[\s\S]*?\*\//g, '');
+    };
+
+    it('draws the card frame at 4:3', () => {
+        expect(frameRule()).toMatch(/aspect-ratio:\s*4\s*\/\s*3/);
+    });
+
+    /*
+     * Declaring the ratio is not the same as getting it, which is how this
+     * shipped half-working: a max-height: 200px sat beside the aspect-ratio,
+     * and on any card wider than about 267px the cap won and the box quietly
+     * became a different shape. The shop's cards are 253 wide so it held
+     * there; the homepage's are 322 and it did not, which is exactly why the
+     * cropper fix appeared on one page and not the other.
+     *
+     * A height bound on a box whose height comes from its width does not limit
+     * that box, it reshapes it.
+     */
+    it('lets nothing override the ratio it just declared', () => {
+        expect(frameRule()).not.toMatch(/max-height/);
+        expect(frameRule()).not.toMatch(/\bheight:/);
     });
 
     it('crops uploads to the same shape', () => {
