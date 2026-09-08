@@ -17,9 +17,11 @@ class Brand extends Model
      * seeder that builds a fresh install read them from here, so the two
      * cannot drift.
      *
-     * Intel, MSI, Gigabyte, Corsair and Samsung are absent deliberately: those
-     * files were the wrong company's marks and were deleted. Those brands draw
-     * their name until somebody uploads the real thing.
+     * Gigabyte is absent deliberately. Its artwork read "GIBAT" — a mangled
+     * wordmark, not the company's mark — so it draws its name until somebody
+     * uploads the real thing. Intel, MSI, Corsair and Samsung were absent for
+     * the same reason until their correct marks were recovered from the vector
+     * artwork that shipped alongside the wrong files.
      */
     public const BUNDLED_LOGOS = [
         'amd' => '/images/brands/amd.png',
@@ -31,6 +33,10 @@ class Brand extends Model
         'logitech' => '/images/brands/logitech.png',
         'hp' => '/images/brands/hp.png',
         'lenovo' => '/images/brands/lenovo.png',
+        'intel' => '/images/brands/intel.png',
+        'msi' => '/images/brands/msi.png',
+        'corsair' => '/images/brands/corsair.png',
+        'samsung' => '/images/brands/samsung.png',
     ];
 
     protected $fillable = ['name', 'slug', 'logo_path', 'is_featured'];
