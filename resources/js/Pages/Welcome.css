@@ -972,17 +972,32 @@
 }
 
 /* The parts on the left, the running total on the right. */
+/*
+ * The two sides finish level.
+ *
+ * align-items: start let each column take its own content height, and they do
+ * not agree: three rows come to 313px and the summary card to 342, so the card
+ * hung 29px below the last row and the panel ended on a ragged edge. The parts
+ * are the subject and the summary is about them, so the two reading as one
+ * block matters more than either keeping its natural height.
+ *
+ * Stretch rather than a fixed height on either: whichever side is taller sets
+ * the row, so this holds when the summary gains a line or a fourth component
+ * is added.
+ */
 .builder-interactive-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .builder-parts {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* Fill the row the grid gives us, so the rows below have slack to share. */
+    height: 100%;
 }
 
 /* One row per component: same height whether a part has two options or ten,
@@ -992,6 +1007,11 @@
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
+    /*
+     * The three share whatever height the summary beside them needs, equally,
+     * so the column fills its side without one row growing more than another.
+     */
+    flex: 1;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--bg-surface);
