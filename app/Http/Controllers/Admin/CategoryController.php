@@ -101,6 +101,18 @@ class CategoryController extends Controller
         $name = $category->name;
 
         $descendantIds = Category::getDescendantIds($category);
+
+        /*
+         * Primary category, deliberately — not the pivot, unlike everywhere
+         * else that asks what is in a category.
+         *
+         * `products.category_id` is ON DELETE CASCADE, so these are the
+         * products the delete would actually destroy. A product merely listed
+         * here as an additional category loses the listing and nothing else,
+         * because the pivot row cascades on its own. Counting those too would
+         * refuse to delete a category over products that were never at risk,
+         * and would overstate what the warning is warning about.
+         */
         $productCount = Product::whereIn('category_id', $descendantIds)->count();
 
         if ($productCount > 0) {

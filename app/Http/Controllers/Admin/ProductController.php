@@ -62,7 +62,14 @@ class ProductController extends Controller
         }
 
         if (! empty($categoryId)) {
-            $query->where('category_id', $categoryId);
+            // Everything listed under the category, not only what is primarily
+            // filed there. Filtering the admin list by "Processor" and not
+            // seeing a part the shop shows under Processor reads as the filter
+            // being broken.
+            $query->whereHas(
+                'categories',
+                fn ($q) => $q->where('categories.id', $categoryId)
+            );
         }
 
         /*

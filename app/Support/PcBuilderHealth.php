@@ -171,7 +171,7 @@ class PcBuilderHealth
                 }
 
                 return Product::with('specifications', 'category.parent.parent')
-                    ->whereIn('category_id', $categoryIds)
+                    ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                     ->where('is_active', true)
                     ->get()
                     ->filter(fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p)))
@@ -202,7 +202,7 @@ class PcBuilderHealth
         $parts = empty($categoryIds)
             ? collect()
             : Product::with('specifications', 'category')
-                ->whereIn('category_id', $categoryIds)
+                ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                 ->where('is_active', true)
                 ->get();
 

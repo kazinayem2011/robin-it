@@ -734,7 +734,7 @@ class ProductService
         }
 
         return Product::active()
-            ->whereIn('category_id', $ids)
+            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $ids))
             ->with(['specifications'])
             ->get();
     }
@@ -880,13 +880,35 @@ class ProductService
         // the category tree again and running its own count. Both are done once
         // here and read from memory below.
         $descendants = $this->descendantMap($categories->pluck('id')->all());
-        $counts = Product::where('is_active', true)
-            ->selectRaw('category_id, COUNT(*) as total')
+
+        /*
+         * Which products sit under each category, through the pivot.
+         *
+         * Two reasons this is a set of ids rather than a count per category.
+         * A part reaches a slot through any of its categories, not just its
+         * primary one, so counting the column missed every part added to a
+         * slot as an extra category. And a slot's figure is the union over its
+         * descendants, not the sum: one product listed under both "Processor >
+         * Gaming" and "Processor > Budget" is one processor to choose from,
+         * and summing counted it twice.
+         */
+        $slotCategoryIds = collect($descendants)
+            ->flatten()
+            ->merge($categories->pluck('id'))
+            ->unique()
+            ->values();
+
+        $membership = DB::table('category_product')
+            ->join('products', 'products.id', '=', 'category_product.product_id')
+            ->where('products.is_active', true)
+            ->whereIn('category_product.category_id', $slotCategoryIds)
+            ->distinct()
+            ->get(['category_product.category_id as category_id', 'category_product.product_id as product_id'])
             ->groupBy('category_id')
-            ->pluck('total', 'category_id');
+            ->map(fn ($rows) => $rows->pluck('product_id')->all());
 
         return collect($slots)
-            ->map(function (array $slot) use ($categories, $descendants, $counts) {
+            ->map(function (array $slot) use ($categories, $descendants, $membership) {
                 $category = $categories->get($slot['slug']);
 
                 if (! $category) {
@@ -894,7 +916,10 @@ class ProductService
                 }
 
                 $ids = $descendants[$category->id] ?? [$category->id];
-                $available = collect($ids)->sum(fn ($id) => (int) ($counts[$id] ?? 0));
+                $available = collect($ids)
+                    ->flatMap(fn ($id) => $membership[$id] ?? [])
+                    ->unique()
+                    ->count();
 
                 // An optional slot with nothing behind it is a dead end and is
                 // dropped. A required one is kept and marked unavailable —
@@ -980,7 +1005,15 @@ class ProductService
             ->withCatalogAggregates();
 
         if (! empty($categoryIds)) {
-            $query->whereIn('category_id', $categoryIds);
+            // The pivot, not `category_id`: a part listed in a slot as one of
+            // its additional categories belongs in that slot's list just as
+            // much as one whose primary category it is. Reading the column
+            // offered only the latter, so adding a motherboard to "Processor"
+            // in the admin left the builder still showing nothing new.
+            $query->whereHas(
+                'categories',
+                fn ($q) => $q->whereIn('categories.id', $categoryIds)
+            );
         } else {
             // Fallback search if category slug has no direct match
             $needle = SearchTerm::escape($componentSlug);
