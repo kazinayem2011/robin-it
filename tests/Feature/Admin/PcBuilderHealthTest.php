@@ -288,4 +288,58 @@ class PcBuilderHealthTest extends TestCase
         $this->assertStringNotContainsString('slot', $stock['title']);
         $this->assertStringContainsString('Processor', $stock['detail']);
     }
+
+    /*
+     * Counting a problem and then not being able to reach it is barely better
+     * than not counting it. The warning's Fix used to land on the whole
+     * catalogue — 1,269 rows — with the ones needing work marked by a badge
+     * somebody had to spot while paging.
+     */
+    public function test_the_fix_link_goes_to_the_products_that_need_work(): void
+    {
+        $this->part($this->shelf('component-processor'), 'No Specs', stock: 3);
+
+        $specs = collect(app(PcBuilderHealth::class)->problems())
+            ->firstWhere('url', '/admin/products?needs_specs=1');
+
+        $this->assertNotNull($specs, 'the Fix link still points at the whole catalogue');
+    }
+
+    public function test_the_product_list_can_show_only_those_products(): void
+    {
+        $shelf = $this->shelf('component-processor');
+        $needsWork = $this->part($shelf, 'No Specs', stock: 3);
+        $fine = $this->part($shelf, 'Fully Specified', ['Socket' => 'AM5', 'TDP' => '105W'], stock: 3);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $props = $this->actingAs($admin)
+            ->get('/admin/products?needs_specs=1')
+            ->assertStatus(200)
+            ->viewData('page')['props'];
+
+        $ids = collect($props['products']['data'])->pluck('id');
+
+        $this->assertTrue($ids->contains($needsWork->id));
+        $this->assertFalse($ids->contains($fine->id), 'a fully specified product was included');
+        $this->assertTrue($props['needsSpecs'], 'the page needs to say the filter is on');
+    }
+
+    /** Without the flag it is the ordinary catalogue. */
+    public function test_the_filter_is_off_by_default(): void
+    {
+        $shelf = $this->shelf('component-processor');
+        $this->part($shelf, 'No Specs', stock: 3);
+        $fine = $this->part($shelf, 'Fully Specified', ['Socket' => 'AM5', 'TDP' => '105W'], stock: 3);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $props = $this->actingAs($admin)->get('/admin/products')
+            ->assertStatus(200)->viewData('page')['props'];
+
+        $this->assertTrue(
+            collect($props['products']['data'])->pluck('id')->contains($fine->id)
+        );
+        $this->assertFalse($props['needsSpecs']);
+    }
 }

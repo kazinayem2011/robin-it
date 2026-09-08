@@ -12,6 +12,7 @@ use App\Services\PcCompatibilityService;
 use App\Services\ProductGalleryService;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
+use App\Support\PcBuilderHealth;
 use App\Support\SearchTerm;
 use App\Support\SlugFactory;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +65,17 @@ class ProductController extends Controller
             $query->where('category_id', $categoryId);
         }
 
+        /*
+         * Only the products the PC Builder cannot check.
+         *
+         * The builder's screen counts these and its Fix button used to land
+         * here, on the whole catalogue, with the ones that need work marked by
+         * a badge somebody had to spot while paging through 1,269 rows.
+         */
+        if ($request->boolean('needs_specs')) {
+            $query->whereIn('id', app(PcBuilderHealth::class)->productIdsMissingSpecs());
+        }
+
         $products = $query->paginate(20)->withQueryString();
 
         // Which builder components cannot be compatibility-checked because a
@@ -92,9 +104,11 @@ class ProductController extends Controller
              * a typeahead against categories/search.
              */
             'brands' => Brand::all(['id', 'name', 'slug']),
+            'needsSpecs' => $request->boolean('needs_specs'),
             'filters' => [
                 'search' => $search,
                 'category_id' => $categoryId,
+                'needs_specs' => $request->boolean('needs_specs'),
             ],
         ]);
     }

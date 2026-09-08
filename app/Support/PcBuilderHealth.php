@@ -113,7 +113,8 @@ class PcBuilderHealth
                     .'parts fit together — it says it could not confirm the build, instead of passing '
                     .'or failing it. Mostly '.$worst->join(', ', ' and ')
                     .'. Open a product and fill in its Specifications.',
-                'url' => '/admin/products',
+                // Straight to the products that need it, not the catalogue.
+                'url' => '/admin/products?needs_specs=1',
             ];
         }
 
@@ -142,6 +143,43 @@ class PcBuilderHealth
         }
 
         return $problems;
+    }
+
+    /**
+     * The products the builder cannot check, by id.
+     *
+     * The warning counted them and the Fix button landed on the whole
+     * catalogue — 1,269 rows, with the ones that need work marked by a badge
+     * somebody had to spot while paging. Counting a problem and then not being
+     * able to reach it is barely better than not counting it.
+     *
+     * Resolved in PHP rather than SQL because "missing" means the product has
+     * no specification under any of the names a check accepts, and those
+     * aliases live in the engine. Only products on builder shelves are loaded,
+     * which is a fraction of the catalogue.
+     *
+     * @return array<int, int>
+     */
+    public function productIdsMissingSpecs(): array
+    {
+        return collect($this->products->getPcBuilderCategories())
+            ->flatMap(function (array $slot) {
+                $categoryIds = $this->categories->getDescendantIds((string) ($slot['id'] ?? ''));
+
+                if (empty($categoryIds)) {
+                    return [];
+                }
+
+                return Product::with('specifications', 'category.parent.parent')
+                    ->whereIn('category_id', $categoryIds)
+                    ->where('is_active', true)
+                    ->get()
+                    ->filter(fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p)))
+                    ->pluck('id');
+            })
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** The counts the dashboard card needs, without the per-slot detail. */

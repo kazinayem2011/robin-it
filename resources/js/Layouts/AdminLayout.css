@@ -2554,6 +2554,58 @@ a.admin-card:hover,
     flex-shrink: 0;
 }
 
+/*
+ * Arriving from the PC Builder's "Fix", which filters the list down to the
+ * products it cannot check. Saying so is what stops the catalogue looking as
+ * though it has lost eleven hundred rows.
+ */
+.admin-spec-filter-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-md);
+    color: var(--warning-text);
+}
+
+.admin-spec-filter-note svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.admin-spec-filter-note strong {
+    display: block;
+    font-size: 0.88rem;
+    margin-bottom: 2px;
+}
+
+.admin-spec-filter-note p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.admin-spec-filter-note a {
+    margin-left: auto;
+    align-self: center;
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: inherit;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    opacity: 0.85;
+}
+
+.admin-spec-filter-note a:hover {
+    opacity: 1;
+}
+
 .admin-logo-preview {
     max-width: 180px;
     max-height: 48px;

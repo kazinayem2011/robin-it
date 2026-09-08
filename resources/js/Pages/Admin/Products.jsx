@@ -187,6 +187,7 @@ export default function Products({
     brands = [],
     selectedCategory: initialCategory = '',
     search = '',
+    needsSpecs = false,
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -705,6 +706,29 @@ export default function Products({
             subtitle={`Manage ${siteConfig.name} Hardware Catalog, Live Stock Levels & Pricing`}
         >
             <Head title={`Admin Products & Inventory — ${siteConfig.name}`} />
+
+            {/*
+             * Arriving from the PC Builder's "Fix", which sends only the
+             * products it cannot check. Without saying so the list looks like
+             * the catalogue has lost eleven hundred rows.
+             */}
+            {needsSpecs && (
+                <div className="admin-spec-filter-note">
+                    <AlertTriangle size={16} />
+                    <div>
+                        <strong>
+                            Showing only the products the PC Builder cannot
+                            check
+                        </strong>
+                        <p>
+                            Each one is missing a specification the builder
+                            reads — the red note under its name says which. Open
+                            it, add them under Specifications, and save.
+                        </p>
+                    </div>
+                    <Link href={ROUTES.ADMIN_PRODUCTS}>Show all products</Link>
+                </div>
+            )}
 
             {/* Reusable Data Table */}
             <DataTable
