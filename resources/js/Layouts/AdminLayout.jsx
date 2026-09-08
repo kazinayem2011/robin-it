@@ -64,6 +64,15 @@ import './AdminLayout.css';
  *
  * `ability` null means everyone who can reach the admin at all sees it.
  */
+/*
+ * The admin's navigation, grouped by the job being done.
+ *
+ * Every item was already under a heading, but three of them were under the
+ * wrong one: Customers sat in Orders, Purchasing and Suppliers in Stock, and
+ * the journal and pages in Marketing. Each is a different job from the ones
+ * around it, and the cost showed up as hunting — a customer's record in one
+ * group and their warranty claim in another.
+ */
 const NAV_GROUPS = [
     {
         // The dashboard needs no heading; it is the first thing and it is one
@@ -79,6 +88,11 @@ const NAV_GROUPS = [
         ],
     },
     {
+        /*
+         * What has been bought and how it travels. Customers left this group:
+         * a customer is a person the shop has, not a thing that happened to an
+         * order, and everything else about them lived two headings away.
+         */
         label: 'Orders',
         items: [
             {
@@ -88,16 +102,52 @@ const NAV_GROUPS = [
                 ability: 'orders',
             },
             {
+                label: 'Couriers',
+                href: ROUTES.ADMIN_COURIERS,
+                icon: Truck,
+                ability: 'couriers',
+            },
+        ],
+    },
+    {
+        /*
+         * The people who buy, and everything they have said.
+         *
+         * These were spread across Orders and a separate Support heading, so
+         * answering one customer meant three groups: their record here, their
+         * question there, their warranty claim somewhere else.
+         */
+        label: 'Customers',
+        items: [
+            {
                 label: 'Customers',
                 href: ROUTES.ADMIN_CUSTOMERS,
                 icon: Users,
                 ability: 'customers',
             },
             {
-                label: 'Couriers',
-                href: ROUTES.ADMIN_COURIERS,
-                icon: Truck,
-                ability: 'couriers',
+                label: 'Messages',
+                href: ROUTES.ADMIN_MESSAGES,
+                icon: Inbox,
+                ability: 'support',
+            },
+            {
+                label: 'Product Questions',
+                href: ROUTES.ADMIN_QUESTIONS,
+                icon: HelpCircle,
+                ability: 'support',
+            },
+            {
+                label: 'Customer Reviews',
+                href: ROUTES.ADMIN_REVIEWS,
+                icon: MessageSquare,
+                ability: 'support',
+            },
+            {
+                label: 'Warranty & RMA',
+                href: ROUTES.ADMIN_WARRANTY,
+                icon: ShieldCheck,
+                ability: 'support',
             },
         ],
     },
@@ -135,6 +185,11 @@ const NAV_GROUPS = [
         ],
     },
     {
+        /*
+         * What is on the shelves and what has moved. Purchasing and Suppliers
+         * went to Buying: ordering from a supplier is a different job from
+         * counting what arrived, done by different people at different times.
+         */
         label: 'Stock',
         items: [
             {
@@ -161,6 +216,12 @@ const NAV_GROUPS = [
                 icon: Hash,
                 ability: 'stock',
             },
+        ],
+    },
+    {
+        /* Getting stock in, as opposed to counting what is already here. */
+        label: 'Buying',
+        items: [
             {
                 label: 'Purchasing',
                 href: ROUTES.ADMIN_PURCHASING,
@@ -207,6 +268,11 @@ const NAV_GROUPS = [
         ],
     },
     {
+        /*
+         * Things that run and end: a campaign, a banner, a coupon, an offer.
+         * The journal and the pages moved to Content — they are written once
+         * and left up, which is a different rhythm and a different person.
+         */
         label: 'Marketing',
         items: [
             {
@@ -234,6 +300,18 @@ const NAV_GROUPS = [
                 ability: 'marketing',
             },
             {
+                label: 'Subscribers',
+                href: ROUTES.ADMIN_SUBSCRIBERS,
+                icon: AtSign,
+                ability: 'marketing',
+            },
+        ],
+    },
+    {
+        /* Written once and left up, unlike a campaign. */
+        label: 'Content',
+        items: [
+            {
                 label: 'Tech Journal',
                 href: ROUTES.ADMIN_BLOGS,
                 icon: BookOpen,
@@ -244,41 +322,6 @@ const NAV_GROUPS = [
                 href: ROUTES.ADMIN_PAGES,
                 icon: FileText,
                 ability: 'marketing',
-            },
-            {
-                label: 'Subscribers',
-                href: ROUTES.ADMIN_SUBSCRIBERS,
-                icon: AtSign,
-                ability: 'marketing',
-            },
-        ],
-    },
-    {
-        label: 'Support',
-        items: [
-            {
-                label: 'Messages',
-                href: ROUTES.ADMIN_MESSAGES,
-                icon: Inbox,
-                ability: 'support',
-            },
-            {
-                label: 'Product Questions',
-                href: ROUTES.ADMIN_QUESTIONS,
-                icon: HelpCircle,
-                ability: 'support',
-            },
-            {
-                label: 'Customer Reviews',
-                href: ROUTES.ADMIN_REVIEWS,
-                icon: MessageSquare,
-                ability: 'support',
-            },
-            {
-                label: 'Warranty & RMA',
-                href: ROUTES.ADMIN_WARRANTY,
-                icon: ShieldCheck,
-                ability: 'support',
             },
         ],
     },
