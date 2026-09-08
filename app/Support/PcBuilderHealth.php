@@ -54,6 +54,71 @@ class PcBuilderHealth
             ->all();
     }
 
+    /**
+     * What actually needs doing, at most a few lines.
+     *
+     * The screen led with a three-column guide, a banner and a table of
+     * thirteen rows by six columns, which is a lot to read to find out that
+     * nothing is wrong. Most days nothing is, and the answer should take a
+     * second to reach — so the detail moved behind a fold and this comes
+     * first.
+     *
+     * Summarised rather than enumerated on purpose. "Five required slots have
+     * nothing in stock" is one line worth reading; the same fact as five rows
+     * is a list nobody finishes.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function problems(): array
+    {
+        $slots = collect($this->slots());
+        $problems = [];
+
+        $starved = $slots->where('starved', true);
+
+        if ($starved->isNotEmpty()) {
+            $problems[] = [
+                'tone' => 'danger',
+                'title' => $starved->count() === 1
+                    ? $starved->first()['label'].' has no parts at all'
+                    : $starved->count().' required slots have no parts at all',
+                'detail' => 'Nobody can finish a build without them. Add products to '
+                    .$starved->pluck('label')->join(', ', ' and ').'.',
+                'url' => '/admin/products',
+            ];
+        }
+
+        $gaps = (int) $slots->sum('missing_specs');
+
+        if ($gaps > 0) {
+            $problems[] = [
+                'tone' => 'warn',
+                'title' => $gaps.' '.($gaps === 1 ? 'part cannot' : 'parts cannot').' be compatibility-checked',
+                'detail' => 'They are missing the specifications the check reads, so those builds '
+                    .'are reported to the customer as unverified rather than as passing.',
+                'url' => '/admin/products',
+            ];
+        }
+
+        // Only the required ones: a shopper can finish a build without a
+        // second monitor, and thirteen rows of this would be noise.
+        $dry = $slots->where('required', true)->where('parts', '>', 0)->where('in_stock', 0);
+
+        if ($dry->isNotEmpty()) {
+            $problems[] = [
+                'tone' => 'warn',
+                'title' => $dry->count() === 1
+                    ? 'Nothing is in stock for '.$dry->first()['label']
+                    : $dry->count().' required slots have nothing in stock',
+                'detail' => 'The parts are still offered and marked out of stock, so a build can be '
+                    .'planned but not bought.',
+                'url' => '/admin/stock',
+            ];
+        }
+
+        return $problems;
+    }
+
     /** The counts the dashboard card needs, without the per-slot detail. */
     public function summary(): array
     {

@@ -20,7 +20,7 @@ import './PcBuilder.css';
  * already exists — on the product, or on the category it sits in — so each row
  * says which, rather than offering a second place to edit the same thing.
  */
-export default function AdminPcBuilder({ slots = [], summary = {} }) {
+export default function AdminPcBuilder({ problems = [], slots = [] }) {
     const trouble = (slot) => slot.starved || slot.missing_specs > 0;
 
     return (
@@ -32,6 +32,150 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
 
             <div className="admin-pcb">
                 {/*
+                 * What needs doing, first and in as few lines as possible.
+                 * Most days this is the all-clear and the rest of the screen
+                 * can stay shut.
+                 */}
+                {problems.length === 0 ? (
+                    <p className="admin-pcb-clear">
+                        <CheckCircle2 size={16} /> Nothing needs attention.
+                        Every slot has parts, and they carry the specifications
+                        the compatibility check reads.
+                    </p>
+                ) : (
+                    <ul className="admin-pcb-problems">
+                        {problems.map((problem) => (
+                            <li
+                                key={problem.title}
+                                className={`tone-${problem.tone}`}
+                            >
+                                <AlertTriangle size={16} />
+                                <div>
+                                    <strong>{problem.title}</strong>
+                                    <p>{problem.detail}</p>
+                                </div>
+                                <Link href={problem.url}>Fix</Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+
+                <details className="admin-pcb-fold">
+                    <summary>
+                        All {slots.length} slots — what each one offers
+                    </summary>
+
+                    <table className="admin-pcb-table">
+                        <thead>
+                            <tr>
+                                <th>Slot</th>
+                                <th>Category to file it under</th>
+                                <th className="num">Parts</th>
+                                <th className="num">In stock</th>
+                                <th className="num">Checkable</th>
+                                <th>Needs these specs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {slots.map((slot) => (
+                                <tr
+                                    key={slot.id}
+                                    className={
+                                        trouble(slot) ? 'has-trouble' : ''
+                                    }
+                                >
+                                    <td>
+                                        <strong>{slot.label}</strong>
+                                        {slot.required && (
+                                            <span className="admin-pcb-required">
+                                                required
+                                            </span>
+                                        )}
+                                    </td>
+
+                                    <td>
+                                        {/* Written as the product form's category
+                                        picker writes it, so the two can be
+                                        matched without translating. The slug
+                                        is the hover, for developers. */}
+                                        <span
+                                            className="admin-pcb-path"
+                                            title={slot.category_slug}
+                                        >
+                                            {slot.category}
+                                        </span>
+                                    </td>
+
+                                    <td className="num">
+                                        {/* A required slot with nothing in it is
+                                        the one state that actually stops a
+                                        customer finishing a build, so it is
+                                        named rather than left a bare zero. */}
+                                        {slot.starved ? (
+                                            <span className="admin-pcb-warn">
+                                                <AlertTriangle size={13} /> none
+                                            </span>
+                                        ) : (
+                                            slot.parts
+                                        )}
+                                        {slot.over_cap && (
+                                            <span
+                                                className="admin-pcb-warn"
+                                                title={`Only the newest ${slot.shown} are offered`}
+                                            >
+                                                {' '}
+                                                showing {slot.shown}
+                                            </span>
+                                        )}
+                                    </td>
+
+                                    <td className="num">
+                                        {/* "none" rather than a zero with a word
+                                        after it, which rendered as "0none". */}
+                                        {slot.parts > 0 &&
+                                        slot.in_stock === 0 ? (
+                                            <span className="admin-pcb-warn">
+                                                none
+                                            </span>
+                                        ) : (
+                                            slot.in_stock
+                                        )}
+                                    </td>
+
+                                    <td className="num">
+                                        {slot.needs_specs.length === 0 ? (
+                                            <span className="admin-pcb-muted">
+                                                n/a
+                                            </span>
+                                        ) : slot.missing_specs === 0 ? (
+                                            <span className="admin-pcb-ok">
+                                                <CheckCircle2 size={13} /> all
+                                            </span>
+                                        ) : (
+                                            <span className="admin-pcb-warn">
+                                                {slot.parts -
+                                                    slot.missing_specs}{' '}
+                                                of {slot.parts}
+                                            </span>
+                                        )}
+                                    </td>
+
+                                    <td>
+                                        {slot.needs_specs.length ? (
+                                            slot.needs_specs.join(', ')
+                                        ) : (
+                                            <span className="admin-pcb-muted">
+                                                not compatibility-checked
+                                            </span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </details>
+
+                {/*
                  * Written for whoever actually keeps the catalogue, who has
                  * no reason to know what a category slug is. It names the
                  * exact fields on the product form — Group, Name, Value — and
@@ -39,10 +183,12 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                  * specification" is not an instruction anyone can follow if
                  * the check is matching on a field they cannot see.
                  *
-                 * Open by default: the whole reason this screen exists is
-                 * that none of it was written down anywhere.
+                 * Closed, and below the problems above. It used to be open
+                 * and first, which put three columns of reference in front of
+                 * somebody whose actual question is "is anything wrong?" —
+                 * answered in a line or two now. This is read once.
                  */}
-                <details className="admin-pcb-guide" open>
+                <details className="admin-pcb-guide">
                     <summary>
                         <Cpu size={16} />
                         <span>How the PC Builder picks up your products</span>
@@ -156,127 +302,6 @@ export default function AdminPcBuilder({ slots = [], summary = {} }) {
                         </section>
                     </div>
                 </details>
-
-                {summary.spec_gaps > 0 && (
-                    <div className="admin-pcb-banner">
-                        <AlertTriangle size={16} />
-                        <span>
-                            <strong>
-                                {summary.spec_gaps} part
-                                {summary.spec_gaps === 1 ? '' : 's'}
-                            </strong>{' '}
-                            cannot be compatibility-checked, because the
-                            specifications the check reads are missing. Those
-                            builds are reported as unverified rather than as
-                            passing.
-                        </span>
-                    </div>
-                )}
-
-                <table className="admin-pcb-table">
-                    <thead>
-                        <tr>
-                            <th>Slot</th>
-                            <th>Category to file it under</th>
-                            <th className="num">Parts</th>
-                            <th className="num">In stock</th>
-                            <th className="num">Checkable</th>
-                            <th>Needs these specs</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {slots.map((slot) => (
-                            <tr
-                                key={slot.id}
-                                className={trouble(slot) ? 'has-trouble' : ''}
-                            >
-                                <td>
-                                    <strong>{slot.label}</strong>
-                                    {slot.required && (
-                                        <span className="admin-pcb-required">
-                                            required
-                                        </span>
-                                    )}
-                                </td>
-
-                                <td>
-                                    {/* Written as the product form's category
-                                        picker writes it, so the two can be
-                                        matched without translating. The slug
-                                        is the hover, for developers. */}
-                                    <span
-                                        className="admin-pcb-path"
-                                        title={slot.category_slug}
-                                    >
-                                        {slot.category}
-                                    </span>
-                                </td>
-
-                                <td className="num">
-                                    {/* A required slot with nothing in it is
-                                        the one state that actually stops a
-                                        customer finishing a build, so it is
-                                        named rather than left a bare zero. */}
-                                    {slot.starved ? (
-                                        <span className="admin-pcb-warn">
-                                            <AlertTriangle size={13} /> none
-                                        </span>
-                                    ) : (
-                                        slot.parts
-                                    )}
-                                    {slot.over_cap && (
-                                        <span
-                                            className="admin-pcb-warn"
-                                            title={`Only the newest ${slot.shown} are offered`}
-                                        >
-                                            {' '}
-                                            showing {slot.shown}
-                                        </span>
-                                    )}
-                                </td>
-
-                                <td className="num">
-                                    {/* "none" rather than a zero with a word
-                                        after it, which rendered as "0none". */}
-                                    {slot.parts > 0 && slot.in_stock === 0 ? (
-                                        <span className="admin-pcb-warn">
-                                            none
-                                        </span>
-                                    ) : (
-                                        slot.in_stock
-                                    )}
-                                </td>
-
-                                <td className="num">
-                                    {slot.needs_specs.length === 0 ? (
-                                        <span className="admin-pcb-muted">
-                                            n/a
-                                        </span>
-                                    ) : slot.missing_specs === 0 ? (
-                                        <span className="admin-pcb-ok">
-                                            <CheckCircle2 size={13} /> all
-                                        </span>
-                                    ) : (
-                                        <span className="admin-pcb-warn">
-                                            {slot.parts - slot.missing_specs} of{' '}
-                                            {slot.parts}
-                                        </span>
-                                    )}
-                                </td>
-
-                                <td>
-                                    {slot.needs_specs.length ? (
-                                        slot.needs_specs.join(', ')
-                                    ) : (
-                                        <span className="admin-pcb-muted">
-                                            not compatibility-checked
-                                        </span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
 
                 <p className="admin-pcb-foot">
                     Specifications are edited on the product.{' '}

@@ -174,7 +174,7 @@ class PcBuilderHealthTest extends TestCase
             ->viewData('page')['props'];
 
         $this->assertNotEmpty($props['slots']);
-        $this->assertArrayHasKey('spec_gaps', $props['summary']);
+        $this->assertArrayHasKey('problems', $props, 'the screen leads with what needs doing');
     }
 
     public function test_a_customer_cannot_open_it(): void
@@ -228,5 +228,57 @@ class PcBuilderHealthTest extends TestCase
                 "the guide no longer mentions \"{$term}\", which an admin has no other way to learn"
             );
         }
+    }
+
+    /*
+     * The screen leads with what needs doing, because most days nothing does
+     * and that answer should take a second to reach. Everything else — the
+     * thirteen-row table, the guide — is a fold underneath.
+     */
+    public function test_it_says_nothing_needs_attention_when_nothing_does(): void
+    {
+        $shelf = $this->shelf('component-processor');
+        $this->part($shelf, 'A Chip', ['Socket' => 'AM5', 'TDP' => '105W'], stock: 3);
+
+        $this->assertSame([], app(PcBuilderHealth::class)->problems());
+    }
+
+    public function test_it_raises_parts_that_cannot_be_checked(): void
+    {
+        $this->part($this->shelf('component-processor'), 'No Specs', stock: 3);
+
+        $problems = app(PcBuilderHealth::class)->problems();
+
+        $this->assertCount(1, $problems);
+        $this->assertStringContainsString('cannot be compatibility-checked', $problems[0]['title']);
+        $this->assertSame('warn', $problems[0]['tone']);
+    }
+
+    /** A required slot with nothing in it stops a build outright, so it leads. */
+    public function test_a_required_slot_with_no_parts_is_the_gravest(): void
+    {
+        $this->shelf('component-processor');
+
+        $problems = app(PcBuilderHealth::class)->problems();
+
+        $this->assertSame('danger', $problems[0]['tone']);
+        $this->assertStringContainsString('no parts at all', $problems[0]['title']);
+    }
+
+    /**
+     * Summarised, not enumerated. Five slots out of stock is one line worth
+     * reading; the same fact as five rows is a list nobody finishes.
+     */
+    public function test_slots_with_no_stock_are_reported_as_one_line(): void
+    {
+        foreach (['component-processor', 'component-motherboard', 'component-ssd'] as $slug) {
+            $this->part($this->shelf($slug), ucfirst($slug).' Part', ['Socket' => 'AM5', 'TDP' => '1W', 'Memory Type' => 'DDR5', 'Form Factor' => 'ATX', 'Wattage' => '1W'], stock: 0);
+        }
+
+        $stock = collect(app(PcBuilderHealth::class)->problems())
+            ->firstWhere('url', '/admin/stock');
+
+        $this->assertNotNull($stock, 'nothing reported the empty shelves');
+        $this->assertStringContainsString('3 required slots', $stock['title']);
     }
 }

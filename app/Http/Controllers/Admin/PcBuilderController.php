@@ -27,8 +27,10 @@ class PcBuilderController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/PcBuilder', [
+            // What needs doing, then the detail behind a fold. summary() is
+            // the dashboard card's, and the page has no use for it.
+            'problems' => $this->health->problems(),
             'slots' => $this->health->slots(),
-            'summary' => $this->health->summary(),
         ]);
     }
 }
