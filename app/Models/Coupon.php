@@ -90,7 +90,22 @@ class Coupon extends Model
             return $this->productIds()->contains($product->id);
         }
 
-        return $this->categoryIds()->contains($product->category_id);
+        /*
+         * Every category the product is listed under, not only its primary.
+         *
+         * A product can sit under several, and a coupon scoped to Laptops has
+         * to reach a laptop that is filed primarily under Clearance and listed
+         * under Laptops as well. Reading `category_id` refused the shopper a
+         * code that plainly covers the thing in their basket, and the refusal
+         * message named the right categories, which makes it look like the
+         * coupon is broken rather than the check.
+         */
+        $productCategoryIds = $product->categories->pluck('id')
+            ->push($product->category_id)
+            ->filter()
+            ->unique();
+
+        return $productCategoryIds->intersect($this->categoryIds())->isNotEmpty();
     }
 
     /** Product ids this coupon covers, resolved once per instance. */
@@ -121,7 +136,9 @@ class Coupon extends Model
      */
     public function eligibleSubtotal(Cart $cart): float
     {
-        $cart->loadMissing('items.product', 'items.variant');
+        // `product.categories` too: appliesTo reads it for a category-scoped
+        // coupon, and without it here that is one query per line in the cart.
+        $cart->loadMissing('items.product.categories', 'items.variant');
 
         $total = 0.0;
 

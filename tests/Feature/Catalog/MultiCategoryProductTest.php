@@ -5,6 +5,7 @@ namespace Tests\Feature\Catalog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\PcCompatibilityService;
 use App\Services\ProductService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -239,6 +240,42 @@ class MultiCategoryProductTest extends TestCase
         $part->syncCategories([$processor->id]);
 
         $this->assertSame(1, $countFor());
+    }
+
+    /**
+     * Being offered in a slot and being understood as that kind of part have to
+     * agree.
+     *
+     * The engine worked out what a part was by walking up from its primary
+     * category. Once the builder started offering parts reached through the
+     * pivot, a processor filed under Mini PC was offered as a processor and
+     * classified as nothing — and a part the engine cannot place is reported as
+     * needing no specs, which is indistinguishable from one it has checked.
+     */
+    public function test_a_part_is_classified_by_the_slot_it_is_listed_in(): void
+    {
+        $processor = $this->category('Processor', 'component-processor');
+        $part = $this->product($this->category('Mini PC', 'mini-pc'));
+
+        $compatibility = app(PcCompatibilityService::class);
+
+        $this->assertNull(
+            $compatibility->slotForProduct($part),
+            'nothing about it says processor yet',
+        );
+
+        $part->syncCategories([$processor->id]);
+
+        $this->assertSame(
+            PcCompatibilityService::SLOT_CPU,
+            $compatibility->slotForProduct($part->fresh()),
+        );
+
+        // And so the specs it is short of are a processor's, not silence.
+        $this->assertSame(
+            ['Socket', 'TDP'],
+            $compatibility->missingSpecsFor($part->fresh()),
+        );
     }
 
     /**

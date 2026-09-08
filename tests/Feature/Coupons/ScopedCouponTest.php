@@ -97,6 +97,57 @@ class ScopedCouponTest extends TestCase
         $this->assertEqualsWithDelta(3000.0, Order::latest()->first()->discount, 0.01);
     }
 
+    /**
+     * A product can be listed in more than one category, and a coupon has to
+     * see all of them.
+     *
+     * The check read `products.category_id`, so a promo on Graphics Cards
+     * missed a card filed primarily under Clearance and listed under Graphics
+     * Cards as well. The shopper was told the code did not apply to anything in
+     * their basket — while naming the very category the card sits in, which
+     * reads as the coupon being broken rather than the check.
+     */
+    public function test_a_category_coupon_reaches_a_product_listed_there_as_an_extra(): void
+    {
+        $clearance = Category::create(['name' => 'Clearance', 'slug' => 'clearance', 'is_active' => true]);
+
+        // Filed under Clearance, but also sold as a graphics card.
+        $card = $this->product('RX 7800 XT', $clearance, 40000);
+        $card->syncCategories([$this->gpus->id]);
+
+        $coupon = $this->coupon(['scope' => Coupon::SCOPE_CATEGORIES]);
+        $coupon->categories()->attach($this->gpus->id);
+
+        $user = User::factory()->create();
+        $this->fill($user, [[$card, 1], [$this->cpu, 1]]);
+
+        $this->checkout($user, 'SAVE10')->assertStatus(201);
+
+        // 10% of the 40,000 card only — the 20,000 processor is not covered.
+        $this->assertEqualsWithDelta(4000.0, Order::latest()->first()->discount, 0.01);
+    }
+
+    /**
+     * The other half of the same rule: being listed somewhere the coupon covers
+     * is what earns the discount, not merely being in the cart beside it.
+     */
+    public function test_a_category_coupon_still_ignores_a_product_listed_nowhere_near_it(): void
+    {
+        $clearance = Category::create(['name' => 'Clearance', 'slug' => 'clearance', 'is_active' => true]);
+        $mat = $this->product('Desk Mat', $clearance, 900);
+
+        $coupon = $this->coupon(['scope' => Coupon::SCOPE_CATEGORIES]);
+        $coupon->categories()->attach($this->gpus->id);
+
+        $user = User::factory()->create();
+        $this->fill($user, [[$this->gpu, 1], [$mat, 1]]);
+
+        $this->checkout($user, 'SAVE10')->assertStatus(201);
+
+        // 10% of the 10,000 card. The mat shares a cart, not a category.
+        $this->assertEqualsWithDelta(1000.0, Order::latest()->first()->discount, 0.01);
+    }
+
     /** The whole point: a category promo must not discount the rest of the basket. */
     public function test_a_category_coupon_only_discounts_that_category(): void
     {

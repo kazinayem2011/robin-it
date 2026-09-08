@@ -284,15 +284,37 @@ class PcCompatibilityService
      */
     public function slotForProduct(Product $product): ?string
     {
-        $category = $product->category;
-        $guard = 0;
+        /*
+         * Every category the product is listed under gets walked, not only its
+         * primary one.
+         *
+         * A part can be put into a builder shelf as an additional category —
+         * that is how a product filed under "Mini PC" becomes selectable as a
+         * processor. Starting only from the primary found no slot for it and
+         * reported it as needing no specs, which reads as a part the engine has
+         * checked rather than one it could not place.
+         *
+         * The primary is tried first, so a part listed under two shelves the
+         * builder knows is classified by its own breadcrumb. Callers that know
+         * the slot should pass it instead — this is the answer for when nobody
+         * does, such as the admin's own "add a spec" warning.
+         */
+        $starts = collect([$product->category])
+            ->concat($product->categories)
+            ->filter()
+            ->unique('id');
 
-        while ($category && $guard++ < 6) {
-            if ($slot = self::slotFor($category->slug)) {
-                return $slot;
+        foreach ($starts as $start) {
+            $category = $start;
+            $guard = 0;
+
+            while ($category && $guard++ < 6) {
+                if ($slot = self::slotFor($category->slug)) {
+                    return $slot;
+                }
+
+                $category = $category->parent;
             }
-
-            $category = $category->parent;
         }
 
         return null;

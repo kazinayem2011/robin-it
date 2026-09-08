@@ -164,17 +164,26 @@ class PcBuilderHealth
     {
         return collect($this->products->getPcBuilderCategories())
             ->flatMap(function (array $slot) {
-                $categoryIds = $this->categories->getDescendantIds((string) ($slot['id'] ?? ''));
+                $slotId = (string) ($slot['id'] ?? '');
+                $categoryIds = $this->categories->getDescendantIds($slotId);
 
                 if (empty($categoryIds)) {
                     return [];
                 }
 
+                // The slot is passed rather than left to be inferred from the
+                // product. These parts are gathered through the pivot, so one
+                // can reach this slot on a category that is not its primary —
+                // and inferring walks up from the primary, which would ask a
+                // part filed under Casing for a processor's specs, or find no
+                // slot at all and call it complete.
+                $slotKey = PcCompatibilityService::slotFor($slotId);
+
                 return Product::with('specifications', 'category.parent.parent')
                     ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                     ->where('is_active', true)
                     ->get()
-                    ->filter(fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p)))
+                    ->filter(fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p, $slotKey)))
                     ->pluck('id');
             })
             ->unique()
@@ -206,8 +215,12 @@ class PcBuilderHealth
                 ->where('is_active', true)
                 ->get();
 
+        // Same as above: this slot is known, so it is stated rather than
+        // guessed from a part that may only be listed here.
+        $slotKey = PcCompatibilityService::slotFor($id);
+
         $missing = $parts->filter(
-            fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p))
+            fn (Product $p) => ! empty($this->compatibility->missingSpecsFor($p, $slotKey))
         );
 
         return [
