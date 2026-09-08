@@ -1364,12 +1364,22 @@ export default function Products({
             </Modal>
 
             {cropperOpen && (
+                /*
+                 * 4:3, because that is the shape of the frame a product card
+                 * draws it in.
+                 *
+                 * This cropped to a square, and every card then letterboxed it:
+                 * measured on the listing, an 800x800 upload painted 189x189
+                 * inside a 253x189 box — three quarters of the width, with 32px
+                 * of empty bar down each side. The photo was not wrong, it was
+                 * cut to a shape nothing displays.
+                 */
                 <ImageCropperModal
                     isOpen={cropperOpen}
                     onClose={() => setCropperOpen(false)}
                     onCropComplete={handleCropComplete}
-                    aspectRatio={1}
-                    title="Crop Product Image (1:1)"
+                    aspectRatio={4 / 3}
+                    title="Crop Product Image (4:3)"
                 />
             )}
 
