@@ -1,15 +1,17 @@
 /* Show.css - Product Details Page (SSOT) */
 
+/*
+ * The details sit straight on the page, not in a card.
+ *
+ * There was a wrapper doing border, radius and shadow around the whole thing.
+ * It bought nothing — the details are the page, so outlining them separated
+ * them from nothing — and it cost 66px of width, which the fact row needs. The
+ * white ground stays, because the page itself is grey and the reference is
+ * white; only the card chrome has gone.
+ */
 .pdp-page-wrapper {
-    padding: 30px 16px 60px;
-}
-
-.pdp-container {
     background-color: var(--bg-surface);
-    padding: 32px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    padding: 30px 20px 60px;
 }
 
 .breadcrumbs {
@@ -39,9 +41,15 @@
 }
 
 /* Top PDP Section: 2-Column Gallery + Details */
+/*
+ * The gallery had nearly half the width for one 420px-tall picture, while the
+ * column carrying the title, five facts, the features and the payment choice
+ * had the other half and wrapped. The picture is now the narrower of the two,
+ * which is also how the reference is proportioned.
+ */
 .pdp-top {
     display: grid;
-    grid-template-columns: 1fr 1.15fr;
+    grid-template-columns: 1fr 2fr;
     gap: 40px;
     margin-bottom: 40px;
 }
@@ -143,26 +151,31 @@
 .pdp-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 20px;
 }
 
 /*
- * A filled pill and nothing else.
+ * A filled pill and nothing else. The border was doing the outlining the fill
+ * already does, and two edges around a short label read as a form control
+ * rather than a fact.
  *
- * The border was doing the outlining that the fill already does, and at this
- * size two edges around a short label reads as a form control rather than a
- * fact. Roomier and a size up, because the row now carries the price and was
- * set small enough to be skimmed past.
+ * The size is set by what fits. Five facts want about 780px on one line and
+ * the column is about 805px, so the padding and the type are as generous as
+ * they can be while the row still holds together — the reference keeps all
+ * five on one line, and dropping to a second row is what this is avoiding.
  */
 .meta-item {
     background-color: var(--bg-surface-subtle);
-    padding: 9px 18px;
+    padding: 8px 12px;
     border-radius: var(--radius-full);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    /* A chip breaking its own label across two lines looks like a fault. It
+       either sits on the row or moves to the next one whole. */
+    white-space: nowrap;
 }
 
 .meta-label {
@@ -732,11 +745,7 @@
 
 @media (max-width: 600px) {
     .pdp-page-wrapper {
-        padding: 16px 8px 40px;
-    }
-    .pdp-container {
-        padding: 16px;
-        border-radius: var(--radius-sm);
+        padding: 16px 12px 40px;
     }
     .main-image {
         height: 280px;

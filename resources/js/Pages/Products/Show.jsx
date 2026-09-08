@@ -466,795 +466,761 @@ export default function ProductDetails(props) {
             />
 
             <div className="container pdp-page-wrapper">
-                <div className="pdp-container">
-                    {/* Breadcrumbs */}
-                    <div className="breadcrumbs">
-                        <Link href={ROUTES.HOME}>Home</Link> &gt;
-                        <Link
-                            href={ROUTES.SHOP_CATEGORY(
-                                product.category?.slug || '',
-                            )}
-                        >
-                            {product.category?.name || 'Category'}
-                        </Link>{' '}
-                        &gt;
-                        <span className="current">{product.name}</span>
+                {/* Breadcrumbs */}
+                <div className="breadcrumbs">
+                    <Link href={ROUTES.HOME}>Home</Link> &gt;
+                    <Link
+                        href={ROUTES.SHOP_CATEGORY(
+                            product.category?.slug || '',
+                        )}
+                    >
+                        {product.category?.name || 'Category'}
+                    </Link>{' '}
+                    &gt;
+                    <span className="current">{product.name}</span>
+                </div>
+                {/* Top Section: Image & Basic Info */}
+                <div className="pdp-top">
+                    {/* Image Gallery */}
+                    <div className="pdp-gallery">
+                        <div className="main-image">
+                            <ProductImage
+                                src={images[selectedImageIndex] || images[0]}
+                                product={product}
+                                alt={product.name}
+                            />
+                        </div>
+                        {images.length > 1 && (
+                            <div className="thumbnail-list">
+                                {images.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        className={`thumbnail-stub ${selectedImageIndex === idx ? 'active' : ''}`}
+                                        onClick={() =>
+                                            setSelectedImageIndex(idx)
+                                        }
+                                    >
+                                        <ProductImage
+                                            src={img}
+                                            alt={`Thumbnail ${idx + 1}`}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Top Section: Image & Basic Info */}
-                    <div className="pdp-top">
-                        {/* Image Gallery */}
-                        <div className="pdp-gallery">
-                            <div className="main-image">
-                                <ProductImage
-                                    src={
-                                        images[selectedImageIndex] || images[0]
-                                    }
-                                    product={product}
-                                    alt={product.name}
-                                />
+                    {/* Product Summary */}
+                    <div className="pdp-summary">
+                        <h1 className="pdp-title">{product.name}</h1>
+
+                        {/* One row of facts, in the order a shopper checks
+                            them: what it costs, what it usually costs,
+                            whether it can be had, what to quote on the
+                            phone, who makes it.
+
+                            The price leads here rather than sitting in its
+                            own block underneath, because it is the first
+                            thing being looked for and the Payment Options
+                            below already carry it at size. Two places, not
+                            three. */}
+                        <div className="pdp-meta">
+                            <div className="meta-item">
+                                <span className="meta-label">Price:</span>
+                                <span className="meta-value">
+                                    {formatBdt(cashPrice)}
+                                </span>
                             </div>
-                            {images.length > 1 && (
-                                <div className="thumbnail-list">
-                                    {images.map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            className={`thumbnail-stub ${selectedImageIndex === idx ? 'active' : ''}`}
-                                            onClick={() =>
-                                                setSelectedImageIndex(idx)
-                                            }
-                                        >
-                                            <ProductImage
-                                                src={img}
-                                                alt={`Thumbnail ${idx + 1}`}
-                                            />
-                                        </button>
-                                    ))}
+
+                            {/* Only when it is genuinely a different
+                                number. "Regular Price" repeating the price
+                                beside it reads as a mistake. */}
+                            {regularPrice > cashPrice && (
+                                <div className="meta-item">
+                                    <span className="meta-label">
+                                        Regular Price:
+                                    </span>
+                                    <span className="meta-value">
+                                        {formatBdt(regularPrice)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="meta-item">
+                                <span className="meta-label">Status:</span>
+                                <span className="meta-value">
+                                    {/* Just the status, the way the
+                                        reference reads it. The count used
+                                        to be appended — "In Stock (25
+                                        available)" — which is a different
+                                        question from the one this row
+                                        answers, and it is on the page
+                                        already where the quantity is
+                                        chosen.
+
+                                        The label is the server's where it
+                                        has one, so a shop can say "2-3
+                                        Days" or "Call for Price" rather
+                                        than only in or out. */}
+                                    {needsVariantChoice
+                                        ? 'Choose an option'
+                                        : availableStock > 0
+                                          ? product.stock_status_label ||
+                                            'In Stock'
+                                          : isPreorder
+                                            ? 'Pre-Order'
+                                            : product.stock_status_label ||
+                                              'Out of Stock'}
+                                </span>
+                            </div>
+
+                            <div className="meta-item">
+                                <span className="meta-label">
+                                    Product Code:
+                                </span>
+                                <span className="meta-value">
+                                    RC-{product.id}
+                                </span>
+                            </div>
+
+                            {/* Only when there is one. "Brand: N/A" is a
+                                chip that answers nothing and pushes the
+                                ones that do along. */}
+                            {product.brand?.name && (
+                                <div className="meta-item">
+                                    <span className="meta-label">Brand:</span>
+                                    <span className="meta-value">
+                                        {product.brand.name}
+                                    </span>
                                 </div>
                             )}
                         </div>
 
-                        {/* Product Summary */}
-                        <div className="pdp-summary">
-                            <h1 className="pdp-title">{product.name}</h1>
-
-                            {/* One row of facts, in the order a shopper checks
-                                them: what it costs, what it usually costs,
-                                whether it can be had, what to quote on the
-                                phone, who makes it.
-
-                                The price leads here rather than sitting in its
-                                own block underneath, because it is the first
-                                thing being looked for and the Payment Options
-                                below already carry it at size. Two places, not
-                                three. */}
-                            <div className="pdp-meta">
-                                <div className="meta-item">
-                                    <span className="meta-label">Price:</span>
-                                    <span className="meta-value">
-                                        {formatBdt(cashPrice)}
-                                    </span>
-                                </div>
-
-                                {/* Only when it is genuinely a different
-                                    number. "Regular Price" repeating the price
-                                    beside it reads as a mistake. */}
-                                {regularPrice > cashPrice && (
-                                    <div className="meta-item">
-                                        <span className="meta-label">
-                                            Regular Price:
-                                        </span>
-                                        <span className="meta-value">
-                                            {formatBdt(regularPrice)}
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className="meta-item">
-                                    <span className="meta-label">Status:</span>
-                                    <span className="meta-value">
-                                        {/* Just the status, the way the
-                                            reference reads it. The count used
-                                            to be appended — "In Stock (25
-                                            available)" — which is a different
-                                            question from the one this row
-                                            answers, and it is on the page
-                                            already where the quantity is
-                                            chosen.
-
-                                            The label is the server's where it
-                                            has one, so a shop can say "2-3
-                                            Days" or "Call for Price" rather
-                                            than only in or out. */}
-                                        {needsVariantChoice
-                                            ? 'Choose an option'
-                                            : availableStock > 0
-                                              ? product.stock_status_label ||
-                                                'In Stock'
-                                              : isPreorder
-                                                ? 'Pre-Order'
-                                                : product.stock_status_label ||
-                                                  'Out of Stock'}
-                                    </span>
-                                </div>
-
-                                <div className="meta-item">
-                                    <span className="meta-label">
-                                        Product Code:
-                                    </span>
-                                    <span className="meta-value">
-                                        RC-{product.id}
-                                    </span>
-                                </div>
-
-                                {/* Only when there is one. "Brand: N/A" is a
-                                    chip that answers nothing and pushes the
-                                    ones that do along. */}
-                                {product.brand?.name && (
-                                    <div className="meta-item">
-                                        <span className="meta-label">
-                                            Brand:
-                                        </span>
-                                        <span className="meta-value">
-                                            {product.brand.name}
-                                        </span>
-                                    </div>
-                                )}
+                        {/* The clock stays with the deal it is counting
+                            down, now that the price it belonged to has
+                            moved up into the row above. */}
+                        {(selectedVariant ?? product).has_discount && (
+                            <div className="pdp-deal-clock">
+                                <CountdownTimer
+                                    label="LIMITED DEAL:"
+                                    variant="pill"
+                                    showIcon={true}
+                                    iconType="flame"
+                                />
                             </div>
+                        )}
 
-                            {/* The clock stays with the deal it is counting
-                                down, now that the price it belonged to has
-                                moved up into the row above. */}
-                            {(selectedVariant ?? product).has_discount && (
-                                <div className="pdp-deal-clock">
-                                    <CountdownTimer
-                                        label="LIMITED DEAL:"
-                                        variant="pill"
-                                        showIcon={true}
-                                        iconType="flame"
-                                    />
-                                </div>
-                            )}
+                        {/* Option picker. Each option carries its own stock,
+                            so one being sold out says nothing about another. */}
+                        {product.has_variants && variants.length > 0 && (
+                            <div className="pdp-variants">
+                                <span className="pdp-variants-label">
+                                    {(product.variant_attributes || []).join(
+                                        ' / ',
+                                    ) || 'Options'}
+                                </span>
+                                <div className="pdp-variant-options">
+                                    {variants.map((variant) => {
+                                        const out =
+                                            variant.stock_quantity === 0;
 
-                            {/* Option picker. Each option carries its own stock,
-                                so one being sold out says nothing about another. */}
-                            {product.has_variants && variants.length > 0 && (
-                                <div className="pdp-variants">
-                                    <span className="pdp-variants-label">
-                                        {(
-                                            product.variant_attributes || []
-                                        ).join(' / ') || 'Options'}
-                                    </span>
-                                    <div className="pdp-variant-options">
-                                        {variants.map((variant) => {
-                                            const out =
-                                                variant.stock_quantity === 0;
-
-                                            return (
-                                                <button
-                                                    key={variant.id}
-                                                    type="button"
-                                                    disabled={out}
-                                                    className={`pdp-variant-chip ${
-                                                        variant.id ===
-                                                        selectedVariantId
-                                                            ? 'is-selected'
-                                                            : ''
-                                                    } ${out ? 'is-out' : ''}`}
-                                                    onClick={() => {
-                                                        setSelectedVariantId(
-                                                            variant.id,
-                                                        );
-                                                        setQuantity(1);
-                                                        // Jump back to the
-                                                        // first shot so the
-                                                        // option's own image
-                                                        // is what is showing.
-                                                        setSelectedImageIndex(
-                                                            0,
-                                                        );
-                                                    }}
-                                                    title={
-                                                        out
-                                                            ? 'Out of stock'
-                                                            : `${variant.stock_quantity} available`
-                                                    }
-                                                >
-                                                    <span>{variant.name}</span>
-                                                    <span className="pdp-variant-price">
-                                                        {formatBdt(
-                                                            variant.effective_price,
-                                                        )}
-                                                    </span>
-                                                    {out && (
-                                                        <span className="pdp-variant-out">
-                                                            Sold out
-                                                        </span>
+                                        return (
+                                            <button
+                                                key={variant.id}
+                                                type="button"
+                                                disabled={out}
+                                                className={`pdp-variant-chip ${
+                                                    variant.id ===
+                                                    selectedVariantId
+                                                        ? 'is-selected'
+                                                        : ''
+                                                } ${out ? 'is-out' : ''}`}
+                                                onClick={() => {
+                                                    setSelectedVariantId(
+                                                        variant.id,
+                                                    );
+                                                    setQuantity(1);
+                                                    // Jump back to the
+                                                    // first shot so the
+                                                    // option's own image
+                                                    // is what is showing.
+                                                    setSelectedImageIndex(0);
+                                                }}
+                                                title={
+                                                    out
+                                                        ? 'Out of stock'
+                                                        : `${variant.stock_quantity} available`
+                                                }
+                                            >
+                                                <span>{variant.name}</span>
+                                                <span className="pdp-variant-price">
+                                                    {formatBdt(
+                                                        variant.effective_price,
                                                     )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                                </span>
+                                                {out && (
+                                                    <span className="pdp-variant-out">
+                                                        Sold out
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                            )}
-
-                            {/* Key Features is authored markup — a curated list
-                                that opens with the model and the part number.
-                                short_description splitting on newlines was the
-                                stand-in for it, and is still the fallback for
-                                every product written before the field existed.
-                                Sanitised server-side through RichText. */}
-                            <div className="pdp-short-desc">
-                                <h2 className="pdp-section-heading">
-                                    Key Features
-                                </h2>
-
-                                {product.key_features ? (
-                                    <div
-                                        className="pdp-key-features"
-                                        dangerouslySetInnerHTML={{
-                                            __html: product.key_features,
-                                        }}
-                                    />
-                                ) : (
-                                    <ul>
-                                        {product.short_description
-                                            ?.split('\n')
-                                            .map((line, i) => (
-                                                <li key={i}>{line}</li>
-                                            )) || (
-                                            <li>
-                                                100% Genuine product with
-                                                official brand warranty.
-                                            </li>
-                                        )}
-                                    </ul>
-                                )}
-
-                                {/* The summary above is the headline; the full
-                                    table is a long way down the page past the
-                                    suggestions. This carries the reader there
-                                    and opens the right panel, rather than
-                                    leaving them to scroll and then find the
-                                    tab still on whatever they last touched.
-                                    Specifications when there are any, the
-                                    description when there are not — landing on
-                                    an empty table is worse than not offering
-                                    the jump. */}
-                                {detailsPanel && (
-                                    <button
-                                        type="button"
-                                        className="pdp-more-info"
-                                        onClick={showFullDetails}
-                                    >
-                                        View More Info
-                                    </button>
-                                )}
                             </div>
+                        )}
 
-                            {/* Buy-more-pay-less, shown as a table rather than
-                                buried in the description. A trade buyer who
-                                cannot see the tier phones instead of ordering,
-                                which is the problem this solves. */}
-                            {product.quantity_discounts?.length > 0 && (
-                                <div className="pdp-tier-table">
-                                    <h4>Bulk pricing</h4>
-                                    <table>
-                                        <tbody>
-                                            {product.quantity_discounts.map(
-                                                (tier) => (
-                                                    <tr key={tier.id}>
-                                                        <td>
-                                                            {tier.min_quantity}+
-                                                            units
-                                                        </td>
-                                                        <td>
-                                                            {formatBdt(
-                                                                tier.price,
-                                                            )}{' '}
-                                                            each
-                                                        </td>
-                                                    </tr>
-                                                ),
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-
-                            {/* Paying at once and paying monthly are different
-                                prices, so they are shown as the choice they
-                                are. The discount rewards paying now and the
-                                instalment is on the regular price — presenting
-                                one figure would misprice one of the two. */}
+                        {/* Key Features is authored markup — a curated list
+                            that opens with the model and the part number.
+                            short_description splitting on newlines was the
+                            stand-in for it, and is still the fallback for
+                            every product written before the field existed.
+                            Sanitised server-side through RichText. */}
+                        <div className="pdp-short-desc">
                             <h2 className="pdp-section-heading">
-                                Payment Options
+                                Key Features
                             </h2>
 
-                            <div
-                                className="pdp-payment-options"
-                                role="radiogroup"
-                                aria-label="Payment Options"
+                            {product.key_features ? (
+                                <div
+                                    className="pdp-key-features"
+                                    dangerouslySetInnerHTML={{
+                                        __html: product.key_features,
+                                    }}
+                                />
+                            ) : (
+                                <ul>
+                                    {product.short_description
+                                        ?.split('\n')
+                                        .map((line, i) => (
+                                            <li key={i}>{line}</li>
+                                        )) || (
+                                        <li>
+                                            100% Genuine product with official
+                                            brand warranty.
+                                        </li>
+                                    )}
+                                </ul>
+                            )}
+
+                            {/* The summary above is the headline; the full
+                                table is a long way down the page past the
+                                suggestions. This carries the reader there
+                                and opens the right panel, rather than
+                                leaving them to scroll and then find the
+                                tab still on whatever they last touched.
+                                Specifications when there are any, the
+                                description when there are not — landing on
+                                an empty table is worse than not offering
+                                the jump. */}
+                            {detailsPanel && (
+                                <button
+                                    type="button"
+                                    className="pdp-more-info"
+                                    onClick={showFullDetails}
+                                >
+                                    View More Info
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Buy-more-pay-less, shown as a table rather than
+                            buried in the description. A trade buyer who
+                            cannot see the tier phones instead of ordering,
+                            which is the problem this solves. */}
+                        {product.quantity_discounts?.length > 0 && (
+                            <div className="pdp-tier-table">
+                                <h4>Bulk pricing</h4>
+                                <table>
+                                    <tbody>
+                                        {product.quantity_discounts.map(
+                                            (tier) => (
+                                                <tr key={tier.id}>
+                                                    <td>
+                                                        {tier.min_quantity}+
+                                                        units
+                                                    </td>
+                                                    <td>
+                                                        {formatBdt(tier.price)}{' '}
+                                                        each
+                                                    </td>
+                                                </tr>
+                                            ),
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {/* Paying at once and paying monthly are different
+                            prices, so they are shown as the choice they
+                            are. The discount rewards paying now and the
+                            instalment is on the regular price — presenting
+                            one figure would misprice one of the two. */}
+                        <h2 className="pdp-section-heading">Payment Options</h2>
+
+                        <div
+                            className="pdp-payment-options"
+                            role="radiogroup"
+                            aria-label="Payment Options"
+                        >
+                            {/* Always drawn, even with nothing to compare
+                                it against: this is where the price is
+                                shown at size, so a product with no
+                                instalment plan would otherwise have none. */}
+                            <label
+                                className={`pdp-pay-option ${payMethod === 'cash' ? 'active' : ''}`}
                             >
-                                {/* Always drawn, even with nothing to compare
-                                    it against: this is where the price is
-                                    shown at size, so a product with no
-                                    instalment plan would otherwise have none. */}
+                                <input
+                                    type="radio"
+                                    name="pdp-pay"
+                                    value="cash"
+                                    checked={payMethod === 'cash'}
+                                    onChange={() => setPayMethod('cash')}
+                                />
+                                <span className="pdp-pay-body">
+                                    <span className="pdp-pay-price">
+                                        {formatBdt(cashPrice)}
+                                    </span>
+                                    <span className="pdp-pay-tag">
+                                        Cash Discount Price
+                                    </span>
+                                    <span className="pdp-pay-note">
+                                        Online / Cash Payment
+                                    </span>
+                                </span>
+                            </label>
+
+                            {product.emi_monthly && (
                                 <label
-                                    className={`pdp-pay-option ${payMethod === 'cash' ? 'active' : ''}`}
+                                    className={`pdp-pay-option ${payMethod === 'emi' ? 'active' : ''}`}
                                 >
                                     <input
                                         type="radio"
                                         name="pdp-pay"
-                                        value="cash"
-                                        checked={payMethod === 'cash'}
-                                        onChange={() => setPayMethod('cash')}
+                                        value="emi"
+                                        checked={payMethod === 'emi'}
+                                        onChange={() => setPayMethod('emi')}
                                     />
                                     <span className="pdp-pay-body">
                                         <span className="pdp-pay-price">
-                                            {formatBdt(cashPrice)}
+                                            {formatBdt(product.emi_monthly)}
+                                            /month
                                         </span>
                                         <span className="pdp-pay-tag">
-                                            Cash Discount Price
+                                            Regular Price:{' '}
+                                            {formatBdt(product.price)}
                                         </span>
                                         <span className="pdp-pay-note">
-                                            Online / Cash Payment
+                                            0% EMI for up to{' '}
+                                            {product.emi_max_months} Months ***
                                         </span>
                                     </span>
                                 </label>
-
-                                {product.emi_monthly && (
-                                    <label
-                                        className={`pdp-pay-option ${payMethod === 'emi' ? 'active' : ''}`}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="pdp-pay"
-                                            value="emi"
-                                            checked={payMethod === 'emi'}
-                                            onChange={() => setPayMethod('emi')}
-                                        />
-                                        <span className="pdp-pay-body">
-                                            <span className="pdp-pay-price">
-                                                {formatBdt(product.emi_monthly)}
-                                                /month
-                                            </span>
-                                            <span className="pdp-pay-tag">
-                                                Regular Price:{' '}
-                                                {formatBdt(product.price)}
-                                            </span>
-                                            <span className="pdp-pay-note">
-                                                0% EMI for up to{' '}
-                                                {product.emi_max_months} Months
-                                                ***
-                                            </span>
-                                        </span>
-                                    </label>
-                                )}
-                            </div>
-
-                            <div className="pdp-actions">
-                                {/*
-                                 * Sold out is one state, so it gets one
-                                 * control. "Buy Now" and "Add to Cart" both
-                                 * fall back to the same label when there is
-                                 * nothing to sell, which put two identical
-                                 * dead buttons side by side — and a quantity
-                                 * stepper above them for choosing how many of
-                                 * nothing to have. What a shopper can
-                                 * actually do next is the waiting list below.
-                                 */}
-                                {soldOut ? (
-                                    <Button
-                                        variant="secondary"
-                                        size="lg"
-                                        disabled
-                                    >
-                                        Out of Stock
-                                    </Button>
-                                ) : (
-                                    <>
-                                        <div className="quantity-selector">
-                                            <button
-                                                type="button"
-                                                disabled={quantity <= 1}
-                                                onClick={() =>
-                                                    setQuantity((prev) =>
-                                                        Math.max(1, prev - 1),
-                                                    )
-                                                }
-                                            >
-                                                -
-                                            </button>
-                                            <input
-                                                type="number"
-                                                value={quantity}
-                                                readOnly
-                                            />
-                                            <button
-                                                type="button"
-                                                disabled={
-                                                    quantity >= availableStock
-                                                }
-                                                onClick={() =>
-                                                    setQuantity((prev) =>
-                                                        Math.min(
-                                                            availableStock ||
-                                                                99,
-                                                            prev + 1,
-                                                        ),
-                                                    )
-                                                }
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                        <Button
-                                            variant="primary"
-                                            size="lg"
-                                            disabled={soldOut}
-                                            onClick={handleBuyNow}
-                                        >
-                                            {needsVariantChoice
-                                                ? 'Choose an option'
-                                                : isPreorder
-                                                  ? 'Pre-order Now'
-                                                  : 'Buy Now'}
-                                        </Button>
-                                        <Button
-                                            variant={
-                                                addedToCart
-                                                    ? 'dark'
-                                                    : 'secondary'
-                                            }
-                                            size="lg"
-                                            disabled={soldOut}
-                                            onClick={handleAddToCart}
-                                            loading={addingToCart}
-                                            icon={
-                                                addedToCart
-                                                    ? Check
-                                                    : ShoppingCart
-                                            }
-                                        >
-                                            {addedToCart
-                                                ? 'Added to Cart'
-                                                : isPreorder
-                                                  ? 'Pre-order'
-                                                  : 'Add to Cart'}
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Nobody should reach the payment page and only
-                                then discover this ships later. */}
-                            {isPreorder && (
-                                <div
-                                    className="pdp-preorder-notice"
-                                    role="status"
-                                >
-                                    <Clock size={18} />
-                                    <div>
-                                        <strong>Pre-order</strong>
-                                        <p>
-                                            {releaseDate
-                                                ? `This is out of stock now and expected back on ${releaseDate}. Order it today and it ships as soon as the delivery arrives.`
-                                                : 'This is out of stock now. Order it today and it ships as soon as the next delivery arrives.'}
-                                        </p>
-                                    </div>
-                                </div>
                             )}
-
-                            {/* Only when the thing being looked at is actually
-                                unavailable — on a variant product that means
-                                the chosen option, not the product overall.
-
-                                And only when there is somewhere to write to.
-                                An account can be opened with a mobile number
-                                and no address; this waiting list is email, so
-                                for those customers it is not an offer at all
-                                and asking would be a form they cannot use. */}
-                            {soldOut && canBeEmailed && (
-                                <BackInStockForm
-                                    productId={product.id}
-                                    variantId={selectedVariant?.id ?? null}
-                                    accountEmail={auth?.user?.email ?? ''}
-                                />
-                            )}
-
-                            <BranchAvailability
-                                productId={product.id}
-                                variantId={selectedVariant?.id ?? null}
-                            />
-
-                            <div className="pdp-secondary-actions">
-                                <button
-                                    type="button"
-                                    className={`btn-text ${isWishlisted ? 'is-saved' : ''}`}
-                                    onClick={() => toggleWishlist(product.id)}
-                                    disabled={pendingId === product.id}
-                                    aria-pressed={isWishlisted}
-                                >
-                                    <Heart
-                                        size={15}
-                                        fill={
-                                            isWishlisted
-                                                ? 'currentColor'
-                                                : 'none'
-                                        }
-                                    />
-                                    {isWishlisted
-                                        ? 'Saved to Wishlist'
-                                        : 'Add to Wishlist'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-text"
-                                    onClick={handleAddToCompare}
-                                >
-                                    <Scale size={15} /> Add to Compare
-                                </button>
-                            </div>
                         </div>
-                    </div>
 
-                    {/*
-                     * Hand-picked where a shopkeeper has chosen them, worked
-                     * out from the same shelf where nobody has. It used to be
-                     * hand-picked only, and nothing had been picked for any of
-                     * the shop's twelve hundred products — so a shopper
-                     * looking at a mouse was never offered another mouse.
-                     */}
-                    <ProductSuggestions products={similar} />
-
-                    {/* The question people actually type into Google, answered
-                        on the page rather than left to a snippet generator.
-                        Templated from the product's own figures, so it cannot
-                        drift out of date the way a hand-written line would. */}
-                    <section className="pdp-latest-price">
-                        <h3>
-                            What is the price of {product.name} in Bangladesh?
-                        </h3>
-                        <p>
-                            The latest price of {product.name} in Bangladesh is{' '}
-                            {formatBdt(
-                                selectedVariant?.effective_price ??
-                                    product.effective_price ??
-                                    product.price,
-                            )}
-                            {selectedVariant && (
+                        <div className="pdp-actions">
+                            {/*
+                             * Sold out is one state, so it gets one
+                             * control. "Buy Now" and "Add to Cart" both
+                             * fall back to the same label when there is
+                             * nothing to sell, which put two identical
+                             * dead buttons side by side — and a quantity
+                             * stepper above them for choosing how many of
+                             * nothing to have. What a shopper can
+                             * actually do next is the waiting list below.
+                             */}
+                            {soldOut ? (
+                                <Button variant="secondary" size="lg" disabled>
+                                    Out of Stock
+                                </Button>
+                            ) : (
                                 <>
-                                    {' '}
-                                    for the{' '}
-                                    {Object.values(
-                                        selectedVariant.options || {},
-                                    ).join(' / ')}{' '}
-                                    option
+                                    <div className="quantity-selector">
+                                        <button
+                                            type="button"
+                                            disabled={quantity <= 1}
+                                            onClick={() =>
+                                                setQuantity((prev) =>
+                                                    Math.max(1, prev - 1),
+                                                )
+                                            }
+                                        >
+                                            -
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={quantity}
+                                            readOnly
+                                        />
+                                        <button
+                                            type="button"
+                                            disabled={
+                                                quantity >= availableStock
+                                            }
+                                            onClick={() =>
+                                                setQuantity((prev) =>
+                                                    Math.min(
+                                                        availableStock || 99,
+                                                        prev + 1,
+                                                    ),
+                                                )
+                                            }
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                    <Button
+                                        variant="primary"
+                                        size="lg"
+                                        disabled={soldOut}
+                                        onClick={handleBuyNow}
+                                    >
+                                        {needsVariantChoice
+                                            ? 'Choose an option'
+                                            : isPreorder
+                                              ? 'Pre-order Now'
+                                              : 'Buy Now'}
+                                    </Button>
+                                    <Button
+                                        variant={
+                                            addedToCart ? 'dark' : 'secondary'
+                                        }
+                                        size="lg"
+                                        disabled={soldOut}
+                                        onClick={handleAddToCart}
+                                        loading={addingToCart}
+                                        icon={
+                                            addedToCart ? Check : ShoppingCart
+                                        }
+                                    >
+                                        {addedToCart
+                                            ? 'Added to Cart'
+                                            : isPreorder
+                                              ? 'Pre-order'
+                                              : 'Add to Cart'}
+                                    </Button>
                                 </>
                             )}
-                            . You can buy it at the best price from our website
-                            or visit any of our showrooms.
-                        </p>
-                    </section>
+                        </div>
 
-                    {/* Bottom Section: Reusable Tabs */}
-                    <div
-                        className="pdp-tabs-section"
-                        ref={detailsRef}
-                        id="product-details"
-                    >
-                        <Tabs
-                            tabs={[
-                                {
-                                    key: 'specifications',
-                                    label: 'Specifications',
-                                },
-                                {
-                                    key: 'description',
-                                    label: 'Description',
-                                },
-                                {
-                                    key: 'questions',
-                                    label: 'Questions',
-                                    badge: questions.length,
-                                },
-                                {
-                                    key: 'reviews',
-                                    label: 'Reviews',
-                                    badge: reviewsData.total_reviews || 0,
-                                },
-                            ]}
-                            activeTab={activeTab}
-                            onChange={setActiveTab}
-                            variant="line"
+                        {/* Nobody should reach the payment page and only
+                            then discover this ships later. */}
+                        {isPreorder && (
+                            <div className="pdp-preorder-notice" role="status">
+                                <Clock size={18} />
+                                <div>
+                                    <strong>Pre-order</strong>
+                                    <p>
+                                        {releaseDate
+                                            ? `This is out of stock now and expected back on ${releaseDate}. Order it today and it ships as soon as the delivery arrives.`
+                                            : 'This is out of stock now. Order it today and it ships as soon as the next delivery arrives.'}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Only when the thing being looked at is actually
+                            unavailable — on a variant product that means
+                            the chosen option, not the product overall.
+
+                            And only when there is somewhere to write to.
+                            An account can be opened with a mobile number
+                            and no address; this waiting list is email, so
+                            for those customers it is not an offer at all
+                            and asking would be a form they cannot use. */}
+                        {soldOut && canBeEmailed && (
+                            <BackInStockForm
+                                productId={product.id}
+                                variantId={selectedVariant?.id ?? null}
+                                accountEmail={auth?.user?.email ?? ''}
+                            />
+                        )}
+
+                        <BranchAvailability
+                            productId={product.id}
+                            variantId={selectedVariant?.id ?? null}
                         />
 
-                        <div className="tab-content">
-                            {activeTab === 'questions' && (
-                                <ProductQuestions
-                                    slug={productSlug}
-                                    questions={questions}
-                                    onAsked={loadQuestions}
-                                    askingAs={auth?.user?.name || ''}
+                        <div className="pdp-secondary-actions">
+                            <button
+                                type="button"
+                                className={`btn-text ${isWishlisted ? 'is-saved' : ''}`}
+                                onClick={() => toggleWishlist(product.id)}
+                                disabled={pendingId === product.id}
+                                aria-pressed={isWishlisted}
+                            >
+                                <Heart
+                                    size={15}
+                                    fill={
+                                        isWishlisted ? 'currentColor' : 'none'
+                                    }
                                 />
-                            )}
-
-                            {activeTab === 'specifications' && (
-                                <div className="specifications-table">
-                                    <h3>Technical Specifications</h3>
-                                    {product.specifications &&
-                                    product.specifications.length > 0 ? (
-                                        <table>
-                                            {/* Grouped into sections, in the order
-                                                the admin entered them. A product
-                                                whose specs predate grouping has no
-                                                `group` on any row and renders as
-                                                the plain two-column table it
-                                                always was. */}
-                                            {groupSpecifications(
-                                                product.specifications,
-                                            ).map(({ group, items }) => (
-                                                <tbody key={group || '__none'}>
-                                                    {group && (
-                                                        <tr className="spec-group-row">
-                                                            <th
-                                                                colSpan={2}
-                                                                scope="colgroup"
-                                                                className="spec-group"
-                                                            >
-                                                                {group}
-                                                            </th>
-                                                        </tr>
-                                                    )}
-                                                    {items.map((spec) => (
-                                                        <tr key={spec.id}>
-                                                            <td className="spec-name">
-                                                                {spec.name}
-                                                            </td>
-                                                            <td className="spec-value">
-                                                                {spec.value}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            ))}
-                                        </table>
-                                    ) : (
-                                        <p>
-                                            {/* Says what is true. It used to
-                                                read "Standard official
-                                                specifications apply", which
-                                                claims a spec sheet exists and
-                                                sends the reader looking for
-                                                one that was never entered. */}
-                                            We have not published a
-                                            specification sheet for this product
-                                            yet. Ask us and we will confirm any
-                                            detail you need.
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            {activeTab === 'description' && (
-                                <div className="description-content">
-                                    <h3>Product Description</h3>
-                                    <div
-                                        dangerouslySetInnerHTML={{
-                                            __html:
-                                                product.description ||
-                                                '<p>Genuine product supplied with official manufacturer warranty and full accessories.</p>',
-                                        }}
-                                    ></div>
-                                </div>
-                            )}
-
-                            {activeTab === 'reviews' && (
-                                <div className="reviews-tab-content">
-                                    {/* Reusable Rating Score & Breakdown Component */}
-                                    <RatingBreakdown
-                                        averageRating={
-                                            reviewsData.average_rating || 5
-                                        }
-                                        totalReviews={
-                                            reviewsData.total_reviews || 0
-                                        }
-                                        breakdown={
-                                            reviewsData.breakdown || {
-                                                5: 0,
-                                                4: 0,
-                                                3: 0,
-                                                2: 0,
-                                                1: 0,
-                                            }
-                                        }
-                                    />
-
-                                    {/* Verified Buyer Permission Gate */}
-                                    {reviewsData.can_review ? (
-                                        <ReviewForm
-                                            onSubmit={handleReviewSubmit}
-                                            loading={submittingReview}
-                                        />
-                                    ) : reviewsData.already_reviewed ? (
-                                        <div className="verified-buyer-notice success">
-                                            <Check
-                                                size={20}
-                                                className="text-success"
-                                            />
-                                            <div>
-                                                <strong>
-                                                    Verified Review Published
-                                                </strong>
-                                                <p>
-                                                    Thank you! Your verified
-                                                    purchase review is live for
-                                                    this product.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : !reviewsData.is_logged_in ? (
-                                        <div className="verified-buyer-notice info">
-                                            <ShieldCheck
-                                                size={20}
-                                                className="text-primary"
-                                            />
-                                            <div>
-                                                <strong>
-                                                    Verified Purchase Required
-                                                </strong>
-                                                <p>
-                                                    Only customers who have
-                                                    purchased this product from
-                                                    {siteConfig.name} can write
-                                                    a review.{' '}
-                                                    <Link
-                                                        href={ROUTES.LOGIN}
-                                                        style={{
-                                                            color: 'var(--primary-ink)',
-                                                            fontWeight: 700,
-                                                        }}
-                                                    >
-                                                        Log in to your account
-                                                        &rarr;
-                                                    </Link>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="verified-buyer-notice warning">
-                                            <ShieldCheck
-                                                size={20}
-                                                className="text-muted"
-                                            />
-                                            <div>
-                                                <strong>
-                                                    Verified Purchase Required
-                                                </strong>
-                                                <p>
-                                                    Only verified buyers who
-                                                    have purchased this product
-                                                    from {siteConfig.name} can
-                                                    submit a review.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Reusable Customer Reviews Feed List Component */}
-                                    <ReviewList
-                                        reviews={reviewsData.reviews || []}
-                                        totalReviews={
-                                            reviewsData.total_reviews || 0
-                                        }
-                                    />
-                                </div>
-                            )}
+                                {isWishlisted
+                                    ? 'Saved to Wishlist'
+                                    : 'Add to Wishlist'}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-text"
+                                onClick={handleAddToCompare}
+                            >
+                                <Scale size={15} /> Add to Compare
+                            </button>
                         </div>
                     </div>
                 </div>
+                {/*
+                 * Hand-picked where a shopkeeper has chosen them, worked
+                 * out from the same shelf where nobody has. It used to be
+                 * hand-picked only, and nothing had been picked for any of
+                 * the shop's twelve hundred products — so a shopper
+                 * looking at a mouse was never offered another mouse.
+                 */}
+                <ProductSuggestions products={similar} />
+                {/* The question people actually type into Google, answered
+                    on the page rather than left to a snippet generator.
+                    Templated from the product's own figures, so it cannot
+                    drift out of date the way a hand-written line would. */}
+                <section className="pdp-latest-price">
+                    <h3>What is the price of {product.name} in Bangladesh?</h3>
+                    <p>
+                        The latest price of {product.name} in Bangladesh is{' '}
+                        {formatBdt(
+                            selectedVariant?.effective_price ??
+                                product.effective_price ??
+                                product.price,
+                        )}
+                        {selectedVariant && (
+                            <>
+                                {' '}
+                                for the{' '}
+                                {Object.values(
+                                    selectedVariant.options || {},
+                                ).join(' / ')}{' '}
+                                option
+                            </>
+                        )}
+                        . You can buy it at the best price from our website or
+                        visit any of our showrooms.
+                    </p>
+                </section>
+                {/* Bottom Section: Reusable Tabs */}
+                <div
+                    className="pdp-tabs-section"
+                    ref={detailsRef}
+                    id="product-details"
+                >
+                    <Tabs
+                        tabs={[
+                            {
+                                key: 'specifications',
+                                label: 'Specifications',
+                            },
+                            {
+                                key: 'description',
+                                label: 'Description',
+                            },
+                            {
+                                key: 'questions',
+                                label: 'Questions',
+                                badge: questions.length,
+                            },
+                            {
+                                key: 'reviews',
+                                label: 'Reviews',
+                                badge: reviewsData.total_reviews || 0,
+                            },
+                        ]}
+                        activeTab={activeTab}
+                        onChange={setActiveTab}
+                        variant="line"
+                    />
+
+                    <div className="tab-content">
+                        {activeTab === 'questions' && (
+                            <ProductQuestions
+                                slug={productSlug}
+                                questions={questions}
+                                onAsked={loadQuestions}
+                                askingAs={auth?.user?.name || ''}
+                            />
+                        )}
+
+                        {activeTab === 'specifications' && (
+                            <div className="specifications-table">
+                                <h3>Technical Specifications</h3>
+                                {product.specifications &&
+                                product.specifications.length > 0 ? (
+                                    <table>
+                                        {/* Grouped into sections, in the order
+                                            the admin entered them. A product
+                                            whose specs predate grouping has no
+                                            `group` on any row and renders as
+                                            the plain two-column table it
+                                            always was. */}
+                                        {groupSpecifications(
+                                            product.specifications,
+                                        ).map(({ group, items }) => (
+                                            <tbody key={group || '__none'}>
+                                                {group && (
+                                                    <tr className="spec-group-row">
+                                                        <th
+                                                            colSpan={2}
+                                                            scope="colgroup"
+                                                            className="spec-group"
+                                                        >
+                                                            {group}
+                                                        </th>
+                                                    </tr>
+                                                )}
+                                                {items.map((spec) => (
+                                                    <tr key={spec.id}>
+                                                        <td className="spec-name">
+                                                            {spec.name}
+                                                        </td>
+                                                        <td className="spec-value">
+                                                            {spec.value}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        ))}
+                                    </table>
+                                ) : (
+                                    <p>
+                                        {/* Says what is true. It used to
+                                            read "Standard official
+                                            specifications apply", which
+                                            claims a spec sheet exists and
+                                            sends the reader looking for
+                                            one that was never entered. */}
+                                        We have not published a specification
+                                        sheet for this product yet. Ask us and
+                                        we will confirm any detail you need.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'description' && (
+                            <div className="description-content">
+                                <h3>Product Description</h3>
+                                <div
+                                    dangerouslySetInnerHTML={{
+                                        __html:
+                                            product.description ||
+                                            '<p>Genuine product supplied with official manufacturer warranty and full accessories.</p>',
+                                    }}
+                                ></div>
+                            </div>
+                        )}
+
+                        {activeTab === 'reviews' && (
+                            <div className="reviews-tab-content">
+                                {/* Reusable Rating Score & Breakdown Component */}
+                                <RatingBreakdown
+                                    averageRating={
+                                        reviewsData.average_rating || 5
+                                    }
+                                    totalReviews={
+                                        reviewsData.total_reviews || 0
+                                    }
+                                    breakdown={
+                                        reviewsData.breakdown || {
+                                            5: 0,
+                                            4: 0,
+                                            3: 0,
+                                            2: 0,
+                                            1: 0,
+                                        }
+                                    }
+                                />
+
+                                {/* Verified Buyer Permission Gate */}
+                                {reviewsData.can_review ? (
+                                    <ReviewForm
+                                        onSubmit={handleReviewSubmit}
+                                        loading={submittingReview}
+                                    />
+                                ) : reviewsData.already_reviewed ? (
+                                    <div className="verified-buyer-notice success">
+                                        <Check
+                                            size={20}
+                                            className="text-success"
+                                        />
+                                        <div>
+                                            <strong>
+                                                Verified Review Published
+                                            </strong>
+                                            <p>
+                                                Thank you! Your verified
+                                                purchase review is live for this
+                                                product.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : !reviewsData.is_logged_in ? (
+                                    <div className="verified-buyer-notice info">
+                                        <ShieldCheck
+                                            size={20}
+                                            className="text-primary"
+                                        />
+                                        <div>
+                                            <strong>
+                                                Verified Purchase Required
+                                            </strong>
+                                            <p>
+                                                Only customers who have
+                                                purchased this product from
+                                                {siteConfig.name} can write a
+                                                review.{' '}
+                                                <Link
+                                                    href={ROUTES.LOGIN}
+                                                    style={{
+                                                        color: 'var(--primary-ink)',
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    Log in to your account
+                                                    &rarr;
+                                                </Link>
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="verified-buyer-notice warning">
+                                        <ShieldCheck
+                                            size={20}
+                                            className="text-muted"
+                                        />
+                                        <div>
+                                            <strong>
+                                                Verified Purchase Required
+                                            </strong>
+                                            <p>
+                                                Only verified buyers who have
+                                                purchased this product from{' '}
+                                                {siteConfig.name} can submit a
+                                                review.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Reusable Customer Reviews Feed List Component */}
+                                <ReviewList
+                                    reviews={reviewsData.reviews || []}
+                                    totalReviews={
+                                        reviewsData.total_reviews || 0
+                                    }
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>{' '}
             </div>
         </>
     );
