@@ -371,7 +371,17 @@ export default function Categories({
             router.reload({ preserveScroll: true });
         } catch (error) {
             console.error('Delete failed', error);
-            toast.error('Failed to delete category.', 'Error');
+            /*
+             * The server's own sentence, which is the whole point of the
+             * refusal: it names how many products are in the way and says to
+             * move them first. "Failed to delete category." replaced all of
+             * that with nothing an admin could act on — every other handler
+             * on this page already passes the message through.
+             */
+            toast.error(
+                error?.message || 'Could not delete that category.',
+                'Delete Failed',
+            );
         } finally {
             setIsSubmitting(false);
         }

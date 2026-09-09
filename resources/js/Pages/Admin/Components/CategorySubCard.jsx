@@ -110,6 +110,7 @@ export const CategorySubCard = ({
                         className="admin-sub-icon-btn"
                         onClick={() => onEdit(sub)}
                         title="Edit Subcategory"
+                        aria-label={`Edit ${sub.name}`}
                     >
                         <Edit2 size={12} />
                     </button>
@@ -118,6 +119,7 @@ export const CategorySubCard = ({
                         className="admin-sub-icon-btn btn-danger"
                         onClick={() => onDelete(sub)}
                         title="Delete Subcategory"
+                        aria-label={`Delete ${sub.name}`}
                     >
                         <Trash2 size={12} />
                     </button>

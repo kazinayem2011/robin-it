@@ -24,11 +24,19 @@ export const CategoryDeleteModal = ({
                     Are you sure you want to delete{' '}
                     <strong>'{deleteModalState.category?.name}'</strong>?
                 </p>
+                {/*
+                    Says what actually happens, both halves of it. The old
+                    wording warned only about subcategories, which left an
+                    admin expecting products to be destroyed too — and then
+                    facing a refusal with no explanation. Products are the one
+                    thing this will not take: the delete stops instead.
+                */}
                 <div className="admin-delete-warning-box">
                     <Info size={16} className="warning-icon" />
                     <span>
-                        Warning: Deleting a category will also delete its nested
-                        subcategories.
+                        Any subcategories beneath it are deleted with it. If
+                        products are filed here, nothing is deleted — you will
+                        be told how many to move first.
                     </span>
                 </div>
             </div>

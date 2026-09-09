@@ -180,6 +180,7 @@ export const CategoryParentCard = ({
                         className="admin-table-icon-btn"
                         onClick={() => onEdit(parent)}
                         title="Edit Category"
+                        aria-label={`Edit ${parent.name}`}
                     >
                         <Edit2 size={14} />
                     </button>
@@ -189,6 +190,7 @@ export const CategoryParentCard = ({
                         className="admin-table-icon-btn btn-danger"
                         onClick={() => onDelete(parent)}
                         title="Delete Category"
+                        aria-label={`Delete ${parent.name}`}
                     >
                         <Trash2 size={14} />
                     </button>
