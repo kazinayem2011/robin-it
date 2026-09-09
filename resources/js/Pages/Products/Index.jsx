@@ -421,6 +421,11 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             value={activeFilters}
                             onChange={applyFilters}
                             hideOnSale={onSaleOnly}
+                            /* Standing on a maker's own shelf, the brand is
+                               settled; the row of pills above changes it. */
+                            hideBrand={Boolean(
+                                facets?.category?.is_brand_shelf,
+                            )}
                             /* Placeholders only when there is nothing at all
                                to show — the very first listing of the session. */
                             loading={facets === null}

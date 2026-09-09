@@ -23,6 +23,12 @@ export default function ProductFilters({
     // a checkbox that does nothing.
     hideOnSale = false,
     /*
+     * A brand shelf has already said which maker. Offering a Brand filter
+     * there is one checkbox that changes nothing, and the row of makers above
+     * the grid is how somebody moves to another one.
+     */
+    hideBrand = false,
+    /*
      * The facets have not arrived yet. Category and Brand are built entirely
      * from them, so without a placeholder those two sections simply are not
      * there and the sidebar collapses to a third of its height.
@@ -366,7 +372,7 @@ export default function ProductFilters({
                     )}
                 </section>
 
-                {!loading && allBrands.length > 0 && (
+                {!loading && !hideBrand && allBrands.length > 0 && (
                     <section className="plp-filter-group">
                         <button
                             type="button"

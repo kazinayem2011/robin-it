@@ -222,6 +222,40 @@ describe('what the filter panel offers', () => {
  * shelf's bounds honestly were and no help to anybody, and two number boxes
  * underneath that a shopper had to guess values for.
  */
+/**
+ * The Brand filter, and the one page that should not have it.
+ *
+ * On a maker's own shelf — /shop/asus-all-laptop — every product is that
+ * maker's, so the filter is a single checkbox that changes nothing. The row of
+ * makers across the top of the grid is how somebody moves to another one,
+ * which is what the trade does and what Star Tech does.
+ */
+describe('the Brand filter', () => {
+    it('is offered on an ordinary shelf, several at a time', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(headings()).toContain('Brand');
+        expect(screen.getByLabelText('ASUS')).toBeTruthy();
+        expect(screen.getByLabelText('MSI')).toBeTruthy();
+    });
+
+    it('is withheld on a maker’s own shelf', () => {
+        render(<ProductFilters facets={FACETS} value={{}} hideBrand />);
+
+        expect(headings()).not.toContain('Brand');
+        expect(screen.queryByLabelText('ASUS')).toBeNull();
+    });
+
+    /* The rest of the panel is untouched: price and stock still narrow. */
+    it('leaves the other filters alone there', () => {
+        render(<ProductFilters facets={FACETS} value={{}} hideBrand />);
+
+        expect(headings()).toEqual(
+            expect.arrayContaining(['Price', 'Availability']),
+        );
+    });
+});
+
 describe('the price slider', () => {
     const handles = () => [
         screen.getByLabelText('Minimum price', {

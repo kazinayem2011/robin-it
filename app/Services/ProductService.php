@@ -116,8 +116,12 @@ class ProductService
      *
      * Only when the shelf has a parent. A root category carrying a brand would
      * otherwise widen to the whole catalogue rather than narrow.
+     *
+     * Returns the brand it pinned, if it pinned one, so the caller knows the
+     * shelf has already decided and a brand filter on top of it would only
+     * contradict it.
      */
-    private function scopeToShelf(Builder $query, string|int $categoryRef): void
+    private function scopeToShelf(Builder $query, string|int $categoryRef): ?int
     {
         $shelf = is_int($categoryRef)
             ? Category::find($categoryRef, ['id', 'parent_id', 'brand_id'])
@@ -130,10 +134,12 @@ class ProductService
             );
             $query->where('brand_id', $shelf->brand_id);
 
-            return;
+            return (int) $shelf->brand_id;
         }
 
         $this->scopeToCategories($query, $this->categoryService->getDescendantIds($categoryRef));
+
+        return null;
     }
 
     private function baseFilteredQuery(array $filters): Builder
@@ -141,10 +147,22 @@ class ProductService
         $query = Product::active();
 
         // Filter by Category Slug or ID
+        $shelfBrand = null;
+
         if (! empty($filters['category_slug'])) {
-            $this->scopeToShelf($query, $filters['category_slug']);
+            $shelfBrand = $this->scopeToShelf($query, $filters['category_slug']);
         } elseif (! empty($filters['category_id'])) {
-            $this->scopeToShelf($query, (int) $filters['category_id']);
+            $shelfBrand = $this->scopeToShelf($query, (int) $filters['category_id']);
+        }
+
+        /*
+         * A brand shelf has already said which maker, and the sidebar offers
+         * no Brand filter there for that reason. One arriving anyway — an old
+         * link, a pasted URL — would contradict the shelf and return nothing,
+         * with no filter on screen to explain the empty grid.
+         */
+        if ($shelfBrand !== null) {
+            unset($filters['brand_ids'], $filters['brand_slug'], $filters['brand_id']);
         }
 
         // Filter by Brand. Several may be selected at once — a shopper
@@ -279,10 +297,10 @@ class ProductService
         if (! empty($filters['category_slug'])) {
             $category = Category::where('slug', $filters['category_slug'])
                 ->where('is_active', true)
-                ->first(['id', 'name', 'slug']);
+                ->first(['id', 'name', 'slug', 'brand_id']);
         } elseif (! empty($filters['category_id'])) {
             $category = Category::where('is_active', true)
-                ->find($filters['category_id'], ['id', 'name', 'slug']);
+                ->find($filters['category_id'], ['id', 'name', 'slug', 'brand_id']);
         }
 
         return [
@@ -295,6 +313,14 @@ class ProductService
                 'id' => $category->id,
                 'name' => $category->name,
                 'slug' => $category->slug,
+                /*
+                 * Whether this shelf stands for a maker, which decides
+                 * whether the sidebar offers a Brand filter at all. On the
+                 * ASUS shelf every product is an ASUS, so the filter would be
+                 * one checkbox that changes nothing — the row of makers above
+                 * the grid is how somebody moves to another one.
+                 */
+                'is_brand_shelf' => $category->brand_id !== null,
             ] : null,
         ];
     }
