@@ -218,6 +218,28 @@ class CategoryBrandTest extends TestCase
         $this->assertSame(1, Brand::where('name', 'Walton')->count());
     }
 
+    /**
+     * What the form actually sends for "Not a brand shelf".
+     *
+     * A <select> has no null, only "", so this is the shape that arrives on
+     * every save of an ordinary shelf — by far the commonest request this
+     * endpoint sees, and one no other test here covers.
+     */
+    public function test_an_empty_brand_from_the_form_is_no_brand(): void
+    {
+        $shelf = $this->shelf('Gaming Laptop');
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}", [
+                'name' => 'Gaming Laptop',
+                'brand_id' => '',
+                'create_brand' => false,
+            ])
+            ->assertOk();
+
+        $this->assertNull($shelf->fresh()->brand_id);
+    }
+
     /** Saying nothing still means nothing: most shelves are product lines. */
     public function test_a_shelf_saved_without_asking_mints_nothing(): void
     {
