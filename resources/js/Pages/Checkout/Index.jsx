@@ -5,6 +5,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService, checkoutService, couponService } from '../../services';
 import Button from '../../Components/Button';
 import ProductImage from '../../Components/ProductImage';
+import { lineImageSrc } from '../../utils/lineImage';
 import Select from '../../Components/Select';
 import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
@@ -581,6 +582,7 @@ export default function Checkout({
                                             className="summary-item"
                                         >
                                             <ProductImage
+                                                src={lineImageSrc(item)}
                                                 product={item.product}
                                                 alt={item.product.name}
                                                 className="item-img-stub"

@@ -5,6 +5,7 @@ import AccountLayout from './AccountLayout';
 import OrderInvoiceModal from './OrderInvoiceModal';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { ProductImage } from '@/Components/ProductImage';
+import { lineImageSrc } from '@/utils/lineImage';
 import { Pagination } from '@/Components/Pagination';
 import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES, API_ENDPOINTS } from '@/constants/endpoints';
@@ -121,6 +122,7 @@ export default function Orders({
                                                 className="order-item-row"
                                             >
                                                 <ProductImage
+                                                    src={lineImageSrc(item)}
                                                     product={item.product}
                                                     alt={item.product_name}
                                                     className="order-item-thumb"

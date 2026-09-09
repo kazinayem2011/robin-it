@@ -365,7 +365,7 @@ class OrderService
         }
 
         $order = Order::where('order_number', $orderNumber)
-            ->with(['items.product.images', 'courier'])
+            ->with(['items.product.images', 'items.variant', 'courier'])
             ->first();
 
         if (! $order) {
@@ -419,7 +419,16 @@ class OrderService
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
                     'total' => (float) $item->total,
-                    'image' => $item->product?->images?->first()?->image_url ?? ProductImage::PLACEHOLDER,
+                    /*
+                     * The option's own photo when it has one. An option can
+                     * carry its own shots — a white card looks nothing like
+                     * the black one — and `image_url` on the variant is its
+                     * lead one. Reading the product's alone showed the generic
+                     * shot for every option, and made choosing a lead photo
+                     * for an option look as though it had not saved.
+                     */
+                    'image' => $item->variant?->image_url
+                        ?: ($item->product?->images?->first()?->image_url ?? ProductImage::PLACEHOLDER),
                 ];
             }),
         ];

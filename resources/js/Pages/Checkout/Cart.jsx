@@ -4,6 +4,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { cartService } from '../../services';
 
 import ProductImage from '../../Components/ProductImage';
+import { lineImageSrc } from '../../utils/lineImage';
 import ProductSuggestions from '../../Components/ProductSuggestions';
 import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
@@ -225,6 +226,7 @@ export default function Cart() {
                                             className="cart-item-row"
                                         >
                                             <ProductImage
+                                                src={lineImageSrc(item)}
                                                 product={item.product}
                                                 alt={item.product.name}
                                                 className="cart-item-img"
