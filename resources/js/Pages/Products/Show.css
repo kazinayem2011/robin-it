@@ -284,28 +284,42 @@
     margin-bottom: 24px;
 }
 
+/*
+ * The browser's own marker, not a bullet of our own.
+ *
+ * It was a `::before` holding a • at 1.1rem, absolutely positioned with no
+ * `top`, inside text set at 0.88rem. An absolutely positioned box gets its own
+ * line box, so a glyph a third larger than the text it sits beside could not
+ * share the text's baseline — which is the misalignment. Fixing it by hand
+ * means guessing an offset that only holds at one font size and one
+ * line-height.
+ *
+ * `list-style` puts the marker back in the browser's hands, which aligns it to
+ * the first line's baseline for us, and `::marker` still allows the brand
+ * colour. The `ul` also stops being a flex container: a marker belongs to a
+ * `list-item`, and flexing the list is what makes browsers disagree about
+ * whether the item still has one.
+ */
 .pdp-short-desc ul {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    list-style: disc;
+    margin: 0;
+    padding-left: 20px;
 }
 
 .pdp-short-desc li {
     font-size: 0.88rem;
     color: var(--text-secondary);
     line-height: 1.5;
-    position: relative;
-    padding-left: 16px;
 }
 
-.pdp-short-desc li::before {
-    content: '•';
-    position: absolute;
-    left: 0;
+/* Spacing between items, not around them, so the list sits flush to the
+   heading above and the link below. */
+.pdp-short-desc li + li {
+    margin-top: 8px;
+}
+
+.pdp-short-desc li::marker {
     color: var(--primary-ink);
-    font-weight: 900;
-    font-size: 1.1rem;
 }
 
 /* Action Buttons & Quantity */
@@ -1336,14 +1350,9 @@
 
 /* Authored markup, so the list styling has to be stated here rather than
    inherited from the <ul> the fallback used. */
-.pdp-key-features ul {
-    margin: 0;
-    padding-left: 18px;
-}
-
-.pdp-key-features li {
-    margin: 4px 0;
-}
+/* The authored list is inside .pdp-short-desc, so it takes the marker, the
+   indent and the spacing set there. It had a second padding-left and its own
+   item margins, which stacked with those rather than replacing them. */
 
 /* Similar products */
 /* The suggestion row's styles live with the component that draws it —
