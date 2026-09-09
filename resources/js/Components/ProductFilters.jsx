@@ -372,6 +372,46 @@ export default function ProductFilters({
                     )}
                 </section>
 
+                <section className="plp-filter-group">
+                    <button
+                        type="button"
+                        className="plp-filter-legend"
+                        aria-expanded={!collapsed.availability}
+                        onClick={() => toggleSection('availability')}
+                    >
+                        <h4>Availability</h4>
+                        <ChevronDown size={15} />
+                    </button>
+                    <label className="plp-filter-check">
+                        <input
+                            type="checkbox"
+                            className="custom-checkbox-input"
+                            checked={Boolean(value.in_stock)}
+                            onChange={(e) =>
+                                onChange?.({
+                                    in_stock: e.target.checked || undefined,
+                                })
+                            }
+                        />
+                        <span>In stock only</span>
+                    </label>
+                    {!hideOnSale && (
+                        <label className="plp-filter-check">
+                            <input
+                                type="checkbox"
+                                className="custom-checkbox-input"
+                                checked={Boolean(value.on_sale)}
+                                onChange={(e) =>
+                                    onChange?.({
+                                        on_sale: e.target.checked || undefined,
+                                    })
+                                }
+                            />
+                            <span>On sale</span>
+                        </label>
+                    )}
+                </section>
+
                 {!loading && !hideBrand && allBrands.length > 0 && (
                     <section className="plp-filter-group">
                         <button
@@ -497,46 +537,6 @@ export default function ProductFilters({
                             </section>
                         );
                     })}
-
-                <section className="plp-filter-group">
-                    <button
-                        type="button"
-                        className="plp-filter-legend"
-                        aria-expanded={!collapsed.availability}
-                        onClick={() => toggleSection('availability')}
-                    >
-                        <h4>Availability</h4>
-                        <ChevronDown size={15} />
-                    </button>
-                    <label className="plp-filter-check">
-                        <input
-                            type="checkbox"
-                            className="custom-checkbox-input"
-                            checked={Boolean(value.in_stock)}
-                            onChange={(e) =>
-                                onChange?.({
-                                    in_stock: e.target.checked || undefined,
-                                })
-                            }
-                        />
-                        <span>In stock only</span>
-                    </label>
-                    {!hideOnSale && (
-                        <label className="plp-filter-check">
-                            <input
-                                type="checkbox"
-                                className="custom-checkbox-input"
-                                checked={Boolean(value.on_sale)}
-                                onChange={(e) =>
-                                    onChange?.({
-                                        on_sale: e.target.checked || undefined,
-                                    })
-                                }
-                            />
-                            <span>On sale</span>
-                        </label>
-                    )}
-                </section>
 
                 {facets && (
                     <p className="plp-filter-hint plp-filter-total">

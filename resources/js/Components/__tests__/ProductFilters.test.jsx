@@ -158,12 +158,15 @@ describe('what the filter panel offers', () => {
         expect(headings()).not.toContain('Category');
     });
 
-    it('offers Price, Brand and Availability', () => {
+    /*
+     * In this order. Price first because it is the one everybody uses, then
+     * Availability, which is a single decision, and Brand after them because
+     * it is the long list.
+     */
+    it('offers Price, then Availability, then Brand', () => {
         render(<ProductFilters facets={FACETS} value={{}} />);
 
-        expect(headings()).toEqual(
-            expect.arrayContaining(['Price', 'Brand', 'Availability']),
-        );
+        expect(headings()).toEqual(['Price', 'Availability', 'Brand']);
     });
 
     /* The category search went with the tree; the brand one is a different box. */
