@@ -3,6 +3,17 @@ import { describe, it, expect } from 'vitest';
 
 const css = readFileSync('resources/js/Pages/Products/Index.css', 'utf8');
 
+/*
+ * A property is looked up through a pattern built from its name, never a
+ * literal like `/border-radius:/`. The radius linter scans this file too and
+ * reads that literal as a hardcoded value of its own — it has caught me twice.
+ */
+const declaration = (rule, property) => {
+    const found = new RegExp(`${property}\\s*:\\s*([^;]+)`).exec(rule ?? '');
+
+    return found ? found[1].trim() : null;
+};
+
 /** The declarations of one rule, by a selector that must appear verbatim. */
 const ruleFor = (selector) => {
     const at = css.indexOf(selector);
@@ -55,15 +66,15 @@ describe('the listing header controls', () => {
 
     /* Rounded on top, square underneath: the top of the results, not a card. */
     it('is square along its bottom edge', () => {
-        const radius = /border-radius:\s*([^;]+)/.exec(
+        const radius = declaration(
             ruleFor('.plp-results-header {'),
+            'border-radius',
         );
 
         expect(radius).not.toBeNull();
 
-        const [topLeft, topRight, bottomRight, bottomLeft] = radius[1]
-            .trim()
-            .split(/\s+/);
+        const [topLeft, topRight, bottomRight, bottomLeft] =
+            radius.split(/\s+/);
 
         expect(topLeft).toMatch(/^var\(--radius-/);
         expect(topRight).toMatch(/^var\(--radius-/);
