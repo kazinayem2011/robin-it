@@ -95,12 +95,17 @@ class CategoryController extends Controller
     }
 
     /**
-     * Move a category one place up or down among its own siblings.
+     * Move a category among its own siblings.
      *
-     * A swap rather than a position to write. The client would otherwise have
-     * to know both rows' positions and send two updates, and two clients doing
-     * that at once leave the pair holding the same number — which is precisely
-     * the tie the ordering has to break with a name.
+     * Two ways of saying where, because there are two ways of asking. An arrow
+     * sends a `direction` and means one step; a dragged card sends the
+     * `position` it was dropped at and means put it there. Both land in the
+     * same renumbering below, so the two routes cannot drift apart.
+     *
+     * The client sends where it wants the row, never the positions to write.
+     * Otherwise it would have to know both rows' numbers and send two updates,
+     * and two admins doing that at once leave the pair holding the same
+     * number — precisely the tie the ordering has to break with a name.
      *
      * Scoped to siblings: `position` is per parent, so a subcategory moving up
      * moves within its own shelf and never past its parent into another one.
@@ -108,31 +113,58 @@ class CategoryController extends Controller
     public function move(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'direction' => 'required|in:up,down',
+            'direction' => 'required_without:position|nullable|in:up,down',
+            'position' => 'required_without:direction|nullable|integer|min:0',
         ]);
 
         $category = Category::findOrFail($id);
-        $up = $validated['direction'] === 'up';
+        $direction = $validated['direction'] ?? null;
+        $target = isset($validated['position']) ? (int) $validated['position'] : null;
 
-        return DB::transaction(function () use ($category, $up) {
+        return DB::transaction(function () use ($category, $direction, $target) {
             $siblings = Category::where('parent_id', $category->parent_id)
                 ->lockForUpdate()
                 ->inMenuOrder()
                 ->get();
 
             $at = $siblings->search(fn (Category $c) => $c->id === $category->id);
-            $to = $up ? $at - 1 : $at + 1;
+            $last = $siblings->count() - 1;
 
-            /*
-             * Already at the end it is being asked to move towards. Answered
-             * rather than refused: the buttons are disabled at the ends, so
-             * arriving here means two people moved the same shelf at once, and
-             * the second one has simply lost a race.
-             */
-            if ($at === false || $to < 0 || $to >= $siblings->count()) {
+            if ($at === false) {
                 return $this->successResponse(
                     ['position' => $category->position],
                     "'{$category->name}' is already as far as it goes."
+                );
+            }
+
+            /*
+             * A dropped card is clamped, an arrow is not.
+             *
+             * They mean different things when they overshoot. Dropping below
+             * the last row means "put it last", and the shelf the admin is
+             * looking at may be shorter than the one on the server. An arrow
+             * at the end means the row is already there — answered rather than
+             * refused, because the buttons are disabled at the ends, so
+             * arriving here means two people moved the same shelf at once and
+             * the second one has simply lost a race.
+             */
+            if ($target !== null) {
+                $to = max(0, min($target, $last));
+            } else {
+                $to = $direction === 'up' ? $at - 1 : $at + 1;
+
+                if ($to < 0 || $to > $last) {
+                    return $this->successResponse(
+                        ['position' => $category->position],
+                        "'{$category->name}' is already as far as it goes."
+                    );
+                }
+            }
+
+            if ($to === $at) {
+                return $this->successResponse(
+                    ['position' => $at],
+                    "'{$category->name}' is already there."
                 );
             }
 
@@ -160,7 +192,7 @@ class CategoryController extends Controller
 
             return $this->successResponse(
                 ['position' => $to],
-                "'{$category->name}' moved ".($up ? 'up' : 'down').'.'
+                "'{$category->name}' moved."
             );
         });
     }

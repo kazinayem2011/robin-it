@@ -7,6 +7,7 @@ import {
     ChevronRight,
     ArrowUp,
     ArrowDown,
+    GripVertical,
 } from 'lucide-react';
 import { CategorySubCard } from './CategorySubCard';
 import { getCategoryIcon } from '@/utils/iconMap';
@@ -32,12 +33,53 @@ export const CategoryParentCard = ({
     onMove,
     isFirst = false,
     isLast = false,
+    /*
+     * Dragging. The arrows stay: they are the keyboard and touch route, and a
+     * drag is a mouse gesture that neither of those can perform.
+     */
+    index = 0,
+    draggingId = null,
+    onDragStart,
+    onDragEnterRow,
+    onDrop,
+    onDragEnd,
 }) => {
+    const isDraggable = Boolean(onDragStart);
+
     return (
-        <div className="admin-cat-tree-parent-card">
+        <div
+            className={`admin-cat-tree-parent-card${
+                draggingId === parent.id ? ' is-dragging' : ''
+            }`}
+            draggable={isDraggable}
+            onDragStart={(event) => {
+                event.stopPropagation();
+                event.dataTransfer.effectAllowed = 'move';
+                onDragStart?.(parent, null);
+            }}
+            /* null is the roots' shelf: these cards have no parent. */
+            onDragEnter={() => onDragEnterRow?.(null, index)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onDrop?.();
+            }}
+            onDragEnd={() => onDragEnd?.()}
+        >
             {/* Level 1: Root Category Header */}
             <div className="admin-cat-tree-parent-header">
                 <div className="admin-cat-tree-parent-left">
+                    {isDraggable ? (
+                        <span
+                            className="admin-cat-drag-handle"
+                            title="Drag to reorder"
+                            aria-hidden="true"
+                        >
+                            <GripVertical size={15} />
+                        </span>
+                    ) : null}
+
                     <button
                         type="button"
                         className="admin-cat-collapse-btn"
@@ -107,11 +149,14 @@ export const CategoryParentCard = ({
                     </button>
 
                     {/* Order is what the shop shows: the menu, the footer
-                        and every picker read these in this order. */}
+                        and every picker read these in this order. Both are
+                        dead while the tree is filtered — the page withholds
+                        onMove then, and a live arrow that moves nothing
+                        looks broken doing it. */}
                     <button
                         type="button"
                         className="admin-table-icon-btn"
-                        disabled={isFirst}
+                        disabled={!onMove || isFirst}
                         onClick={() => onMove?.(parent, 'up')}
                         title="Move up"
                         aria-label={`Move ${parent.name} up`}
@@ -122,7 +167,7 @@ export const CategoryParentCard = ({
                     <button
                         type="button"
                         className="admin-table-icon-btn"
-                        disabled={isLast}
+                        disabled={!onMove || isLast}
                         onClick={() => onMove?.(parent, 'down')}
                         title="Move down"
                         aria-label={`Move ${parent.name} down`}
@@ -154,7 +199,7 @@ export const CategoryParentCard = ({
             {!isCollapsed && (
                 <div className="admin-cat-tree-sub-grid">
                     {parent.children && parent.children.length > 0 ? (
-                        parent.children.map((sub, index) => (
+                        parent.children.map((sub, subIndex) => (
                             <CategorySubCard
                                 key={sub.id}
                                 sub={sub}
@@ -162,11 +207,18 @@ export const CategoryParentCard = ({
                                 onDelete={onDelete}
                                 onAddChild={onAddChild}
                                 onMove={onMove}
-                                isFirst={!onMove || index === 0}
+                                isFirst={!onMove || subIndex === 0}
                                 isLast={
                                     !onMove ||
-                                    index === parent.children.length - 1
+                                    subIndex === parent.children.length - 1
                                 }
+                                parentId={parent.id}
+                                index={subIndex}
+                                draggingId={draggingId}
+                                onDragStart={onDragStart}
+                                onDragEnterRow={onDragEnterRow}
+                                onDrop={onDrop}
+                                onDragEnd={onDragEnd}
                             />
                         ))
                     ) : (

@@ -207,6 +207,107 @@ class CategoryOrderTest extends TestCase
         $this->assertSame(['Bravo', 'Alpha', 'Charlie'], $this->names());
     }
 
+    /**
+     * A dropped card says where it landed, not which way it went.
+     *
+     * Dragging is why: a card lifted from the top of a shelf of twelve and let
+     * go at the bottom has not moved "down", it has moved to eleven, and
+     * saying it in steps would be eleven requests and eleven renumberings.
+     */
+    public function test_a_dragged_shelf_lands_where_it_was_dropped(): void
+    {
+        $desktop = $this->shelf('Desktop', 0);
+        $this->shelf('Laptop', 1);
+        $this->shelf('Monitor', 2);
+        $this->shelf('Phone', 3);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$desktop->id}/move", [
+                'position' => 2,
+            ])
+            ->assertOk();
+
+        $this->assertSame(
+            ['Laptop', 'Monitor', 'Desktop', 'Phone'],
+            $this->names(),
+        );
+    }
+
+    public function test_a_dragged_subcategory_lands_among_its_own_siblings(): void
+    {
+        $root = $this->shelf('Component', 0);
+        $this->shelf('Processor', 0, $root->id);
+        $this->shelf('Casing', 1, $root->id);
+        $cooler = $this->shelf('Cooler', 2, $root->id);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$cooler->id}/move", [
+                'position' => 0,
+            ])
+            ->assertOk();
+
+        $this->assertSame(
+            ['Cooler', 'Processor', 'Casing'],
+            $this->names($root->id),
+        );
+    }
+
+    /**
+     * Dropped below the last row, which is how someone says "put it last".
+     * The shelf on screen can also be shorter than the one on the server, so
+     * the index arriving is not necessarily one that exists.
+     */
+    public function test_a_drop_past_the_end_puts_it_last(): void
+    {
+        $desktop = $this->shelf('Desktop', 0);
+        $this->shelf('Laptop', 1);
+        $this->shelf('Monitor', 2);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$desktop->id}/move", [
+                'position' => 99,
+            ])
+            ->assertOk();
+
+        $this->assertSame(['Laptop', 'Monitor', 'Desktop'], $this->names());
+    }
+
+    /** Picked up and put back down where it was. */
+    public function test_a_drop_in_the_same_place_changes_nothing(): void
+    {
+        $this->shelf('Desktop', 0);
+        $laptop = $this->shelf('Laptop', 1);
+        $this->shelf('Monitor', 2);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$laptop->id}/move", [
+                'position' => 1,
+            ])
+            ->assertOk();
+
+        $this->assertSame(['Desktop', 'Laptop', 'Monitor'], $this->names());
+    }
+
+    public function test_a_move_needs_one_of_the_two_ways_of_saying_where(): void
+    {
+        $shelf = $this->shelf('Desktop', 0);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}/move", [])
+            ->assertStatus(422);
+    }
+
+    public function test_a_negative_position_is_refused(): void
+    {
+        $shelf = $this->shelf('Desktop', 0);
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}/move", [
+                'position' => -1,
+            ])
+            ->assertStatus(422);
+    }
+
     public function test_a_direction_is_required_and_checked(): void
     {
         $shelf = $this->shelf('Desktop', 0);

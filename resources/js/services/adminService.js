@@ -597,6 +597,21 @@ export const adminService = {
     },
 
     /**
+     * Drop a category at a place on its shelf, rather than step it there.
+     *
+     * A card dragged from the top of a shelf of twelve to the bottom has not
+     * moved "down" — it has moved to eleven, and stepping it would be eleven
+     * requests. Sends the index it landed at and lets the server renumber.
+     */
+    async moveCategoryTo(categoryId, position) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.CATEGORY_MOVE(categoryId),
+            { position },
+        );
+        return response;
+    },
+
+    /**
      * Delete a category from the database.
      * @param {number|string} categoryId
      */

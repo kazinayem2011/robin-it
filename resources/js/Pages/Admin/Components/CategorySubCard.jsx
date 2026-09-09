@@ -1,5 +1,12 @@
 import React from 'react';
-import { Edit2, Trash2, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+    Edit2,
+    Trash2,
+    Plus,
+    ArrowUp,
+    ArrowDown,
+    GripVertical,
+} from 'lucide-react';
 import { CategoryChip } from './CategoryChip';
 import { getCategoryIcon } from '@/utils/iconMap';
 
@@ -16,11 +23,60 @@ export const CategorySubCard = ({
     onMove,
     isFirst = false,
     isLast = false,
+    /* See CategoryParentCard: same drag, one shelf down. */
+    parentId = null,
+    index = 0,
+    draggingId = null,
+    onDragStart,
+    onDragEnterRow,
+    onDrop,
+    onDragEnd,
 }) => {
+    const isDraggable = Boolean(onDragStart);
+
     return (
-        <div className="admin-cat-tree-sub-card">
+        <div
+            className={`admin-cat-tree-sub-card${
+                draggingId === sub.id ? ' is-dragging' : ''
+            }`}
+            draggable={isDraggable}
+            /*
+             * Stopped here, every one of them. These cards sit inside a
+             * draggable parent card, so without this a subcategory picked up
+             * would start its parent's drag as well and carry the whole shelf.
+             */
+            onDragStart={(event) => {
+                event.stopPropagation();
+                event.dataTransfer.effectAllowed = 'move';
+                onDragStart?.(sub, parentId);
+            }}
+            onDragEnter={(event) => {
+                event.stopPropagation();
+                onDragEnterRow?.(parentId, index);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onDrop?.();
+            }}
+            onDragEnd={(event) => {
+                event.stopPropagation();
+                onDragEnd?.();
+            }}
+        >
             <div className="admin-cat-tree-sub-header">
                 <div className="admin-cat-tree-sub-title">
+                    {isDraggable ? (
+                        <span
+                            className="admin-cat-drag-handle is-sub"
+                            title="Drag to reorder"
+                            aria-hidden="true"
+                        >
+                            <GripVertical size={13} />
+                        </span>
+                    ) : null}
+
                     <span className="admin-sub-icon-badge">
                         {getCategoryIcon(sub, { size: 14 })}
                     </span>

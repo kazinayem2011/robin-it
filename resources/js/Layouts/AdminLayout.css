@@ -1402,6 +1402,49 @@ a.admin-card:hover,
     border-color: var(--border-strong);
 }
 
+/*
+ * Reordering by dragging a card.
+ *
+ * The whole card is the drag surface rather than the grip alone — a shelf of
+ * fifteen is easier to rearrange when the target is the row, not a 15px
+ * column of dots. The grip says so; it is not itself the handle, which is why
+ * it is aria-hidden. Keyboard and touch use the arrows beside it.
+ */
+.admin-cat-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    cursor: grab;
+}
+
+.admin-cat-drag-handle.is-sub {
+    margin-inline-start: -2px;
+}
+
+.admin-cat-tree-parent-card[draggable='true']:hover .admin-cat-drag-handle,
+.admin-cat-tree-sub-card[draggable='true']:hover .admin-cat-drag-handle {
+    color: var(--text-primary);
+}
+
+.admin-cat-tree-parent-card[draggable='true']:active,
+.admin-cat-tree-sub-card[draggable='true']:active {
+    cursor: grabbing;
+}
+
+/*
+ * The card being carried, not the space it left. The list has already closed
+ * up behind it and reopened where it is heading, so this is what tells the
+ * eye which of the two rows is the one in hand.
+ */
+.admin-cat-tree-parent-card.is-dragging,
+.admin-cat-tree-sub-card.is-dragging {
+    opacity: 0.4;
+    border-style: dashed;
+    border-color: var(--primary-ink);
+}
+
 .admin-cat-tree-parent-header {
     display: flex;
     align-items: center;
