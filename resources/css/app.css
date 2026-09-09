@@ -2915,6 +2915,29 @@ textarea.admin-form-input {
     }
 }
 
+/*
+ * The footer gained a count and a skip when batches arrived, which is four
+ * things in a row that was built for two. They stack rather than overflow, and
+ * the count goes above them instead of pushing the buttons off the edge.
+ */
+@media (max-width: 560px) {
+    .cropper-modal-footer {
+        flex-wrap: wrap;
+        justify-content: stretch;
+    }
+
+    .cropper-queue-count {
+        margin-right: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .cropper-modal-footer .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
 .cropper-canvas-wrapper {
     display: flex;
     flex-direction: column;

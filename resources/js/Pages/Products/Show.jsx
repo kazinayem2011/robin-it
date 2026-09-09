@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useMemo,
+    useRef,
+    useCallback,
+} from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import {
@@ -41,6 +47,8 @@ import {
     Bookmark,
     SquarePlus,
     Link2,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import './Show.css';
 
@@ -199,6 +207,70 @@ export default function ProductDetails(props) {
      * One ref each rather than one for the group, because the row has to be
      * able to scroll to any of them and to mark whichever is being read.
      */
+    /*
+     * The thumbnail strip, and whether there is anything past either edge.
+     *
+     * Measured rather than worked out from the count: how many fit depends on
+     * the column, which changes with the viewport, and a strip that shows its
+     * arrows when nothing is hidden is as wrong as one that hides them when
+     * something is.
+     */
+    const thumbsRef = useRef(null);
+    const [thumbNav, setThumbNav] = useState({
+        canScrollBack: false,
+        canScrollOn: false,
+    });
+
+    const measureThumbs = useCallback(() => {
+        const el = thumbsRef.current;
+
+        if (!el) return;
+
+        // A pixel of slack: sub-pixel widths leave a fractional remainder that
+        // would keep the forward arrow up with nothing left to reach.
+        setThumbNav({
+            canScrollBack: el.scrollLeft > 1,
+            canScrollOn: el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+        });
+    }, []);
+
+    const slideThumbs = (direction) => {
+        const el = thumbsRef.current;
+
+        if (!el) return;
+
+        // Most of a screenful, not all of it: a whole-width jump leaves no
+        // shared thumbnail between before and after, so nothing tells the
+        // reader they moved rather than jumped somewhere unrelated.
+        el.scrollBy({
+            left: direction * el.clientWidth * 0.8,
+            behavior: 'smooth',
+        });
+    };
+
+    /*
+     * Measured after the render that drew the strip, and again whenever the
+     * column changes width.
+     *
+     * Keyed on the product rather than the gallery: `images` is derived below
+     * the loading guards, and a hook cannot be called after an early return.
+     * A ResizeObserver rather than a window listener, because the column is a
+     * grid track and changes at the layout's own breakpoints, not only when
+     * the window itself is dragged.
+     */
+    useEffect(() => {
+        const el = thumbsRef.current;
+
+        measureThumbs();
+
+        if (!el || typeof ResizeObserver === 'undefined') return;
+
+        const observer = new ResizeObserver(measureThumbs);
+        observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [measureThumbs, product]);
+
     const sectionsRef = useRef(null);
 
     /*
@@ -695,22 +767,61 @@ export default function ProductDetails(props) {
                             />
                         </div>
                         {images.length > 1 && (
-                            <div className="thumbnail-list">
-                                {images.map((img, idx) => (
+                            /*
+                                A gallery can hold more thumbnails than the
+                                column is wide — eight of them want about
+                                700px against a 405px column. They kept their
+                                width and overflowed, and the overflow was
+                                reachable only by a trackpad swipe or a
+                                scrollbar the platform may not draw, so on a
+                                mouse the later photos could not be reached at
+                                all. The arrows are that reach; they appear
+                                only when there is something past the edge.
+                            */
+                            <div className="thumbnail-strip">
+                                {thumbNav.canScrollBack && (
                                     <button
-                                        key={idx}
                                         type="button"
-                                        className={`thumbnail-stub ${selectedImageIndex === idx ? 'active' : ''}`}
-                                        onClick={() =>
-                                            setSelectedImageIndex(idx)
-                                        }
+                                        className="thumb-nav is-back"
+                                        aria-label="Show earlier photos"
+                                        onClick={() => slideThumbs(-1)}
                                     >
-                                        <ProductImage
-                                            src={img}
-                                            alt={`Thumbnail ${idx + 1}`}
-                                        />
+                                        <ChevronLeft size={16} />
                                     </button>
-                                ))}
+                                )}
+
+                                <div
+                                    className="thumbnail-list"
+                                    ref={thumbsRef}
+                                    onScroll={measureThumbs}
+                                >
+                                    {images.map((img, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            className={`thumbnail-stub ${selectedImageIndex === idx ? 'active' : ''}`}
+                                            onClick={() =>
+                                                setSelectedImageIndex(idx)
+                                            }
+                                        >
+                                            <ProductImage
+                                                src={img}
+                                                alt={`Thumbnail ${idx + 1}`}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {thumbNav.canScrollOn && (
+                                    <button
+                                        type="button"
+                                        className="thumb-nav is-on"
+                                        aria-label="Show later photos"
+                                        onClick={() => slideThumbs(1)}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

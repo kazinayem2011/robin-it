@@ -113,14 +113,74 @@
     transform: scale(1.04);
 }
 
+/*
+ * The strip, and the two arrows that reach past its edges.
+ *
+ * The arrows sit outside the scrolling track rather than over it, so they
+ * never cover a thumbnail — a control that hides the thing it is helping you
+ * reach is worse than no control.
+ */
+.thumbnail-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.thumb-nav {
+    flex: none;
+    width: 26px;
+    height: 76px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.thumb-nav:hover {
+    border-color: var(--primary);
+    color: var(--primary-ink);
+}
+
+.thumb-nav:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
 .thumbnail-list {
     display: flex;
     gap: 12px;
     overflow-x: auto;
     padding-bottom: 4px;
+    /* Without this the flex row refuses to be narrower than its thumbnails and
+       takes the gallery column with it. */
+    min-width: 0;
+    scroll-behavior: smooth;
+    /* The arrows are the control on a desktop; the bar underneath them is
+       noise. Swiping and dragging still work. */
+    scrollbar-width: none;
+}
+
+.thumbnail-list::-webkit-scrollbar {
+    display: none;
 }
 
 .thumbnail-stub {
+    /*
+     * `flex: none`, or they never overflow at all.
+     *
+     * A flex item with a width still shrinks — flex-shrink defaults to 1 — so
+     * eight thumbnails in a 405px column were squeezed to about 40px each and
+     * the photos inside them squashed with them. `overflow-x` had nothing to
+     * scroll because nothing ever exceeded the track.
+     */
+    flex: none;
     width: 76px;
     height: 76px;
     background-color: var(--bg-surface-subtle);
@@ -758,6 +818,23 @@
    components' — `h2.pdp-details-heading`, rendered once per section so all
    four carry the same one, and styled above. */
 
+/*
+ * The table scrolls inside its own box rather than taking the page with it.
+ *
+ * A spec value with no spaces — a part number, a driver version, a pasted URL
+ * — cannot wrap, so the table grows past its column and the whole document
+ * scrolls sideways. `anywhere` lets such a value break mid-token, which is the
+ * better answer; this is the guard for the cases it cannot.
+ */
+.specifications-table {
+    overflow-x: auto;
+}
+
+.specifications-table .spec-value,
+.specifications-table .spec-name {
+    overflow-wrap: anywhere;
+}
+
 .specifications-table table {
     width: 100%;
     border-collapse: collapse;
@@ -1111,6 +1188,15 @@
 }
 
 @media (max-width: 600px) {
+    /*
+     * The arrows are a desktop affordance. On a touch screen the strip is
+     * swiped, and two 26px buttons either side take a third of the width the
+     * thumbnails are trying to use.
+     */
+    .thumb-nav {
+        display: none;
+    }
+
     .pdp-page-wrapper {
         padding: 16px 8px 40px;
     }
