@@ -241,33 +241,28 @@ export const BuilderRowsSkeleton = ({ count = 8 }) => (
  * dropped from roughly 2300px to 720px and sprang back a moment later, which
  * shoved the page around on every category click.
  */
+/**
+ * Standing in for the one section of the filter panel that waits on the
+ * server: Brand. Price and Availability draw themselves immediately, so they
+ * are not placeholders.
+ *
+ * It used to lead with a Category group of its own, and kept doing so after
+ * the category tree was taken out of the panel — so the shopper was shown a
+ * section loading that was never going to arrive.
+ */
 export const FilterFacetSkeleton = () => (
-    <>
-        <section className="plp-filter-group">
-            <div className="plp-filter-legend" aria-hidden="true">
-                <h4>Category</h4>
-            </div>
-            {/* The real section carries a search box above six or more rows. */}
-            <div className="plp-filter-skeleton-rows">
-                <Skeleton height="34px" />
-                {range(8).map((i) => (
-                    <Skeleton key={i} height="17px" width={`${88 - i * 6}%`} />
-                ))}
-            </div>
-        </section>
-
-        <section className="plp-filter-group">
-            <div className="plp-filter-legend" aria-hidden="true">
-                <h4>Brand</h4>
-            </div>
-            <div className="plp-filter-skeleton-rows">
-                <Skeleton height="34px" />
-                {range(8).map((i) => (
-                    <Skeleton key={i} height="17px" width={`${76 - i * 4}%`} />
-                ))}
-            </div>
-        </section>
-    </>
+    <section className="plp-filter-group">
+        <div className="plp-filter-legend" aria-hidden="true">
+            <h4>Brand</h4>
+        </div>
+        {/* The real section carries a search box above eight or more rows. */}
+        <div className="plp-filter-skeleton-rows">
+            <Skeleton height="34px" />
+            {range(8).map((i) => (
+                <Skeleton key={i} height="17px" width={`${76 - i * 4}%`} />
+            ))}
+        </div>
+    </section>
 );
 
 export default Skeleton;

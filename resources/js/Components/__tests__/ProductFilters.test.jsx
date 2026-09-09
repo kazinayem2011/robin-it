@@ -42,7 +42,7 @@ describe('ProductFilters loading and busy states', () => {
     it('shows placeholders only when there is nothing to show', () => {
         render(<ProductFilters facets={null} value={{}} loading />);
 
-        expect(skeletons()).toBe(2);
+        expect(skeletons()).toBeGreaterThan(0);
         expect(screen.queryByText('ASUS')).not.toBeInTheDocument();
     });
 
@@ -83,7 +83,7 @@ describe('ProductFilters loading and busy states', () => {
     it('does not dim the placeholders on a cold load', () => {
         render(<ProductFilters facets={null} value={{}} loading busy />);
 
-        expect(skeletons()).toBe(2);
+        expect(skeletons()).toBeGreaterThan(0);
         expect(body()).not.toHaveClass('is-busy');
         expect(body()).not.toHaveAttribute('inert');
     });
@@ -105,6 +105,51 @@ describe('ProductFilters loading and busy states', () => {
  * makers across the top of the shelf. A panel for narrowing a selection should
  * not open with the one control that leaves it.
  */
+/**
+ * A placeholder may only stand in for a section that is coming.
+ *
+ * The skeleton led with a Category group and kept leading with one after the
+ * category tree was taken out of the panel, so a shopper watched a section
+ * load that was never going to arrive. Comparing the two lists rather than
+ * counting them means the next section to leave the panel cannot leave a
+ * placeholder behind either.
+ */
+describe('the filter panel while it loads', () => {
+    /* The skeleton's own groups are the ones holding placeholder rows. */
+    const placeholderHeadings = () =>
+        [...document.querySelectorAll('.plp-filter-group')]
+            .filter((group) => group.querySelector('.plp-filter-skeleton-rows'))
+            .map((group) => group.querySelector('h4')?.textContent.trim());
+
+    it('names no section the panel does not have', () => {
+        const { unmount } = render(<ProductFilters value={{}} loading />);
+        const placeholders = placeholderHeadings();
+        unmount();
+
+        render(<ProductFilters facets={FACETS} value={{}} />);
+        const real = headings();
+
+        expect(placeholders.length).toBeGreaterThan(0);
+        expect(placeholders).not.toContain('Category');
+
+        for (const name of placeholders) {
+            expect(real, `${name} is a placeholder for nothing`).toContain(
+                name,
+            );
+        }
+    });
+
+    /*
+     * Brand is the only one worth a placeholder: it waits on the server, and
+     * Price and Availability draw themselves at once.
+     */
+    it('stands in for Brand', () => {
+        render(<ProductFilters value={{}} loading />);
+
+        expect(placeholderHeadings()).toEqual(['Brand']);
+    });
+});
+
 describe('what the filter panel offers', () => {
     it('opens on Price, not on Category', () => {
         render(<ProductFilters facets={FACETS} value={{}} />);
