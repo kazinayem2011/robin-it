@@ -1269,7 +1269,10 @@
     text-transform: uppercase;
     color: var(--primary-ink);
     background: transparent;
-    border-bottom: 2px solid currentColor;
+    /* 1px: at 2px this underline was heavier than the rule under the section
+       title above it, so a group heading read as the more important of the
+       two. Still currentColor, so it stays the heading's own ink. */
+    border-bottom: 1px solid currentColor;
 }
 
 /* The first heading sits directly under the table's own title. */
