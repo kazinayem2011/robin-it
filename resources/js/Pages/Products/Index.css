@@ -546,11 +546,21 @@
     gap: 2px;
 }
 
+/*
+ * The scroller has to be as wide as the rows inside it.
+ *
+ * Those bleed 10px either side so their hover highlight is wider than the
+ * text. `overflow-y: auto` also permits overflow sideways, so the extra 20px
+ * put a horizontal scrollbar across the bottom of the brand list. Widening
+ * the scroller by the same 20px and padding it back keeps the rows aligned
+ * and leaves nothing to scroll to.
+ */
 .plp-filter-scroll {
     max-height: 210px;
     overflow-y: auto;
-    /* Room for the scrollbar so it does not sit on top of the labels. */
-    padding-right: 4px;
+    overflow-x: hidden;
+    margin-inline: -10px;
+    padding-inline: 10px;
 }
 
 .plp-filter-scroll::-webkit-scrollbar {
@@ -595,13 +605,13 @@
  * control read as a circle — which is a radio button's shape, and says
  * "choose one of these" about a list where several can be picked at once.
  *
- * 0 rather than a smaller number: the linter allows it precisely for squaring
- * a corner off on purpose, and there is no token between 8px and nothing.
+ * Rounded to --radius-sm, the 8px this design system rounds everything to,
+ * rather than to a hard corner.
  */
 .plp-filter-check input {
     margin: 0;
     flex-shrink: 0;
-    border-radius: 0;
+    border-radius: var(--radius-sm);
 }
 
 /* The label takes the room; the tally is pushed to the right-hand edge. */

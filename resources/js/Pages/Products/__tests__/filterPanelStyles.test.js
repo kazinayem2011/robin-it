@@ -65,18 +65,35 @@ describe('the filter panel', () => {
         ).toBeNull();
     });
 
-    /*
-     * A checkbox is square. --radius-md is 8px, every radius token in this
-     * system is 8px, and 8px on an 18px box reads as a circle — which is a
-     * radio button's shape, and says "one of these" about a list where several
-     * can be chosen.
-     */
-    it('draws a square checkbox, not a round one', () => {
+    /* Rounded to the 8px this system rounds everything to. */
+    it('rounds the checkbox to the system radius', () => {
         const radius = declaration(
             ruleFor('.plp-filter-check input {'),
             'border-radius',
         );
 
-        expect(radius).toMatch(/^0(px)?$/);
+        expect(radius).toBe('var(--radius-sm)');
+    });
+
+    /**
+     * The scroller is as wide as the rows in it.
+     *
+     * The rows bleed 10px either side, and `overflow-y: auto` permits overflow
+     * sideways too — so the extra 20px put a horizontal scrollbar across the
+     * bottom of the brand list. The scroller has to be widened by the same
+     * amount the rows are, or there is something to scroll to.
+     */
+    it('leaves the brand list nothing to scroll sideways', () => {
+        const rows = ruleFor('.plp-filter-check {');
+        const scroller = ruleFor('.plp-filter-scroll {');
+        const px = (value) => Number((/-?\d+/.exec(value ?? '') ?? [0])[0]);
+
+        const bleed = -px(declaration(rows, 'margin-inline'));
+        const room = -px(declaration(scroller, 'margin-inline'));
+
+        expect(bleed).toBeGreaterThan(0);
+        expect(room).toBe(bleed);
+        expect(px(declaration(scroller, 'padding-inline'))).toBe(bleed);
+        expect(declaration(scroller, 'overflow-x')).toBe('hidden');
     });
 });
