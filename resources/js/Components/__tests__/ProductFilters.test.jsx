@@ -1,37 +1,39 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import ProductFilters from '../ProductFilters';
-
-/*
- * Inertia's Link needs a router; the filter only uses it for hrefs.
- */
-vi.mock('@inertiajs/react', () => ({
-    Link: ({ children, ...props }) => <a {...props}>{children}</a>,
-}));
 
 const FACETS = {
     min_price: 1000,
     max_price: 90000,
     total: 12,
+    /*
+     * Nine, because the brand search only appears above eight — below that the
+     * list is shorter than the box that would filter it.
+     */
     brands: [
         { id: 1, name: 'ASUS', slug: 'asus' },
         { id: 2, name: 'MSI', slug: 'msi' },
+        { id: 3, name: 'Corsair', slug: 'corsair' },
+        { id: 4, name: 'Dell', slug: 'dell' },
+        { id: 5, name: 'HP', slug: 'hp' },
+        { id: 6, name: 'Lenovo', slug: 'lenovo' },
+        { id: 7, name: 'Gigabyte', slug: 'gigabyte' },
+        { id: 8, name: 'Intel', slug: 'intel' },
+        { id: 9, name: 'AMD', slug: 'amd' },
     ],
 };
+
+const headings = () =>
+    [...document.querySelectorAll('.plp-filter-legend h4')].map((h) =>
+        h.textContent.trim(),
+    );
 
 const body = () => document.querySelector('.plp-filters-body');
 const skeletons = () =>
     document.querySelectorAll('.plp-filter-skeleton-rows').length;
 
-/*
- * A category is a different page, but the same shopping.
- *
- * These links carried the bare route, so choosing one threw away everything
- * the shopper had already narrowed by: search "corsair", click Component, and
- * you were looking at all 161 components with the term gone from the page and
- * from the URL.
- */
 describe('ProductFilters loading and busy states', () => {
     /*
      * The very first listing of a session has no facets at all, so there is
@@ -92,5 +94,78 @@ describe('ProductFilters loading and busy states', () => {
         expect(skeletons()).toBe(0);
         expect(body()).not.toHaveClass('is-busy');
         expect(screen.getByText('MSI')).toBeInTheDocument();
+    });
+});
+
+/**
+ * What the panel is for.
+ *
+ * It led with a category tree and a search box for it, which is navigation the
+ * shop offers three other ways — the mega menu, the breadcrumb, and the row of
+ * makers across the top of the shelf. A panel for narrowing a selection should
+ * not open with the one control that leaves it.
+ */
+describe('what the filter panel offers', () => {
+    it('opens on Price, not on Category', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(headings()[0]).toBe('Price');
+        expect(headings()).not.toContain('Category');
+    });
+
+    it('offers Price, Brand and Availability', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(headings()).toEqual(
+            expect.arrayContaining(['Price', 'Brand', 'Availability']),
+        );
+    });
+
+    /* The category search went with the tree; the brand one is a different box. */
+    it('has no category search left behind', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(screen.queryByLabelText('Search categories')).toBeNull();
+        expect(screen.queryByPlaceholderText('Search categories')).toBeNull();
+    });
+
+    it('keeps the brand search', async () => {
+        const user = userEvent.setup();
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        const box = screen.getByLabelText('Search brands');
+        await user.type(box, 'cor');
+
+        expect(screen.getByText('Corsair')).toBeInTheDocument();
+        expect(screen.queryByText('ASUS')).toBeNull();
+    });
+
+    /* Several at once: a shopper comparing ASUS against MSI picks both. */
+    it('reports a brand as chosen, and two of them at once', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+
+        render(
+            <ProductFilters facets={FACETS} value={{}} onChange={onChange} />,
+        );
+
+        await user.click(screen.getByLabelText('ASUS'));
+        expect(onChange).toHaveBeenLastCalledWith(
+            expect.objectContaining({ brand_ids: [1] }),
+        );
+
+        onChange.mockClear();
+        render(
+            <ProductFilters
+                facets={FACETS}
+                value={{ brand_ids: [1] }}
+                onChange={onChange}
+            />,
+        );
+
+        await user.click(screen.getAllByLabelText('MSI')[1]);
+        expect(onChange).toHaveBeenLastCalledWith(
+            expect.objectContaining({ brand_ids: [1, 2] }),
+        );
     });
 });
