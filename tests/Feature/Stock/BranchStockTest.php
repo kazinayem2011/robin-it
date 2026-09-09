@@ -227,49 +227,6 @@ class BranchStockTest extends TestCase
         $this->assertSame(2, $breakdown['Uttara Showroom']);
     }
 
-    public function test_customers_are_shown_which_showroom_has_it(): void
-    {
-        $product = $this->product();
-        $stock = app(StockService::class);
-        $stock->record($product, null, 4, StockMovement::PURCHASE, ['store_id' => $this->online->id]);
-        $stock->record($product->fresh(), null, 2, StockMovement::PURCHASE, ['store_id' => $this->showroom->id]);
-
-        $branches = $this->getJson("/api/products/{$product->id}/branches")
-            ->assertStatus(200)
-            ->json('data.branches');
-
-        // The online branch is the warehouse the site already sells from, not
-        // somewhere to go and look at one.
-        $this->assertSame(['Uttara Showroom'], collect($branches)->pluck('store')->all());
-        $this->assertTrue($branches[0]['available']);
-    }
-
-    /** A showroom count is stale the moment someone walks in with one. */
-    public function test_the_customer_is_not_given_an_exact_showroom_count(): void
-    {
-        $product = $this->product();
-        app(StockService::class)->record($product, null, 9, StockMovement::PURCHASE, [
-            'store_id' => $this->showroom->id,
-        ]);
-
-        $branches = $this->getJson("/api/products/{$product->id}/branches")->json('data.branches');
-
-        $this->assertArrayNotHasKey('quantity', $branches[0]);
-        $this->assertTrue($branches[0]['available']);
-    }
-
-    public function test_a_branch_with_none_left_is_not_listed(): void
-    {
-        $product = $this->product();
-        app(StockService::class)->record($product, null, 5, StockMovement::PURCHASE, [
-            'store_id' => $this->online->id,
-        ]);
-
-        $branches = $this->getJson("/api/products/{$product->id}/branches")->json('data.branches');
-
-        $this->assertSame([], $branches);
-    }
-
     public function test_an_admin_can_move_stock_over_http(): void
     {
         $product = $this->product();

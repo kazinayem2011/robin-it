@@ -182,16 +182,32 @@ class SqlInjectionTest extends TestCase
     {
         $encoded = urlencode($payload);
 
-        $this->getJson("/api/products/{$encoded}/branches")->assertStatus(404);
         $this->get("/orders/{$encoded}/invoice")->assertStatus(404);
     }
 
-    /** A real id still routes. */
+    /**
+     * A real id still routes.
+     *
+     * Against the invoice rather than a catalogue endpoint: the constraint
+     * being proved is the global one on `id`, and after the branch-availability
+     * endpoint was removed the invoice is the public route that carries it.
+     */
     public function test_a_numeric_id_still_reaches_its_controller(): void
     {
-        $this->catalogue();
+        $user = User::factory()->create();
 
-        $this->getJson('/api/products/'.Product::first()->id.'/branches')->assertStatus(200);
+        // Built the way the test below it builds one; there is no Order factory.
+        $order = Order::create([
+            'order_number' => 'ORD-ROUTES',
+            'user_id' => $user->id,
+            'subtotal' => 100, 'shipping_fee' => 60, 'discount' => 0, 'total' => 160,
+            'status' => 'pending', 'payment_method' => 'COD', 'payment_status' => 'unpaid',
+            'shipping_address' => ['name' => 'Rahim', 'phone' => '01712345678'],
+        ]);
+
+        $this->actingAs($user)
+            ->get("/orders/{$order->id}/invoice")
+            ->assertStatus(200);
     }
 
     /** Order tracking takes both of its inputs as bound values. */

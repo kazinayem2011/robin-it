@@ -9,7 +9,6 @@ import {
 } from '@/services';
 import BackInStockForm from '../../Components/BackInStockForm';
 import ProductSuggestions from '../../Components/ProductSuggestions';
-import BranchAvailability from '../../Components/BranchAvailability';
 import Button from '../../Components/Button';
 import CountdownTimer from '../../Components/CountdownTimer';
 // The gallery renders <ProductImage> but never imported it, so the whole page
@@ -1088,11 +1087,6 @@ export default function ProductDetails(props) {
                                 accountEmail={auth?.user?.email ?? ''}
                             />
                         )}
-
-                        <BranchAvailability
-                            productId={product.id}
-                            variantId={selectedVariant?.id ?? null}
-                        />
                     </div>
                 </div>
                 {/*

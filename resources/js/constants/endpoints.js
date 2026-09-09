@@ -17,7 +17,6 @@ export const API_ENDPOINTS = {
     // Products API
     PRODUCTS: {
         FILTERS: '/products/filters',
-        BRANCHES: (id) => `/products/${id}/branches`,
         LIST: '/products',
         DETAIL: (slug) => `/products/${slug}`,
         FLASH_SALE: '/products/flash-sale',

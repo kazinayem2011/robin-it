@@ -84,7 +84,6 @@ Route::middleware('throttle:api')->group(function () {
     // as a product slug and this endpoint 404s.
     Route::get(ApiEndpoints::PRODUCTS_FILTERS, [ProductController::class, 'filters']);
     Route::get(ApiEndpoints::STOCK_NOTIFY_COUNT, [StockNotificationController::class, 'count']);
-    Route::get(ApiEndpoints::PRODUCT_BRANCHES, [ProductController::class, 'branchAvailability']);
     Route::get(ApiEndpoints::PRODUCTS_SHOW, [ProductController::class, 'show']);
 
     // Showroom Stores API

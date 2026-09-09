@@ -27,8 +27,6 @@ class ApiEndpoints
     public const STOCK_NOTIFY_COUNT = 'stock-notifications/count';
 
     /** Which showrooms are holding something. */
-    public const PRODUCT_BRANCHES = 'products/{id}/branches';
-
     public const PRODUCTS_SHOW = 'products/{slug}';
 
     public const PRODUCTS_FLASH_SALE = 'products/flash-sale';
