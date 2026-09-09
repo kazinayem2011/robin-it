@@ -18,11 +18,16 @@ import './ProductSuggestions.css';
  *
  * Renders nothing when there is nothing to suggest: a heading over an empty
  * row reads as something that failed to load.
+ *
+ * @param {'row'|'column'} [layout='row'] - A row fills the width it is given
+ *   and wraps; a column stacks one card per line, for a narrow rail beside the
+ *   page's main content rather than a band across it.
  */
 export default function ProductSuggestions({
     products = [],
     title = 'Similar Products',
     className = '',
+    layout = 'row',
 }) {
     const { wishlistIds, toggleWishlist } = useWishlist();
     const addToCart = useAddToCart();
@@ -33,7 +38,7 @@ export default function ProductSuggestions({
         <section className={`product-suggestions ${className}`.trim()}>
             <h3 className="product-suggestions-title">{title}</h3>
 
-            <div className="product-suggestions-grid">
+            <div className={`product-suggestions-grid layout-${layout}`}>
                 {products.map((product) => (
                     <ProductCard
                         key={product.id}

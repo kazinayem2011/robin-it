@@ -18,18 +18,31 @@
     font-family: var(--font-heading);
 }
 
+.product-suggestions-grid {
+    display: grid;
+    gap: 16px;
+}
+
 /*
  * Matches the shop's own grid so a suggestion is the same size as the card it
  * was suggested from — a narrower one reads as a lesser product.
  */
-.product-suggestions-grid {
-    display: grid;
+.product-suggestions-grid.layout-row {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+}
+
+/*
+ * One per line, for a rail beside the page's own content. The cards are the
+ * same cards; only the track count changes, so a suggestion in the rail still
+ * carries its badges and its add-to-cart.
+ */
+.product-suggestions-grid.layout-column {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
 }
 
 @media (max-width: 520px) {
-    .product-suggestions-grid {
+    .product-suggestions-grid.layout-row {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 12px;
     }

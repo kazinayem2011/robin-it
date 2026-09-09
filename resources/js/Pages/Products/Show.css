@@ -558,6 +558,53 @@
  * height, and the observer that marks the current section reads the same two
  * values, so clicking and scrolling agree.
  */
+/*
+ * The detail and a rail of suggestions beside it, the way the reference lays
+ * it out. They were a band across the foot of the page, below the reviews,
+ * which is past everything and so past the point at which somebody deciding
+ * between two products would still be looking.
+ *
+ * The sticky row above stays full width: it navigates the left column, and
+ * indenting it to match would leave it not lining up with the page.
+ */
+.pdp-sections-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 40px;
+    align-items: start;
+}
+
+.pdp-sections-main {
+    min-width: 0;
+}
+
+/*
+ * The rail scrolls with the page rather than pinning. It is shorter than the
+ * four sections beside it, so pinning would leave it hanging in a column of
+ * nothing for most of the scroll.
+ */
+.pdp-sections-aside {
+    min-width: 0;
+}
+
+/* The section already spaces itself; the rail sits level with the first one. */
+.pdp-rail-suggestions {
+    margin: 0;
+}
+
+@media (max-width: 1080px) {
+    /* Below this the rail is narrower than the card it holds. It goes under
+       the detail instead, as a row, which is what it was before. */
+    .pdp-sections-body {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .pdp-rail-suggestions .product-suggestions-grid.layout-column {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}
+
 .pdp-section {
     scroll-margin-top: calc(
         var(--site-chrome-h, 142px) + var(--pdp-nav-h, 48px) + 12px

@@ -1141,205 +1141,247 @@ export default function ProductDetails(props) {
                         className="pdp-section-nav"
                     />
 
-                    <section
-                        id="specification"
-                        className="pdp-section"
-                        ref={sectionRefs.specification}
-                    >
-                        <h2 className="pdp-details-heading">Specification</h2>
+                    <div className="pdp-sections-body">
+                        <div className="pdp-sections-main">
+                            <section
+                                id="specification"
+                                className="pdp-section"
+                                ref={sectionRefs.specification}
+                            >
+                                <h2 className="pdp-details-heading">
+                                    Specification
+                                </h2>
 
-                        <ProductSpecifications
-                            specifications={product.specifications || []}
-                        />
-                    </section>
+                                <ProductSpecifications
+                                    specifications={
+                                        product.specifications || []
+                                    }
+                                />
+                            </section>
 
-                    <section
-                        id="description"
-                        className="pdp-section"
-                        ref={sectionRefs.description}
-                    >
-                        <h2 className="pdp-details-heading">Description</h2>
+                            <section
+                                id="description"
+                                className="pdp-section"
+                                ref={sectionRefs.description}
+                            >
+                                <h2 className="pdp-details-heading">
+                                    Description
+                                </h2>
 
-                        <ProductDescription description={product.description} />
-                    </section>
+                                <ProductDescription
+                                    description={product.description}
+                                />
+                            </section>
 
-                    <section
-                        id="questions"
-                        className="pdp-section"
-                        ref={sectionRefs.questions}
-                    >
-                        <h2 className="pdp-details-heading">Questions</h2>
+                            <section
+                                id="questions"
+                                className="pdp-section"
+                                ref={sectionRefs.questions}
+                            >
+                                <h2 className="pdp-details-heading">
+                                    Questions
+                                </h2>
+
+                                {/*
+                                 * The one question the shop can always answer, above
+                                 * the ones customers have asked.
+                                 *
+                                 * It used to be a paragraph of its own at the foot of
+                                 * the page, written as prose for a search engine to
+                                 * interpret. The price is published properly in the
+                                 * Product markup now, so this is here for the reader
+                                 * instead — in the place someone looking for an answer
+                                 * goes, and in the same shape as every other answer.
+                                 *
+                                 * Templated from the product's own figures and marked
+                                 * up like a real entry, but it is not one: it has no
+                                 * row behind it, so it cannot be edited or removed in
+                                 * admin, and it is not counted in "N questions".
+                                 */}
+                                <ul className="pdp-question-list pdp-question-list-standing">
+                                    <li className="pdp-question">
+                                        <div className="pdp-qa-row">
+                                            <span className="pdp-q-marker">
+                                                Q
+                                            </span>
+                                            <div className="pdp-qa-body">
+                                                <p className="pdp-question-text">
+                                                    What is the price of{' '}
+                                                    {product.name} in
+                                                    Bangladesh?
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="pdp-qa-row is-answer">
+                                            <span className="pdp-a-marker">
+                                                A
+                                            </span>
+                                            <div className="pdp-qa-body">
+                                                <p className="pdp-answer-text">
+                                                    The latest price is{' '}
+                                                    {formatBdt(cashPrice)}
+                                                    {selectedVariant && (
+                                                        <>
+                                                            {' '}
+                                                            for the{' '}
+                                                            {Object.values(
+                                                                selectedVariant.options ||
+                                                                    {},
+                                                            ).join(' / ')}{' '}
+                                                            option
+                                                        </>
+                                                    )}
+                                                    . You can buy it from our
+                                                    website or visit any of our
+                                                    showrooms.
+                                                </p>
+                                                <span className="pdp-question-meta">
+                                                    {brandName}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+
+                                <ProductQuestions
+                                    slug={productSlug}
+                                    questions={questions}
+                                    onAsked={loadQuestions}
+                                    askingAs={auth?.user?.name || ''}
+                                />
+                            </section>
+
+                            <section
+                                id="reviews"
+                                className="pdp-section"
+                                ref={sectionRefs.reviews}
+                            >
+                                <h2 className="pdp-details-heading">
+                                    Ratings &amp; Reviews
+                                </h2>
+
+                                <div className="reviews-tab-content">
+                                    {/* Reusable Rating Score & Breakdown Component */}
+                                    <RatingBreakdown
+                                        averageRating={
+                                            reviewsData.average_rating || 5
+                                        }
+                                        totalReviews={
+                                            reviewsData.total_reviews || 0
+                                        }
+                                        breakdown={
+                                            reviewsData.breakdown || {
+                                                5: 0,
+                                                4: 0,
+                                                3: 0,
+                                                2: 0,
+                                                1: 0,
+                                            }
+                                        }
+                                    />
+
+                                    {/* Verified Buyer Permission Gate */}
+                                    {reviewsData.can_review ? (
+                                        <ReviewForm
+                                            onSubmit={handleReviewSubmit}
+                                            loading={submittingReview}
+                                        />
+                                    ) : reviewsData.already_reviewed ? (
+                                        <div className="verified-buyer-notice success">
+                                            <Check
+                                                size={20}
+                                                className="text-success"
+                                            />
+                                            <div>
+                                                <strong>
+                                                    Verified Review Published
+                                                </strong>
+                                                <p>
+                                                    Thank you! Your verified
+                                                    purchase review is live for
+                                                    this product.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : !reviewsData.is_logged_in ? (
+                                        <div className="verified-buyer-notice info">
+                                            <ShieldCheck
+                                                size={20}
+                                                className="text-primary"
+                                            />
+                                            <div>
+                                                <strong>
+                                                    Verified Purchase Required
+                                                </strong>
+                                                <p>
+                                                    Only customers who have
+                                                    purchased this product from
+                                                    {siteConfig.name} can write
+                                                    a review.{' '}
+                                                    <Link
+                                                        href={ROUTES.LOGIN}
+                                                        style={{
+                                                            color: 'var(--primary-ink)',
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        Log in to your account
+                                                        &rarr;
+                                                    </Link>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="verified-buyer-notice warning">
+                                            <ShieldCheck
+                                                size={20}
+                                                className="text-muted"
+                                            />
+                                            <div>
+                                                <strong>
+                                                    Verified Purchase Required
+                                                </strong>
+                                                <p>
+                                                    Only verified buyers who
+                                                    have purchased this product
+                                                    from {siteConfig.name} can
+                                                    submit a review.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Reusable Customer Reviews Feed List Component */}
+                                    <ReviewList
+                                        reviews={reviewsData.reviews || []}
+                                        totalReviews={
+                                            reviewsData.total_reviews || 0
+                                        }
+                                    />
+                                </div>
+                            </section>
+                        </div>
 
                         {/*
-                         * The one question the shop can always answer, above
-                         * the ones customers have asked.
+                         * Beside the detail rather than in a band under it.
                          *
-                         * It used to be a paragraph of its own at the foot of
-                         * the page, written as prose for a search engine to
-                         * interpret. The price is published properly in the
-                         * Product markup now, so this is here for the reader
-                         * instead — in the place someone looking for an answer
-                         * goes, and in the same shape as every other answer.
-                         *
-                         * Templated from the product's own figures and marked
-                         * up like a real entry, but it is not one: it has no
-                         * row behind it, so it cannot be edited or removed in
-                         * admin, and it is not counted in "N questions".
+                         * Hand-picked where a shopkeeper has chosen them,
+                         * worked out from the same shelf where nobody has. It
+                         * used to be hand-picked only, and nothing had been
+                         * picked for any of the shop's twelve hundred products
+                         * — so a shopper looking at a mouse was never offered
+                         * another mouse.
                          */}
-                        <ul className="pdp-question-list pdp-question-list-standing">
-                            <li className="pdp-question">
-                                <div className="pdp-qa-row">
-                                    <span className="pdp-q-marker">Q</span>
-                                    <div className="pdp-qa-body">
-                                        <p className="pdp-question-text">
-                                            What is the price of {product.name}{' '}
-                                            in Bangladesh?
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="pdp-qa-row is-answer">
-                                    <span className="pdp-a-marker">A</span>
-                                    <div className="pdp-qa-body">
-                                        <p className="pdp-answer-text">
-                                            The latest price is{' '}
-                                            {formatBdt(cashPrice)}
-                                            {selectedVariant && (
-                                                <>
-                                                    {' '}
-                                                    for the{' '}
-                                                    {Object.values(
-                                                        selectedVariant.options ||
-                                                            {},
-                                                    ).join(' / ')}{' '}
-                                                    option
-                                                </>
-                                            )}
-                                            . You can buy it from our website or
-                                            visit any of our showrooms.
-                                        </p>
-                                        <span className="pdp-question-meta">
-                                            {brandName}
-                                        </span>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <ProductQuestions
-                            slug={productSlug}
-                            questions={questions}
-                            onAsked={loadQuestions}
-                            askingAs={auth?.user?.name || ''}
-                        />
-                    </section>
-
-                    <section
-                        id="reviews"
-                        className="pdp-section"
-                        ref={sectionRefs.reviews}
-                    >
-                        <h2 className="pdp-details-heading">
-                            Ratings &amp; Reviews
-                        </h2>
-
-                        <div className="reviews-tab-content">
-                            {/* Reusable Rating Score & Breakdown Component */}
-                            <RatingBreakdown
-                                averageRating={reviewsData.average_rating || 5}
-                                totalReviews={reviewsData.total_reviews || 0}
-                                breakdown={
-                                    reviewsData.breakdown || {
-                                        5: 0,
-                                        4: 0,
-                                        3: 0,
-                                        2: 0,
-                                        1: 0,
-                                    }
-                                }
+                        <aside className="pdp-sections-aside">
+                            <ProductSuggestions
+                                products={similar}
+                                title="You might also like"
+                                layout="column"
+                                className="pdp-rail-suggestions"
                             />
-
-                            {/* Verified Buyer Permission Gate */}
-                            {reviewsData.can_review ? (
-                                <ReviewForm
-                                    onSubmit={handleReviewSubmit}
-                                    loading={submittingReview}
-                                />
-                            ) : reviewsData.already_reviewed ? (
-                                <div className="verified-buyer-notice success">
-                                    <Check size={20} className="text-success" />
-                                    <div>
-                                        <strong>
-                                            Verified Review Published
-                                        </strong>
-                                        <p>
-                                            Thank you! Your verified purchase
-                                            review is live for this product.
-                                        </p>
-                                    </div>
-                                </div>
-                            ) : !reviewsData.is_logged_in ? (
-                                <div className="verified-buyer-notice info">
-                                    <ShieldCheck
-                                        size={20}
-                                        className="text-primary"
-                                    />
-                                    <div>
-                                        <strong>
-                                            Verified Purchase Required
-                                        </strong>
-                                        <p>
-                                            Only customers who have purchased
-                                            this product from
-                                            {siteConfig.name} can write a
-                                            review.{' '}
-                                            <Link
-                                                href={ROUTES.LOGIN}
-                                                style={{
-                                                    color: 'var(--primary-ink)',
-                                                    fontWeight: 700,
-                                                }}
-                                            >
-                                                Log in to your account &rarr;
-                                            </Link>
-                                        </p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="verified-buyer-notice warning">
-                                    <ShieldCheck
-                                        size={20}
-                                        className="text-muted"
-                                    />
-                                    <div>
-                                        <strong>
-                                            Verified Purchase Required
-                                        </strong>
-                                        <p>
-                                            Only verified buyers who have
-                                            purchased this product from{' '}
-                                            {siteConfig.name} can submit a
-                                            review.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Reusable Customer Reviews Feed List Component */}
-                            <ReviewList
-                                reviews={reviewsData.reviews || []}
-                                totalReviews={reviewsData.total_reviews || 0}
-                            />
-                        </div>
-                    </section>
+                        </aside>
+                    </div>
                 </div>
-                {/*
-                 * Hand-picked where a shopkeeper has chosen them, worked
-                 * out from the same shelf where nobody has. It used to be
-                 * hand-picked only, and nothing had been picked for any of
-                 * the shop's twelve hundred products — so a shopper
-                 * looking at a mouse was never offered another mouse.
-                 */}
-                <ProductSuggestions products={similar} />
             </div>
         </>
     );
