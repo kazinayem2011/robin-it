@@ -33,11 +33,43 @@ export const groupSpecifications = (specifications) => {
  * tab, and because the product page was thirteen hundred lines with this and
  * the description inlined in the middle of it.
  */
-export default function ProductSpecifications({ specifications = [] }) {
+export default function ProductSpecifications({
+    specifications = [],
+    model = null,
+    mpn = null,
+}) {
+    /*
+     * The two the shop records in their own fields, shown ahead of the rest.
+     *
+     * They were captured by the product form and displayed nowhere: MPN is the
+     * number a customer cross-checks a machine by, and the model is how the
+     * manufacturer names it. Both were reaching the page's structured data and
+     * neither was reaching the page. They are specifications, so they are
+     * shown as the first rows of the table rather than invented a home of
+     * their own.
+     */
+    const identifiers = [
+        ['Model', model],
+        ['Part number', mpn],
+    ].filter(([, value]) => (value || '').toString().trim());
+
+    const hasTable = specifications.length > 0 || identifiers.length > 0;
+
     return (
         <div className="specifications-table">
-            {specifications.length > 0 ? (
+            {hasTable ? (
                 <table>
+                    {identifiers.length > 0 && (
+                        <tbody>
+                            {identifiers.map(([label, value]) => (
+                                <tr key={label}>
+                                    <td className="spec-name">{label}</td>
+                                    <td className="spec-value">{value}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    )}
+
                     {/* Grouped into sections, in the order the admin entered
                         them. A product whose specs predate grouping has no
                         `group` on any row and renders as the plain two-column

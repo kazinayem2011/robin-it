@@ -138,6 +138,27 @@ export default function ProductDetails(props) {
     });
 
     /*
+     * The smallest quantity this is sold in.
+     *
+     * CartService raises whatever is asked for to this — deliberately, because
+     * some things are not sold singly — but the stepper started at one and let
+     * itself be taken down to one, so a shopper adding "1" of something sold
+     * in fives got five in their basket and no explanation of why. The floor
+     * is the minimum here, and it is stated beside the stepper, so the number
+     * the page shows is the number the cart will hold.
+     */
+    const minQty = Math.max(1, Number(product?.min_order_quantity) || 1);
+
+    /*
+     * The product loads after the first render, so the opening quantity is set
+     * when it arrives rather than guessed at mount. Keyed on the value, not
+     * the product, so it does not fight a shopper who has since chosen more.
+     */
+    useEffect(() => {
+        setQuantity((current) => Math.max(current, minQty));
+    }, [minQty]);
+
+    /*
      * The address to share, without the query string — the same rule the
      * canonical tag follows. `?sort=`, `?page=` and whatever a previous share
      * appended are not part of the product, and passing them on means the
@@ -804,7 +825,7 @@ export default function ProductDetails(props) {
                                                     setSelectedVariantId(
                                                         variant.id,
                                                     );
-                                                    setQuantity(1);
+                                                    setQuantity(minQty);
                                                     // Jump back to the
                                                     // first shot so the
                                                     // option's own image
@@ -983,6 +1004,18 @@ export default function ProductDetails(props) {
                             )}
                         </div>
 
+                        {/*
+                            Said, not just enforced. The cart raises whatever
+                            is asked for to this, so a shopper who was never
+                            told found a quantity they had not chosen.
+                        */}
+                        {minQty > 1 && !soldOut && (
+                            <p className="pdp-min-order">
+                                Sold in {minQty}s — the smallest order for this
+                                item is {minQty}.
+                            </p>
+                        )}
+
                         <div className="pdp-actions">
                             {/*
                              * Sold out is one state, so it gets one
@@ -1003,10 +1036,10 @@ export default function ProductDetails(props) {
                                     <div className="quantity-selector">
                                         <button
                                             type="button"
-                                            disabled={quantity <= 1}
+                                            disabled={quantity <= minQty}
                                             onClick={() =>
                                                 setQuantity((prev) =>
-                                                    Math.max(1, prev - 1),
+                                                    Math.max(minQty, prev - 1),
                                                 )
                                             }
                                         >
@@ -1016,6 +1049,7 @@ export default function ProductDetails(props) {
                                             type="number"
                                             value={quantity}
                                             readOnly
+                                            aria-label={`Quantity${minQty > 1 ? `, minimum ${minQty}` : ''}`}
                                         />
                                         <button
                                             type="button"
@@ -1172,6 +1206,8 @@ export default function ProductDetails(props) {
                                     specifications={
                                         product.specifications || []
                                     }
+                                    model={product.model}
+                                    mpn={product.mpn}
                                 />
                             </section>
 

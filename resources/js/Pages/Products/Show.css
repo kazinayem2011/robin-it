@@ -322,6 +322,14 @@
     color: var(--primary-ink);
 }
 
+/* Only drawn when the product has a minimum above one, which most do not. */
+.pdp-min-order {
+    margin: 0 0 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-ink);
+}
+
 /* Action Buttons & Quantity */
 .pdp-actions {
     display: flex;
