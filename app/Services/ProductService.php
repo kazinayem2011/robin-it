@@ -370,9 +370,18 @@ class ProductService
      * The categories a shopper can still narrow to, as a two-level tree with
      * counts.
      *
-     * Built without the category filter applied, for the same reason the brand
-     * list is: narrowing it to the category already chosen would leave nothing
-     * else to pick and the sidebar would be a dead end.
+     * Built without the category filter applied to the counts, for the same
+     * reason the brand list is: counting only what is already chosen would
+     * leave nothing else to pick and the sidebar would be a dead end.
+     *
+     * Narrowed to one department all the same. Standing in Laptop, this used
+     * to list all fifteen — Accessories, Camera, Component, Desktop, Gadget,
+     * Laptop, ... — which is the mega menu again, in a panel meant for
+     * narrowing rather than leaving, and it pushed Price, Brand and the spec
+     * filters below the fold to do it. Now it is the department the shopper is
+     * in and the shelves inside it: siblings to move between, children to go
+     * deeper. With nothing chosen it is the whole list, because then there is
+     * no department to be inside and choosing one is the point.
      *
      * Products hang off leaf categories, so the counts are rolled up to the
      * parents — a top-level entry reads as everything beneath it, which is what
@@ -396,7 +405,7 @@ class ProductService
         }
 
         $categories = Category::where('is_active', true)
-            ->get(['id', 'name', 'slug', 'parent_id'])
+            ->get(['id', 'name', 'slug', 'parent_id', 'position'])
             ->keyBy('id');
 
         // Roll each leaf's count up through its ancestors.
@@ -419,16 +428,33 @@ class ProductService
             'count' => $totals[$c->id] ?? 0,
         ];
 
-        return $categories
+        $roots = $categories
             ->whereNull('parent_id')
-            ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0)
-            ->sortBy('name')
-            ->map(function (Category $parent) use ($categories, $totals, $node) {
+            ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0);
+
+        // The department the shopper is standing in, if they are in one.
+        $here = $this->rootAncestorOf($scoped, $categories);
+
+        if ($here && $roots->has($here)) {
+            $roots = $roots->only([$here]);
+        }
+
+        /*
+         * The shop's own order, the same as the menu and the footer. It was
+         * alphabetical, which put Accessories and Camera ahead of Desktop and
+         * Laptop and quietly ignored the order an admin had arranged.
+         */
+        $inShopOrder = fn ($collection) => $collection
+            ->sortBy(fn (Category $c) => [$c->position, $c->name]);
+
+        return $inShopOrder($roots)
+            ->map(function (Category $parent) use ($categories, $totals, $node, $inShopOrder) {
                 return $node($parent) + [
-                    'children' => $categories
-                        ->where('parent_id', $parent->id)
-                        ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0)
-                        ->sortBy('name')
+                    'children' => $inShopOrder(
+                        $categories
+                            ->where('parent_id', $parent->id)
+                            ->filter(fn ($c) => ($totals[$c->id] ?? 0) > 0)
+                    )
                         ->map($node)
                         ->values()
                         ->all(),
@@ -436,6 +462,30 @@ class ProductService
             })
             ->values()
             ->all();
+    }
+
+    /**
+     * Which department a chosen shelf belongs to, by id.
+     *
+     * Walks up rather than trusting the depth: a brand shelf sits three levels
+     * down and a series can sit deeper, and the panel wants the top of that
+     * branch either way.
+     */
+    private function rootAncestorOf(array $filters, Collection $categories): ?int
+    {
+        $node = null;
+
+        if (! empty($filters['category_slug'])) {
+            $node = $categories->firstWhere('slug', $filters['category_slug']);
+        } elseif (! empty($filters['category_id'])) {
+            $node = $categories->get((int) $filters['category_id']);
+        }
+
+        for ($guard = 0; $node && $node->parent_id && $guard < 10; $guard++) {
+            $node = $categories->get($node->parent_id);
+        }
+
+        return $node?->id;
     }
 
     /**
