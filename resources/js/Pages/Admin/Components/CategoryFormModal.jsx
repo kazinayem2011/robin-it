@@ -9,6 +9,9 @@ import { NAVBAR_BADGE_OPTIONS } from '@/constants';
 /**
  * Reusable Add / Edit Category Form Modal
  */
+/* Not an id, so it cannot collide with one. */
+const NEW_BRAND = 'new';
+
 export const CategoryFormModal = ({
     modalState,
     onClose,
@@ -17,6 +20,8 @@ export const CategoryFormModal = ({
     brandOptions = [],
     isSubmitting = false,
 }) => {
+    const trimmedName = (formik.values.name || '').trim();
+
     return (
         <Modal
             isOpen={modalState.isOpen}
@@ -78,11 +83,37 @@ export const CategoryFormModal = ({
                     id="cat_brand_id"
                     name="brand_id"
                     label="Stands for a Brand (Optional)"
-                    value={formik.values.brand_id || ''}
-                    onChange={formik.handleChange}
+                    value={
+                        formik.values.create_brand
+                            ? NEW_BRAND
+                            : formik.values.brand_id || ''
+                    }
+                    onChange={(event) => {
+                        const picked = event.target.value;
+                        formik.setFieldValue(
+                            'create_brand',
+                            picked === NEW_BRAND,
+                        );
+                        formik.setFieldValue(
+                            'brand_id',
+                            picked === NEW_BRAND ? '' : picked,
+                        );
+                    }}
                     className="mb-4"
                 >
                     <option value="">Not a brand shelf</option>
+                    {/*
+                        Offered here rather than sending the admin to the brands
+                        screen and back. That trip is the one nobody makes: 386
+                        shelves are named after makers with no brand row, so they
+                        show no logo, no maker on the product page, and cannot be
+                        filtered or featured.
+                    */}
+                    {trimmedName ? (
+                        <option value={NEW_BRAND}>
+                            ➕ Create “{trimmedName}” as a new brand
+                        </option>
+                    ) : null}
                     {brandOptions.map((b) => (
                         <option key={b.id} value={b.id}>
                             {b.name}

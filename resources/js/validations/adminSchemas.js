@@ -7,6 +7,7 @@ export const adminProductSchema = Yup.object().shape({
         .required('Product title is required'),
     category_id: Yup.mixed().required('Category selection is required'),
     brand_id: Yup.mixed().nullable(),
+    create_brand: Yup.boolean().default(false),
     price: Yup.number()
         .typeError('Price must be a valid number')
         .positive('Price must be greater than zero')

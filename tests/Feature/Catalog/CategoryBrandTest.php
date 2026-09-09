@@ -153,6 +153,86 @@ class CategoryBrandTest extends TestCase
         $this->assertNull($shelf->fresh()->brand_id);
     }
 
+    /**
+     * A shelf can mint the brand it stands for.
+     *
+     * The shop's commonest inconsistency, and not hypothetical: 386 shelves
+     * are named after makers `brands` has never heard of — Acer, AOC, Walton,
+     * Tecno. Each looks right in the menu and then carries no logo, shows no
+     * maker on the product page, and cannot be filtered or featured, because
+     * all of those read `brands`.
+     */
+    public function test_a_shelf_can_create_the_brand_it_stands_for(): void
+    {
+        $shelf = $this->shelf('Acer');
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}", [
+                'name' => 'Acer',
+                'create_brand' => true,
+            ])
+            ->assertOk();
+
+        $brand = Brand::whereRaw('LOWER(name) = ?', ['acer'])->first();
+
+        $this->assertNotNull($brand, 'no brand was created for the shelf');
+        $this->assertSame($brand->id, $shelf->fresh()->brand_id);
+    }
+
+    /**
+     * Reused, not duplicated. ASUS is twenty shelves — one per parent — and
+     * each of them saying "I am ASUS" must arrive at the same brand.
+     */
+    public function test_a_second_shelf_for_the_same_maker_reuses_its_brand(): void
+    {
+        $first = $this->shelf('ASUS');
+        $second = $this->shelf('asus');
+
+        foreach ([$first, $second] as $shelf) {
+            $this->actingAs($this->admin())
+                ->patchJson("/api/admin/categories/{$shelf->id}", [
+                    'name' => $shelf->name,
+                    'create_brand' => true,
+                ])
+                ->assertOk();
+        }
+
+        $this->assertSame(1, Brand::whereRaw('LOWER(name) = ?', ['asus'])->count());
+        $this->assertSame($first->fresh()->brand_id, $second->fresh()->brand_id);
+    }
+
+    /** And an existing brand is adopted rather than shadowed by a copy. */
+    public function test_minting_adopts_a_brand_that_already_exists(): void
+    {
+        $existing = $this->brand('Walton');
+        $shelf = $this->shelf('Walton');
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}", [
+                'name' => 'Walton',
+                'create_brand' => true,
+            ])
+            ->assertOk();
+
+        $this->assertSame($existing->id, $shelf->fresh()->brand_id);
+        $this->assertSame(1, Brand::where('name', 'Walton')->count());
+    }
+
+    /** Saying nothing still means nothing: most shelves are product lines. */
+    public function test_a_shelf_saved_without_asking_mints_nothing(): void
+    {
+        $shelf = $this->shelf('Gaming Laptop');
+
+        $this->actingAs($this->admin())
+            ->patchJson("/api/admin/categories/{$shelf->id}", [
+                'name' => 'Gaming Laptop',
+            ])
+            ->assertOk();
+
+        $this->assertNull($shelf->fresh()->brand_id);
+        $this->assertSame(0, Brand::where('name', 'Gaming Laptop')->count());
+    }
+
     public function test_a_shelf_cannot_stand_for_a_brand_that_is_not_there(): void
     {
         $shelf = $this->shelf('MSI');

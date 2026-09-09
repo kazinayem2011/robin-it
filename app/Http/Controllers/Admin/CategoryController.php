@@ -70,6 +70,36 @@ class CategoryController extends Controller
     }
 
     /**
+     * Which brand this shelf stands for, minting one if it has to.
+     *
+     * A shelf named after a maker with no brand row behind it is the shop's
+     * commonest inconsistency — 386 of them exist: Acer, AOC, Walton, Tecno.
+     * Each looks right in the menu and then has no logo, shows no maker on the
+     * product page, and cannot be filtered or featured, because those all read
+     * `brands` and the shelf was never in it.
+     *
+     * So the admin can say "this shelf is a brand" without first going to
+     * another screen to create one. Matched on the name before creating, so
+     * saying it twice — or saying it on a second shelf for the same maker,
+     * which is normal, ASUS has twenty — reuses the one brand rather than
+     * making a second ASUS.
+     */
+    private function brandFor(array $validated, string $name): ?int
+    {
+        if (! empty($validated['create_brand'])) {
+            return Brand::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])
+                ->first()
+                ?->id
+                ?? Brand::create([
+                    'name' => trim($name),
+                    'slug' => SlugFactory::unique(Brand::class, $name),
+                ])->id;
+        }
+
+        return $validated['brand_id'] ?? null;
+    }
+
+    /**
      * Store a newly created category (root, L2 subcategory, or L3 series).
      */
     public function store(CategoryRequest $request): JsonResponse
@@ -80,7 +110,7 @@ class CategoryController extends Controller
             'name' => $validated['name'],
             'slug' => SlugFactory::unique(Category::class, $validated['slug'] ?? $validated['name']),
             'parent_id' => $validated['parent_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
+            'brand_id' => $this->brandFor($validated, $validated['name']),
             'icon' => $validated['icon'] ?? ($validated['parent_id'] ?? null ? null : 'Layers'),
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
@@ -103,7 +133,7 @@ class CategoryController extends Controller
                 $category->id
             ),
             'parent_id' => $validated['parent_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
+            'brand_id' => $this->brandFor($validated, $validated['name']),
             'icon' => $validated['icon'] ?? $category->icon,
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,

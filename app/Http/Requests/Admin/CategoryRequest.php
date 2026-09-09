@@ -29,6 +29,12 @@ class CategoryRequest extends AdminRequest
              * shelves are product lines, not makers, so this is normally null.
              */
             'brand_id' => 'nullable|exists:brands,id',
+            /*
+             * "This shelf is a maker, and there is no row for it yet." Saves a
+             * trip to the brands screen, which is the trip nobody made: 386
+             * shelves are named after makers that `brands` has never heard of.
+             */
+            'create_brand' => 'nullable|boolean',
             'icon' => 'nullable|string|max:50',
             'badge' => 'nullable|string|max:20',
             'is_offer' => 'boolean',
