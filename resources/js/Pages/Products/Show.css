@@ -1342,23 +1342,16 @@
    ProductSuggestions.css — because the cart uses it too, and a rule that only
    loads on the product page leaves it unstyled everywhere else. */
 
-/* The templated "what is the price of X" answer. */
-.pdp-latest-price {
-    margin: 24px 0;
-    padding: 16px 18px;
-    border-radius: var(--radius-md);
-    background: var(--state-wash);
-}
-
-.pdp-latest-price h3 {
-    font-size: 1rem;
-    margin: 0 0 8px;
-}
-
-.pdp-latest-price p {
-    margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.6;
+/*
+ * The shop's own standing answer, above the questions customers have asked.
+ *
+ * It was a section of prose at the foot of the page with a tinted ground of
+ * its own. Here it is one of the answers, so it is drawn as one — the tint
+ * would make the shop's entry look like the important one, when the point is
+ * that it sits in the same list.
+ */
+.pdp-question-list-standing {
+    margin-bottom: 14px;
 }
 
 /* Questions */

@@ -29,6 +29,7 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
+import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -46,7 +47,7 @@ import './Show.css';
 export default function ProductDetails(props) {
     /* Shared by Inertia on every page, so a signed-in shopper is not asked
        for a name the shop already has. */
-    const { auth } = usePage().props;
+    const { auth, brand_name: brandName } = usePage().props;
 
     /*
      * A signed-in customer may have registered with a mobile number instead of
@@ -542,33 +543,13 @@ export default function ProductDetails(props) {
           ]
         : productImages;
 
-    const schemaData = {
-        '@context': 'https://schema.org/',
-        '@type': 'Product',
-        name: product.name,
+    const schemaData = productSchemaFor(product, {
+        price: cashPrice,
         image: images[0],
-        description: product.short_description || product.name,
-        /*
-         * Omitted entirely when unknown, rather than named 'Genuine Brand'.
-         *
-         * schema.org treats brand as optional, and this block is machine-read:
-         * a placeholder here publishes a brand that does not exist straight
-         * into search results, for every product with none recorded.
-         */
-        ...(product.brand?.name
-            ? { brand: { '@type': 'Brand', name: product.brand.name } }
-            : {}),
-        offers: {
-            '@type': 'Offer',
-            priceCurrency: 'BDT',
-            price: product.effective_price ?? product.price,
-            availability: 'https://schema.org/InStock',
-            seller: {
-                '@type': 'Organization',
-                name: siteConfig.name,
-            },
-        },
-    };
+        inStock: stockStatus.tone === 'in',
+        sellerName: brandName || siteConfig.name,
+        reviews: reviewsData,
+    });
 
     return (
         <>
@@ -1183,6 +1164,61 @@ export default function ProductDetails(props) {
                         className="pdp-section"
                         ref={sectionRefs.questions}
                     >
+                        {/*
+                         * The one question the shop can always answer, above
+                         * the ones customers have asked.
+                         *
+                         * It used to be a paragraph of its own at the foot of
+                         * the page, written as prose for a search engine to
+                         * interpret. The price is published properly in the
+                         * Product markup now, so this is here for the reader
+                         * instead — in the place someone looking for an answer
+                         * goes, and in the same shape as every other answer.
+                         *
+                         * Templated from the product's own figures and marked
+                         * up like a real entry, but it is not one: it has no
+                         * row behind it, so it cannot be edited or removed in
+                         * admin, and it is not counted in "N questions".
+                         */}
+                        <ul className="pdp-question-list pdp-question-list-standing">
+                            <li className="pdp-question">
+                                <div className="pdp-qa-row">
+                                    <span className="pdp-q-marker">Q</span>
+                                    <div className="pdp-qa-body">
+                                        <p className="pdp-question-text">
+                                            What is the price of {product.name}{' '}
+                                            in Bangladesh?
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="pdp-qa-row is-answer">
+                                    <span className="pdp-a-marker">A</span>
+                                    <div className="pdp-qa-body">
+                                        <p className="pdp-answer-text">
+                                            The latest price is{' '}
+                                            {formatBdt(cashPrice)}
+                                            {selectedVariant && (
+                                                <>
+                                                    {' '}
+                                                    for the{' '}
+                                                    {Object.values(
+                                                        selectedVariant.options ||
+                                                            {},
+                                                    ).join(' / ')}{' '}
+                                                    option
+                                                </>
+                                            )}
+                                            . You can buy it from our website or
+                                            visit any of our showrooms.
+                                        </p>
+                                        <span className="pdp-question-meta">
+                                            {brandName}
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
                         <ProductQuestions
                             slug={productSlug}
                             questions={questions}
@@ -1294,33 +1330,6 @@ export default function ProductDetails(props) {
                  * looking at a mouse was never offered another mouse.
                  */}
                 <ProductSuggestions products={similar} />
-                {/* The question people actually type into Google, answered
-                    on the page rather than left to a snippet generator.
-                    Templated from the product's own figures, so it cannot
-                    drift out of date the way a hand-written line would. */}
-                <section className="pdp-latest-price">
-                    <h3>What is the price of {product.name} in Bangladesh?</h3>
-                    <p>
-                        The latest price of {product.name} in Bangladesh is{' '}
-                        {formatBdt(
-                            selectedVariant?.effective_price ??
-                                product.effective_price ??
-                                product.price,
-                        )}
-                        {selectedVariant && (
-                            <>
-                                {' '}
-                                for the{' '}
-                                {Object.values(
-                                    selectedVariant.options || {},
-                                ).join(' / ')}{' '}
-                                option
-                            </>
-                        )}
-                        . You can buy it at the best price from our website or
-                        visit any of our showrooms.
-                    </p>
-                </section>
             </div>
         </>
     );

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import Button from './Button';
 import FormInput from './FormInput';
 import { toast } from './Toast';
 import { MessageSquare, Clock, UserRound } from 'lucide-react';
+import siteConfig from '../constants/siteConfig';
 
 /**
  * Questions a shopper asks before buying.
@@ -22,6 +24,10 @@ export default function ProductQuestions({
     onAsked,
     askingAs = '',
 }) {
+    /* Shared on every page, so the answer is signed with the name in the
+       header rather than one written into this file. */
+    const brandName = usePage().props?.brand_name || siteConfig.name;
+
     const [question, setQuestion] = useState('');
     const [name, setName] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -114,7 +120,16 @@ export default function ProductQuestions({
                                                 {q.answer}
                                             </p>
                                             <span className="pdp-question-meta">
-                                                Robin&apos;s Computer
+                                                {/* The shop's own name from
+                                                    Settings, not this one's
+                                                    idea of it: it read
+                                                    "Robin's Computer" while
+                                                    the setting says "Robins
+                                                    Computer", so the answer
+                                                    was signed by a shop with a
+                                                    different name to the one
+                                                    in the header. */}
+                                                {brandName}
                                             </span>
                                         </div>
                                     </div>
