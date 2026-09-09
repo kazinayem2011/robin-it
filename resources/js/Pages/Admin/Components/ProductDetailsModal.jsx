@@ -162,11 +162,18 @@ export default function ProductDetailsModal({
                                 <Row label="Model">{product.model}</Row>
                                 <Row label="MPN">{product.mpn}</Row>
                                 <Row label="Slug">{product.slug}</Row>
+                                {/* The terms are typed a clause per line, so
+                                    they are shown that way — without this the
+                                    four lines somebody entered run together
+                                    into one unreadable sentence. */}
                                 <Row label="Warranty">
-                                    {product.warranty_text ||
-                                        (product.warranty_months
-                                            ? `${product.warranty_months} months`
-                                            : null)}
+                                    {product.warranty_text ? (
+                                        <span className="pd-multiline">
+                                            {product.warranty_text}
+                                        </span>
+                                    ) : product.warranty_months ? (
+                                        `${product.warranty_months} months`
+                                    ) : null}
                                 </Row>
                             </dl>
                         </Section>

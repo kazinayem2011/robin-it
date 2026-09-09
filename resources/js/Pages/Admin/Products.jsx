@@ -1100,9 +1100,15 @@ export default function Products({
                         helperText="Counted from the day the customer buys it. Leave blank if the product has none."
                     />
 
+                    {/* A warranty is a list of clauses, not a sentence: what
+                        is covered, what is not, what the customer has to keep.
+                        One line could not hold them, and the column could not
+                        either until it became `text`. */}
                     <FormInput
                         id="warranty_text"
                         name="warranty_text"
+                        type="textarea"
+                        rows={5}
                         label="Warranty Terms"
                         value={formik.values.warranty_text}
                         onChange={formik.handleChange}
@@ -1111,8 +1117,13 @@ export default function Products({
                             formik.touched.warranty_text &&
                             formik.errors.warranty_text
                         }
-                        placeholder="2 Years warranty (Battery & Adapter 1 Year)"
-                        helperText="What the customer is told. The months above are what the claims system counts."
+                        placeholder={
+                            '2 Years warranty on the unit\n' +
+                            'Battery and adapter: 1 year\n' +
+                            'Physical damage and burn marks are not covered\n' +
+                            'Keep the box and the invoice for any claim'
+                        }
+                        helperText="One clause per line. What the customer is told; the months above are what the claims system counts."
                     />
 
                     {/* One feature per line. The field is stored as markup —

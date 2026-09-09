@@ -105,7 +105,12 @@ class ProductRules
              * is routinely "2 Years warranty (Battery & Adapter 1 Year)". Shown
              * to the customer in preference to the months when both are set.
              */
-            'warranty_text' => 'nullable|string|max:255',
+            /*
+             * Several lines now, not one. Still bounded — the column is `text`
+             * and would take 65k, but a warranty nobody will read is not worth
+             * accepting, and an unbounded string is a payload to be abused.
+             */
+            'warranty_text' => 'nullable|string|max:2000',
 
             /*
              * Written for a search result, not for the page. Lengths match what

@@ -158,6 +158,15 @@
     overflow-wrap: anywhere;
 }
 
+/*
+ * Warranty terms are typed a clause per line. `pre-line` keeps those breaks
+ * while still collapsing the runs of spaces that come with a paste, and still
+ * wrapping a long clause to the column.
+ */
+.pd-multiline {
+    white-space: pre-line;
+}
+
 .pd-empty {
     color: var(--text-subtle);
     font-style: italic;
