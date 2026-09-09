@@ -1793,17 +1793,30 @@ textarea.has-error:focus,
 }
 
 /* Product detail */
+/*
+ * These mirror the product page's own grid, so the content does not shift when
+ * it arrives. 1fr/2fr and a 40px gap are `.pdp-top`; if that ratio changes,
+ * this changes with it.
+ */
 .skeleton-pdp {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     gap: 40px;
-    padding: 32px 0;
+    padding: 0 0 32px;
+}
+
+.skeleton-pdp-utility {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 30px 0 18px;
 }
 
 .skeleton-pdp-gallery {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     min-width: 0;
 }
 
@@ -1816,14 +1829,32 @@ textarea.has-error:focus,
 .skeleton-pdp-info {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
 }
 
+/* The fact row wraps the same way the real chips do. */
+.skeleton-pdp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 6px 0 10px;
+}
+
+/* Two payment cards side by side, collapsing on the same terms as the real
+   ones — `auto-fit` at the same 190px floor. */
+.skeleton-pdp-pay {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+/* The quantity stepper is narrow and fixed; the buy button takes the rest. */
 .skeleton-pdp-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 14px;
     margin-top: 8px;
 }
 
@@ -1831,6 +1862,12 @@ textarea.has-error:focus,
     .skeleton-pdp {
         grid-template-columns: minmax(0, 1fr);
         gap: 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .skeleton-pdp-actions {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

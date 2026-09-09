@@ -529,23 +529,35 @@
  * The row stays put while the sections scroll under it, which is what makes it
  * navigation rather than a heading — a bar that scrolls away is only useful at
  * the top of the page it is meant to move you around.
+ *
+ * It pins below the site header, not at the top of the viewport. `top: 0` put
+ * it underneath a header that is itself sticky at z-index 120, so the row was
+ * hidden behind it and every section landed under both. --site-chrome-h is
+ * published by Header.jsx and is exactly "how far down anything else can stick
+ * without hiding behind the header"; the dashboard's own sidebar pins off the
+ * same value.
  */
 .pdp-section-nav {
     position: sticky;
-    top: 0;
+    top: var(--site-chrome-h, 142px);
     z-index: 5;
     background: var(--bg-page);
     margin-bottom: 8px;
 }
 
 /*
- * `scroll-margin-top` rather than padding: the row above is sticky, so a
- * section scrolled to by the browser would otherwise stop with its heading
- * underneath it. This is the offset the anchor lands at, and it matches the
- * rootMargin the observer uses to decide which section is being read.
+ * Where a section comes to rest when it is scrolled to.
+ *
+ * It has to clear the header *and* the row that pins under it, or the heading
+ * arrives hidden behind them — which is what "hides a few on top" was. The row
+ * measures itself into --pdp-nav-h so this does not depend on guessing its
+ * height, and the observer that marks the current section reads the same two
+ * values, so clicking and scrolling agree.
  */
 .pdp-section {
-    scroll-margin-top: 72px;
+    scroll-margin-top: calc(
+        var(--site-chrome-h, 142px) + var(--pdp-nav-h, 48px) + 12px
+    );
     padding-bottom: 34px;
 }
 

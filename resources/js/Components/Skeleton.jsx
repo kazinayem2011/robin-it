@@ -112,35 +112,99 @@ export const LineItemsSkeleton = ({ count = 3 }) => (
 );
 
 /** The product page: gallery on the left, buying column on the right. */
+/**
+ * The product page while it loads.
+ *
+ * It stood for a layout the page no longer has: two equal columns against the
+ * real 1fr/2fr, a 420px gallery against a 4:3 one, and an info column of five
+ * anonymous bars where there is now a title, a row of five chips, the key
+ * features, and two payment cards. A skeleton that is the wrong shape moves
+ * the content when it arrives, which is the one thing it exists to prevent.
+ *
+ * The widths of the chips are deliberately uneven — "Brand: Lenovo" is not the
+ * width of "Regular Price: 82,500" — because a row of five identical pills
+ * reads as a control rather than as text about to appear.
+ */
+const CHIP_WIDTHS = ['104px', '150px', '112px', '138px', '92px'];
+
 export const ProductDetailSkeleton = () => (
-    <div className="skeleton-pdp">
-        <div className="skeleton-pdp-gallery">
-            <Skeleton height="420px" borderRadius="var(--radius-md, 12px)" />
-            <div className="skeleton-pdp-thumbs">
-                {range(4).map((i) => (
+    <>
+        {/* Share, Save and Compare, which sit above the two columns. */}
+        <div className="skeleton-pdp-utility">
+            <Skeleton width="150px" height="22px" />
+            <Skeleton width="210px" height="22px" />
+        </div>
+
+        <div className="skeleton-pdp">
+            <div className="skeleton-pdp-gallery">
+                {/* 4:3, the same ratio the real frame states, so the column
+                    below it does not jump when the photo lands. */}
+                <Skeleton
+                    height="auto"
+                    borderRadius="var(--radius-md, 12px)"
+                    style={{ aspectRatio: '4 / 3' }}
+                />
+                <div className="skeleton-pdp-thumbs">
+                    {range(4).map((i) => (
+                        <Skeleton
+                            key={i}
+                            height="76px"
+                            borderRadius="var(--radius-sm, 8px)"
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <div className="skeleton-pdp-info">
+                {/* Title, two lines of it. */}
+                <Skeleton width="92%" height="26px" />
+                <Skeleton width="58%" height="26px" />
+
+                {/* The fact row: price, regular price, status, code, brand. */}
+                <div className="skeleton-pdp-chips">
+                    {CHIP_WIDTHS.map((width, i) => (
+                        <Skeleton
+                            key={i}
+                            width={width}
+                            height="33px"
+                            borderRadius="var(--radius-full, 999px)"
+                        />
+                    ))}
+                </div>
+
+                {/* Key Features: a heading and its bullets. */}
+                <Skeleton width="140px" height="18px" />
+                {range(5).map((i) => (
+                    <Skeleton key={i} width={`${92 - i * 9}%`} height="13px" />
+                ))}
+                <Skeleton width="118px" height="14px" />
+
+                {/* Payment Options: a heading and the two cards. */}
+                <Skeleton width="160px" height="18px" />
+                <div className="skeleton-pdp-pay">
+                    {range(2).map((i) => (
+                        <Skeleton
+                            key={i}
+                            height="82px"
+                            borderRadius="var(--radius-md, 12px)"
+                        />
+                    ))}
+                </div>
+
+                {/* Quantity stepper beside the buy button. */}
+                <div className="skeleton-pdp-actions">
                     <Skeleton
-                        key={i}
-                        height="72px"
+                        height="46px"
                         borderRadius="var(--radius-sm, 8px)"
                     />
-                ))}
+                    <Skeleton
+                        height="46px"
+                        borderRadius="var(--radius-sm, 8px)"
+                    />
+                </div>
             </div>
         </div>
-        <div className="skeleton-pdp-info">
-            <Skeleton width="30%" height="14px" />
-            <Skeleton width="85%" height="30px" />
-            <Skeleton width="45%" height="16px" />
-            <Skeleton width="35%" height="34px" />
-            <Skeleton height="1px" />
-            {range(3).map((i) => (
-                <Skeleton key={i} width={`${85 - i * 12}%`} height="14px" />
-            ))}
-            <div className="skeleton-pdp-actions">
-                <Skeleton height="46px" borderRadius="var(--radius-sm, 8px)" />
-                <Skeleton height="46px" borderRadius="var(--radius-sm, 8px)" />
-            </div>
-        </div>
-    </div>
+    </>
 );
 
 /** One row per component slot, matching the builder's four-column grid. */

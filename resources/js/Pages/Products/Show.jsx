@@ -176,6 +176,8 @@ export default function ProductDetails(props) {
      * One ref each rather than one for the group, because the row has to be
      * able to scroll to any of them and to mark whichever is being read.
      */
+    const sectionsRef = useRef(null);
+
     const sectionRefs = {
         specification: useRef(null),
         description: useRef(null),
@@ -195,16 +197,53 @@ export default function ProductDetails(props) {
     const showFullDetails = () => goToSection('specification');
 
     /*
+     * How tall the navigation row is, published for the CSS to offset against.
+     *
+     * A section has to come to rest below the site header *and* below this row,
+     * or its heading arrives hidden behind them. Measured rather than assumed,
+     * the way Header.jsx measures its own bars, because the row's height moves
+     * with the type scale and wraps on a narrow screen.
+     */
+    useEffect(() => {
+        const container = sectionsRef.current;
+
+        if (!container || typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        const row = container.querySelector('.pdp-section-nav');
+
+        if (!row) {
+            return;
+        }
+
+        const publish = () => {
+            document.documentElement.style.setProperty(
+                '--pdp-nav-h',
+                `${Math.round(row.getBoundingClientRect().height)}px`,
+            );
+        };
+
+        publish();
+
+        const observer = new ResizeObserver(publish);
+        observer.observe(row);
+
+        return () => observer.disconnect();
+    }, [product]);
+
+    /*
      * Keep the row honest as the page is scrolled by hand.
      *
      * Without this the row marks whatever was last clicked, so it can claim
      * the reader is in Specification while they are reading Reviews — worse
      * than marking nothing, because it is confidently wrong.
      *
-     * The top band is where "current" is decided: a rootMargin that ignores
-     * the bottom 55% of the viewport means a section counts as being read once
-     * its heading reaches the upper part of the screen, rather than the moment
-     * a pixel of it appears at the bottom.
+     * The top of the band is the header plus the row, the same offset the
+     * sections rest at, so clicking a section and scrolling to it agree about
+     * which one is current. Ignoring the bottom 55% means a section counts as
+     * being read once its heading reaches the upper part of the screen, rather
+     * than the moment a pixel of it appears at the bottom.
      */
     useEffect(() => {
         if (!product || typeof IntersectionObserver === 'undefined') {
@@ -218,6 +257,16 @@ export default function ProductDetails(props) {
         if (!nodes.length) {
             return;
         }
+
+        const px = (name, fallback) => {
+            const raw = getComputedStyle(
+                document.documentElement,
+            ).getPropertyValue(name);
+
+            return parseInt(raw, 10) || fallback;
+        };
+
+        const top = px('--site-chrome-h', 142) + px('--pdp-nav-h', 48) + 12;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -238,7 +287,7 @@ export default function ProductDetails(props) {
                     setActiveSection(match[0]);
                 }
             },
-            { rootMargin: '-80px 0px -55% 0px', threshold: 0 },
+            { rootMargin: `-${top}px 0px -55% 0px`, threshold: 0 },
         );
 
         nodes.forEach(([, node]) => observer.observe(node));
@@ -1078,7 +1127,11 @@ export default function ProductDetails(props) {
                  * Each section's id matches its key in the row, so the links
                  * are ordinary fragment links and work without the scrolling.
                  */}
-                <div className="pdp-sections" id="product-details">
+                <div
+                    className="pdp-sections"
+                    id="product-details"
+                    ref={sectionsRef}
+                >
                     <Tabs
                         navigation
                         tabs={[
