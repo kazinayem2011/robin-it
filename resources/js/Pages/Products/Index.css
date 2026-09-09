@@ -1,7 +1,7 @@
 /* Index.css - Product Listing Page (SSOT) */
 
 .plp-page-wrapper {
-    padding: 24px 16px 60px;
+    padding: 20px 16px 60px;
 }
 
 .plp-container {
@@ -15,33 +15,38 @@
  * its own border and shadow, so a breadcrumb, a title and an item count took
  * roughly 180px of vertical space before a single product appeared.
  */
+/*
+ * The breadcrumb's row, and nothing else now the title and the count have
+ * gone. It keeps no padding of its own: the gaps down this page all come from
+ * .plp-container's own gap, so there is one number to change rather than four
+ * that add up.
+ */
 .plp-header-banner {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     gap: 16px;
     flex-wrap: wrap;
-    padding: 4px 0 18px;
 }
 
-.plp-title {
-    margin: 2px 0 0;
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-}
-
-.plp-item-count {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-}
-
-.plp-breadcrumbs-spacer {
+/*
+ * Two rules used to say this, one of them adding a margin of its own.
+ *
+ * The class it shares, `.breadcrumbs`, is declared in Products/Show.css with
+ * 24px of margin and 14px of padding beneath it, which the detail page wants
+ * and this one does not — a trail, a row of makers and two panels each need
+ * the same gap, not one that is three times the others. Both are cancelled
+ * here, on the compound selector so it wins wherever the two files land in
+ * the bundle.
+ */
+.breadcrumbs.plp-breadcrumbs-spacer {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.8rem;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
 }
 
 .plp-breadcrumbs-spacer .current {
@@ -54,12 +59,6 @@
     color: var(--text-faint);
 }
 
-.plp-breadcrumbs-spacer {
-    margin-bottom: 6px;
-    font-size: 0.82rem;
-    color: var(--text-muted);
-}
-
 .plp-breadcrumbs-spacer a {
     color: var(--text-body);
     text-decoration: none;
@@ -67,21 +66,6 @@
 
 .plp-breadcrumbs-spacer a:hover {
     color: var(--primary-ink);
-}
-
-.plp-title {
-    font-size: 1.6rem;
-    font-weight: 900;
-    text-transform: capitalize;
-    font-family: var(--font-heading);
-    color: var(--text-primary);
-    line-height: 1.2;
-    margin-bottom: 4px;
-}
-
-.plp-item-count {
-    font-size: 0.84rem;
-    color: var(--text-muted);
 }
 
 /*
@@ -181,21 +165,6 @@
     }
 }
 
-.plp-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.plp-sort-label {
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: var(--text-body);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
 /*
  * A fixed width, not the content's.
  *
@@ -249,16 +218,6 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-        padding-bottom: 10px;
-    }
-
-    .plp-title {
-        margin-top: 0;
-        font-size: 1.45rem;
-    }
-
-    .plp-breadcrumbs-spacer {
-        margin-bottom: 2px;
     }
 
     .plp-container {
@@ -746,7 +705,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 18px;
 }
 
 .cat-brand-pill {
