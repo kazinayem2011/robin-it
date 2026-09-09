@@ -697,6 +697,54 @@
     color: var(--text-primary);
 }
 
+/*
+ * Warranty. Both halves were recorded by the admin and shown to nobody — this
+ * is the first place either reaches a customer.
+ */
+.pdp-warranty-period {
+    margin: 0 0 14px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.pdp-warranty-period strong {
+    color: var(--text-primary);
+}
+
+/*
+ * The clauses, as a list. Wide measure is deliberate: several of these run to
+ * a full sentence, and the Bengali policy text is longer again than its
+ * English equivalent.
+ */
+.pdp-warranty-terms {
+    list-style: disc;
+    margin: 0;
+    padding-left: 20px;
+    max-width: 70ch;
+}
+
+.pdp-warranty-terms li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+.pdp-warranty-terms li + li {
+    margin-top: 8px;
+}
+
+.pdp-warranty-terms li::marker {
+    color: var(--primary-ink);
+}
+
+.pdp-warranty-single {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    max-width: 70ch;
+}
+
 /* Specifications Table */
 /* No heading rule here any more. The section titles are the page's, not these
    components' — `h2.pdp-details-heading`, rendered once per section so all

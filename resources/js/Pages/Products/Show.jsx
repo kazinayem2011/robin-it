@@ -17,6 +17,7 @@ import ProductImage from '../../Components/ProductImage';
 import ProductDescription from '../../Components/ProductDescription';
 import ProductQuestions from '../../Components/ProductQuestions';
 import ProductSpecifications from '../../Components/ProductSpecifications';
+import ProductWarranty from '../../Components/ProductWarranty';
 import RatingBreakdown from '../../Components/RatingBreakdown';
 import ReviewForm from '../../Components/ReviewForm';
 import ReviewList from '../../Components/ReviewList';
@@ -171,16 +172,28 @@ export default function ProductDetails(props) {
     };
 
     /*
-     * The four sections below the product, and the row that navigates them.
+     * The sections below the product, and the row that navigates them. Four
+     * always, plus Warranty on a product that records one.
      *
      * One ref each rather than one for the group, because the row has to be
      * able to scroll to any of them and to mark whichever is being read.
      */
     const sectionsRef = useRef(null);
 
+    /*
+     * Whether there is a warranty to show. Both fields are optional and most
+     * of the catalogue carries neither, so the section and its place in the
+     * row above appear together or not at all.
+     */
+    const hasWarranty = Boolean(
+        Number(product?.warranty_months) ||
+        (product?.warranty_text || '').trim(),
+    );
+
     const sectionRefs = {
         specification: useRef(null),
         description: useRef(null),
+        warranty: useRef(null),
         questions: useRef(null),
         reviews: useRef(null),
     };
@@ -1118,6 +1131,15 @@ export default function ProductDetails(props) {
                                 key: 'description',
                                 label: 'Description',
                             },
+                            /*
+                             * Only when the product has one. Most of this
+                             * catalogue carries no warranty terms, and a
+                             * permanent tab leading to "nothing recorded"
+                             * advertises that absence on every product.
+                             */
+                            ...(hasWarranty
+                                ? [{ key: 'warranty', label: 'Warranty' }]
+                                : []),
                             {
                                 key: 'questions',
                                 label: 'Questions',
@@ -1166,6 +1188,23 @@ export default function ProductDetails(props) {
                                     description={product.description}
                                 />
                             </section>
+
+                            {hasWarranty && (
+                                <section
+                                    id="warranty"
+                                    className="pdp-section"
+                                    ref={sectionRefs.warranty}
+                                >
+                                    <h2 className="pdp-details-heading">
+                                        Warranty
+                                    </h2>
+
+                                    <ProductWarranty
+                                        months={product.warranty_months}
+                                        terms={product.warranty_text}
+                                    />
+                                </section>
+                            )}
 
                             <section
                                 id="questions"
