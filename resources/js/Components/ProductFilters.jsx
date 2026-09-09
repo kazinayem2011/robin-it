@@ -40,6 +40,37 @@ export default function ProductFilters({
     const [maxPrice, setMaxPrice] = useState(value.max_price ?? '');
     const [open, setOpen] = useState(false);
 
+    /*
+     * The slider runs from nothing to the dearest thing on the shelf, which is
+     * how the trade draws it — Star Tech's laptop slider is 0 to 818,000, not
+     * 34,000 to 818,000. Starting at the cheapest would make the left handle's
+     * resting place mean "no minimum" and "the minimum there is" at once, and a
+     * shelf where everything costs the same would have no track to drag along.
+     *
+     * It replaced a line of text reading "৳3,500 – ৳3,500 available", which is
+     * what that shelf's bounds honestly were and no help to anybody.
+     */
+    const priceCeiling = Math.ceil(facets?.max_price ?? 0);
+
+    /*
+     * A hundred steps across whatever the shelf spans, so dragging feels the
+     * same on a ৳2,000 cable shelf as on a ৳800,000 laptop one, and rounded so
+     * the number under the handle is one a person would say out loud.
+     */
+    const priceStep = Math.max(1, Math.round(priceCeiling / 100));
+
+    // An untouched handle rests at its end of the track: no minimum, no maximum.
+    const clampPrice = (raw, fallback) => {
+        const value = Number(raw);
+
+        return raw === '' || Number.isNaN(value)
+            ? fallback
+            : Math.min(Math.max(value, 0), priceCeiling);
+    };
+
+    const sliderLow = clampPrice(minPrice, 0);
+    const sliderHigh = clampPrice(maxPrice, priceCeiling);
+
     // Long lists get a search box. Short ones do not need one and a box over
     // four options is just clutter.
     const [brandQuery, setBrandQuery] = useState('');
@@ -234,12 +265,66 @@ export default function ProductFilters({
                     </button>
                     {!collapsed.price && (
                         <>
-                            {facets && facets.max_price > 0 && (
-                                <p className="plp-filter-hint">
-                                    {formatBdt(facets.min_price)} –{' '}
-                                    {formatBdt(facets.max_price)} available
-                                </p>
+                            {priceCeiling > 0 && (
+                                <div className="plp-price-slider">
+                                    <span className="plp-price-track" />
+                                    <span
+                                        className="plp-price-track-fill"
+                                        style={{
+                                            left: `${(sliderLow / priceCeiling) * 100}%`,
+                                            right: `${100 - (sliderHigh / priceCeiling) * 100}%`,
+                                        }}
+                                    />
+
+                                    {/*
+                                        Two overlaid range inputs rather than a
+                                        library. They are draggable, and they
+                                        are also arrow-keyable and readable to a
+                                        screen reader without any of that being
+                                        written — which a pair of divs would
+                                        have had to earn back by hand.
+                                    */}
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={priceCeiling}
+                                        step={priceStep}
+                                        value={sliderLow}
+                                        onChange={(event) => {
+                                            const next = Number(
+                                                event.target.value,
+                                            );
+                                            setMinPrice(
+                                                String(
+                                                    Math.min(next, sliderHigh),
+                                                ),
+                                            );
+                                        }}
+                                        aria-label="Minimum price"
+                                        aria-valuetext={formatBdt(sliderLow)}
+                                    />
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={priceCeiling}
+                                        step={priceStep}
+                                        value={sliderHigh}
+                                        onChange={(event) => {
+                                            const next = Number(
+                                                event.target.value,
+                                            );
+                                            setMaxPrice(
+                                                String(
+                                                    Math.max(next, sliderLow),
+                                                ),
+                                            );
+                                        }}
+                                        aria-label="Maximum price"
+                                        aria-valuetext={formatBdt(sliderHigh)}
+                                    />
+                                </div>
                             )}
+
                             <div className="plp-price-inputs">
                                 <input
                                     type="number"

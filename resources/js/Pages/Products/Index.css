@@ -322,6 +322,96 @@
     color: var(--text-subtle);
 }
 
+/*
+ * The price range, as a track with a handle at each end.
+ *
+ * Two range inputs stacked on one track. Each is transparent and passes the
+ * mouse straight through except at its own thumb, so both handles stay
+ * grabbable even where they overlap — a single input cannot express a range,
+ * and a pair of divs would have had to earn back the keyboard and the screen
+ * reader that these two get for nothing.
+ */
+.plp-price-slider {
+    position: relative;
+    height: 26px;
+    margin: 6px 2px 14px;
+}
+
+.plp-price-track,
+.plp-price-track-fill {
+    position: absolute;
+    top: 50%;
+    height: 4px;
+    border-radius: var(--radius-full);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.plp-price-track {
+    left: 0;
+    right: 0;
+    background: var(--bg-muted-strong);
+}
+
+.plp-price-track-fill {
+    background: var(--primary-ink);
+}
+
+.plp-price-slider input[type='range'] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    appearance: none;
+    /* The track is drawn above; only the thumbs take the mouse. */
+    pointer-events: none;
+}
+
+.plp-price-slider input[type='range']:focus {
+    outline: none;
+}
+
+.plp-price-slider input[type='range']::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--primary-ink);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+    cursor: grab;
+    pointer-events: auto;
+    appearance: none;
+}
+
+.plp-price-slider input[type='range']::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--primary-ink);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+    cursor: grab;
+    pointer-events: auto;
+}
+
+.plp-price-slider input[type='range']:active::-webkit-slider-thumb {
+    cursor: grabbing;
+}
+
+/* Keyboard focus has to be visible on a control with no border of its own. */
+.plp-price-slider input[type='range']:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+}
+
+.plp-price-slider input[type='range']:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+}
+
 .plp-filter-hint {
     margin: 0 0 10px;
     font-size: 12px;

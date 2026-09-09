@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import ProductFilters from '../ProductFilters';
@@ -167,5 +167,117 @@ describe('what the filter panel offers', () => {
         expect(onChange).toHaveBeenLastCalledWith(
             expect.objectContaining({ brand_ids: [1, 2] }),
         );
+    });
+});
+
+/**
+ * The price range, as a track with a handle at each end.
+ *
+ * It was a line of text — "৳3,500 – ৳3,500 available" — which is what that
+ * shelf's bounds honestly were and no help to anybody, and two number boxes
+ * underneath that a shopper had to guess values for.
+ */
+describe('the price slider', () => {
+    const handles = () => [
+        screen.getByLabelText('Minimum price', {
+            selector: 'input[type="range"]',
+        }),
+        screen.getByLabelText('Maximum price', {
+            selector: 'input[type="range"]',
+        }),
+    ];
+
+    it('replaces the line of text about what is available', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(screen.queryByText(/available/)).toBeNull();
+        expect(document.querySelector('.plp-price-slider')).toBeTruthy();
+    });
+
+    /*
+     * From nothing to the dearest thing on the shelf, the way the trade draws
+     * it. Starting at the cheapest would make the left handle's resting place
+     * mean "no minimum" and "the minimum there is" at the same time.
+     */
+    it('runs from zero to the dearest thing on the shelf', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        const [low, high] = handles();
+        expect(low.min).toBe('0');
+        expect(high.max).toBe('90000');
+    });
+
+    it('rests each handle at its own end until it is moved', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        const [low, high] = handles();
+        expect(low.value).toBe('0');
+        expect(high.value).toBe('90000');
+    });
+
+    it('places the handles where the shopper left them', () => {
+        render(
+            <ProductFilters
+                facets={FACETS}
+                value={{ min_price: 20000, max_price: 60000 }}
+            />,
+        );
+
+        const [low, high] = handles();
+        expect(low.value).toBe('20000');
+        expect(high.value).toBe('60000');
+    });
+
+    /* Dragged past each other, the handles stop rather than invert the range. */
+    it('will not let the handles cross', () => {
+        render(
+            <ProductFilters
+                facets={FACETS}
+                value={{ min_price: 20000, max_price: 60000 }}
+            />,
+        );
+
+        const [low, high] = handles();
+
+        // Dragging the low handle above the high one pins it, not past it.
+        fireEvent.change(low, { target: { value: '80000' } });
+        expect(Number(low.value)).toBeLessThanOrEqual(Number(high.value));
+        expect(low.value).toBe('60000');
+
+        // And the same the other way.
+        fireEvent.change(high, { target: { value: '0' } });
+        expect(Number(high.value)).toBeGreaterThanOrEqual(Number(low.value));
+    });
+
+    /*
+     * A hundred steps across whatever the shelf spans, so the drag feels the
+     * same on a cable shelf as on a laptop one.
+     */
+    it('steps in proportion to the shelf, not in single taka', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(Number(handles()[0].step)).toBe(900);
+    });
+
+    it('draws no slider when nothing on the shelf has a price', () => {
+        render(
+            <ProductFilters
+                facets={{ ...FACETS, min_price: 0, max_price: 0 }}
+                value={{}}
+            />,
+        );
+
+        expect(document.querySelector('.plp-price-slider')).toBeNull();
+    });
+
+    /* The boxes stay: a slider cannot be told an exact figure. */
+    it('keeps the number boxes alongside it', () => {
+        render(<ProductFilters facets={FACETS} value={{}} />);
+
+        expect(
+            screen.getByLabelText('Minimum price', {
+                selector: 'input[type="number"]',
+            }),
+        ).toBeTruthy();
     });
 });
