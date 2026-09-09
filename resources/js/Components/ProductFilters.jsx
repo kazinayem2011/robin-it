@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from '@inertiajs/react';
 import { SlidersHorizontal, X, Search, ChevronDown } from 'lucide-react';
 import { formatBdt } from '../utils/formatters';
-import { ROUTES } from '../constants/endpoints';
-import { buildShopSearch } from '../utils/shopQuery';
 import { FilterFacetSkeleton } from './Skeleton';
 
 /**
@@ -18,13 +15,10 @@ export default function ProductFilters({
     facets = null,
     value = {},
     onChange,
-    categorySlug = null,
     /*
      * What the listing is sorted by, so a category link can carry it. Not used
      * for anything the sidebar draws.
      */
-    sort = null,
-    defaultSort = null,
     // The offers page is already restricted to on-sale, so the box would be
     // a checkbox that does nothing.
     hideOnSale = false,
@@ -48,7 +42,6 @@ export default function ProductFilters({
 
     // Long lists get a search box. Short ones do not need one and a box over
     // four options is just clutter.
-    const [categoryQuery, setCategoryQuery] = useState('');
     const [brandQuery, setBrandQuery] = useState('');
     const [collapsed, setCollapsed] = useState({});
     const bodyRef = useRef(null);
@@ -74,50 +67,6 @@ export default function ProductFilters({
 
     const toggleSection = (key) =>
         setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
-
-    const categories = useMemo(
-        () => facets?.categories ?? [],
-        [facets?.categories],
-    );
-
-    /*
-     * Matching a parent keeps its children, and matching a child keeps the
-     * parent so the result is not an orphaned row with no idea where it sits.
-     */
-    const visibleCategories = useMemo(() => {
-        const needle = categoryQuery.trim().toLowerCase();
-
-        if (!needle) return categories;
-
-        return categories
-            .map((parent) => {
-                const parentHit = parent.name.toLowerCase().includes(needle);
-                const children = (parent.children ?? []).filter((child) =>
-                    child.name.toLowerCase().includes(needle),
-                );
-
-                if (parentHit) return parent;
-                if (children.length) return { ...parent, children };
-
-                return null;
-            })
-            .filter(Boolean);
-    }, [categories, categoryQuery]);
-
-    /*
-     * Only the branch being browsed is opened, plus anything a search matched.
-     * Expanding all of them at once made the sidebar 5,800px tall — longer than
-     * the results it is meant to filter.
-     */
-    const isExpanded = (parent) => {
-        if (categoryQuery.trim()) return true;
-        if (!categorySlug) return false;
-
-        return (
-            parent.slug === categorySlug ||
-            (parent.children ?? []).some((c) => c.slug === categorySlug)
-        );
-    };
 
     const allBrands = useMemo(() => facets?.brands ?? [], [facets?.brands]);
     const brands = useMemo(() => {
@@ -225,23 +174,6 @@ export default function ProductFilters({
             0,
         );
 
-    /*
-     * A category is a different page, but the same shopping.
-     *
-     * These links carried the bare route, so choosing a category threw away
-     * everything the shopper had already narrowed by: search "corsair", click
-     * Component, and you were looking at all 161 components with the term
-     * gone from the page and from the URL. Paging is the one thing that does
-     * not survive — page 4 of Laptops is not page 4 of Monitors.
-     */
-    const hrefFor = (slug) =>
-        (slug ? ROUTES.SHOP_CATEGORY(slug) : ROUTES.SHOP) +
-        buildShopSearch({
-            sort: sort ?? undefined,
-            filters: value,
-            defaultSort: defaultSort ?? undefined,
-        });
-
     const clearAll = () => {
         setMinPrice('');
         setMaxPrice('');
@@ -289,104 +221,6 @@ export default function ProductFilters({
                 </div>
 
                 {loading && <FilterFacetSkeleton />}
-
-                {!loading && categories.length > 0 && (
-                    <section className="plp-filter-group">
-                        <button
-                            type="button"
-                            className="plp-filter-legend"
-                            aria-expanded={!collapsed.category}
-                            onClick={() => toggleSection('category')}
-                        >
-                            <h4>Category</h4>
-                            <ChevronDown size={15} />
-                        </button>
-
-                        {!collapsed.category && (
-                            <>
-                                {categories.length > 5 && (
-                                    <div className="plp-filter-search">
-                                        <Search size={13} />
-                                        <input
-                                            type="search"
-                                            value={categoryQuery}
-                                            onChange={(e) =>
-                                                setCategoryQuery(e.target.value)
-                                            }
-                                            placeholder="Search categories"
-                                            aria-label="Search categories"
-                                        />
-                                    </div>
-                                )}
-
-                                <ul className="plp-category-tree">
-                                    <li>
-                                        <Link
-                                            href={hrefFor(null)}
-                                            className={`plp-category-link${!categorySlug ? ' is-current' : ''}`}
-                                        >
-                                            All products
-                                        </Link>
-                                    </li>
-
-                                    {visibleCategories.map((parent) => (
-                                        <li key={parent.id}>
-                                            <Link
-                                                href={hrefFor(parent.slug)}
-                                                className={`plp-category-link${categorySlug === parent.slug ? ' is-current' : ''}`}
-                                            >
-                                                <span>{parent.name}</span>
-                                                <span className="plp-facet-count">
-                                                    {parent.count}
-                                                </span>
-                                            </Link>
-
-                                            {parent.children?.length > 0 &&
-                                                isExpanded(parent) && (
-                                                    <ul className="plp-category-children">
-                                                        {parent.children.map(
-                                                            (child) => (
-                                                                <li
-                                                                    key={
-                                                                        child.id
-                                                                    }
-                                                                >
-                                                                    <Link
-                                                                        href={hrefFor(
-                                                                            child.slug,
-                                                                        )}
-                                                                        className={`plp-category-link is-child${categorySlug === child.slug ? ' is-current' : ''}`}
-                                                                    >
-                                                                        <span>
-                                                                            {
-                                                                                child.name
-                                                                            }
-                                                                        </span>
-                                                                        <span className="plp-facet-count">
-                                                                            {
-                                                                                child.count
-                                                                            }
-                                                                        </span>
-                                                                    </Link>
-                                                                </li>
-                                                            ),
-                                                        )}
-                                                    </ul>
-                                                )}
-                                        </li>
-                                    ))}
-
-                                    {visibleCategories.length === 0 && (
-                                        <li className="plp-filter-empty">
-                                            No category matches “{categoryQuery}
-                                            ”
-                                        </li>
-                                    )}
-                                </ul>
-                            </>
-                        )}
-                    </section>
-                )}
 
                 <section className="plp-filter-group">
                     <button

@@ -14,10 +14,6 @@ const FACETS = {
     min_price: 1000,
     max_price: 90000,
     total: 12,
-    categories: [
-        { id: 1, name: 'Laptops', slug: 'laptops', count: 5, children: [] },
-        { id: 2, name: 'Monitors', slug: 'monitors', count: 7, children: [] },
-    ],
     brands: [
         { id: 1, name: 'ASUS', slug: 'asus' },
         { id: 2, name: 'MSI', slug: 'msi' },
@@ -36,68 +32,6 @@ const skeletons = () =>
  * you were looking at all 161 components with the term gone from the page and
  * from the URL.
  */
-describe('the category links', () => {
-    const linkTo = (name) =>
-        [...document.querySelectorAll('.plp-category-link')]
-            .find((a) => a.textContent.trim().startsWith(name))
-            ?.getAttribute('href');
-
-    it('keep the search term', () => {
-        render(
-            <ProductFilters facets={FACETS} value={{ search: 'corsair' }} />,
-        );
-
-        expect(linkTo('Laptops')).toBe('/shop/laptops?search=corsair');
-    });
-
-    it('keep the shelf filters and the sort as well', () => {
-        render(
-            <ProductFilters
-                facets={FACETS}
-                value={{ search: 'corsair', in_stock: true }}
-                sort="price_low_high"
-                defaultSort="latest"
-            />,
-        );
-
-        const href = linkTo('Monitors');
-
-        expect(href).toContain('/shop/monitors?');
-        expect(href).toContain('search=corsair');
-        expect(href).toContain('in_stock=1');
-        expect(href).toContain('sort=price_low_high');
-    });
-
-    /* Widening back out is still the same shopping. */
-    it('keep it on the way back to everything', () => {
-        render(
-            <ProductFilters
-                facets={FACETS}
-                value={{ search: 'corsair' }}
-                categorySlug="laptops"
-            />,
-        );
-
-        expect(linkTo('All products')).toBe('/shop?search=corsair');
-    });
-
-    /* Page 4 of Laptops is not page 4 of Monitors. */
-    it('do not carry the page number across', () => {
-        render(
-            <ProductFilters facets={FACETS} value={{ search: 'corsair' }} />,
-        );
-
-        expect(linkTo('Laptops')).not.toContain('page=');
-    });
-
-    it('stay bare when nothing has been narrowed', () => {
-        render(<ProductFilters facets={FACETS} value={{}} />);
-
-        expect(linkTo('Laptops')).toBe('/shop/laptops');
-        expect(linkTo('All products')).toBe('/shop');
-    });
-});
-
 describe('ProductFilters loading and busy states', () => {
     /*
      * The very first listing of a session has no facets at all, so there is
@@ -119,7 +53,6 @@ describe('ProductFilters loading and busy states', () => {
 
         expect(skeletons()).toBe(0);
         expect(screen.getByText('ASUS')).toBeInTheDocument();
-        expect(screen.getByText('Laptops')).toBeInTheDocument();
     });
 
     it('takes itself out of action while refreshing', () => {
