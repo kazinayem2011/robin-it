@@ -147,12 +147,20 @@ jobs:
       # queue:restart is not optional: workers hold the old code in memory.
       # Queued mail is fire-and-forget by design, so a worker running stale
       # code fails silently — customers simply stop receiving confirmations.
+      #
+      # cache:clear is what config:clear is not. The cache driver here is
+      # `file`, under storage/, which the deploy does not touch — so 3,800-odd
+      # entries survive it, including the mega-menu tree, cached by the hour
+      # and holding every category's slug. A release that renames a shelf or
+      # adds one therefore served the old menu for up to an hour afterwards,
+      # which looks exactly like the deploy not having worked.
       - name: Migrate and refresh caches
         run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "cd ${{ secrets.DEPLOY_PATH }} && \
              php artisan migrate --force && \
+             php artisan cache:clear && \
              php artisan config:clear && \
              php artisan config:cache && \
              php artisan route:cache && \
