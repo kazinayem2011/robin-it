@@ -127,10 +127,16 @@
     min-width: 0;
 }
 
+/*
+ * A circle, not a full-height bar. At 26x76 each arrow was the height of the
+ * thumbnails it sat beside and read as a ninth tile in the strip rather than a
+ * control acting on it. Centred against the row, so the strip still reads as
+ * one line of photos with a handle at each end.
+ */
 .thumb-nav {
     flex: none;
-    width: 26px;
-    height: 76px;
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -138,7 +144,7 @@
     cursor: pointer;
     background: var(--bg-surface-subtle);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     color: var(--text-secondary);
     transition: all var(--transition-fast);
 }
