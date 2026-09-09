@@ -400,12 +400,16 @@
     gap: 10px;
 }
 
-/* Tighter than the group on the right: three icons of the same kind read as
-   one control, and spacing them apart made the bar look half empty. */
+/*
+ * 5px was set when these were padded discs with a generic glyph inside, where
+ * the padding did the separating. The real brand marks fill their box to the
+ * edge — Facebook's circle and WhatsApp's bubble are the artwork — so at that
+ * spacing the three of them ran together into one shape.
+ */
 .pdp-share {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 10px;
 }
 
 .pdp-share-label {
