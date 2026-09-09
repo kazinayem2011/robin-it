@@ -14,6 +14,7 @@ export const CategoryFormModal = ({
     onClose,
     formik,
     parentOptions = [],
+    brandOptions = [],
     isSubmitting = false,
 }) => {
     return (
@@ -64,6 +65,29 @@ export const CategoryFormModal = ({
                                 {p.name}
                             </option>
                         ))}
+                </FormSelect>
+
+                {/*
+                    A shelf can stand for a brand: "ASUS" under Brand PC is a
+                    shelf with its own page, which is how the trade lists them.
+                    Setting it here carries the brand's logo into the mega menu
+                    and keeps the pair joined through a rename — they used to be
+                    matched on their names alone.
+                */}
+                <FormSelect
+                    id="cat_brand_id"
+                    name="brand_id"
+                    label="Stands for a Brand (Optional)"
+                    value={formik.values.brand_id || ''}
+                    onChange={formik.handleChange}
+                    className="mb-4"
+                >
+                    <option value="">Not a brand shelf</option>
+                    {brandOptions.map((b) => (
+                        <option key={b.id} value={b.id}>
+                            {b.name}
+                        </option>
+                    ))}
                 </FormSelect>
 
                 {/* Category Name */}

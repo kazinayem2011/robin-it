@@ -20,7 +20,11 @@ import {
 /**
  * Main Admin Category Hierarchy & Mega Menu Organizer Page
  */
-export default function Categories({ categories = [], parentOptions = [] }) {
+export default function Categories({
+    categories = [],
+    parentOptions = [],
+    brandOptions = [],
+}) {
     const [searchQuery, setSearchQuery] = useState('');
 
     /*
@@ -119,6 +123,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
             name: '',
             slug: '',
             parent_id: '',
+            brand_id: '',
             icon: '',
             badge: '',
             is_offer: false,
@@ -173,6 +178,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
                 name: '',
                 slug: '',
                 parent_id: '',
+                brand_id: '',
                 icon: 'Layers',
                 badge: '',
                 is_offer: false,
@@ -194,6 +200,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
                 name: '',
                 slug: '',
                 parent_id: parent.id,
+                brand_id: '',
                 icon: level === 2 ? 'Folder' : '',
                 badge: '',
                 is_offer: false,
@@ -319,6 +326,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
                 name: cat.name || '',
                 slug: cat.slug || '',
                 parent_id: cat.parent_id || '',
+                brand_id: cat.brand_id || '',
                 icon: cat.icon || '',
                 badge: cat.badge || '',
                 is_offer: Boolean(cat.is_offer),
@@ -455,6 +463,7 @@ export default function Categories({ categories = [], parentOptions = [] }) {
             {/* Category Create / Edit Modal */}
             <CategoryFormModal
                 modalState={modalState}
+                brandOptions={brandOptions}
                 onClose={closeModal}
                 formik={formik}
                 parentOptions={parentOptions}

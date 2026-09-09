@@ -51,6 +51,8 @@ export const adminCategorySchema = Yup.object().shape({
         .required('Category name is required'),
     slug: Yup.string().max(120, 'Slug cannot exceed 120 characters').nullable(),
     parent_id: Yup.mixed().nullable(),
+    /* The brand a shelf stands for, when it stands for one. Usually null. */
+    brand_id: Yup.mixed().nullable(),
     icon: Yup.string().max(50).nullable(),
     badge: Yup.string().max(20).nullable(),
     is_offer: Yup.boolean().default(false),

@@ -24,6 +24,11 @@ class CategoryRequest extends AdminRequest
                 Rule::unique('categories', 'slug')->ignore($this->routeId()),
             ],
             'parent_id' => 'nullable|exists:categories,id',
+            /*
+             * The brand this shelf stands for, if it stands for one. Most
+             * shelves are product lines, not makers, so this is normally null.
+             */
+            'brand_id' => 'nullable|exists:brands,id',
             'icon' => 'nullable|string|max:50',
             'badge' => 'nullable|string|max:20',
             'is_offer' => 'boolean',

@@ -79,12 +79,22 @@ class CategoryService
         /*
          * Third-level entries are overwhelmingly brand names, and a drawn icon
          * cannot say "ASUS" — a generic box next to every one of eleven hundred
-         * brands is noise pretending to be information. Where the name matches
-         * a row in `brands`, its logo is used; everything else falls back to a
-         * lettermark in the interface.
+         * brands is noise pretending to be information. A shelf that stands for
+         * a brand carries its logo; everything else falls back to a lettermark
+         * in the interface.
          *
-         * Loaded once here rather than per node: the tree is built behind an
-         * hour-long cache, so this is one query per rebuild, not per visitor.
+         * Two ways of finding the brand, and the order matters. The shelf's own
+         * brand_id is the authority, because names are not a join: it left 44
+         * of the 144 brand shelves without a logo, cannot connect a shelf named
+         * "ASUS" to the brand row "ASUS (Network)", and comes apart the moment
+         * either side is renamed.
+         *
+         * The name is still tried when no brand is set, because a shop that
+         * creates a shelf called "AMD" and uploads an AMD logo expects the two
+         * to meet without being told to link them.
+         *
+         * Loaded once here rather than per node: the tree is built behind a
+         * cache, so this is one query per rebuild, not per visitor.
          */
         $brandLogos = Brand::whereNotNull('logo_path')
             ->pluck('logo_path', 'name')
@@ -100,7 +110,9 @@ class CategoryService
                     ->whereIn('id', $stocked)
                     ->with(['children' => function ($q) use ($stocked) {
                         $q->where('is_active', true)
-                            ->whereIn('id', $stocked);
+                            ->whereIn('id', $stocked)
+                            // One query for every brand on the tree, not one per shelf.
+                            ->with('brand:id,name,logo_path');
                     }]);
             }])
             ->get()
@@ -123,7 +135,8 @@ class CategoryService
                                     'id' => $child->id,
                                     'name' => $child->name,
                                     'slug' => $child->slug,
-                                    'logo' => $brandLogos->get(mb_strtolower(trim($child->name))),
+                                    'logo' => $child->brand?->logo_path
+                                        ?? $brandLogos->get(mb_strtolower(trim($child->name))),
                                     'isHot' => str_contains(strtolower($child->name), '4090')
                                         || str_contains(strtolower($child->name), '5090')
                                         || str_contains(strtolower($child->name), 'ultra beast'),

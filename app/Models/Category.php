@@ -10,6 +10,7 @@ class Category extends Model
 {
     protected $fillable = [
         'parent_id',
+        'brand_id',
         'name',
         'slug',
         'position',
@@ -26,6 +27,21 @@ class Category extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * The brand this shelf stands for, when it stands for one.
+     *
+     * The shop lists brands the way the trade does — "ASUS" is a shelf under
+     * Brand PC, with its own page and its own URL — so a category and a brand
+     * are the same thing seen from two sides, and this is the seam.
+     *
+     * Null for an ordinary shelf. Most are: 996 of the 1,140 third-level
+     * shelves are product lines, not makers.
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Attribute;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CategoryService;
@@ -27,7 +28,14 @@ class CategoryController extends Controller
          * so the tree an admin reordered still showed itself unchanged.
          */
         $categories = Category::whereNull('parent_id')
-            ->with(['children.children', 'products'])
+            ->with([
+                'children.children',
+                'products',
+                // Every level, because a brand shelf is usually the third one.
+                'brand:id,name',
+                'children.brand:id,name',
+                'children.children.brand:id,name',
+            ])
             ->inMenuOrder()
             ->get();
 
@@ -46,9 +54,18 @@ class CategoryController extends Controller
                 'level' => $c->parent_id ? ($c->parent->parent_id ? 3 : 2) : 1,
             ]);
 
+        /*
+         * A shelf can stand for a brand — "ASUS" under Brand PC is a shelf
+         * with its own page, the way the trade lists them. The pair used to be
+         * matched on their names at render time, which left 44 of the 144
+         * brand shelves without a logo and came apart on any rename.
+         */
+        $brandOptions = Brand::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Admin/Categories', [
             'categories' => $categories,
             'parentOptions' => $parentOptions,
+            'brandOptions' => $brandOptions,
         ]);
     }
 
@@ -63,6 +80,7 @@ class CategoryController extends Controller
             'name' => $validated['name'],
             'slug' => SlugFactory::unique(Category::class, $validated['slug'] ?? $validated['name']),
             'parent_id' => $validated['parent_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
             'icon' => $validated['icon'] ?? ($validated['parent_id'] ?? null ? null : 'Layers'),
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
@@ -85,6 +103,7 @@ class CategoryController extends Controller
                 $category->id
             ),
             'parent_id' => $validated['parent_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
             'icon' => $validated['icon'] ?? $category->icon,
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
