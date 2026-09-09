@@ -51,6 +51,70 @@
     border-bottom-color: var(--primary);
 }
 
+/*
+ * Variant: Blocks — a row of buttons rather than underlined labels.
+ *
+ * For the product page's section navigation, matching the reference: no rule
+ * under the row, square corners, and each item reading as a solid target. A
+ * `line` tab is a label with a mark under it, which reads as "you are here";
+ * these read as "go here", which is what they do.
+ *
+ * Its own variant rather than a change to `line`, which fourteen other screens
+ * use and expect to keep.
+ */
+.reusable-tabs-container.variant-blocks .reusable-tabs-nav {
+    gap: 2px;
+    border-bottom: none;
+}
+
+.reusable-tabs-container.variant-blocks .reusable-tab-btn {
+    /* Square, deliberately: a row of abutting buttons reads as one control,
+       and rounded ends would break it into separate pills. */
+    border-radius: 0;
+    border: none;
+    background: var(--bg-surface-subtle);
+    color: var(--text-body);
+    padding: 12px 22px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+        background var(--transition-fast),
+        color var(--transition-fast);
+}
+
+.reusable-tabs-container.variant-blocks .reusable-tab-btn:hover {
+    background: var(--bg-muted-strong);
+    color: var(--text-primary);
+}
+
+.reusable-tabs-container.variant-blocks .reusable-tab-btn.active {
+    background: var(--primary);
+    color: var(--text-on-accent);
+}
+
+.reusable-tabs-container.variant-blocks .reusable-tab-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+/* The count sits on a filled ground here, so it cannot borrow the page's. */
+.reusable-tabs-container.variant-blocks .reusable-tab-badge {
+    background: rgba(0, 0, 0, 0.12);
+    color: inherit;
+}
+
+.reusable-tabs-container.variant-blocks
+    .reusable-tab-btn.active
+    .reusable-tab-badge {
+    background: rgba(255, 255, 255, 0.24);
+}
+
 /* Variant: Pills */
 .reusable-tabs-container.variant-pills .reusable-tab-btn {
     background: var(--bg-surface);

@@ -3154,6 +3154,19 @@ textarea.admin-form-input {
     border-top: 1px solid var(--border-color);
     background: var(--bg-surface-subtle);
 }
+
+/*
+ * How far through a batch of photos this is. Pushed to the left so the buttons
+ * stay where they were — somebody cropping six in a row is clicking the same
+ * spot each time, and a count that moved them would cost that.
+ */
+.cropper-queue-count {
+    margin-right: auto;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
 /* ==========================================================================
    UTILITY CLASSES
    --------------------------------------------------------------------------

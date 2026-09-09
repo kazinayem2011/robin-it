@@ -645,7 +645,11 @@ export default function Products({
      * photo is first is how they end up disagreeing.
      */
     const handleCropComplete = async ({ file }) => {
-        setCropperOpen(false);
+        /*
+         * The modal is not closed here any more — it closes itself once the
+         * photos it was given are dealt with. Closing on the first completion
+         * ended the errand after one of six.
+         */
         setUploadingImage(true);
         try {
             const { path } = await uploadService.uploadImage(file, 'products');
@@ -658,7 +662,6 @@ export default function Products({
                 formik.setFieldValue('images', next);
                 // Kept in step for anything still posting the single field.
                 formik.setFieldValue('image_path', next[0]?.image_path || '');
-                toast.success('Photo added.', 'Upload Complete');
             } else {
                 formik.setFieldValue(
                     'variants',
@@ -676,7 +679,6 @@ export default function Products({
                         };
                     }),
                 );
-                toast.success('Option photo added.', 'Upload Complete');
             }
         } catch (err) {
             toast.error(
@@ -685,7 +687,13 @@ export default function Products({
             );
         } finally {
             setUploadingImage(false);
-            setCropTarget('product');
+            /*
+             * `cropTarget` is deliberately left alone. It says which gallery
+             * these photos belong to, and the modal may still have more of
+             * them queued — resetting it here sent the second photo of an
+             * option's gallery to the product's. It is cleared when the modal
+             * closes, which is when the errand is actually over.
+             */
         }
     };
 
@@ -1387,9 +1395,15 @@ export default function Products({
                  */
                 <ImageCropperModal
                     isOpen={cropperOpen}
-                    onClose={() => setCropperOpen(false)}
+                    onClose={() => {
+                        setCropperOpen(false);
+                        setCropTarget('product');
+                    }}
                     onCropComplete={handleCropComplete}
                     aspectRatio={4 / 3}
+                    lockAspect
+                    multiple
+                    targetWidth={1200}
                     title="Crop Product Image (4:3)"
                 />
             )}

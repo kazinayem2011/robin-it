@@ -1153,7 +1153,7 @@ export default function ProductDetails(props) {
                         ]}
                         activeTab={activeSection}
                         onChange={goToSection}
-                        variant="line"
+                        variant="blocks"
                         className="pdp-section-nav"
                     />
 

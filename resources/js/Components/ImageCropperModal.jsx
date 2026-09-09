@@ -49,6 +49,22 @@ export const ImageCropperModal = ({
     targetWidth = 800,
     targetHeight = 800,
     aspectRatio = 1,
+    /*
+     * Hold the crop to `aspectRatio` and hide the ratio and size controls.
+     *
+     * For a product photo the shape is not the uploader's choice — the card,
+     * the gallery and the placeholder are all 4:3, and a square or a banner
+     * cut here is letterboxed everywhere it is drawn.
+     */
+    lockAspect = false,
+    /*
+     * Let one visit to the file picker bring several photos.
+     *
+     * A gallery is normally filled in one go, and reopening the cropper per
+     * photo made adding six a six-times repeated errand. They queue instead:
+     * the first is loaded, and cropping or skipping it moves to the next.
+     */
+    multiple = false,
     title = 'Crop & Optimize Image',
     maxSizeMB = 10, // Maximum allowed file upload size in Megabytes
     acceptedTypes = DEFAULT_ACCEPTED_TYPES,
@@ -63,8 +79,27 @@ export const ImageCropperModal = ({
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [selectedAspect, setSelectedAspect] = useState(aspectRatio);
+    /*
+     * The photos still to be dealt with, and which one is on screen. Empty for
+     * a single pick, which is every caller that does not ask for `multiple`.
+     */
+    const [queue, setQueue] = useState([]);
+    const [queueIndex, setQueueIndex] = useState(0);
+
     const [customWidth, setCustomWidth] = useState(targetWidth);
     const [customHeight, setCustomHeight] = useState(targetHeight);
+
+    /*
+     * The size the export will actually write, and the size the button claims
+     * it will. They were separate: the label read customWidth × customHeight
+     * while the export squashed the crop into that box, so for a locked 4:3 it
+     * announced 800×800 and produced a stretched square. One value now, so the
+     * label cannot describe a file the export does not make.
+     */
+    const outputWidth = parseInt(customWidth, 10) || 800;
+    const outputHeight = selectedAspect
+        ? Math.round(outputWidth / selectedAspect)
+        : parseInt(customHeight, 10) || 800;
 
     const canvasRef = useRef(null);
 
@@ -142,11 +177,10 @@ export const ImageCropperModal = ({
         }
     }, [isOpen]);
 
-    // Handle Local File Upload from modal
-    const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (!validateAndProcessFile(file)) return;
+    /** Put one file on the canvas, resetting whatever was done to the last. */
+    const loadFile = useCallback(
+        (file) => {
+            if (!file || !validateAndProcessFile(file)) return;
 
             const reader = new FileReader();
             reader.onload = (event) => {
@@ -161,7 +195,40 @@ export const ImageCropperModal = ({
                 };
             };
             reader.readAsDataURL(file);
+        },
+        [validateAndProcessFile],
+    );
+
+    // Handle Local File Upload from modal
+    const handleFileChange = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        setQueue(multiple ? files : []);
+        setQueueIndex(0);
+        loadFile(files[0]);
+    };
+
+    /*
+     * Move to the next photo in the queue, or leave when there is none.
+     *
+     * Both finishing one and skipping one come through here, so the two cannot
+     * disagree about when the modal is done.
+     */
+    const advance = () => {
+        const next = queueIndex + 1;
+
+        if (next < queue.length) {
+            setQueueIndex(next);
+            setImageObj(null);
+            loadFile(queue[next]);
+
+            return;
         }
+
+        setQueue([]);
+        setQueueIndex(0);
+        onClose?.();
     };
 
     // Draw Main Interactive Canvas
@@ -278,8 +345,24 @@ export const ImageCropperModal = ({
         if (!imageObj) return;
 
         const outCanvas = document.createElement('canvas');
-        outCanvas.width = parseInt(customWidth, 10) || 800;
-        outCanvas.height = parseInt(customHeight, 10) || 800;
+
+        /*
+         * The output has to be the shape of the selection, or the export
+         * stretches it.
+         *
+         * The width and height were read straight from their inputs, which
+         * start at targetWidth/targetHeight and know nothing about the ratio:
+         * a caller asking for a 4:3 crop with the default 800x800 output got
+         * its selection squashed into a square by the non-uniform scale below.
+         * Every product photo cropped since 4:3 was introduced came out
+         * stretched for exactly that reason.
+         *
+         * Width is what the caller asked for; height follows the ratio. Only
+         * a freeform crop, which has no ratio to follow, uses both inputs.
+         */
+        outCanvas.width = outputWidth;
+        outCanvas.height = outputHeight;
+
         const outCtx = outCanvas.getContext('2d');
 
         const cw = 500;
@@ -355,7 +438,14 @@ export const ImageCropperModal = ({
                         height: outCanvas.height,
                     });
                 }
-                onClose();
+
+                /*
+                 * The modal decides when it is finished, not the caller. With
+                 * several photos queued there is another one to crop, and a
+                 * caller that closed on every completion would end the errand
+                 * after the first.
+                 */
+                advance();
             },
             outputFormat,
             outputQuality,
@@ -430,10 +520,13 @@ export const ImageCropperModal = ({
                                     </div>
                                 )}
                                 <label className="cropper-file-upload-btn">
-                                    Browse Image File
+                                    {multiple
+                                        ? 'Browse Image Files'
+                                        : 'Browse Image File'}
                                     <input
                                         type="file"
                                         accept="image/jpeg,image/png,image/webp,image/avif,image/jpg"
+                                        multiple={multiple}
                                         onChange={handleFileChange}
                                         style={{ display: 'none' }}
                                     />
@@ -451,88 +544,96 @@ export const ImageCropperModal = ({
 
                     {/* Right: Controls & Presets Sidebar */}
                     <div className="cropper-sidebar-controls">
-                        {/* Aspect Ratio Presets */}
-                        <div className="control-group">
-                            <label className="control-label">
-                                Aspect Ratio
-                            </label>
-                            <div className="aspect-ratio-btn-grid">
-                                <button
-                                    type="button"
-                                    className={`aspect-btn ${selectedAspect === 1 ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedAspect(1);
-                                        setCustomWidth(800);
-                                        setCustomHeight(800);
-                                    }}
-                                >
-                                    1:1 Square
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`aspect-btn ${selectedAspect === 16 / 9 ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedAspect(16 / 9);
-                                        setCustomWidth(1280);
-                                        setCustomHeight(720);
-                                    }}
-                                >
-                                    16:9 Banner
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`aspect-btn ${selectedAspect === 4 / 3 ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedAspect(4 / 3);
-                                        setCustomWidth(800);
-                                        setCustomHeight(600);
-                                    }}
-                                >
-                                    4:3 Standard
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`aspect-btn ${selectedAspect === null ? 'active' : ''}`}
-                                    onClick={() => setSelectedAspect(null)}
-                                >
-                                    Freeform
-                                </button>
+                        {/* Aspect Ratio Presets. Absent when the caller
+                            fixes the shape: offering a choice that is then
+                            overridden is worse than not offering one. */}
+                        {!lockAspect && (
+                            <div className="control-group">
+                                <label className="control-label">
+                                    Aspect Ratio
+                                </label>
+                                <div className="aspect-ratio-btn-grid">
+                                    <button
+                                        type="button"
+                                        className={`aspect-btn ${selectedAspect === 1 ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedAspect(1);
+                                            setCustomWidth(800);
+                                            setCustomHeight(800);
+                                        }}
+                                    >
+                                        1:1 Square
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`aspect-btn ${selectedAspect === 16 / 9 ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedAspect(16 / 9);
+                                            setCustomWidth(1280);
+                                            setCustomHeight(720);
+                                        }}
+                                    >
+                                        16:9 Banner
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`aspect-btn ${selectedAspect === 4 / 3 ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedAspect(4 / 3);
+                                            setCustomWidth(800);
+                                            setCustomHeight(600);
+                                        }}
+                                    >
+                                        4:3 Standard
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`aspect-btn ${selectedAspect === null ? 'active' : ''}`}
+                                        onClick={() => setSelectedAspect(null)}
+                                    >
+                                        Freeform
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Custom Output Resolution */}
-                        <div className="control-group">
-                            <label className="control-label">
-                                Output Dimensions (px)
-                            </label>
-                            <div className="dimensions-input-row">
-                                <div className="dim-field">
-                                    <span>W</span>
-                                    <input
-                                        type="number"
-                                        value={customWidth}
-                                        onChange={(e) =>
-                                            setCustomWidth(e.target.value)
-                                        }
-                                        min={50}
-                                        max={3840}
-                                    />
-                                </div>
-                                <span className="dim-separator">×</span>
-                                <div className="dim-field">
-                                    <span>H</span>
-                                    <input
-                                        type="number"
-                                        value={customHeight}
-                                        onChange={(e) =>
-                                            setCustomHeight(e.target.value)
-                                        }
-                                        min={50}
-                                        max={3840}
-                                    />
+                        {/* Custom Output Resolution. Hidden with the ratio:
+                            the height is derived from it, so a height field
+                            here would be a number the export ignores. */}
+                        {!lockAspect && (
+                            <div className="control-group">
+                                <label className="control-label">
+                                    Output Dimensions (px)
+                                </label>
+                                <div className="dimensions-input-row">
+                                    <div className="dim-field">
+                                        <span>W</span>
+                                        <input
+                                            type="number"
+                                            value={customWidth}
+                                            onChange={(e) =>
+                                                setCustomWidth(e.target.value)
+                                            }
+                                            min={50}
+                                            max={3840}
+                                        />
+                                    </div>
+                                    <span className="dim-separator">×</span>
+                                    <div className="dim-field">
+                                        <span>H</span>
+                                        <input
+                                            type="number"
+                                            value={customHeight}
+                                            onChange={(e) =>
+                                                setCustomHeight(e.target.value)
+                                            }
+                                            min={50}
+                                            max={3840}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Zoom Slider */}
                         <div className="control-group">
@@ -596,16 +697,38 @@ export const ImageCropperModal = ({
 
                 {/* Modal Footer Actions */}
                 <div className="cropper-modal-footer">
+                    {/* Which of the queued photos this is. Absent for a single
+                        pick, where there is no progress to report. */}
+                    {queue.length > 1 && (
+                        <span className="cropper-queue-count">
+                            Photo {queueIndex + 1} of {queue.length}
+                        </span>
+                    )}
+
                     <Button variant="ghost" onClick={onClose}>
-                        Cancel
+                        {queue.length > 1 ? 'Cancel the rest' : 'Cancel'}
                     </Button>
+
+                    {/*
+                        Skipping one is not cancelling the errand. Picking six
+                        photos and finding the fourth is the wrong shot should
+                        cost that one photo, not the two behind it.
+                    */}
+                    {queue.length > 1 && queueIndex < queue.length - 1 && (
+                        <Button variant="secondary" onClick={advance}>
+                            Skip this one
+                        </Button>
+                    )}
+
                     <Button
                         variant="primary"
                         icon={Check}
                         disabled={!imageObj}
                         onClick={handleSaveCrop}
                     >
-                        Apply &amp; Crop ({customWidth}×{customHeight}px)
+                        {queue.length > 1 && queueIndex < queue.length - 1
+                            ? 'Crop & next'
+                            : `Apply & Crop (${outputWidth}×${outputHeight}px)`}
                     </Button>
                 </div>
             </div>
