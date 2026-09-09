@@ -213,6 +213,24 @@
     color: var(--text-primary);
 }
 
+/*
+ * Availability is the one value in the row that is news rather than a fact, so
+ * it is the one that carries colour: green when it can be bought, red when it
+ * cannot.
+ *
+ * `waiting` is neither. A shop can set its own out-of-stock wording, and
+ * "Pre-Order" or "2-3 Days" is a promise about when — painting that red sends
+ * a customer elsewhere for something arriving on Tuesday. It stays the row's
+ * ordinary ink.
+ */
+.meta-value.is-stock-in {
+    color: var(--success-hover);
+}
+
+.meta-value.is-stock-out {
+    color: var(--danger);
+}
+
 /* The countdown sat inside the price block. With the price moved up into the
    chips, the clock needs its own line rather than being wedged into the row. */
 .pdp-deal-clock {
@@ -378,21 +396,18 @@
 }
 
 /*
- * The shared shape: a 24px hit target with no chrome of its own. What each one
- * looks like is set below — the two that post somewhere are filled discs, the
- * one that copies a link is the bare glyph.
+ * A bare 22px hit target — no border, no ground, no disc. Each mark supplies
+ * its own shape and colour; only the link glyph borrows the page's ink.
  *
- * 24px rather than 28px, and the group is spaced at 5px rather than 10px: at
- * the previous size the three of them plus the label took a quarter of the bar
- * to say something a shopper glances at once.
+ * Down from three 28px discs spaced 10px apart, which with the label took a
+ * quarter of the bar to offer something a shopper glances at once.
  */
 .pdp-share-btn {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border: 0;
     padding: 0;
     background: none;
-    border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -412,25 +427,22 @@
 }
 
 /*
- * Only the two that post somewhere are filled, and the colour is what makes
- * them recognisable at 24px — this icon set carries no brand marks, so a row
- * of three identical grey glyphs would have to be read rather than spotted.
+ * The real marks, so no disc of ours behind them: each logo already contains
+ * its own circle or bubble, and putting it inside another one gives Facebook a
+ * ring it does not have. They take the brand's own colour, which is what makes
+ * them recognisable at this size.
  *
- * Both are theme-exempt: they are other companies' colours and mean nothing
- * if they follow ours. Note the linter only checks palette tokens, not raw
- * hex, so these markers document the intent rather than satisfy a rule.
+ * Both hex values are the ones Simple Icons publishes with the paths, and both
+ * are theme-exempt — another company's colour means nothing following ours.
+ * The linter only inspects palette tokens rather than raw hex, so these
+ * markers record the intent rather than satisfy a rule.
  */
-.pdp-share-btn.is-facebook,
-.pdp-share-btn.is-whatsapp {
-    color: var(--white); /* theme-exempt: sits on a fixed brand colour */
-}
-
 .pdp-share-btn.is-facebook {
-    background: #0866ff; /* theme-exempt: Facebook blue */
+    color: #0866ff; /* theme-exempt: Facebook blue */
 }
 
 .pdp-share-btn.is-whatsapp {
-    background: #25d366; /* theme-exempt: WhatsApp green */
+    color: #25d366; /* theme-exempt: WhatsApp green */
 }
 
 /* Unfilled, like the reference. Copying a link goes nowhere, so it borrows no
@@ -1178,7 +1190,10 @@
    the 16px dot inside it. */
 .pdp-pay-option {
     display: flex;
-    align-items: flex-start;
+    /* Centred against the whole card rather than pinned to the first line of
+       it: the card is three lines tall and a dot sitting up by the price read
+       as misaligned. */
+    align-items: center;
     gap: 11px;
     padding: 14px 16px;
     border: 1px solid var(--border-color);
@@ -1200,7 +1215,10 @@
 }
 
 .pdp-pay-option input[type='radio'] {
-    margin: 3px 0 0;
+    /* No nudge margin — the flex centring above places it now. */
+    margin: 0;
+    width: 17px;
+    height: 17px;
     accent-color: var(--primary);
     flex: none;
     cursor: pointer;

@@ -27,6 +27,8 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { detailsPanelFor } from '../../utils/detailsPanel';
+import { stockStatusFor } from '../../utils/stockStatus';
+import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
@@ -36,9 +38,7 @@ import {
     ShieldCheck,
     Bookmark,
     SquarePlus,
-    MessageCircle,
     Link2,
-    Share2,
 } from 'lucide-react';
 import './Show.css';
 
@@ -143,6 +143,16 @@ export default function ProductDetails(props) {
      * option. Regular is the undiscounted list price, and is only ever shown
      * when it is actually higher.
      */
+    /*
+     * The availability line, and whether it reads as good news. Worked out in
+     * one place because a variant product's own label describes the total
+     * across its options, not the option in front of the shopper.
+     */
+    const stockStatus = stockStatusFor(product, {
+        selectedVariant,
+        availableStock,
+    });
+
     const priced = selectedVariant ?? product;
     const cashPrice =
         (selectedVariant ? null : product?.checkout_price) ??
@@ -152,16 +162,28 @@ export default function ProductDetails(props) {
     const regularPrice = priced?.price ?? 0;
 
     /*
-     * Read at render rather than kept in state: the address is whatever the
-     * browser is showing, and it changes on an Inertia navigation without this
-     * component unmounting. Guarded because the module is evaluated before the
-     * browser exists.
+     * The address to share, without the query string — the same rule the
+     * canonical tag follows. `?sort=`, `?page=` and whatever a previous share
+     * appended are not part of the product, and passing them on means the
+     * next person's share carries them too.
+     *
+     * Read at render rather than kept in state, because an Inertia navigation
+     * changes it without this component unmounting. Guarded because the module
+     * is evaluated before the browser exists.
+     *
+     * Note for local testing: Facebook builds its preview by fetching the URL
+     * it is given, so from localhost the composer opens with nothing attached.
+     * That is Facebook being unable to reach the address, not a missing link —
+     * it fills in once the URL is publicly reachable.
      */
-    const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const pageUrl =
+        typeof window !== 'undefined'
+            ? window.location.origin + window.location.pathname
+            : '';
 
     const copyProductLink = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href);
+            await navigator.clipboard.writeText(pageUrl);
             toast.success('Product link copied to clipboard!');
         } catch {
             // Clipboard access needs a secure context and the viewer's
@@ -525,7 +547,7 @@ export default function ProductDetails(props) {
                             aria-label="Share on Facebook"
                             title="Share on Facebook"
                         >
-                            <Share2 size={13} />
+                            <FacebookGlyph size={20} />
                         </a>
 
                         <a
@@ -536,7 +558,7 @@ export default function ProductDetails(props) {
                             aria-label="Share on WhatsApp"
                             title="Share on WhatsApp"
                         >
-                            <MessageCircle size={13} />
+                            <WhatsAppGlyph size={20} />
                         </a>
 
                         <button
@@ -644,29 +666,10 @@ export default function ProductDetails(props) {
 
                             <div className="meta-item">
                                 <span className="meta-label">Status:</span>
-                                <span className="meta-value">
-                                    {/* Just the status, the way the
-                                        reference reads it. The count used
-                                        to be appended — "In Stock (25
-                                        available)" — which is a different
-                                        question from the one this row
-                                        answers, and it is on the page
-                                        already where the quantity is
-                                        chosen.
-
-                                        The label is the server's where it
-                                        has one, so a shop can say "2-3
-                                        Days" or "Call for Price" rather
-                                        than only in or out. */}
-                                    {needsVariantChoice
-                                        ? 'Choose an option'
-                                        : availableStock > 0
-                                          ? product.stock_status_label ||
-                                            'In Stock'
-                                          : isPreorder
-                                            ? 'Pre-Order'
-                                            : product.stock_status_label ||
-                                              'Out of Stock'}
+                                <span
+                                    className={`meta-value is-stock-${stockStatus.tone}`}
+                                >
+                                    {stockStatus.label}
                                 </span>
                             </div>
 
