@@ -97,10 +97,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
     flex-wrap: wrap;
-    padding: 14px 18px;
-    margin-bottom: 14px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -134,9 +134,23 @@
     white-space: nowrap;
 }
 
-/* Four entries of at most three digits; it never needs to be wider. */
+/* Three entries of at most two digits; it never needs to be wider. */
 .plp-show-select {
-    width: 86px;
+    width: 74px;
+}
+
+/*
+ * One height for both, set here rather than on each.
+ *
+ * Select's own rules live in :where() and carry no specificity, so whatever a
+ * caller's class says wins — which meant Sort By read 40px from its class and
+ * Show took the 46px default, and the two sat at different heights in the same
+ * bar. Stated once so they cannot drift apart again.
+ */
+.plp-control .plp-sort-select,
+.plp-control .plp-show-select {
+    height: 34px;
+    font-size: 0.82rem;
 }
 
 /*
@@ -146,7 +160,7 @@
 @media (max-width: 560px) {
     .plp-results-header {
         align-items: stretch;
-        padding: 12px 14px;
+        padding: 8px 12px;
     }
 
     .plp-results-controls {
@@ -189,7 +203,6 @@
  */
 .plp-sort-select {
     width: 190px;
-    height: 40px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
     background: var(--bg-surface);
