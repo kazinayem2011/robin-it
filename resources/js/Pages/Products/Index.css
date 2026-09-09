@@ -563,18 +563,22 @@
 }
 
 /*
- * An option lines up with the heading it sits under.
+ * An option lines up with the heading it sits under, and its highlight reaches
+ * past both.
  *
- * It carried 8px of horizontal padding, so every checkbox and every label in
- * the panel stood 8px to the right of the section name above it — a step in
- * the left edge at each group, for the sake of a hover highlight that reads
- * just as well running the full width of the panel.
+ * The padding used to indent the content: 8px of it, against a heading with
+ * none, so every checkbox stood 8px right of its own section name — a step in
+ * the panel's left edge at each group. Cancelling it with an equal negative
+ * margin keeps the row's content on the heading's edge and lets the hover
+ * background bleed the other way, out over the panel's own padding, so the
+ * highlight is wider than the text rather than hugging it.
  */
 .plp-filter-check {
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 4px 0;
+    padding: 4px 10px;
+    margin-inline: -10px;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background var(--transition-fast);

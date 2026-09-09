@@ -32,14 +32,27 @@ describe('the filter panel', () => {
      * left edge at every group.
      */
     it('lines an option up with the heading it sits under', () => {
-        const padding = declaration(ruleFor('.plp-filter-check {'), 'padding');
+        const rule = ruleFor('.plp-filter-check {');
+        const px = (value) => Number((/-?\d+/.exec(value ?? '') ?? [0])[0]);
 
-        expect(padding).not.toBeNull();
+        const inset = px(declaration(rule, 'padding').split(/\s+/)[1]);
+        const pull = px(declaration(rule, 'margin-inline'));
 
-        const sides = padding.split(/\s+/);
+        /*
+         * The two cancel: the padding widens the hover background and the
+         * margin takes the content back to the heading's own left edge. What
+         * matters is the sum, not either number.
+         */
+        expect(inset).toBeGreaterThan(0);
+        expect(inset + pull).toBe(0);
+    });
 
-        expect(sides.length).toBeGreaterThan(1);
-        expect(sides[1]).toMatch(/^0(px)?$/);
+    /* And the highlight is wider than the words in it. */
+    it('reaches its highlight past the text on both sides', () => {
+        const rule = ruleFor('.plp-filter-check {');
+
+        expect(declaration(rule, 'border-radius')).toBe('var(--radius-sm)');
+        expect(declaration(rule, 'margin-inline')).toMatch(/^-\d+px$/);
     });
 
     it('starts the price controls on that same edge', () => {
