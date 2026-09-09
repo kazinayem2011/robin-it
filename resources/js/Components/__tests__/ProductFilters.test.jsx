@@ -270,6 +270,41 @@ describe('the price slider', () => {
         expect(document.querySelector('.plp-price-slider')).toBeNull();
     });
 
+    /**
+     * The ceiling is the dearest thing still reachable, so choosing a brand
+     * can lower it beneath a maximum the shopper had already set — pick
+     * 60,000 on a shelf topping out at 132,000, then narrow to a maker whose
+     * dearest is 9,500. The handle pins to the new end rather than sitting
+     * off the track or reading above the slider's own maximum.
+     */
+    it('pins a handle left beyond a lowered ceiling', () => {
+        render(
+            <ProductFilters
+                facets={{ ...FACETS, max_price: 9500 }}
+                value={{ min_price: 0, max_price: 60000 }}
+            />,
+        );
+
+        const high = screen.getByLabelText('Maximum price', {
+            selector: 'input[type="range"]',
+        });
+
+        expect(high.max).toBe('9500');
+        expect(high.value).toBe('9500');
+
+        /*
+         * The value above is the input's own doing — a range input clamps
+         * itself to its max. What needs clamping is the filled span, which is
+         * positioned by percentage: 60,000 of a 9,500 track is 631%, and the
+         * fill would run off the end of it.
+         */
+        const fill = document.querySelector('.plp-price-track-fill');
+        const right = parseFloat(fill.style.right);
+
+        expect(right).toBeGreaterThanOrEqual(0);
+        expect(right).toBeLessThanOrEqual(100);
+    });
+
     /* The boxes stay: a slider cannot be told an exact figure. */
     it('keeps the number boxes alongside it', () => {
         render(<ProductFilters facets={FACETS} value={{}} />);
