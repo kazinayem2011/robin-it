@@ -65,14 +65,42 @@ describe('the filter panel', () => {
         ).toBeNull();
     });
 
-    /* Rounded to the 8px this system rounds everything to. */
-    it('rounds the checkbox to the system radius', () => {
+    /**
+     * A rounded square rather than a circle.
+     *
+     * The box is 18px. Every radius token in this system is 8px, which is
+     * within a pixel of half that — so any of them draws a circle here, which
+     * is a radio button's shape and says "one of these" about a list where
+     * several can be picked.
+     *
+     * Asserted against the box's own size rather than against the number 4,
+     * so the shape is what is pinned: anything from a third of the width
+     * upwards stops reading as a square.
+     */
+    it('draws the checkbox as a rounded square, not a circle', () => {
+        const box = 18;
         const radius = declaration(
             ruleFor('.plp-filter-check input {'),
             'border-radius',
         );
 
-        expect(radius).toBe('var(--radius-sm)');
+        expect(radius).toMatch(/^\d+px$/);
+        expect(Number.parseInt(radius, 10)).toBeGreaterThan(0);
+        expect(Number.parseInt(radius, 10)).toBeLessThan(box / 3);
+    });
+
+    /*
+     * The number needs the linter's marker, and the marker is matched by line,
+     * so it has to stay on the declaration's own line.
+     */
+    it('carries its exemption on the same line as the value', () => {
+        const line = css
+            .split('\n')
+            .find((row) => row.includes('radius-exempt'));
+
+        expect(line).toBeDefined();
+        expect(line).toMatch(/border-radius:/);
+        expect(line.length).toBeLessThanOrEqual(80);
     });
 
     /**

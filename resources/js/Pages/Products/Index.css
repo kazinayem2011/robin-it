@@ -605,13 +605,17 @@
  * control read as a circle — which is a radio button's shape, and says
  * "choose one of these" about a list where several can be picked at once.
  *
- * Rounded to --radius-sm, the 8px this design system rounds everything to,
- * rather than to a hard corner.
+ * A rounded square, which needs a number rather than a token.
+ *
+ * The box is 18px and every radius token in this system is 8px, which leaves
+ * about a pixel of straight edge on each side — so --radius-sm, --radius-md
+ * and the rest all draw a circle at this size. A circle is a radio button's
+ * shape, and says "one of these" about a list where several can be picked.
  */
 .plp-filter-check input {
     margin: 0;
     flex-shrink: 0;
-    border-radius: var(--radius-sm);
+    border-radius: 4px; /* radius-exempt: 8px on 18px draws a circle */
 }
 
 /* The label takes the room; the tally is pushed to the right-hand edge. */
