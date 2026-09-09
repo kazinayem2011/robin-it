@@ -53,6 +53,24 @@ describe('the listing header controls', () => {
         }
     });
 
+    /* Rounded on top, square underneath: the top of the results, not a card. */
+    it('is square along its bottom edge', () => {
+        const radius = /border-radius:\s*([^;]+)/.exec(
+            ruleFor('.plp-results-header {'),
+        );
+
+        expect(radius).not.toBeNull();
+
+        const [topLeft, topRight, bottomRight, bottomLeft] = radius[1]
+            .trim()
+            .split(/\s+/);
+
+        expect(topLeft).toMatch(/^var\(--radius-/);
+        expect(topRight).toMatch(/^var\(--radius-/);
+        expect(bottomRight).toMatch(/^0(px)?$/);
+        expect(bottomLeft).toMatch(/^0(px)?$/);
+    });
+
     /* The bar was 14px top and bottom, which read as a banner rather than a row. */
     it('sits in a bar with room for the controls and no more', () => {
         const rule = ruleFor('.plp-results-header {');

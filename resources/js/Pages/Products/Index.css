@@ -103,7 +103,9 @@
     margin-bottom: 12px;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    /* Square along the bottom, so it reads as the top of the results
+       rather than a card floating above them. */
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .plp-results-title {
