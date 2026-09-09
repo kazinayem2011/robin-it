@@ -12,6 +12,7 @@ class Category extends Model
         'parent_id',
         'name',
         'slug',
+        'position',
         'icon',
         'badge',
         'is_offer',
@@ -27,9 +28,29 @@ class Category extends Model
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
+    /**
+     * The shelves under this one, in the order the shop put them.
+     *
+     * Ordered on the relation rather than at each call site. Nothing ordered
+     * categories at all before, and the menu, the footer and every picker
+     * showed whatever the engine returned; putting it here means no future
+     * caller can forget, the way each of those had.
+     */
     public function children(): HasMany
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(Category::class, 'parent_id')->inMenuOrder();
+    }
+
+    /**
+     * The shop's own order, with name as the tie-break.
+     *
+     * Two shelves can share a position — a fresh row defaults to 0 until it is
+     * moved — and without a second key their order between themselves is
+     * whatever the engine feels like, which is the thing this is fixing.
+     */
+    public function scopeInMenuOrder($query)
+    {
+        return $query->orderBy('position')->orderBy('name');
     }
 
     /** The questions this shelf asks about its products. */

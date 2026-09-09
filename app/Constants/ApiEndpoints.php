@@ -350,6 +350,8 @@ class ApiEndpoints
     /** The questions a category asks about its products, for the product form. */
     public const ADMIN_CATEGORY_ATTRIBUTES = 'categories/{id}/attributes';
 
+    public const ADMIN_CATEGORIES_MOVE = 'categories/{id}/move';
+
     public const ADMIN_BRANDS = 'brands';
 
     /** Read-only: what the PC Builder is offering, and why. */

@@ -1179,6 +1179,7 @@ class ProductService
             ->map(fn (Product $p) => $this->formatProductCardData($p));
 
         $categories = Category::where('is_active', true)
+            ->inMenuOrder()
             ->where('name', 'LIKE', "%{$needle}%")
             ->take(4)
             ->get(['id', 'name', 'slug', 'icon']);

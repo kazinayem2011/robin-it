@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\CategoryService;
 use App\Support\SearchTerm;
 use App\Support\SlugFactory;
 use Illuminate\Http\JsonResponse;
@@ -20,9 +21,14 @@ class CategoryController extends Controller
 {
     public function index(): Response
     {
+        /*
+         * In the shop's own order, which is what the admin is arranging. It
+         * was `orderBy('id')` — the order they happened to be created in —
+         * so the tree an admin reordered still showed itself unchanged.
+         */
         $categories = Category::whereNull('parent_id')
             ->with(['children.children', 'products'])
-            ->orderBy('id', 'asc')
+            ->inMenuOrder()
             ->get();
 
         // Flat list for parent selector (Level 1 & Level 2 categories)
@@ -86,6 +92,77 @@ class CategoryController extends Controller
         ]);
 
         return $this->successResponse($category, "Category '{$category->name}' updated successfully.");
+    }
+
+    /**
+     * Move a category one place up or down among its own siblings.
+     *
+     * A swap rather than a position to write. The client would otherwise have
+     * to know both rows' positions and send two updates, and two clients doing
+     * that at once leave the pair holding the same number — which is precisely
+     * the tie the ordering has to break with a name.
+     *
+     * Scoped to siblings: `position` is per parent, so a subcategory moving up
+     * moves within its own shelf and never past its parent into another one.
+     */
+    public function move(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'direction' => 'required|in:up,down',
+        ]);
+
+        $category = Category::findOrFail($id);
+        $up = $validated['direction'] === 'up';
+
+        return DB::transaction(function () use ($category, $up) {
+            $siblings = Category::where('parent_id', $category->parent_id)
+                ->lockForUpdate()
+                ->inMenuOrder()
+                ->get();
+
+            $at = $siblings->search(fn (Category $c) => $c->id === $category->id);
+            $to = $up ? $at - 1 : $at + 1;
+
+            /*
+             * Already at the end it is being asked to move towards. Answered
+             * rather than refused: the buttons are disabled at the ends, so
+             * arriving here means two people moved the same shelf at once, and
+             * the second one has simply lost a race.
+             */
+            if ($at === false || $to < 0 || $to >= $siblings->count()) {
+                return $this->successResponse(
+                    ['position' => $category->position],
+                    "'{$category->name}' is already as far as it goes."
+                );
+            }
+
+            /*
+             * Renumbered from zero across the whole set rather than swapping
+             * two values. Rows that have never been moved all sit at 0, so a
+             * swap between two of them changes nothing at all.
+             */
+            $ordered = $siblings->values();
+            $moved = $ordered->splice($at, 1)->first();
+            $ordered->splice($to, 0, [$moved]);
+
+            foreach ($ordered as $index => $sibling) {
+                if ($sibling->position !== $index) {
+                    $sibling->forceFill(['position' => $index])->save();
+                }
+            }
+
+            /*
+             * The menu is cached for an hour and holds this order, so it has
+             * to be dropped here. The model events that normally do it fire on
+             * save — which the loop above may skip for rows already in place.
+             */
+            CategoryService::flush();
+
+            return $this->successResponse(
+                ['position' => $to],
+                "'{$category->name}' moved ".($up ? 'up' : 'down').'.'
+            );
+        });
     }
 
     /**

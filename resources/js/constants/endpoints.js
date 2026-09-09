@@ -170,6 +170,7 @@ export const API_ENDPOINTS = {
         PRODUCT_ITEM: (id) => `/admin/products/${id}`,
         CATEGORIES: '/admin/categories',
         CATEGORY_ITEM: (id) => `/admin/categories/${id}`,
+        CATEGORY_MOVE: (id) => `/admin/categories/${id}/move`,
         BANNERS: '/admin/banners',
         BANNER_ITEM: (id) => `/admin/banners/${id}`,
         COUPONS: '/admin/coupons',

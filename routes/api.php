@@ -245,6 +245,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::get(ApiEndpoints::ADMIN_CATEGORY_ATTRIBUTES, [AdminCategoryController::class, 'attributes'])->middleware('can:catalogue');
         Route::post(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'store'])->middleware('can:catalogue');
         Route::patch(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'update'])->middleware('can:catalogue');
+        Route::patch(ApiEndpoints::ADMIN_CATEGORIES_MOVE, [AdminCategoryController::class, 'move'])->middleware('can:catalogue');
         Route::delete(ApiEndpoints::ADMIN_CATEGORIES_ITEM, [AdminCategoryController::class, 'destroy'])->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_PRODUCTS_ITEM, [AdminProductController::class, 'show'])->middleware('can:catalogue');
         Route::post(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'store'])->middleware('can:catalogue');

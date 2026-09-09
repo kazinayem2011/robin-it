@@ -91,6 +91,7 @@ class CategoryService
             ->mapWithKeys(fn ($path, $name) => [mb_strtolower(trim($name)) => $path]);
 
         return Category::whereNull('parent_id')
+            ->inMenuOrder()
             ->where('is_active', true)
             ->where(fn ($q) => $q->where('is_offer', true)
                 ->orWhereIn('id', $stocked))
@@ -208,10 +209,13 @@ class CategoryService
     private function buildFeaturedCategories(): array
     {
         $categories = Category::where('is_active', true)
+            ->inMenuOrder()
             ->where(function ($q) {
                 $q->whereNull('parent_id')
                     ->orWhereIn('slug', ['cpu', 'graphics-card', 'motherboard', 'ram', 'storage', 'monitors', 'gaming-laptops', 'gaming-pc', 'desktops']);
             })
+            // Ten of them, so which ten is the shop's decision rather than
+            // the engine's — it had no order to take them in.
             ->take(10)
             ->get();
 

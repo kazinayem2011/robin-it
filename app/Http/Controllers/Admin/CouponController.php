@@ -22,7 +22,7 @@ class CouponController extends Controller
             'coupons' => Coupon::with(['products:id,name', 'categories:id,name'])->latest()->get(),
             // The scope pickers need something to choose from.
             'products' => Product::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name', 'parent_id']),
+            'categories' => Category::where('is_active', true)->inMenuOrder()->get(['id', 'name', 'parent_id']),
             'scopes' => Coupon::SCOPES,
         ]);
     }

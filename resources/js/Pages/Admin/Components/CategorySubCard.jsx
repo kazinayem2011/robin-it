@@ -1,12 +1,22 @@
 import React from 'react';
-import { Edit2, Trash2, Plus } from 'lucide-react';
+import { Edit2, Trash2, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 import { CategoryChip } from './CategoryChip';
 import { getCategoryIcon } from '@/utils/iconMap';
 
 /**
  * Reusable Level 2 Subcategory Card
  */
-export const CategorySubCard = ({ sub, onEdit, onDelete, onAddChild }) => {
+export const CategorySubCard = ({
+    sub,
+    onEdit,
+    onDelete,
+    onAddChild,
+    /* Position among its own siblings; see CategoryParentCard for why the
+       list decides rather than the card. */
+    onMove,
+    isFirst = false,
+    isLast = false,
+}) => {
     return (
         <div className="admin-cat-tree-sub-card">
             <div className="admin-cat-tree-sub-header">
@@ -19,6 +29,26 @@ export const CategorySubCard = ({ sub, onEdit, onDelete, onAddChild }) => {
                 </div>
 
                 <div className="admin-sub-action-group">
+                    <button
+                        type="button"
+                        className="admin-sub-icon-btn"
+                        disabled={isFirst}
+                        onClick={() => onMove?.(sub, 'up')}
+                        title="Move up"
+                        aria-label={`Move ${sub.name} up`}
+                    >
+                        <ArrowUp size={12} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-sub-icon-btn"
+                        disabled={isLast}
+                        onClick={() => onMove?.(sub, 'down')}
+                        title="Move down"
+                        aria-label={`Move ${sub.name} down`}
+                    >
+                        <ArrowDown size={12} />
+                    </button>
                     <button
                         type="button"
                         className="admin-sub-icon-btn"

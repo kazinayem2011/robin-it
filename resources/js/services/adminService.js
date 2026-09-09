@@ -579,6 +579,24 @@ export const adminService = {
     },
 
     /**
+     * Move a category one place up or down among its own siblings.
+     *
+     * A direction rather than a position: the server swaps and renumbers the
+     * whole set, so two admins reordering at once cannot leave two shelves
+     * holding the same number.
+     *
+     * @param {number|string} categoryId
+     * @param {'up'|'down'} direction
+     */
+    async moveCategory(categoryId, direction) {
+        const response = await axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.CATEGORY_MOVE(categoryId),
+            { direction },
+        );
+        return response;
+    },
+
+    /**
      * Delete a category from the database.
      * @param {number|string} categoryId
      */

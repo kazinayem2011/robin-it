@@ -1,5 +1,13 @@
 import React from 'react';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+    Plus,
+    Edit2,
+    Trash2,
+    ChevronDown,
+    ChevronRight,
+    ArrowUp,
+    ArrowDown,
+} from 'lucide-react';
 import { CategorySubCard } from './CategorySubCard';
 import { getCategoryIcon } from '@/utils/iconMap';
 
@@ -14,6 +22,16 @@ export const CategoryParentCard = ({
     onDelete,
     onAddSubcategory,
     onAddChild,
+    /*
+     * Where this sits among its siblings, and how to move it.
+     *
+     * Passed in rather than worked out here: only the list knows how many
+     * there are, and an arrow that is live at the end of the list moves
+     * nothing and looks broken doing it.
+     */
+    onMove,
+    isFirst = false,
+    isLast = false,
 }) => {
     return (
         <div className="admin-cat-tree-parent-card">
@@ -88,6 +106,30 @@ export const CategoryParentCard = ({
                         <Plus size={13} /> Add Subcategory
                     </button>
 
+                    {/* Order is what the shop shows: the menu, the footer
+                        and every picker read these in this order. */}
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        disabled={isFirst}
+                        onClick={() => onMove?.(parent, 'up')}
+                        title="Move up"
+                        aria-label={`Move ${parent.name} up`}
+                    >
+                        <ArrowUp size={14} />
+                    </button>
+
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        disabled={isLast}
+                        onClick={() => onMove?.(parent, 'down')}
+                        title="Move down"
+                        aria-label={`Move ${parent.name} down`}
+                    >
+                        <ArrowDown size={14} />
+                    </button>
+
                     <button
                         type="button"
                         className="admin-table-icon-btn"
@@ -112,13 +154,19 @@ export const CategoryParentCard = ({
             {!isCollapsed && (
                 <div className="admin-cat-tree-sub-grid">
                     {parent.children && parent.children.length > 0 ? (
-                        parent.children.map((sub) => (
+                        parent.children.map((sub, index) => (
                             <CategorySubCard
                                 key={sub.id}
                                 sub={sub}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 onAddChild={onAddChild}
+                                onMove={onMove}
+                                isFirst={!onMove || index === 0}
+                                isLast={
+                                    !onMove ||
+                                    index === parent.children.length - 1
+                                }
                             />
                         ))
                     ) : (

@@ -194,6 +194,33 @@ export default function Categories({ categories = [], parentOptions = [] }) {
         });
     };
 
+    /*
+     * Move a shelf one place among its siblings.
+     *
+     * Reloads only the tree rather than the whole page: `preserveScroll` keeps
+     * the admin where they were, which matters when the shelf being moved is
+     * two thirds of the way down a list of fifteen.
+     */
+    /*
+     * Reordering is off while a search is filtering the tree. The list is a
+     * subset then, so first and last in it are not first and last among the
+     * siblings — the arrows would be enabled at the wrong ends and the move
+     * would be against rows that are not on screen.
+     */
+    const canReorder = !searchQuery.trim();
+
+    const moveCategory = async (cat, direction) => {
+        try {
+            await adminService.moveCategory(cat.id, direction);
+            router.reload({ only: ['categories'], preserveScroll: true });
+        } catch (err) {
+            toast.error(
+                err?.message || 'Could not move that category.',
+                'Reorder Failed',
+            );
+        }
+    };
+
     const openEditModal = (cat) => {
         formik.resetForm({
             values: {
@@ -303,10 +330,13 @@ export default function Categories({ categories = [], parentOptions = [] }) {
                     />
                 ) : (
                     <div className="admin-cat-tree-list">
-                        {filteredCategories.map((parent) => (
+                        {filteredCategories.map((parent, index) => (
                             <CategoryParentCard
                                 key={parent.id}
                                 parent={parent}
+                                onMove={moveCategory}
+                                isFirst={index === 0}
+                                isLast={index === filteredCategories.length - 1}
                                 isCollapsed={collapsedIds.has(parent.id)}
                                 onToggleCollapse={toggleCollapse}
                                 onEdit={openEditModal}
