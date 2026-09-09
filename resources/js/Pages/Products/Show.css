@@ -349,44 +349,55 @@
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 22px;
-    padding: 10px 18px;
+    margin-bottom: 18px;
+    padding: 6px 14px;
     background: var(--bg-surface);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-full);
 }
 
-.pdp-share,
 .pdp-utility-actions {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+/* Tighter than the group on the right: three icons of the same kind read as
+   one control, and spacing them apart made the bar look half empty. */
+.pdp-share {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .pdp-share-label {
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
+    margin-right: 2px;
 }
 
 /*
- * Round, filled, and each in the colour of the place it posts to, which is
- * how these are recognised at this size — a row of identical grey circles
- * makes the reader read three labels to find the one they want.
+ * The shared shape: a 24px hit target with no chrome of its own. What each one
+ * looks like is set below — the two that post somewhere are filled discs, the
+ * one that copies a link is the bare glyph.
  *
- * theme-exempt on all three: these are other companies' colours and mean
- * nothing if they follow our theme.
+ * 24px rather than 28px, and the group is spaced at 5px rather than 10px: at
+ * the previous size the three of them plus the label took a quarter of the bar
+ * to say something a shopper glances at once.
  */
 .pdp-share-btn {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border: 0;
+    padding: 0;
+    background: none;
     border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--white); /* theme-exempt: sits on a fixed brand colour */
+    color: var(--text-secondary);
     text-decoration: none;
     transition: transform var(--transition-fast);
 }
@@ -400,6 +411,20 @@
     outline-offset: 2px;
 }
 
+/*
+ * Only the two that post somewhere are filled, and the colour is what makes
+ * them recognisable at 24px — this icon set carries no brand marks, so a row
+ * of three identical grey glyphs would have to be read rather than spotted.
+ *
+ * Both are theme-exempt: they are other companies' colours and mean nothing
+ * if they follow ours. Note the linter only checks palette tokens, not raw
+ * hex, so these markers document the intent rather than satisfy a rule.
+ */
+.pdp-share-btn.is-facebook,
+.pdp-share-btn.is-whatsapp {
+    color: var(--white); /* theme-exempt: sits on a fixed brand colour */
+}
+
 .pdp-share-btn.is-facebook {
     background: #0866ff; /* theme-exempt: Facebook blue */
 }
@@ -408,11 +433,14 @@
     background: #25d366; /* theme-exempt: WhatsApp green */
 }
 
-/* The odd one out on purpose: copying a link goes nowhere, so it takes the
-   page's own ink rather than borrowing a brand's. */
+/* Unfilled, like the reference. Copying a link goes nowhere, so it borrows no
+   brand and needs no disc — the chain glyph alone says what it does. */
 .pdp-share-btn.is-link {
-    background: var(--bg-muted-strong);
-    color: var(--text-secondary);
+    color: var(--text-muted);
+}
+
+.pdp-share-btn.is-link:hover {
+    color: var(--primary-ink);
 }
 
 .pdp-utility-btn {

@@ -38,7 +38,7 @@ import {
     SquarePlus,
     MessageCircle,
     Link2,
-    Send,
+    Share2,
 } from 'lucide-react';
 import './Show.css';
 
@@ -525,7 +525,7 @@ export default function ProductDetails(props) {
                             aria-label="Share on Facebook"
                             title="Share on Facebook"
                         >
-                            <Send size={15} />
+                            <Share2 size={13} />
                         </a>
 
                         <a
@@ -536,7 +536,7 @@ export default function ProductDetails(props) {
                             aria-label="Share on WhatsApp"
                             title="Share on WhatsApp"
                         >
-                            <MessageCircle size={15} />
+                            <MessageCircle size={13} />
                         </a>
 
                         <button
