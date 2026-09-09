@@ -1,17 +1,17 @@
 /* Show.css - Product Details Page (SSOT) */
 
 /*
- * The details sit straight on the page, not in a card.
+ * The details sit straight on the page — no card, and no ground of their own.
  *
- * There was a wrapper doing border, radius and shadow around the whole thing.
- * It bought nothing — the details are the page, so outlining them separated
- * them from nothing — and it cost 66px of width, which the fact row needs. The
- * white ground stays, because the page itself is grey and the reference is
- * white; only the card chrome has gone.
+ * There was a wrapper doing background, border, radius and shadow around the
+ * whole thing. It bought nothing — the details are the page, so outlining them
+ * separated them from nothing — and it cost 66px of width, which the fact row
+ * needs. The side padding went with the background: it was there to inset
+ * content from a white edge that no longer exists, and `.container` already
+ * holds the page off the viewport.
  */
 .pdp-page-wrapper {
-    background-color: var(--bg-surface);
-    padding: 30px 20px 60px;
+    padding: 30px 16px 60px;
 }
 
 .breadcrumbs {
@@ -745,7 +745,7 @@
 
 @media (max-width: 600px) {
     .pdp-page-wrapper {
-        padding: 16px 12px 40px;
+        padding: 16px 8px 40px;
     }
     .main-image {
         height: 280px;
