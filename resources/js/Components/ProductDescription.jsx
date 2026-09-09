@@ -9,7 +9,6 @@ import React from 'react';
 export default function ProductDescription({ description }) {
     return (
         <div className="description-content">
-            <h2 className="pdp-details-heading">Description</h2>
             <div
                 dangerouslySetInnerHTML={{
                     __html:

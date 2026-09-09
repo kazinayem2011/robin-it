@@ -36,8 +36,6 @@ export const groupSpecifications = (specifications) => {
 export default function ProductSpecifications({ specifications = [] }) {
     return (
         <div className="specifications-table">
-            <h2 className="pdp-details-heading">Specification</h2>
-
             {specifications.length > 0 ? (
                 <table>
                     {/* Grouped into sections, in the order the admin entered

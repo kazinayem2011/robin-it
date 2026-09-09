@@ -565,12 +565,41 @@
     padding-bottom: 0;
 }
 
+/*
+ * The name of each section, and the line that separates it from its contents.
+ *
+ * It was 1.15rem at weight 700 with nothing under it, which against a table of
+ * bold spec names and a paragraph of body text was not obviously a title at
+ * all — it read as the first line of the section rather than its name. The
+ * homepage's own section titles are 1.65rem at 800, so this was the odd one
+ * out as well.
+ *
+ * The rule does the separating; the short accent on it is what makes the row
+ * read as a heading rather than as a horizontal divider that happens to have
+ * text above it.
+ */
 .pdp-details-heading {
+    position: relative;
     font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
     color: var(--text-primary);
-    margin: 0 0 14px;
+    margin: 0 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pdp-details-heading::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    /* Sits on the border rather than under it, so the two read as one line. */
+    bottom: -1px;
+    width: 54px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: var(--radius-full);
 }
 
 .pdp-tabs {
@@ -604,10 +633,9 @@
 }
 
 /* Specifications Table */
-/* The two headings in here are `h2.pdp-details-heading` now — they name
-   sections of the page rather than the contents of a tab panel, and are styled
-   with the other headings above. The h3 rule they used to match is gone with
-   them. */
+/* No heading rule here any more. The section titles are the page's, not these
+   components' — `h2.pdp-details-heading`, rendered once per section so all
+   four carry the same one, and styled above. */
 
 .specifications-table table {
     width: 100%;

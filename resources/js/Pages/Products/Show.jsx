@@ -1146,6 +1146,8 @@ export default function ProductDetails(props) {
                         className="pdp-section"
                         ref={sectionRefs.specification}
                     >
+                        <h2 className="pdp-details-heading">Specification</h2>
+
                         <ProductSpecifications
                             specifications={product.specifications || []}
                         />
@@ -1156,6 +1158,8 @@ export default function ProductDetails(props) {
                         className="pdp-section"
                         ref={sectionRefs.description}
                     >
+                        <h2 className="pdp-details-heading">Description</h2>
+
                         <ProductDescription description={product.description} />
                     </section>
 
@@ -1164,6 +1168,8 @@ export default function ProductDetails(props) {
                         className="pdp-section"
                         ref={sectionRefs.questions}
                     >
+                        <h2 className="pdp-details-heading">Questions</h2>
+
                         {/*
                          * The one question the shop can always answer, above
                          * the ones customers have asked.
@@ -1232,6 +1238,10 @@ export default function ProductDetails(props) {
                         className="pdp-section"
                         ref={sectionRefs.reviews}
                     >
+                        <h2 className="pdp-details-heading">
+                            Ratings &amp; Reviews
+                        </h2>
+
                         <div className="reviews-tab-content">
                             {/* Reusable Rating Score & Breakdown Component */}
                             <RatingBreakdown
