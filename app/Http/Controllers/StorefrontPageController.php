@@ -6,6 +6,7 @@ use App\Models\Banner;
 use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\CategorySlugHistory;
 use App\Models\ContentPage;
 use App\Models\Order;
 use App\Models\Product;
@@ -104,14 +105,30 @@ class StorefrontPageController extends Controller
      * catalogue never had ("laptops" for "laptop") and nothing said so. Making
      * the miss a 404 is what turns the next such typo into something visible.
      */
-    public function shopCategory(string $categorySlug): Response
+    public function shopCategory(string $categorySlug): Response|RedirectResponse
     {
-        abort_unless(
-            Category::where('slug', $categorySlug)->where('is_active', true)->exists(),
-            404
-        );
+        if (Category::where('slug', $categorySlug)->where('is_active', true)->exists()) {
+            return Inertia::render('Products/Index', ['categorySlug' => $categorySlug]);
+        }
 
-        return Inertia::render('Products/Index', ['categorySlug' => $categorySlug]);
+        /*
+         * An address the shelf used to answer at. The live lookup goes first,
+         * so a slug that has since been taken by another category belongs to
+         * whoever holds it now, not to the history.
+         *
+         * Permanent, so a search engine moves its index rather than keeping
+         * both and splitting the page's standing between them.
+         */
+        $moved = CategorySlugHistory::where('slug', $categorySlug)
+            ->whereHas('category', fn ($q) => $q->where('is_active', true))
+            ->with('category:id,slug')
+            ->first();
+
+        if ($moved) {
+            return redirect()->route('shop.category', $moved->category->slug, 301);
+        }
+
+        abort(404);
     }
 
     public function product(string $slug): Response

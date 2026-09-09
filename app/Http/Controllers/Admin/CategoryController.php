@@ -100,17 +100,53 @@ class CategoryController extends Controller
     }
 
     /**
+     * The address a shelf should answer at when nobody has typed one.
+     *
+     * A brand shelf reads maker-first — `intel-processor`, not the path
+     * through the tree — because that is the order somebody searches in, and
+     * it is what the trade does. Without this the next admin to save an ASUS
+     * shelf would get `asus`, then `asus-2`, then `asus-3`, since the name is
+     * the same under every parent.
+     *
+     * Only when the admin left the field blank: a slug typed by hand is the
+     * shop's own decision and is never second-guessed.
+     */
+    private function slugFor(array $validated, ?int $brandId, ?int $parentId): string
+    {
+        if (! empty($validated['slug'])) {
+            return $validated['slug'];
+        }
+
+        if ($brandId && $parentId) {
+            $brand = Brand::find($brandId, ['name']);
+            $parent = Category::find($parentId, ['name']);
+
+            if ($brand && $parent) {
+                return $brand->name.' '.$parent->name;
+            }
+        }
+
+        return $validated['name'];
+    }
+
+    /**
      * Store a newly created category (root, L2 subcategory, or L3 series).
      */
     public function store(CategoryRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
+        $brandId = $this->brandFor($validated, $validated['name']);
+        $parentId = $validated['parent_id'] ?? null;
+
         $category = Category::create([
             'name' => $validated['name'],
-            'slug' => SlugFactory::unique(Category::class, $validated['slug'] ?? $validated['name']),
-            'parent_id' => $validated['parent_id'] ?? null,
-            'brand_id' => $this->brandFor($validated, $validated['name']),
+            'slug' => SlugFactory::unique(
+                Category::class,
+                $this->slugFor($validated, $brandId, $parentId)
+            ),
+            'parent_id' => $parentId,
+            'brand_id' => $brandId,
             'icon' => $validated['icon'] ?? ($validated['parent_id'] ?? null ? null : 'Layers'),
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
@@ -125,15 +161,18 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
         $validated = $request->validated();
 
+        $brandId = $this->brandFor($validated, $validated['name']);
+        $parentId = $validated['parent_id'] ?? null;
+
         $category->update([
             'name' => $validated['name'],
             'slug' => SlugFactory::unique(
                 Category::class,
-                $validated['slug'] ?? $validated['name'],
+                $this->slugFor($validated, $brandId, $parentId),
                 $category->id
             ),
-            'parent_id' => $validated['parent_id'] ?? null,
-            'brand_id' => $this->brandFor($validated, $validated['name']),
+            'parent_id' => $parentId,
+            'brand_id' => $brandId,
             'icon' => $validated['icon'] ?? $category->icon,
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,

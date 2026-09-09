@@ -24,6 +24,36 @@ class Category extends Model
         'spotlight_link',
     ];
 
+    /**
+     * Keep the address a shelf is moving away from.
+     *
+     * Recorded here rather than at the call sites that rename things, because
+     * there are several — the admin form, the seeders, a migration — and a
+     * rename that forgets to do this breaks every existing link to the shelf
+     * with nothing to show that it has.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Category $category) {
+            if (! $category->isDirty('slug')) {
+                return;
+            }
+
+            $was = $category->getOriginal('slug');
+
+            if ($was) {
+                CategorySlugHistory::updateOrCreate(
+                    ['slug' => $was],
+                    ['category_id' => $category->id, 'created_at' => now()],
+                );
+            }
+
+            // Moving back to an address it once left: that is where it lives
+            // again, so it is no longer somewhere to redirect away from.
+            CategorySlugHistory::where('slug', $category->slug)->delete();
+        });
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
