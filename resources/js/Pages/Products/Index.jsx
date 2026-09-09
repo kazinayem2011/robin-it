@@ -13,6 +13,7 @@ import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import { ProductCard } from '../../Components/ProductCard';
 import ProductFilters from '../../Components/ProductFilters';
+import CategoryBrandRow from '../../Components/CategoryBrandRow';
 import Select from '../../Components/Select';
 import SEOHead from '../../Components/SEOHead';
 import { ProductCardSkeleton } from '../../Components/Skeleton';
@@ -185,6 +186,39 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
         // requestFilters is compared by filterKey, its stable serialisation.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, sort, categorySlug, filterKey, reloadKey]);
+
+    /*
+     * The makers on this shelf. Keyed on the shelf alone, not on the shopper's
+     * choices: the row is the way into a maker, so narrowing by price must not
+     * make makers vanish from it — that is the sidebar's job, where the counts
+     * are supposed to move.
+     */
+    const [categoryBrands, setCategoryBrands] = useState([]);
+
+    useEffect(() => {
+        if (!categorySlug) {
+            setCategoryBrands([]);
+            return;
+        }
+
+        let cancelled = false;
+
+        productService
+            .getCategoryBrands(categorySlug)
+            .then((rows) => {
+                if (!cancelled)
+                    setCategoryBrands(Array.isArray(rows) ? rows : []);
+            })
+            .catch(() => {
+                // A row that cannot load is simply absent; the page is not
+                // about it, and an error where pills should be says nothing.
+                if (!cancelled) setCategoryBrands([]);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [categorySlug]);
 
     // The facets describe the selection, so they follow everything except
     // paging and sorting.
@@ -369,6 +403,17 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                             />
                         </div>
                     </div>
+
+                    {/*
+                     * The makers on this shelf, before any filter. Not part of
+                     * ProductFilters on purpose: these are shelves with their
+                     * own addresses, not checkboxes, and the sidebar's Brand
+                     * list still does the job of picking two at once.
+                     */}
+                    <CategoryBrandRow
+                        brands={categoryBrands}
+                        activeSlug={categorySlug}
+                    />
 
                     <div className="plp-layout">
                         <ProductFilters

@@ -232,6 +232,76 @@ class CategoryService
     }
 
     /**
+     * The makers on a shelf, as the shelves that stand for them.
+     *
+     * Shown as a row across the top of a category page, which is how the trade
+     * presents it — Star Tech puts Lenovo, MSI, HP, Asus in a line under the
+     * heading, each one a page of its own, before any filter is touched. It is
+     * the shortest route a shopper has: most people arriving at Laptop already
+     * know whose laptop they want.
+     *
+     * Distinct by maker, not by shelf. ASUS can stand under both All Laptop
+     * and Gaming Laptop within the same department, and the row wants one ASUS
+     * — the nearest one, so the link stays as close to where the shopper is as
+     * it can.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function brandShelvesIn(string|int $categoryOrSlug): array
+    {
+        $key = 'category:brand-shelves:'.$categoryOrSlug;
+
+        return Cache::remember($key, now()->addHour(), function () use ($categoryOrSlug) {
+            $ids = $this->getDescendantIds($categoryOrSlug);
+
+            if ($ids === []) {
+                return [];
+            }
+
+            $stocked = $this->categoryIdsWithProducts();
+
+            /*
+             * Ordered by the parent's place in the menu, which is what decides
+             * the dedupe below, and it matters more than it looks. Under
+             * Laptop, ASUS stands on All Laptop, Gaming Laptop, Premium
+             * Ultrabook and Laptop Bag; ordering these any other way gave the
+             * row an ASUS that led to laptop bags. The shop already says which
+             * of those shelves comes first, and that is the answer.
+             */
+            $shelves = Category::query()
+                ->from('categories as c')
+                ->join('categories as p', 'p.id', '=', 'c.parent_id')
+                ->whereIn('c.id', $ids)
+                ->whereNotNull('c.brand_id')
+                ->where('c.is_active', true)
+                ->whereIn('c.id', $stocked)
+                ->with('brand:id,name,logo_path')
+                ->orderBy('p.position')
+                ->orderBy('p.name')
+                ->orderBy('c.position')
+                ->orderBy('c.name')
+                ->get(['c.id', 'c.name', 'c.slug', 'c.brand_id', 'c.parent_id']);
+
+            $seen = [];
+
+            foreach ($shelves as $shelf) {
+                if (! $shelf->brand || isset($seen[$shelf->brand_id])) {
+                    continue;
+                }
+
+                $seen[$shelf->brand_id] = [
+                    'id' => $shelf->id,
+                    'name' => $shelf->brand->name,
+                    'slug' => $shelf->slug,
+                    'logo' => $shelf->brand->logo_path,
+                ];
+            }
+
+            return array_values($seen);
+        });
+    }
+
+    /**
      * Get Featured Categories for Homepage Bubble Carousel directly from DB.
      *
      * Previously this resolved descendants and counted products once per category —

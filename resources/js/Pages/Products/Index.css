@@ -581,3 +581,65 @@
     border-color: var(--primary);
     color: var(--primary-ink);
 }
+
+/*
+ * The makers on a shelf, in a line across the top of it.
+ *
+ * Sits above the filters rather than inside them because it is not a filter:
+ * each one is a shelf with its own address. Most people arriving at Laptop
+ * already know whose laptop they want.
+ */
+.cat-brand-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.cat-brand-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.cat-brand-pill:hover {
+    border-color: var(--primary-ink);
+    color: var(--primary-ink);
+}
+
+.cat-brand-pill.is-active {
+    border-color: var(--primary-ink);
+    background: var(--primary-ink);
+    color: var(--text-on-accent);
+}
+
+/*
+ * One line that scrolls on a phone rather than four rows of wrapped pills.
+ * Fourteen makers stacked four deep pushes the grid off the screen, and the
+ * row is meant to be glanced at on the way past.
+ */
+@media (max-width: 640px) {
+    .cat-brand-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-inline: -16px;
+        padding-inline: 16px;
+    }
+
+    .cat-brand-row::-webkit-scrollbar {
+        display: none;
+    }
+}

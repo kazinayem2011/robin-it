@@ -15,6 +15,8 @@ class ApiEndpoints
 
     public const CATEGORIES_FEATURED = 'categories/featured';
 
+    public const CATEGORY_BRANDS = 'categories/{slug}/brands';
+
     // Products
     public const PRODUCTS_INDEX = 'products';
 

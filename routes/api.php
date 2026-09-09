@@ -71,6 +71,7 @@ Route::middleware('throttle:api')->group(function () {
     // Categories API
     Route::get(ApiEndpoints::CATEGORIES_MEGA_MENU, [CategoryController::class, 'megaMenu']);
     Route::get(ApiEndpoints::CATEGORIES_FEATURED, [CategoryController::class, 'featured']);
+    Route::get(ApiEndpoints::CATEGORY_BRANDS, [CategoryController::class, 'brands']);
 
     // Products & Homepage Data API
     Route::get(ApiEndpoints::PRODUCTS_FLASH_SALE, [ProductController::class, 'flashSale']);
