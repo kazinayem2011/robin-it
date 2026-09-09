@@ -15,6 +15,17 @@ import './Tabs.css';
  *   them all at once. Falls back to a row on a narrow screen, where there is
  *   no width to give away.
  * @param {string} [className] - Additional custom CSS class
+ * @param {boolean} [navigation=false] - Jump to sections that are all on the
+ *   page, rather than switch between panels only one of which is shown.
+ *
+ *   This changes what the row *is*, so it changes the markup rather than only
+ *   the styling. A `role="tab"` promises a `tabpanel` that appears when it is
+ *   chosen and hides when it is not; pointing that at four headings a reader
+ *   can already see says the opposite of what is true, and `aria-selected`
+ *   claims the other three are hidden. In this mode it is a `nav` of real
+ *   links to fragments, with `aria-current` marking the one being read — which
+ *   also means they work before the JavaScript runs, and can be opened in a
+ *   new tab or bookmarked like any other link.
  */
 export default function Tabs({
     tabs = [],
@@ -23,29 +34,25 @@ export default function Tabs({
     variant = 'line',
     orientation = 'horizontal',
     className = '',
+    navigation = false,
 }) {
+    const Container = navigation ? 'nav' : 'div';
+
     return (
         <div
             className={`reusable-tabs-container variant-${variant} orientation-${orientation} ${className}`}
         >
-            <div
+            <Container
                 className="reusable-tabs-nav"
-                role="tablist"
-                aria-orientation={orientation}
+                role={navigation ? undefined : 'tablist'}
+                aria-orientation={navigation ? undefined : orientation}
             >
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.key;
                     const Icon = tab.icon;
 
-                    return (
-                        <button
-                            key={tab.key}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActive}
-                            className={`reusable-tab-btn ${isActive ? 'active' : ''}`}
-                            onClick={() => onChange(tab.key)}
-                        >
+                    const inner = (
+                        <>
                             {Icon && (
                                 <Icon size={16} className="reusable-tab-icon" />
                             )}
@@ -59,10 +66,42 @@ export default function Tabs({
                                     {tab.badge}
                                 </span>
                             )}
+                        </>
+                    );
+
+                    if (navigation) {
+                        return (
+                            <a
+                                key={tab.key}
+                                href={`#${tab.key}`}
+                                aria-current={isActive ? 'true' : undefined}
+                                className={`reusable-tab-btn ${isActive ? 'active' : ''}`}
+                                onClick={(event) => {
+                                    // The href stays the fallback; smooth
+                                    // scrolling and the active mark are this.
+                                    event.preventDefault();
+                                    onChange(tab.key);
+                                }}
+                            >
+                                {inner}
+                            </a>
+                        );
+                    }
+
+                    return (
+                        <button
+                            key={tab.key}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActive}
+                            className={`reusable-tab-btn ${isActive ? 'active' : ''}`}
+                            onClick={() => onChange(tab.key)}
+                        >
+                            {inner}
                         </button>
                     );
                 })}
-            </div>
+            </Container>
         </div>
     );
 }

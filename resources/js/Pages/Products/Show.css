@@ -251,9 +251,9 @@
 /*
  * The jump down to the full table.
  *
- * A button rather than an anchor: it also decides which panel opens, so it is
- * doing something rather than going somewhere. Styled as the link it reads as,
- * underline and all, because that is what makes it obviously clickable.
+ * Styled as the link it reads as, underline and all, because that is what
+ * makes it obviously clickable. It scrolls to the Specification section, the
+ * same as the first item in the row down there.
  */
 .pdp-more-info {
     display: inline-block;
@@ -512,20 +512,45 @@
 }
 
 /*
- * Specification and description, stacked and read on the page.
+ * Everything about the product, one section after another, with the row above
+ * them navigating rather than switching.
  *
- * They were two tabs, which made a shopper checking a figure in the table
- * against a sentence in the description click between them and lose their
- * place. The gap between the two is wide enough that they read as separate
- * sections rather than one long table with prose stuck on the end.
+ * They were tab panels, one shown at a time, so a shopper checking a figure in
+ * the table against a sentence in the description clicked between two views of
+ * the same product and lost their place.
  */
-.pdp-details {
-    display: flex;
-    flex-direction: column;
-    gap: 34px;
+.pdp-sections {
     margin-top: 30px;
     border-top: 1px solid var(--border-color);
     padding-top: 28px;
+}
+
+/*
+ * The row stays put while the sections scroll under it, which is what makes it
+ * navigation rather than a heading — a bar that scrolls away is only useful at
+ * the top of the page it is meant to move you around.
+ */
+.pdp-section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg-page);
+    margin-bottom: 8px;
+}
+
+/*
+ * `scroll-margin-top` rather than padding: the row above is sticky, so a
+ * section scrolled to by the browser would otherwise stop with its heading
+ * underneath it. This is the offset the anchor lands at, and it matches the
+ * rootMargin the observer uses to decide which section is being read.
+ */
+.pdp-section {
+    scroll-margin-top: 72px;
+    padding-bottom: 34px;
+}
+
+.pdp-section:last-child {
+    padding-bottom: 0;
 }
 
 .pdp-details-heading {
@@ -534,13 +559,6 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0 0 14px;
-}
-
-/* Tabs Section */
-.pdp-tabs-section {
-    margin-top: 30px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 28px;
 }
 
 .pdp-tabs {

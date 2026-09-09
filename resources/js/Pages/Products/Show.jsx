@@ -72,7 +72,7 @@ export default function ProductDetails(props) {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('reviews');
+    const [activeSection, setActiveSection] = useState('specification');
 
     /*
      * Which of the two payment options is selected. Presentational for now —
@@ -171,21 +171,81 @@ export default function ProductDetails(props) {
     };
 
     /*
-     * "View More Info" jumps to the specification and description, which now
-     * sit on the page rather than behind tabs.
+     * The four sections below the product, and the row that navigates them.
      *
-     * That made this simpler than it was: there is no longer a panel to choose
-     * first, and no product without a section to land on, because both carry
-     * an empty state of their own. So it scrolls, and that is all.
+     * One ref each rather than one for the group, because the row has to be
+     * able to scroll to any of them and to mark whichever is being read.
      */
-    const detailsRef = useRef(null);
+    const sectionRefs = {
+        specification: useRef(null),
+        description: useRef(null),
+        questions: useRef(null),
+        reviews: useRef(null),
+    };
 
-    const showFullDetails = () => {
-        detailsRef.current?.scrollIntoView({
+    const goToSection = (key) => {
+        setActiveSection(key);
+        sectionRefs[key]?.current?.scrollIntoView({
             behavior: 'smooth',
             block: 'start',
         });
     };
+
+    /* "View More Info" is the same journey, to the first of them. */
+    const showFullDetails = () => goToSection('specification');
+
+    /*
+     * Keep the row honest as the page is scrolled by hand.
+     *
+     * Without this the row marks whatever was last clicked, so it can claim
+     * the reader is in Specification while they are reading Reviews — worse
+     * than marking nothing, because it is confidently wrong.
+     *
+     * The top band is where "current" is decided: a rootMargin that ignores
+     * the bottom 55% of the viewport means a section counts as being read once
+     * its heading reaches the upper part of the screen, rather than the moment
+     * a pixel of it appears at the bottom.
+     */
+    useEffect(() => {
+        if (!product || typeof IntersectionObserver === 'undefined') {
+            return;
+        }
+
+        const nodes = Object.entries(sectionRefs)
+            .map(([key, ref]) => [key, ref.current])
+            .filter(([, node]) => node);
+
+        if (!nodes.length) {
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort(
+                        (a, b) =>
+                            a.boundingClientRect.top - b.boundingClientRect.top,
+                    )[0];
+
+                if (!visible) {
+                    return;
+                }
+
+                const match = nodes.find(([, node]) => node === visible.target);
+
+                if (match) {
+                    setActiveSection(match[0]);
+                }
+            },
+            { rootMargin: '-80px 0px -55% 0px', threshold: 0 },
+        );
+
+        nodes.forEach(([, node]) => observer.observe(node));
+
+        return () => observer.disconnect();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [product]);
 
     // A variant product with nothing chosen yet cannot be bought.
     const needsVariantChoice =
@@ -1006,31 +1066,30 @@ export default function ProductDetails(props) {
                     </div>
                 </div>
                 {/*
-                 * The specification and the description, both read on the page.
+                 * Everything the shop knows about this product, on one page,
+                 * with the row above it as the way around.
                  *
-                 * They were two tabs, so a shopper comparing a figure in the
-                 * table against a sentence in the description had to click
-                 * between them and lose their place. Stacked, the whole of what
-                 * the shop knows about the product is one scroll.
+                 * The row is not switching panels any more — all four are
+                 * rendered and a click scrolls. That is what the reference
+                 * does, and it means a shopper checking a figure in the table
+                 * against a sentence in the description keeps their place
+                 * instead of clicking between two views of the same product.
+                 *
+                 * Each section's id matches its key in the row, so the links
+                 * are ordinary fragment links and work without the scrolling.
                  */}
-                <section
-                    className="pdp-details"
-                    ref={detailsRef}
-                    id="product-details"
-                >
-                    <ProductSpecifications
-                        specifications={product.specifications || []}
-                    />
-                    <ProductDescription description={product.description} />
-                </section>
-                {/* Bottom Section: Reusable Tabs */}
-                <div
-                    className="pdp-tabs-section"
-                    ref={detailsRef}
-                    id="product-details"
-                >
+                <div className="pdp-sections" id="product-details">
                     <Tabs
+                        navigation
                         tabs={[
+                            {
+                                key: 'specification',
+                                label: 'Specification',
+                            },
+                            {
+                                key: 'description',
+                                label: 'Description',
+                            },
                             {
                                 key: 'questions',
                                 label: 'Questions',
@@ -1042,124 +1101,138 @@ export default function ProductDetails(props) {
                                 badge: reviewsData.total_reviews || 0,
                             },
                         ]}
-                        activeTab={activeTab}
-                        onChange={setActiveTab}
+                        activeTab={activeSection}
+                        onChange={goToSection}
                         variant="line"
+                        className="pdp-section-nav"
                     />
 
-                    <div className="tab-content">
-                        {activeTab === 'questions' && (
-                            <ProductQuestions
-                                slug={productSlug}
-                                questions={questions}
-                                onAsked={loadQuestions}
-                                askingAs={auth?.user?.name || ''}
+                    <section
+                        id="specification"
+                        className="pdp-section"
+                        ref={sectionRefs.specification}
+                    >
+                        <ProductSpecifications
+                            specifications={product.specifications || []}
+                        />
+                    </section>
+
+                    <section
+                        id="description"
+                        className="pdp-section"
+                        ref={sectionRefs.description}
+                    >
+                        <ProductDescription description={product.description} />
+                    </section>
+
+                    <section
+                        id="questions"
+                        className="pdp-section"
+                        ref={sectionRefs.questions}
+                    >
+                        <ProductQuestions
+                            slug={productSlug}
+                            questions={questions}
+                            onAsked={loadQuestions}
+                            askingAs={auth?.user?.name || ''}
+                        />
+                    </section>
+
+                    <section
+                        id="reviews"
+                        className="pdp-section"
+                        ref={sectionRefs.reviews}
+                    >
+                        <div className="reviews-tab-content">
+                            {/* Reusable Rating Score & Breakdown Component */}
+                            <RatingBreakdown
+                                averageRating={reviewsData.average_rating || 5}
+                                totalReviews={reviewsData.total_reviews || 0}
+                                breakdown={
+                                    reviewsData.breakdown || {
+                                        5: 0,
+                                        4: 0,
+                                        3: 0,
+                                        2: 0,
+                                        1: 0,
+                                    }
+                                }
                             />
-                        )}
 
-                        {activeTab === 'reviews' && (
-                            <div className="reviews-tab-content">
-                                {/* Reusable Rating Score & Breakdown Component */}
-                                <RatingBreakdown
-                                    averageRating={
-                                        reviewsData.average_rating || 5
-                                    }
-                                    totalReviews={
-                                        reviewsData.total_reviews || 0
-                                    }
-                                    breakdown={
-                                        reviewsData.breakdown || {
-                                            5: 0,
-                                            4: 0,
-                                            3: 0,
-                                            2: 0,
-                                            1: 0,
-                                        }
-                                    }
+                            {/* Verified Buyer Permission Gate */}
+                            {reviewsData.can_review ? (
+                                <ReviewForm
+                                    onSubmit={handleReviewSubmit}
+                                    loading={submittingReview}
                                 />
-
-                                {/* Verified Buyer Permission Gate */}
-                                {reviewsData.can_review ? (
-                                    <ReviewForm
-                                        onSubmit={handleReviewSubmit}
-                                        loading={submittingReview}
+                            ) : reviewsData.already_reviewed ? (
+                                <div className="verified-buyer-notice success">
+                                    <Check size={20} className="text-success" />
+                                    <div>
+                                        <strong>
+                                            Verified Review Published
+                                        </strong>
+                                        <p>
+                                            Thank you! Your verified purchase
+                                            review is live for this product.
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : !reviewsData.is_logged_in ? (
+                                <div className="verified-buyer-notice info">
+                                    <ShieldCheck
+                                        size={20}
+                                        className="text-primary"
                                     />
-                                ) : reviewsData.already_reviewed ? (
-                                    <div className="verified-buyer-notice success">
-                                        <Check
-                                            size={20}
-                                            className="text-success"
-                                        />
-                                        <div>
-                                            <strong>
-                                                Verified Review Published
-                                            </strong>
-                                            <p>
-                                                Thank you! Your verified
-                                                purchase review is live for this
-                                                product.
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <strong>
+                                            Verified Purchase Required
+                                        </strong>
+                                        <p>
+                                            Only customers who have purchased
+                                            this product from
+                                            {siteConfig.name} can write a
+                                            review.{' '}
+                                            <Link
+                                                href={ROUTES.LOGIN}
+                                                style={{
+                                                    color: 'var(--primary-ink)',
+                                                    fontWeight: 700,
+                                                }}
+                                            >
+                                                Log in to your account &rarr;
+                                            </Link>
+                                        </p>
                                     </div>
-                                ) : !reviewsData.is_logged_in ? (
-                                    <div className="verified-buyer-notice info">
-                                        <ShieldCheck
-                                            size={20}
-                                            className="text-primary"
-                                        />
-                                        <div>
-                                            <strong>
-                                                Verified Purchase Required
-                                            </strong>
-                                            <p>
-                                                Only customers who have
-                                                purchased this product from
-                                                {siteConfig.name} can write a
-                                                review.{' '}
-                                                <Link
-                                                    href={ROUTES.LOGIN}
-                                                    style={{
-                                                        color: 'var(--primary-ink)',
-                                                        fontWeight: 700,
-                                                    }}
-                                                >
-                                                    Log in to your account
-                                                    &rarr;
-                                                </Link>
-                                            </p>
-                                        </div>
+                                </div>
+                            ) : (
+                                <div className="verified-buyer-notice warning">
+                                    <ShieldCheck
+                                        size={20}
+                                        className="text-muted"
+                                    />
+                                    <div>
+                                        <strong>
+                                            Verified Purchase Required
+                                        </strong>
+                                        <p>
+                                            Only verified buyers who have
+                                            purchased this product from{' '}
+                                            {siteConfig.name} can submit a
+                                            review.
+                                        </p>
                                     </div>
-                                ) : (
-                                    <div className="verified-buyer-notice warning">
-                                        <ShieldCheck
-                                            size={20}
-                                            className="text-muted"
-                                        />
-                                        <div>
-                                            <strong>
-                                                Verified Purchase Required
-                                            </strong>
-                                            <p>
-                                                Only verified buyers who have
-                                                purchased this product from{' '}
-                                                {siteConfig.name} can submit a
-                                                review.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
+                            )}
 
-                                {/* Reusable Customer Reviews Feed List Component */}
-                                <ReviewList
-                                    reviews={reviewsData.reviews || []}
-                                    totalReviews={
-                                        reviewsData.total_reviews || 0
-                                    }
-                                />
-                            </div>
-                        )}
-                    </div>
-                </div>{' '}
+                            {/* Reusable Customer Reviews Feed List Component */}
+                            <ReviewList
+                                reviews={reviewsData.reviews || []}
+                                totalReviews={reviewsData.total_reviews || 0}
+                            />
+                        </div>
+                    </section>
+                </div>
                 {/*
                  * Hand-picked where a shopkeeper has chosen them, worked
                  * out from the same shelf where nobody has. It used to be

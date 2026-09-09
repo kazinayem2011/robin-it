@@ -98,4 +98,90 @@ describe('Tabs', () => {
         expect(container().className).toContain('variant-enclosed');
         expect(container().className).toContain('orientation-vertical');
     });
+
+    /**
+     * Navigation mode, for a row that moves you between sections which are all
+     * on the page rather than switching which one is shown.
+     *
+     * The distinction is not cosmetic. `role="tab"` promises a panel that
+     * appears when chosen and hides when not, and `aria-selected="false"`
+     * claims the others are hidden — both untrue when every section is on
+     * screen, so the markup has to change with the behaviour.
+     */
+    describe('as navigation', () => {
+        const asNav = (activeTab = 'general') =>
+            render(
+                <Tabs
+                    navigation
+                    tabs={TABS}
+                    activeTab={activeTab}
+                    onChange={() => {}}
+                />,
+            );
+
+        it('is a nav of links, not a tablist of buttons', () => {
+            asNav();
+
+            expect(nav().tagName).toBe('NAV');
+            expect(nav().getAttribute('role')).toBeNull();
+            expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0);
+            expect(
+                document.querySelectorAll('a.reusable-tab-btn'),
+            ).toHaveLength(TABS.length);
+        });
+
+        it('links to each section by its key, so it works without the script', () => {
+            asNav();
+
+            expect(
+                screen.getByRole('link', { name: 'SMS' }).getAttribute('href'),
+            ).toBe('#sms');
+        });
+
+        it('marks the section being read with aria-current, not aria-selected', () => {
+            asNav('sms');
+
+            const current = screen.getByRole('link', { name: 'SMS' });
+            expect(current.getAttribute('aria-current')).toBe('true');
+            expect(current.getAttribute('aria-selected')).toBeNull();
+
+            expect(
+                screen
+                    .getByRole('link', { name: 'General' })
+                    .getAttribute('aria-current'),
+            ).toBeNull();
+        });
+
+        it('reports the section clicked without letting the page jump', async () => {
+            const onChange = vi.fn();
+            render(
+                <Tabs
+                    navigation
+                    tabs={TABS}
+                    activeTab="general"
+                    onChange={onChange}
+                />,
+            );
+
+            await userEvent.click(screen.getByRole('link', { name: 'SMS' }));
+
+            expect(onChange).toHaveBeenCalledWith('sms');
+            // preventDefault, so the browser does not also hard-jump to the
+            // fragment and fight the smooth scroll the caller does.
+            expect(window.location.hash).toBe('');
+        });
+
+        it('still renders badges', () => {
+            render(
+                <Tabs
+                    navigation
+                    tabs={[{ key: 'reviews', label: 'Reviews', badge: 7 }]}
+                    activeTab="reviews"
+                    onChange={() => {}}
+                />,
+            );
+
+            expect(screen.getByText('7')).toBeTruthy();
+        });
+    });
 });
