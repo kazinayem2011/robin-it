@@ -428,7 +428,7 @@
 .plp-price-slider {
     position: relative;
     height: 26px;
-    margin: 6px 2px 14px;
+    margin: 6px 0 14px;
 }
 
 .plp-price-track,
@@ -562,11 +562,19 @@
     border-radius: var(--radius-sm);
 }
 
+/*
+ * An option lines up with the heading it sits under.
+ *
+ * It carried 8px of horizontal padding, so every checkbox and every label in
+ * the panel stood 8px to the right of the section name above it — a step in
+ * the left edge at each group, for the sake of a hover highlight that reads
+ * just as well running the full width of the panel.
+ */
 .plp-filter-check {
     display: flex;
     align-items: center;
     gap: 9px;
-    padding: 4px 8px;
+    padding: 4px 0;
     border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background var(--transition-fast);
@@ -575,9 +583,21 @@
     user-select: none;
 }
 
+/*
+ * Square, which is what a checkbox is.
+ *
+ * .custom-checkbox-input rounds itself with --radius-md. Every radius token in
+ * this system is 8px, and 8px on an 18px box is nearly half its width, so the
+ * control read as a circle — which is a radio button's shape, and says
+ * "choose one of these" about a list where several can be picked at once.
+ *
+ * 0 rather than a smaller number: the linter allows it precisely for squaring
+ * a corner off on purpose, and there is no token between 8px and nothing.
+ */
 .plp-filter-check input {
     margin: 0;
     flex-shrink: 0;
+    border-radius: 0;
 }
 
 /* The label takes the room; the tally is pushed to the right-hand edge. */
