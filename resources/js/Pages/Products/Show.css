@@ -70,24 +70,41 @@
     gap: 16px;
 }
 
+/*
+ * The frame is the shape of the picture in it.
+ *
+ * It was 420px tall against a column that is about 405px wide — very nearly a
+ * square — while every product image in this shop is 4:3, the ratio the admin
+ * cropper enforces and the placeholder is drawn at. `contain` then fitted the
+ * image to the width and left a band of the box showing above and below it,
+ * which is what read as the picture not fitting its container. In the dark
+ * theme that band is `#0f1420` around a light photo, so it looked like a
+ * mistake rather than padding.
+ *
+ * Stating the ratio instead of a height means there is no band to see. No
+ * ground and no border either: the photo is the object, and the reference
+ * frames it with nothing.
+ */
 .main-image {
     width: 100%;
-    height: 420px;
-    background-color: var(--bg-surface-subtle);
+    aspect-ratio: 4 / 3;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--border-color);
-    padding: 24px;
     overflow: hidden;
 }
 
+/*
+ * Still `contain`, deliberately. A product photo may not be exactly 4:3 —
+ * anything uploaded before the cropper enforced it is whatever shape it was
+ * saved at — and `cover` would take the edges off a laptop to fill the frame.
+ * `contain` shows the whole product, and any gap it leaves is now invisible
+ * rather than a band of coloured box.
+ */
 .main-image img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     transition: transform var(--transition-normal);
 }
@@ -317,32 +334,121 @@
     color: var(--text-primary);
 }
 
-.pdp-secondary-actions {
+/*
+ * Share, Save and Compare, in one pill above the product.
+ *
+ * They were three separate things in two places — sharing did not exist at
+ * all, and Save and Compare were at the very foot of the summary column below
+ * the branch stock table. This is a row of things you do with the product
+ * rather than to your basket, so it reads as one bar, the way the reference
+ * has it.
+ */
+.pdp-utility-bar {
     display: flex;
-    gap: 20px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border-light);
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding: 10px 18px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
 }
 
-.btn-text {
+.pdp-share,
+.pdp-utility-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pdp-share-label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+/*
+ * Round, filled, and each in the colour of the place it posts to, which is
+ * how these are recognised at this size — a row of identical grey circles
+ * makes the reader read three labels to find the one they want.
+ *
+ * theme-exempt on all three: these are other companies' colours and mean
+ * nothing if they follow our theme.
+ */
+.pdp-share-btn {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--white); /* theme-exempt: sits on a fixed brand colour */
+    text-decoration: none;
+    transition: transform var(--transition-fast);
+}
+
+.pdp-share-btn:hover {
+    transform: scale(1.08);
+}
+
+.pdp-share-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.pdp-share-btn.is-facebook {
+    background: #0866ff; /* theme-exempt: Facebook blue */
+}
+
+.pdp-share-btn.is-whatsapp {
+    background: #25d366; /* theme-exempt: WhatsApp green */
+}
+
+/* The odd one out on purpose: copying a link goes nowhere, so it takes the
+   page's own ink rather than borrowing a brand's. */
+.pdp-share-btn.is-link {
+    background: var(--bg-muted-strong);
+    color: var(--text-secondary);
+}
+
+.pdp-utility-btn {
     background: none;
     border: none;
     color: var(--text-body);
-    font-size: 0.84rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     transition: color var(--transition-fast);
-    /* "Add to Wishlist" and "Add to Compare" sit under the buy button and
-       came out 16px tall — the two easiest things to miss on the page a
-       shopper spends longest on. */
-    min-height: 32px;
+    /* These came out 16px tall when they were plain text buttons — the two
+       easiest things to miss on the page a shopper spends longest on. */
+    min-height: 34px;
+    padding: 0 4px;
 }
 
-.btn-text:hover {
+.pdp-utility-btn:hover {
     color: var(--primary-ink);
+}
+
+.pdp-utility-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.pdp-utility-btn.is-saved {
+    color: var(--primary-ink);
+}
+
+.pdp-utility-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
 }
 
 /* Tabs Section */
@@ -747,10 +853,8 @@
     .pdp-page-wrapper {
         padding: 16px 8px 40px;
     }
-    .main-image {
-        height: 280px;
-        padding: 12px;
-    }
+    /* No height here either: a fixed one overrides the ratio above and brings
+       the letterboxing back on a phone, where it is most of the screen. */
     .pdp-actions {
         flex-direction: column;
         align-items: stretch;
@@ -764,7 +868,11 @@
         width: 100%;
         justify-content: center;
     }
-    .pdp-secondary-actions {
+    .pdp-utility-bar {
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+    }
+    .pdp-utility-actions {
         width: 100%;
         justify-content: space-between;
     }

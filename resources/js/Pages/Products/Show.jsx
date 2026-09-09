@@ -30,12 +30,15 @@ import { detailsPanelFor } from '../../utils/detailsPanel';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
-    Heart,
-    Scale,
     ShoppingCart,
     Check,
     Clock,
     ShieldCheck,
+    Bookmark,
+    SquarePlus,
+    MessageCircle,
+    Link2,
+    Send,
 } from 'lucide-react';
 import './Show.css';
 
@@ -147,6 +150,28 @@ export default function ProductDetails(props) {
         priced?.price ??
         0;
     const regularPrice = priced?.price ?? 0;
+
+    /*
+     * Read at render rather than kept in state: the address is whatever the
+     * browser is showing, and it changes on an Inertia navigation without this
+     * component unmounting. Guarded because the module is evaluated before the
+     * browser exists.
+     */
+    const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+    const copyProductLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            toast.success('Product link copied to clipboard!');
+        } catch {
+            // Clipboard access needs a secure context and the viewer's
+            // permission, and neither is guaranteed. Saying so beats a button
+            // that appears to do nothing.
+            toast.error(
+                'Could not copy the link. Copy it from the address bar.',
+            );
+        }
+    };
 
     /*
      * "View More Info" jumps to the panels at the foot of the page.
@@ -478,6 +503,76 @@ export default function ProductDetails(props) {
                     </Link>{' '}
                     &gt;
                     <span className="current">{product.name}</span>
+                </div>
+                {/*
+                    Sharing it, keeping it, and lining it up against something
+                    else — the three things somebody does with a product other
+                    than buy it. They belong together and above the fold, which
+                    is where the reference puts them; Save and Compare used to
+                    be at the very bottom of the summary column, below the
+                    branch stock table, where they were reached by scrolling
+                    past everything that matters.
+                */}
+                <div className="pdp-utility-bar">
+                    <div className="pdp-share">
+                        <span className="pdp-share-label">Share:</span>
+
+                        <a
+                            className="pdp-share-btn is-facebook"
+                            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Share on Facebook"
+                            title="Share on Facebook"
+                        >
+                            <Send size={15} />
+                        </a>
+
+                        <a
+                            className="pdp-share-btn is-whatsapp"
+                            href={`https://wa.me/?text=${encodeURIComponent(`${product.name} — ${pageUrl}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Share on WhatsApp"
+                            title="Share on WhatsApp"
+                        >
+                            <MessageCircle size={15} />
+                        </a>
+
+                        <button
+                            type="button"
+                            className="pdp-share-btn is-link"
+                            onClick={copyProductLink}
+                            aria-label="Copy link to this product"
+                            title="Copy link"
+                        >
+                            <Link2 size={15} />
+                        </button>
+                    </div>
+
+                    <div className="pdp-utility-actions">
+                        <button
+                            type="button"
+                            className={`pdp-utility-btn ${isWishlisted ? 'is-saved' : ''}`}
+                            onClick={() => toggleWishlist(product.id)}
+                            disabled={pendingId === product.id}
+                            aria-pressed={isWishlisted}
+                        >
+                            <Bookmark
+                                size={16}
+                                fill={isWishlisted ? 'currentColor' : 'none'}
+                            />
+                            {isWishlisted ? 'Saved' : 'Save'}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="pdp-utility-btn"
+                            onClick={handleAddToCompare}
+                        >
+                            <SquarePlus size={16} /> Add to Compare
+                        </button>
+                    </div>
                 </div>
                 {/* Top Section: Image & Basic Info */}
                 <div className="pdp-top">
@@ -943,33 +1038,6 @@ export default function ProductDetails(props) {
                             productId={product.id}
                             variantId={selectedVariant?.id ?? null}
                         />
-
-                        <div className="pdp-secondary-actions">
-                            <button
-                                type="button"
-                                className={`btn-text ${isWishlisted ? 'is-saved' : ''}`}
-                                onClick={() => toggleWishlist(product.id)}
-                                disabled={pendingId === product.id}
-                                aria-pressed={isWishlisted}
-                            >
-                                <Heart
-                                    size={15}
-                                    fill={
-                                        isWishlisted ? 'currentColor' : 'none'
-                                    }
-                                />
-                                {isWishlisted
-                                    ? 'Saved to Wishlist'
-                                    : 'Add to Wishlist'}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn-text"
-                                onClick={handleAddToCompare}
-                            >
-                                <Scale size={15} /> Add to Compare
-                            </button>
-                        </div>
                     </div>
                 </div>
                 {/*
