@@ -100,17 +100,51 @@ class ProductService
      * facets that describe it — so a sidebar can never disagree with the
      * results it sits next to.
      */
+    /**
+     * Narrow a query to one shelf, which for a brand shelf is not a subtree.
+     *
+     * The shop lists brands as categories — "ASUS" under Brand PC, with its
+     * own page — and those shelves used to hold their products the same way
+     * any shelf does, by somebody filing each one twice: once under Brand PC
+     * and again under ASUS. Miss the second and the product is absent from a
+     * page it plainly belongs on, with nothing to say so.
+     *
+     * So a brand shelf is answered rather than stored: everything the maker
+     * made that belongs on the shelf above it. Filing a product as ASUS under
+     * Brand PC now puts it on the ASUS page with no second step, and a product
+     * whose brand is changed leaves the old brand's page by itself.
+     *
+     * Only when the shelf has a parent. A root category carrying a brand would
+     * otherwise widen to the whole catalogue rather than narrow.
+     */
+    private function scopeToShelf(Builder $query, string|int $categoryRef): void
+    {
+        $shelf = is_int($categoryRef)
+            ? Category::find($categoryRef, ['id', 'parent_id', 'brand_id'])
+            : Category::where('slug', $categoryRef)->first(['id', 'parent_id', 'brand_id']);
+
+        if ($shelf?->brand_id && $shelf->parent_id) {
+            $this->scopeToCategories(
+                $query,
+                $this->categoryService->getDescendantIds((int) $shelf->parent_id)
+            );
+            $query->where('brand_id', $shelf->brand_id);
+
+            return;
+        }
+
+        $this->scopeToCategories($query, $this->categoryService->getDescendantIds($categoryRef));
+    }
+
     private function baseFilteredQuery(array $filters): Builder
     {
         $query = Product::active();
 
         // Filter by Category Slug or ID
         if (! empty($filters['category_slug'])) {
-            $categoryIds = $this->categoryService->getDescendantIds($filters['category_slug']);
-            $this->scopeToCategories($query, $categoryIds);
+            $this->scopeToShelf($query, $filters['category_slug']);
         } elseif (! empty($filters['category_id'])) {
-            $categoryIds = $this->categoryService->getDescendantIds((int) $filters['category_id']);
-            $this->scopeToCategories($query, $categoryIds);
+            $this->scopeToShelf($query, (int) $filters['category_id']);
         }
 
         // Filter by Brand. Several may be selected at once — a shopper

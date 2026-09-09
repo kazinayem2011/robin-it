@@ -74,6 +74,41 @@ class ReconcileBrandShelves extends Command
         $this->comment('These are not created automatically. Set the brand on the shelf in the admin,');
         $this->comment('or use "Create <name> as a new brand" on the category form.');
 
+        $this->reportCosmetics();
+
         return self::SUCCESS;
+    }
+
+    /**
+     * The two things worth knowing about that this command will not touch.
+     *
+     * Both change what a shopper sees — a name in the menu, a mark beside it —
+     * so they are somebody's decision rather than a command's.
+     */
+    private function reportCosmetics(): void
+    {
+        $linked = Category::whereNotNull('brand_id')->with('brand:id,name,logo_path')->get();
+
+        $misnamed = $linked->filter(
+            fn (Category $c) => $c->brand && trim($c->name) !== trim($c->brand->name)
+        );
+
+        $this->newLine();
+        $this->info("shelves spelled differently from the brand they stand for: {$misnamed->count()}");
+
+        foreach ($misnamed->take(12) as $shelf) {
+            $this->line("  shelf “{$shelf->name}”  vs  brand “{$shelf->brand->name}”");
+        }
+
+        if ($misnamed->isNotEmpty()) {
+            $this->comment('  Renaming changes what shoppers read in the menu, so it is left alone here.');
+        }
+
+        $noLogo = $linked->filter(fn (Category $c) => $c->brand && ! $c->brand->logo_path);
+        $brands = $noLogo->pluck('brand.name')->unique()->sort()->values();
+
+        $this->newLine();
+        $this->info("brand shelves falling back to a lettermark: {$noLogo->count()}");
+        $this->line('  '.($brands->isEmpty() ? '—' : 'makers with no logo uploaded: '.$brands->implode(', ')));
     }
 }

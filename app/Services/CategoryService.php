@@ -174,29 +174,57 @@ class CategoryService
     {
         // Read through the pivot: a product listed in several categories has
         // to make every one of them visible, not just its primary.
-        $direct = DB::table('category_product')
+        $rows = DB::table('category_product')
             ->join('products', 'products.id', '=', 'category_product.product_id')
             ->where('products.is_active', true)
             ->distinct()
-            ->pluck('category_product.category_id')
-            ->filter()
-            ->all();
+            ->get(['category_product.category_id', 'products.brand_id']);
 
-        if ($direct === []) {
+        if ($rows->isEmpty()) {
             return [];
         }
 
         $parents = Category::pluck('parent_id', 'id');
-        $stocked = array_flip($direct);
+        $stocked = [];
 
-        foreach ($direct as $id) {
-            $cursor = $parents[$id] ?? null;
+        // Which makers have something on each shelf, ancestors included.
+        $makersOn = [];
+
+        foreach ($rows as $row) {
+            if (! $row->category_id) {
+                continue;
+            }
+
+            $stocked[$row->category_id] = true;
+
+            if ($row->brand_id) {
+                $makersOn[$row->category_id][$row->brand_id] = true;
+            }
+
+            $cursor = $parents[$row->category_id] ?? null;
 
             // Walk up to the root. The guard is against a cycle in the data,
             // which would otherwise hang the request.
             for ($depth = 0; $cursor !== null && $depth < 10; $depth++) {
                 $stocked[$cursor] = true;
+
+                if ($row->brand_id) {
+                    $makersOn[$cursor][$row->brand_id] = true;
+                }
+
                 $cursor = $parents[$cursor] ?? null;
+            }
+        }
+
+        /*
+         * A brand shelf holds what its maker made on the shelf above, and it
+         * holds it without a pivot row — that is the point of it. Counting
+         * only pivot rows would call it empty and drop it from the menu, so
+         * the one page that fills itself would be the one nobody could reach.
+         */
+        foreach (Category::whereNotNull('brand_id')->get(['id', 'parent_id', 'brand_id']) as $shelf) {
+            if ($shelf->parent_id && isset($makersOn[$shelf->parent_id][$shelf->brand_id])) {
+                $stocked[$shelf->id] = true;
             }
         }
 
