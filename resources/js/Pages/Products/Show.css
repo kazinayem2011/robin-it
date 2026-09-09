@@ -342,14 +342,34 @@
     background: var(--bg-muted-strong);
 }
 
+/*
+ * The number sits in the row rather than in a box of its own.
+ *
+ * It had no background and no height, so it kept the browser's default field
+ * styling — a pale block, its own intrinsic height, floating inside a 46px row
+ * and not reaching the bottom of it. `appearance: none` also takes off the
+ * spinner arrows, which are useless on a readOnly field the two buttons drive.
+ */
 .quantity-selector input {
     width: 50px;
+    height: 100%;
     text-align: center;
     border: none;
     outline: none;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
     font-weight: 800;
     font-size: 0.95rem;
     color: var(--text-primary);
+}
+
+.quantity-selector input::-webkit-inner-spin-button,
+.quantity-selector input::-webkit-outer-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /*
@@ -491,6 +511,31 @@
     cursor: default;
 }
 
+/*
+ * Specification and description, stacked and read on the page.
+ *
+ * They were two tabs, which made a shopper checking a figure in the table
+ * against a sentence in the description click between them and lose their
+ * place. The gap between the two is wide enough that they read as separate
+ * sections rather than one long table with prose stuck on the end.
+ */
+.pdp-details {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 28px;
+}
+
+.pdp-details-heading {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 14px;
+}
+
 /* Tabs Section */
 .pdp-tabs-section {
     margin-top: 30px;
@@ -529,13 +574,10 @@
 }
 
 /* Specifications Table */
-.specifications-table h3,
-.description-content h3 {
-    font-size: 1.2rem;
-    font-weight: 800;
-    margin-bottom: 18px;
-    color: var(--text-primary);
-}
+/* The two headings in here are `h2.pdp-details-heading` now — they name
+   sections of the page rather than the contents of a tab panel, and are styled
+   with the other headings above. The h3 rule they used to match is gone with
+   them. */
 
 .specifications-table table {
     width: 100%;

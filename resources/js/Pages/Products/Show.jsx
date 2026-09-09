@@ -15,7 +15,9 @@ import CountdownTimer from '../../Components/CountdownTimer';
 // The gallery renders <ProductImage> but never imported it, so the whole page
 // threw "ProductImage is not defined" and rendered nothing at all.
 import ProductImage from '../../Components/ProductImage';
+import ProductDescription from '../../Components/ProductDescription';
 import ProductQuestions from '../../Components/ProductQuestions';
+import ProductSpecifications from '../../Components/ProductSpecifications';
 import RatingBreakdown from '../../Components/RatingBreakdown';
 import ReviewForm from '../../Components/ReviewForm';
 import ReviewList from '../../Components/ReviewList';
@@ -26,7 +28,6 @@ import { toast } from '../../Components/Toast';
 import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
-import { detailsPanelFor } from '../../utils/detailsPanel';
 import { stockStatusFor } from '../../utils/stockStatus';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
@@ -41,32 +42,6 @@ import {
     Link2,
 } from 'lucide-react';
 import './Show.css';
-
-/**
- * Specs arranged into the sections the admin gave them, preserving entry order
- * both between groups and within one.
- *
- * Rows with no group collect under an empty key rather than being dropped or
- * given an invented heading: every spec written before grouping existed has a
- * null group, and those products still have to render.
- */
-const groupSpecifications = (specifications) => {
-    const order = [];
-    const bucket = new Map();
-
-    specifications.forEach((spec) => {
-        const group = (spec.group || '').trim();
-
-        if (!bucket.has(group)) {
-            bucket.set(group, []);
-            order.push(group);
-        }
-
-        bucket.get(group).push(spec);
-    });
-
-    return order.map((group) => ({ group, items: bucket.get(group) }));
-};
 
 export default function ProductDetails(props) {
     /* Shared by Inertia on every page, so a signed-in shopper is not asked
@@ -97,7 +72,7 @@ export default function ProductDetails(props) {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('specifications');
+    const [activeTab, setActiveTab] = useState('reviews');
 
     /*
      * Which of the two payment options is selected. Presentational for now —
@@ -143,6 +118,14 @@ export default function ProductDetails(props) {
      * option. Regular is the undiscounted list price, and is only ever shown
      * when it is actually higher.
      */
+    const priced = selectedVariant ?? product;
+    const cashPrice =
+        (selectedVariant ? null : product?.checkout_price) ??
+        priced?.effective_price ??
+        priced?.price ??
+        0;
+    const regularPrice = priced?.price ?? 0;
+
     /*
      * The availability line, and whether it reads as good news. Worked out in
      * one place because a variant product's own label describes the total
@@ -152,14 +135,6 @@ export default function ProductDetails(props) {
         selectedVariant,
         availableStock,
     });
-
-    const priced = selectedVariant ?? product;
-    const cashPrice =
-        (selectedVariant ? null : product?.checkout_price) ??
-        priced?.effective_price ??
-        priced?.price ??
-        0;
-    const regularPrice = priced?.price ?? 0;
 
     /*
      * The address to share, without the query string — the same rule the
@@ -196,30 +171,19 @@ export default function ProductDetails(props) {
     };
 
     /*
-     * "View More Info" jumps to the panels at the foot of the page.
+     * "View More Info" jumps to the specification and description, which now
+     * sit on the page rather than behind tabs.
      *
-     * A hash link would do the scrolling but not the second half of the job:
-     * the tab is a piece of state, and whoever last read the reviews would be
-     * carried down to the reviews. So the panel is chosen first, and the link
-     * is only drawn when there is a panel worth landing on.
+     * That made this simpler than it was: there is no longer a panel to choose
+     * first, and no product without a section to land on, because both carry
+     * an empty state of their own. So it scrolls, and that is all.
      */
     const detailsRef = useRef(null);
-    const detailsPanel = detailsPanelFor(product);
 
     const showFullDetails = () => {
-        if (!detailsPanel) {
-            return;
-        }
-
-        setActiveTab(detailsPanel);
-
-        // Let the chosen panel render before measuring where to scroll to;
-        // switching from a short panel to a long one moves the target.
-        requestAnimationFrame(() => {
-            detailsRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-            });
+        detailsRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
         });
     };
 
@@ -812,15 +776,13 @@ export default function ProductDetails(props) {
                                 description when there are not — landing on
                                 an empty table is worse than not offering
                                 the jump. */}
-                            {detailsPanel && (
-                                <button
-                                    type="button"
-                                    className="pdp-more-info"
-                                    onClick={showFullDetails}
-                                >
-                                    View More Info
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                className="pdp-more-info"
+                                onClick={showFullDetails}
+                            >
+                                View More Info
+                            </button>
                         </div>
 
                         {/* Buy-more-pay-less, shown as a table rather than
@@ -1044,39 +1006,22 @@ export default function ProductDetails(props) {
                     </div>
                 </div>
                 {/*
-                 * Hand-picked where a shopkeeper has chosen them, worked
-                 * out from the same shelf where nobody has. It used to be
-                 * hand-picked only, and nothing had been picked for any of
-                 * the shop's twelve hundred products — so a shopper
-                 * looking at a mouse was never offered another mouse.
+                 * The specification and the description, both read on the page.
+                 *
+                 * They were two tabs, so a shopper comparing a figure in the
+                 * table against a sentence in the description had to click
+                 * between them and lose their place. Stacked, the whole of what
+                 * the shop knows about the product is one scroll.
                  */}
-                <ProductSuggestions products={similar} />
-                {/* The question people actually type into Google, answered
-                    on the page rather than left to a snippet generator.
-                    Templated from the product's own figures, so it cannot
-                    drift out of date the way a hand-written line would. */}
-                <section className="pdp-latest-price">
-                    <h3>What is the price of {product.name} in Bangladesh?</h3>
-                    <p>
-                        The latest price of {product.name} in Bangladesh is{' '}
-                        {formatBdt(
-                            selectedVariant?.effective_price ??
-                                product.effective_price ??
-                                product.price,
-                        )}
-                        {selectedVariant && (
-                            <>
-                                {' '}
-                                for the{' '}
-                                {Object.values(
-                                    selectedVariant.options || {},
-                                ).join(' / ')}{' '}
-                                option
-                            </>
-                        )}
-                        . You can buy it at the best price from our website or
-                        visit any of our showrooms.
-                    </p>
+                <section
+                    className="pdp-details"
+                    ref={detailsRef}
+                    id="product-details"
+                >
+                    <ProductSpecifications
+                        specifications={product.specifications || []}
+                    />
+                    <ProductDescription description={product.description} />
                 </section>
                 {/* Bottom Section: Reusable Tabs */}
                 <div
@@ -1086,14 +1031,6 @@ export default function ProductDetails(props) {
                 >
                     <Tabs
                         tabs={[
-                            {
-                                key: 'specifications',
-                                label: 'Specifications',
-                            },
-                            {
-                                key: 'description',
-                                label: 'Description',
-                            },
                             {
                                 key: 'questions',
                                 label: 'Questions',
@@ -1118,75 +1055,6 @@ export default function ProductDetails(props) {
                                 onAsked={loadQuestions}
                                 askingAs={auth?.user?.name || ''}
                             />
-                        )}
-
-                        {activeTab === 'specifications' && (
-                            <div className="specifications-table">
-                                <h3>Technical Specifications</h3>
-                                {product.specifications &&
-                                product.specifications.length > 0 ? (
-                                    <table>
-                                        {/* Grouped into sections, in the order
-                                            the admin entered them. A product
-                                            whose specs predate grouping has no
-                                            `group` on any row and renders as
-                                            the plain two-column table it
-                                            always was. */}
-                                        {groupSpecifications(
-                                            product.specifications,
-                                        ).map(({ group, items }) => (
-                                            <tbody key={group || '__none'}>
-                                                {group && (
-                                                    <tr className="spec-group-row">
-                                                        <th
-                                                            colSpan={2}
-                                                            scope="colgroup"
-                                                            className="spec-group"
-                                                        >
-                                                            {group}
-                                                        </th>
-                                                    </tr>
-                                                )}
-                                                {items.map((spec) => (
-                                                    <tr key={spec.id}>
-                                                        <td className="spec-name">
-                                                            {spec.name}
-                                                        </td>
-                                                        <td className="spec-value">
-                                                            {spec.value}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        ))}
-                                    </table>
-                                ) : (
-                                    <p>
-                                        {/* Says what is true. It used to
-                                            read "Standard official
-                                            specifications apply", which
-                                            claims a spec sheet exists and
-                                            sends the reader looking for
-                                            one that was never entered. */}
-                                        We have not published a specification
-                                        sheet for this product yet. Ask us and
-                                        we will confirm any detail you need.
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'description' && (
-                            <div className="description-content">
-                                <h3>Product Description</h3>
-                                <div
-                                    dangerouslySetInnerHTML={{
-                                        __html:
-                                            product.description ||
-                                            '<p>Genuine product supplied with official manufacturer warranty and full accessories.</p>',
-                                    }}
-                                ></div>
-                            </div>
                         )}
 
                         {activeTab === 'reviews' && (
@@ -1292,6 +1160,41 @@ export default function ProductDetails(props) {
                         )}
                     </div>
                 </div>{' '}
+                {/*
+                 * Hand-picked where a shopkeeper has chosen them, worked
+                 * out from the same shelf where nobody has. It used to be
+                 * hand-picked only, and nothing had been picked for any of
+                 * the shop's twelve hundred products — so a shopper
+                 * looking at a mouse was never offered another mouse.
+                 */}
+                <ProductSuggestions products={similar} />
+                {/* The question people actually type into Google, answered
+                    on the page rather than left to a snippet generator.
+                    Templated from the product's own figures, so it cannot
+                    drift out of date the way a hand-written line would. */}
+                <section className="pdp-latest-price">
+                    <h3>What is the price of {product.name} in Bangladesh?</h3>
+                    <p>
+                        The latest price of {product.name} in Bangladesh is{' '}
+                        {formatBdt(
+                            selectedVariant?.effective_price ??
+                                product.effective_price ??
+                                product.price,
+                        )}
+                        {selectedVariant && (
+                            <>
+                                {' '}
+                                for the{' '}
+                                {Object.values(
+                                    selectedVariant.options || {},
+                                ).join(' / ')}{' '}
+                                option
+                            </>
+                        )}
+                        . You can buy it at the best price from our website or
+                        visit any of our showrooms.
+                    </p>
+                </section>
             </div>
         </>
     );
