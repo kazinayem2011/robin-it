@@ -22,7 +22,7 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { useWishlist, useAddToCart } from '../../hooks';
 import { parseShopQuery, buildShopSearch } from '../../utils/shopQuery';
-import { ArrowUpDown, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import './Index.css';
 
 /**
@@ -50,6 +50,24 @@ let lastFacets = null;
  * the dropdown never offered them, so neither was reachable without editing
  * the URL by hand.
  */
+/*
+ * How many at once. 20 is what the API paginates by unless it is told
+ * otherwise, so it is the entry that leaves the URL clean.
+ */
+const DEFAULT_PER_PAGE = 20;
+
+/*
+ * 60 is the ceiling, not a preference: ProductService::MAX_PER_PAGE refuses
+ * anything above it so `?per_page=500000` cannot be used to read the whole
+ * catalogue in one request. An option of 100 here answered 422 and drew an
+ * empty grid.
+ */
+const PER_PAGE_OPTIONS = [
+    { value: '20', label: '20' },
+    { value: '40', label: '40' },
+    { value: '60', label: '60' },
+];
+
 const SORT_OPTIONS = [
     { value: 'latest', label: 'Latest Arrivals' },
     { value: 'discount_high', label: 'Biggest Discount' },
@@ -85,7 +103,6 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(initial.page);
     const [totalPages, setTotalPages] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
     const [sort, setSort] = useState(initial.sort);
     const { wishlistIds, toggleWishlist } = useWishlist();
     const addToCart = useAddToCart();
@@ -98,6 +115,9 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     // Everything the shopper has narrowed by, kept in one object so a change
     // to any of it can reset paging in a single place.
     const [filters, setFilters] = useState(initial.filters);
+
+    // From the URL, so a link to "100 at a time" is a link somebody can send.
+    const [perPage, setPerPage] = useState(initial.perPage ?? DEFAULT_PER_PAGE);
 
     // Only the keys that are actually set, so the URL and the request stay
     // free of `undefined` noise.
@@ -156,6 +176,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
             .getProducts({
                 page,
                 sort,
+                per_page: perPage,
                 category_slug: categorySlug,
                 ...requestFilters,
             })
@@ -164,7 +185,6 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
 
                 setProducts(data.items);
                 setTotalPages(data.meta.last_page || 1);
-                setTotalCount(data.meta.total ?? data.items.length);
                 setLoadError(null);
             })
             .catch((error) => {
@@ -185,7 +205,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
         };
         // requestFilters is compared by filterKey, its stable serialisation.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, sort, categorySlug, filterKey, reloadKey]);
+    }, [page, sort, perPage, categorySlug, filterKey, reloadKey]);
 
     /*
      * The makers on this shelf. Keyed on the shelf alone, not on the shopper's
@@ -262,6 +282,8 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
         const search = buildShopSearch({
             page,
             sort,
+            perPage,
+            defaultPerPage: DEFAULT_PER_PAGE,
             filters: activeFilters,
             defaultSort,
         });
@@ -270,7 +292,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
         if (next !== window.location.pathname + window.location.search) {
             window.history.replaceState(window.history.state, '', next);
         }
-    }, [page, sort, filterKey, activeFilters, defaultSort]);
+    }, [page, sort, perPage, filterKey, activeFilters, defaultSort]);
 
     /**
      * Narrowing always returns to page one: staying on page 4 of a result set
@@ -354,15 +376,6 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                 <Link href={ROUTES.HOME}>Home</Link>
                                 <span className="current">{listingName}</span>
                             </div>
-                            <h1 className="plp-title">
-                                {onSaleOnly
-                                    ? 'Discounts'
-                                    : readableCategory || 'Hardware Catalog'}
-                            </h1>
-                            <span className="plp-item-count">
-                                Showing {products.length} of {totalCount} items
-                            </span>
-
                             {/*
                              * What was searched for, and a way out of it.
                              *
@@ -388,19 +401,6 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                     <X size={13} />
                                 </button>
                             )}
-                        </div>
-
-                        <div className="plp-controls">
-                            <span className="plp-sort-label">
-                                <ArrowUpDown size={14} /> Sort:
-                            </span>
-                            <Select
-                                value={sort}
-                                onChange={(e) => setSort(e.target.value)}
-                                className="plp-sort-select"
-                                aria-label="Sort products by"
-                                options={SORT_OPTIONS}
-                            />
                         </div>
                     </div>
 
@@ -428,6 +428,57 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                         />
 
                         <div className="plp-results" id="shop-results">
+                            {/*
+                             * The shelf's name over its own results, with the
+                             * two controls that change how they are presented.
+                             *
+                             * It used to sit up beside the breadcrumb along
+                             * with "Showing 20 of 51 items", which named the
+                             * page twice and put the count where nobody reads
+                             * it. The name belongs over the grid it names.
+                             */}
+                            <div className="plp-results-header">
+                                <h1 className="plp-results-title">
+                                    {onSaleOnly
+                                        ? 'Discounts'
+                                        : readableCategory ||
+                                          'Hardware Catalog'}
+                                </h1>
+
+                                <div className="plp-results-controls">
+                                    <label className="plp-control">
+                                        <span>Show:</span>
+                                        <Select
+                                            value={String(perPage)}
+                                            onChange={(event) => {
+                                                setPerPage(
+                                                    Number(event.target.value),
+                                                );
+                                                /* Page 4 of twenty is not
+                                                   page 4 of a hundred. */
+                                                setPage(1);
+                                            }}
+                                            className="plp-show-select"
+                                            aria-label="Products per page"
+                                            options={PER_PAGE_OPTIONS}
+                                        />
+                                    </label>
+
+                                    <label className="plp-control">
+                                        <span>Sort By:</span>
+                                        <Select
+                                            value={sort}
+                                            onChange={(event) =>
+                                                setSort(event.target.value)
+                                            }
+                                            className="plp-sort-select"
+                                            aria-label="Sort products by"
+                                            options={SORT_OPTIONS}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
                             {/* Product Grid Area with Skeleton Loading Shimmers */}
                             {/*
                              * The seamed grid the homepage uses: cards edge

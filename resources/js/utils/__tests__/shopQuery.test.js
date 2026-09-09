@@ -44,6 +44,7 @@ describe('parseShopQuery', () => {
     it('defaults to page one, latest, no filters', () => {
         expect(parseShopQuery('')).toEqual({
             page: 1,
+            perPage: null,
             sort: 'latest',
             filters: {},
         });
@@ -56,6 +57,7 @@ describe('parseShopQuery', () => {
             ),
         ).toEqual({
             page: 3,
+            perPage: null,
             sort: 'price_low_high',
             filters: {
                 min_price: 9800,
@@ -129,7 +131,12 @@ describe('per-listing default sort', () => {
     });
 
     it('round-trips against a non-default listing sort', () => {
-        const state = { page: 2, sort: 'latest', filters: { on_sale: true } };
+        const state = {
+            page: 2,
+            perPage: null,
+            sort: 'latest',
+            filters: { on_sale: true },
+        };
         const search = buildShopSearch({
             ...state,
             defaultSort: 'discount_high',
@@ -171,6 +178,7 @@ describe('buildShopSearch', () => {
     it('round-trips a fully specified listing', () => {
         const state = {
             page: 3,
+            perPage: null,
             sort: 'price_low_high',
             filters: {
                 min_price: 9800,
@@ -267,5 +275,59 @@ describe('attribute filters in the URL', () => {
                 filters: { attributes: { 'wi-fi-standard': [] } },
             }),
         ).toBe('');
+    });
+});
+
+/**
+ * "Show: 40" belongs in the URL for the same reason paging and sorting do — a
+ * link to a listing should be a link to the listing somebody is looking at.
+ */
+describe('how many at a time', () => {
+    it('is absent from the URL at the default', () => {
+        expect(
+            buildShopSearch({
+                page: 1,
+                perPage: 20,
+                defaultPerPage: 20,
+                filters: {},
+            }),
+        ).toBe('');
+    });
+
+    it('is written when it is not the default', () => {
+        expect(
+            buildShopSearch({
+                page: 1,
+                perPage: 60,
+                defaultPerPage: 20,
+                filters: {},
+            }),
+        ).toBe('?per_page=60');
+    });
+
+    it('is read back', () => {
+        expect(parseShopQuery('?per_page=40').perPage).toBe(40);
+    });
+
+    /* Nothing said means the listing's own default, not an error. */
+    it('is null when the URL says nothing', () => {
+        expect(parseShopQuery('').perPage).toBeNull();
+    });
+
+    it('ignores a size that is not a positive number', () => {
+        expect(parseShopQuery('?per_page=0').perPage).toBeNull();
+        expect(parseShopQuery('?per_page=-5').perPage).toBeNull();
+        expect(parseShopQuery('?per_page=lots').perPage).toBeNull();
+    });
+
+    it('round-trips with everything else', () => {
+        const state = {
+            page: 2,
+            perPage: 40,
+            sort: 'price_low_high',
+            filters: { in_stock: true },
+        };
+
+        expect(parseShopQuery(buildShopSearch(state))).toEqual(state);
     });
 });

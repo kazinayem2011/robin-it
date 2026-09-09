@@ -48,6 +48,7 @@ const RESERVED = new Set([
     'on_sale',
     'sort',
     'page',
+    'per_page',
     'q',
     'search',
 ]);
@@ -120,6 +121,7 @@ export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
 
     return {
         page: toPositiveInt(params.get('page')) ?? 1,
+        perPage: toPositiveInt(params.get('per_page')),
         sort: SORTS.includes(sort) ? sort : defaultSort,
         filters,
     };
@@ -133,6 +135,8 @@ export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
  */
 export const buildShopSearch = ({
     page = 1,
+    perPage = null,
+    defaultPerPage = 20,
     sort = DEFAULT_SORT,
     filters = {},
     defaultSort = DEFAULT_SORT,
@@ -162,6 +166,10 @@ export const buildShopSearch = ({
     // Only worth naming when it differs from what this listing does anyway.
     if (sort && sort !== defaultSort) params.set('sort', sort);
     if (page > 1) params.set('page', String(page));
+    // Only when it is not the default, so an ordinary link stays clean.
+    if (perPage && perPage !== defaultPerPage) {
+        params.set('per_page', String(perPage));
+    }
 
     const query = params.toString();
 
