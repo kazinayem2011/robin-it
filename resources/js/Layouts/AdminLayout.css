@@ -1889,6 +1889,58 @@ a.admin-card:hover,
     grid-column: 1 / -1;
 }
 
+/*
+ * Two columns need two columns' worth of room.
+ *
+ * The three-column grid beside it has collapsed on a phone since it was
+ * written; this one never did, so Category and Brand sat as a pair about
+ * 150px wide each, which is narrower than the names inside them.
+ */
+@media (max-width: 640px) {
+    .admin-modal-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+/*
+ * The product form's panels.
+ *
+ * Twenty-seven fields and five editors in one scroll meant passing the SEO
+ * boxes to reach the warranty. The tabs sit still while the panel under them
+ * scrolls, so the group being edited is always named on screen and the footer
+ * buttons never travel.
+ */
+.admin-product-tabs {
+    margin-bottom: 18px;
+}
+
+.admin-product-tabpanel {
+    /* Tall enough that switching panels does not resize the dialog under the
+       cursor, short enough to leave the buttons in view on a laptop. */
+    min-height: 320px;
+    max-height: min(58vh, 620px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+@media (max-width: 640px) {
+    .admin-product-tabs {
+        margin-bottom: 12px;
+    }
+
+    /*
+     * On a phone the dialog is the screen, so the panel takes what is left
+     * rather than a fixed slice of it.
+     */
+    .admin-product-tabpanel {
+        min-height: 0;
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+}
+
 .admin-modal-label {
     display: block;
     font-size: 0.8rem;

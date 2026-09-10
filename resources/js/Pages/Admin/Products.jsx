@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import ConfirmDialog from '@/Components/ConfirmDialog';
+import Tabs from '@/Components/Tabs';
 import { applyServerErrors } from '@/utils/serverErrors';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
@@ -12,6 +13,11 @@ import {
     CheckCircle,
     XCircle,
     AlertTriangle,
+    Tag,
+    FileText,
+    SlidersHorizontal,
+    Image as ImageIcon,
+    Globe,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
@@ -184,6 +190,87 @@ export const buildProductPayload = (values, editingProduct) => {
     };
 };
 
+/**
+ * The product form, in the order somebody fills one in.
+ *
+ * Twenty-seven fields and five editors used to sit in one scroll, so entering
+ * a laptop meant passing the SEO boxes to reach the warranty. They are grouped
+ * now, and the grouping carries a cost worth naming: a field on a panel you
+ * cannot see can be the one holding the save up. Every tab therefore counts
+ * its own problems and says so, and a refused save opens the first tab that
+ * has one.
+ */
+const PRODUCT_TABS = [
+    { key: 'basics', label: 'Basics', icon: Package },
+    { key: 'pricing', label: 'Price & stock', icon: Tag },
+    { key: 'description', label: 'Description', icon: FileText },
+    { key: 'specs', label: 'Specs & filters', icon: SlidersHorizontal },
+    { key: 'photos', label: 'Photos', icon: ImageIcon },
+    { key: 'publishing', label: 'Publishing', icon: Globe },
+];
+
+/** Which panel each field is on, for the counts and the jump. */
+const TAB_FIELDS = {
+    basics: ['name', 'category_id', 'category_ids', 'brand_id', 'model', 'mpn'],
+    pricing: [
+        'price',
+        'discount_price',
+        'reorder_level',
+        'barcode',
+        'variants',
+        'allow_preorder',
+        'preorder_limit',
+        'preorder_release_at',
+        'discount_starts_at',
+        'discount_ends_at',
+        'min_order_quantity',
+        'checkout_discount',
+        'emi_available',
+        'emi_max_months',
+        'out_of_stock_status',
+    ],
+    description: [
+        'short_description',
+        'description',
+        'key_features',
+        'warranty_months',
+        'warranty_text',
+    ],
+    specs: ['attribute_value_ids', 'specifications'],
+    photos: ['images', 'image_path'],
+    publishing: [
+        'meta_title',
+        'meta_description',
+        'meta_keyword',
+        'is_active',
+        'is_featured',
+    ],
+};
+
+/**
+ * How many of a tab's fields the form is currently unhappy about.
+ *
+ * Matched on the root of the key, because the two sources spell a nested field
+ * differently: formik leaves `variants` holding an array of row errors, while
+ * the server names `variants.1.sku` outright. Comparing whole keys finds the
+ * first and misses the second — which is the repeated stock code, the one
+ * complaint that most needs the tab opened for it.
+ */
+export const problemsOn = (tabKey, errors = {}) => {
+    const roots = new Set(
+        Object.keys(errors ?? {})
+            .filter((key) => Boolean(errors[key]))
+            .map((key) => String(key).split(/[.[]/)[0]),
+    );
+
+    return (TAB_FIELDS[tabKey] ?? []).filter((field) => roots.has(field))
+        .length;
+};
+
+/** The first tab holding a problem, so a refused save can open it. */
+export const firstTabWithProblem = (errors = {}) =>
+    PRODUCT_TABS.find((t) => problemsOn(t.key, errors) > 0)?.key ?? null;
+
 export default function Products({
     products = { data: [] },
     brands = [],
@@ -297,6 +384,16 @@ export default function Products({
                     error,
                 );
 
+                /*
+                 * Open the panel holding the first complaint. Grouping the
+                 * form put fields out of sight, so a refused save that marked
+                 * something on a closed tab would be harder to act on than the
+                 * single scroll this replaced.
+                 */
+                const landing = firstTabWithProblem(error?.errors ?? {});
+
+                if (landing) setTab(landing);
+
                 toast.error(
                     error?.message ||
                         'Failed to save product. Please check values.',
@@ -317,10 +414,39 @@ export default function Products({
      * nothing to recover it from. Only when there is something to lose:
      * opening the form and closing it again should not be an interrogation.
      */
+    const [tab, setTab] = useState('basics');
+
+    /*
+     * A count beside each tab's name, so a problem on a panel that is not open
+     * still announces itself. Without it, grouping the form would have made a
+     * refused save harder to act on than the single scroll it replaced.
+     */
+    /*
+     * Pressing Save on a form whose problems are all on another panel would
+     * otherwise do nothing visible at all.
+     */
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+
+        const problems = await formik.validateForm();
+        const landing = firstTabWithProblem(problems);
+
+        if (landing) setTab(landing);
+
+        formik.handleSubmit(event);
+    };
+
+    const tabsWithProblems = PRODUCT_TABS.map((entry) => {
+        const problems = problemsOn(entry.key, formik.errors);
+
+        return problems > 0 ? { ...entry, badge: problems } : entry;
+    });
+
     const [confirmingClose, setConfirmingClose] = useState(false);
 
     const closeModal = () => {
         setConfirmingClose(false);
+        setTab('basics');
         setModalOpen(false);
         setEditingProduct(null);
         formik.resetForm();
@@ -844,571 +970,647 @@ export default function Products({
                 }
                 maxWidth="860px"
             >
-                <form onSubmit={formik.handleSubmit} noValidate>
-                    <FormInput
-                        id="name"
-                        name="name"
-                        required
-                        label="Product Title"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.name && formik.errors.name}
-                        placeholder="e.g. Intel Core i7-14700K 20-Core Processor"
+                <form onSubmit={handleSubmit} noValidate>
+                    <Tabs
+                        tabs={tabsWithProblems}
+                        activeTab={tab}
+                        onChange={setTab}
+                        variant="line"
+                        className="admin-product-tabs"
                     />
 
-                    <div className="admin-modal-form-grid">
-                        <CategoryPicker
-                            label="Category"
-                            required
-                            value={formik.values.category_id}
-                            initialLabel={editingProduct?.category?.name || ''}
-                            onChange={(id) =>
-                                formik.setFieldValue('category_id', id)
-                            }
-                            error={
-                                formik.touched.category_id &&
-                                formik.errors.category_id
-                            }
-                            helperText="Where the product lives. Type a few letters."
-                        />
-                        <FormSelect
-                            label="Brand"
-                            name="brand_id"
-                            formik={formik}
-                            placeholder="No Brand / Generic"
-                            options={brands.map((b) => ({
-                                value: b.id,
-                                label: b.name,
-                            }))}
-                        />
-                    </div>
-
-                    <div className="admin-modal-form-grid">
-                        <FormInput
-                            id="model"
-                            name="model"
-                            label="Model"
-                            value={formik.values.model}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.model && formik.errors.model}
-                            placeholder="Cyborg 15 Black Edition A13UC"
-                            helperText="What a customer says at the counter."
-                        />
-                        <FormInput
-                            id="mpn"
-                            name="mpn"
-                            label="MPN"
-                            value={formik.values.mpn}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.mpn && formik.errors.mpn}
-                            placeholder="9S7-15K112-2423"
-                            helperText="Manufacturer part number. Not the barcode."
-                        />
-                    </div>
-
-                    {/* A product belongs in more than one place: an Asus gaming
-                        laptop sits under both "Gaming Laptop > Asus" and "All
-                        Laptop > Asus". The primary above still gives it its
-                        breadcrumb and canonical URL. */}
-                    <CategoryPicker
-                        label="Also list under"
-                        multiple
-                        placeholder="Search to add another category…"
-                        chips={extraCategoryChips}
-                        onRemove={(id) => {
-                            setExtraCategoryChips((c) =>
-                                c.filter((x) => x.id !== id),
-                            );
-                            formik.setFieldValue(
-                                'category_ids',
-                                (formik.values.category_ids || []).filter(
-                                    (x) => x !== id,
-                                ),
-                            );
-                        }}
-                        onChange={(category) => {
-                            if (
-                                (formik.values.category_ids || []).includes(
-                                    category.id,
-                                )
-                            ) {
-                                return;
-                            }
-                            setExtraCategoryChips((c) => [...c, category]);
-                            formik.setFieldValue('category_ids', [
-                                ...(formik.values.category_ids || []),
-                                category.id,
-                            ]);
-                        }}
-                    />
-
-                    <div className="admin-form-grid-3">
-                        <FormInput
-                            id="price"
-                            name="price"
-                            required
-                            label="Regular Price (BDT)"
-                            type="number"
-                            value={formik.values.price}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={formik.touched.price && formik.errors.price}
-                            placeholder="e.g. 45000"
-                        />
-                        <FormInput
-                            id="discount_price"
-                            name="discount_price"
-                            label="Special Discount Price"
-                            type="number"
-                            value={formik.values.discount_price}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.discount_price &&
-                                formik.errors.discount_price
-                            }
-                            placeholder="Optional"
-                        />
-                        {/*
-                         * Stock is only typeable once, when the product is
-                         * first entered. After that it moves through
-                         * deliveries, orders and recorded adjustments — an
-                         * editable field here let a stale form put already-sold
-                         * units back on the shelf.
-                         */}
-                        <FormInput
-                            id="reorder_level"
-                            name="reorder_level"
-                            label="Reorder at"
-                            type="number"
-                            min="0"
-                            value={formik.values.reorder_level}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            placeholder="Store default"
-                            helperText="Flag this for reordering once stock falls to here."
-                        />
-
-                        {/*
-                         * The number on the box. A scanner types it at a stock
-                         * take or a delivery, which is what stops counting
-                         * meaning finding each product in a list by name.
-                         */}
-                        <FormInput
-                            id="barcode"
-                            name="barcode"
-                            label="Barcode"
-                            value={formik.values.barcode}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            placeholder="Scan or type it"
-                            error={
-                                formik.touched.barcode && formik.errors.barcode
-                            }
-                            helperText="The manufacturer's number, for scanning at a count. Leave blank if there is none."
-                        />
-
-                        {/*
-                         * Pre-order. Selling past zero takes the balance
-                         * negative, which is what "units owed" looks like in
-                         * the ledger, so it stays off unless someone turns it
-                         * on for this product.
-                         */}
-                        <div className="auth-form-group">
-                            <Checkbox
-                                id="allow_preorder"
-                                name="allow_preorder"
-                                label="Allow pre-order when out of stock"
-                                checked={formik.values.allow_preorder}
-                                onChange={formik.handleChange}
-                            />
-                            <p className="admin-field-hint">
-                                Customers can buy this with an empty shelf. The
-                                balance goes negative by the number of units
-                                owed, and the next delivery clears it.
-                            </p>
-                        </div>
-
-                        {formik.values.allow_preorder && (
+                    <div className="admin-product-tabpanel">
+                        {tab === 'basics' && (
                             <>
                                 <FormInput
-                                    id="preorder_limit"
-                                    name="preorder_limit"
-                                    label="Pre-order limit"
-                                    type="number"
-                                    min="1"
-                                    value={formik.values.preorder_limit}
+                                    id="name"
+                                    name="name"
+                                    required
+                                    label="Product Title"
+                                    value={formik.values.name}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
-                                    placeholder="No limit"
-                                    helperText="Most units sellable beyond the shelf. Blank means no cap — worth setting, or one scripted buyer can commit you to any number."
+                                    error={
+                                        formik.touched.name &&
+                                        formik.errors.name
+                                    }
+                                    placeholder="e.g. Intel Core i7-14700K 20-Core Processor"
                                 />
 
-                                <FormInput
-                                    id="preorder_release_at"
-                                    name="preorder_release_at"
-                                    label="Expected in stock"
-                                    type="date"
-                                    value={formik.values.preorder_release_at}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    helperText="Shown to the customer. A pre-order without a date is a delay they did not agree to."
+                                <div className="admin-modal-form-grid">
+                                    <CategoryPicker
+                                        label="Category"
+                                        required
+                                        value={formik.values.category_id}
+                                        initialLabel={
+                                            editingProduct?.category?.name || ''
+                                        }
+                                        onChange={(id) =>
+                                            formik.setFieldValue(
+                                                'category_id',
+                                                id,
+                                            )
+                                        }
+                                        error={
+                                            formik.touched.category_id &&
+                                            formik.errors.category_id
+                                        }
+                                        helperText="Where the product lives. Type a few letters."
+                                    />
+                                    <FormSelect
+                                        label="Brand"
+                                        name="brand_id"
+                                        formik={formik}
+                                        placeholder="No Brand / Generic"
+                                        options={brands.map((b) => ({
+                                            value: b.id,
+                                            label: b.name,
+                                        }))}
+                                    />
+                                </div>
+
+                                <div className="admin-modal-form-grid">
+                                    <FormInput
+                                        id="model"
+                                        name="model"
+                                        label="Model"
+                                        value={formik.values.model}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.model &&
+                                            formik.errors.model
+                                        }
+                                        placeholder="Cyborg 15 Black Edition A13UC"
+                                        helperText="What a customer says at the counter."
+                                    />
+                                    <FormInput
+                                        id="mpn"
+                                        name="mpn"
+                                        label="MPN"
+                                        value={formik.values.mpn}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.mpn &&
+                                            formik.errors.mpn
+                                        }
+                                        placeholder="9S7-15K112-2423"
+                                        helperText="Manufacturer part number. Not the barcode."
+                                    />
+                                </div>
+
+                                {/* A product belongs in more than one place: an Asus gaming
+                            laptop sits under both "Gaming Laptop > Asus" and "All
+                            Laptop > Asus". The primary above still gives it its
+                            breadcrumb and canonical URL. */}
+                                <CategoryPicker
+                                    label="Also list under"
+                                    multiple
+                                    placeholder="Search to add another category…"
+                                    chips={extraCategoryChips}
+                                    onRemove={(id) => {
+                                        setExtraCategoryChips((c) =>
+                                            c.filter((x) => x.id !== id),
+                                        );
+                                        formik.setFieldValue(
+                                            'category_ids',
+                                            (
+                                                formik.values.category_ids || []
+                                            ).filter((x) => x !== id),
+                                        );
+                                    }}
+                                    onChange={(category) => {
+                                        if (
+                                            (
+                                                formik.values.category_ids || []
+                                            ).includes(category.id)
+                                        ) {
+                                            return;
+                                        }
+                                        setExtraCategoryChips((c) => [
+                                            ...c,
+                                            category,
+                                        ]);
+                                        formik.setFieldValue('category_ids', [
+                                            ...(formik.values.category_ids ||
+                                                []),
+                                            category.id,
+                                        ]);
+                                    }}
                                 />
                             </>
                         )}
 
-                        {/*
-                         * Stock is shown, never typed — on a new product as
-                         * much as an existing one. What is on the shelf
-                         * arrives under Purchasing: from a supplier, or from
-                         * the "Opening balance" source for goods the shop
-                         * already held. One way in is the only way the ledger
-                         * can be trusted.
-                         */}
-                        <div className="auth-form-group">
-                            <label className="auth-label">Stock</label>
-                            <div className="admin-stock-readonly">
-                                <span className="admin-stock-readonly-qty">
-                                    {editingProduct
-                                        ? editingProduct.has_variants
-                                            ? `${editingProduct.stock_quantity} across ${
-                                                  (
-                                                      editingProduct.variants ||
-                                                      []
-                                                  ).filter((v) => v.is_active)
-                                                      .length
-                                              } option(s)`
-                                            : `${editingProduct.stock_quantity} on hand`
-                                        : 'None yet'}
-                                </span>
-                                <Link
-                                    href={ROUTES.ADMIN_STOCK}
-                                    className="admin-stock-readonly-link"
-                                >
-                                    {editingProduct
-                                        ? 'Receive or adjust'
-                                        : 'Receive stock'}
-                                </Link>
-                            </div>
-                            <span className="admin-field-hint">
-                                {editingProduct
-                                    ? 'Changed by deliveries, orders and recorded adjustments — never edited here.'
-                                    : 'Save the product first, then receive what you hold against the "Opening balance" source.'}
-                            </span>
-                        </div>
-                    </div>
+                        {tab === 'pricing' && (
+                            <>
+                                <div className="admin-form-grid-3">
+                                    <FormInput
+                                        id="price"
+                                        name="price"
+                                        required
+                                        label="Regular Price (BDT)"
+                                        type="number"
+                                        value={formik.values.price}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.price &&
+                                            formik.errors.price
+                                        }
+                                        placeholder="e.g. 45000"
+                                    />
+                                    <FormInput
+                                        id="discount_price"
+                                        name="discount_price"
+                                        label="Special Discount Price"
+                                        type="number"
+                                        value={formik.values.discount_price}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.discount_price &&
+                                            formik.errors.discount_price
+                                        }
+                                        placeholder="Optional"
+                                    />
+                                    {/*
+                                     * Stock is only typeable once, when the product is
+                                     * first entered. After that it moves through
+                                     * deliveries, orders and recorded adjustments — an
+                                     * editable field here let a stale form put already-sold
+                                     * units back on the shelf.
+                                     */}
+                                    <FormInput
+                                        id="reorder_level"
+                                        name="reorder_level"
+                                        label="Reorder at"
+                                        type="number"
+                                        min="0"
+                                        value={formik.values.reorder_level}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        placeholder="Store default"
+                                        helperText="Flag this for reordering once stock falls to here."
+                                    />
 
-                    <VariantEditor
-                        formik={formik}
-                        editingProduct={editingProduct}
-                        onImagesChange={setVariantImages}
-                        onPickImage={(variantKey) => {
-                            setCropTarget(variantKey);
-                            setCropperOpen(true);
-                        }}
-                        uploading={uploadingImage}
-                    />
+                                    {/*
+                                     * The number on the box. A scanner types it at a stock
+                                     * take or a delivery, which is what stops counting
+                                     * meaning finding each product in a list by name.
+                                     */}
+                                    <FormInput
+                                        id="barcode"
+                                        name="barcode"
+                                        label="Barcode"
+                                        value={formik.values.barcode}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        placeholder="Scan or type it"
+                                        error={
+                                            formik.touched.barcode &&
+                                            formik.errors.barcode
+                                        }
+                                        helperText="The manufacturer's number, for scanning at a count. Leave blank if there is none."
+                                    />
 
-                    <FormInput
-                        id="short_description"
-                        name="short_description"
-                        label="Short Summary / Key Highlights"
-                        value={formik.values.short_description}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                            formik.touched.short_description &&
-                            formik.errors.short_description
-                        }
-                        placeholder="e.g. 20 Cores (8P + 12E), up to 5.6 GHz, LGA1700 Socket"
-                    />
+                                    {/*
+                                     * Pre-order. Selling past zero takes the balance
+                                     * negative, which is what "units owed" looks like in
+                                     * the ledger, so it stays off unless someone turns it
+                                     * on for this product.
+                                     */}
+                                    <div className="auth-form-group">
+                                        <Checkbox
+                                            id="allow_preorder"
+                                            name="allow_preorder"
+                                            label="Allow pre-order when out of stock"
+                                            checked={
+                                                formik.values.allow_preorder
+                                            }
+                                            onChange={formik.handleChange}
+                                        />
+                                        <p className="admin-field-hint">
+                                            Customers can buy this with an empty
+                                            shelf. The balance goes negative by
+                                            the number of units owed, and the
+                                            next delivery clears it.
+                                        </p>
+                                    </div>
 
-                    {/* The column has existed since the first migration and the
-                        product page has always rendered it, but the form had no
-                        field — so every description on the site came from a
-                        seeder and no admin could write one. */}
-                    <RichTextEditor
-                        id="description"
-                        label="Full Description"
-                        value={formik.values.description}
-                        onChange={(html) =>
-                            formik.setFieldValue('description', html)
-                        }
-                        error={
-                            formik.touched.description &&
-                            formik.errors.description
-                        }
-                        placeholder="What the product is, who it suits, what is in the box."
-                        helperText="Shown under the Description tab. Formatting here appears on the product page."
-                    />
+                                    {formik.values.allow_preorder && (
+                                        <>
+                                            <FormInput
+                                                id="preorder_limit"
+                                                name="preorder_limit"
+                                                label="Pre-order limit"
+                                                type="number"
+                                                min="1"
+                                                value={
+                                                    formik.values.preorder_limit
+                                                }
+                                                onChange={formik.handleChange}
+                                                onBlur={formik.handleBlur}
+                                                placeholder="No limit"
+                                                helperText="Most units sellable beyond the shelf. Blank means no cap — worth setting, or one scripted buyer can commit you to any number."
+                                            />
 
-                    <FormInput
-                        id="warranty_months"
-                        name="warranty_months"
-                        type="number"
-                        label="Warranty (months)"
-                        value={formik.values.warranty_months}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                            formik.touched.warranty_months &&
-                            formik.errors.warranty_months
-                        }
-                        placeholder="24"
-                        helperText="Counted from the day the customer buys it. Leave blank if the product has none."
-                    />
+                                            <FormInput
+                                                id="preorder_release_at"
+                                                name="preorder_release_at"
+                                                label="Expected in stock"
+                                                type="date"
+                                                value={
+                                                    formik.values
+                                                        .preorder_release_at
+                                                }
+                                                onChange={formik.handleChange}
+                                                onBlur={formik.handleBlur}
+                                                helperText="Shown to the customer. A pre-order without a date is a delay they did not agree to."
+                                            />
+                                        </>
+                                    )}
 
-                    {/* A warranty is a list of clauses, not a sentence: what
-                        is covered, what is not, what the customer has to keep.
-                        One line could not hold them, and the column could not
-                        either until it became `text`. */}
-                    <FormInput
-                        id="warranty_text"
-                        name="warranty_text"
-                        type="textarea"
-                        rows={5}
-                        label="Warranty Terms"
-                        value={formik.values.warranty_text}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                            formik.touched.warranty_text &&
-                            formik.errors.warranty_text
-                        }
-                        placeholder={
-                            '2 Years warranty on the unit\n' +
-                            'Battery and adapter: 1 year\n' +
-                            'Physical damage and burn marks are not covered\n' +
-                            'Keep the box and the invoice for any claim'
-                        }
-                        helperText="One clause per line. What the customer is told; the months above are what the claims system counts."
-                    />
+                                    {/*
+                                     * Stock is shown, never typed — on a new product as
+                                     * much as an existing one. What is on the shelf
+                                     * arrives under Purchasing: from a supplier, or from
+                                     * the "Opening balance" source for goods the shop
+                                     * already held. One way in is the only way the ledger
+                                     * can be trusted.
+                                     */}
+                                    <div className="auth-form-group">
+                                        <label className="auth-label">
+                                            Stock
+                                        </label>
+                                        <div className="admin-stock-readonly">
+                                            <span className="admin-stock-readonly-qty">
+                                                {editingProduct
+                                                    ? editingProduct.has_variants
+                                                        ? `${editingProduct.stock_quantity} across ${
+                                                              (
+                                                                  editingProduct.variants ||
+                                                                  []
+                                                              ).filter(
+                                                                  (v) =>
+                                                                      v.is_active,
+                                                              ).length
+                                                          } option(s)`
+                                                        : `${editingProduct.stock_quantity} on hand`
+                                                    : 'None yet'}
+                                            </span>
+                                            <Link
+                                                href={ROUTES.ADMIN_STOCK}
+                                                className="admin-stock-readonly-link"
+                                            >
+                                                {editingProduct
+                                                    ? 'Receive or adjust'
+                                                    : 'Receive stock'}
+                                            </Link>
+                                        </div>
+                                        <span className="admin-field-hint">
+                                            {editingProduct
+                                                ? 'Changed by deliveries, orders and recorded adjustments — never edited here.'
+                                                : 'Save the product first, then receive what you hold against the "Opening balance" source.'}
+                                        </span>
+                                    </div>
+                                </div>
 
-                    {/* One feature per line. The field is stored as markup —
-                        the product page renders it as a list — but that is no
-                        reason to make a shopkeeper type <ul><li>, which the
-                        placeholder used to ask them to do. */}
-                    <FormInput
-                        id="key_features"
-                        name="key_features"
-                        type="textarea"
-                        rows={6}
-                        label="Key Features"
-                        value={formik.values.key_features}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={
-                            formik.touched.key_features &&
-                            formik.errors.key_features
-                        }
-                        placeholder={
-                            'Processor: Intel Core i5-13420H\n' +
-                            'RAM: 16GB DDR5 5200MHz\n' +
-                            'Graphics: NVIDIA RTX 3050 4GB'
-                        }
-                        helperText="One feature per line. Shown as a bulleted list at the top of the product page."
-                    />
+                                <VariantEditor
+                                    formik={formik}
+                                    editingProduct={editingProduct}
+                                    onImagesChange={setVariantImages}
+                                    onPickImage={(variantKey) => {
+                                        setCropTarget(variantKey);
+                                        setCropperOpen(true);
+                                    }}
+                                    uploading={uploadingImage}
+                                />
 
-                    {/* A sale that stops on time whether or not anyone is at a
-                        desk. Blank dates mean "until changed", which is what
-                        every discount was before this existed. */}
-                    <div className="admin-form-grid-3">
-                        <FormInput
-                            id="discount_starts_at"
-                            name="discount_starts_at"
-                            type="date"
-                            label="Discount Starts"
-                            value={formik.values.discount_starts_at}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.discount_starts_at &&
-                                formik.errors.discount_starts_at
-                            }
-                            helperText="Blank starts immediately."
-                        />
-                        <FormInput
-                            id="discount_ends_at"
-                            name="discount_ends_at"
-                            type="date"
-                            label="Discount Ends"
-                            value={formik.values.discount_ends_at}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.discount_ends_at &&
-                                formik.errors.discount_ends_at
-                            }
-                            helperText="Blank runs until you change it."
-                        />
-                        <FormInput
-                            id="min_order_quantity"
-                            name="min_order_quantity"
-                            type="number"
-                            label="Minimum Order Qty"
-                            value={formik.values.min_order_quantity}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.min_order_quantity &&
-                                formik.errors.min_order_quantity
-                            }
-                            helperText="For things not sold singly."
-                        />
-                    </div>
+                                {/* A sale that stops on time whether or not anyone is at a
+                            desk. Blank dates mean "until changed", which is what
+                            every discount was before this existed. */}
+                                <div className="admin-form-grid-3">
+                                    <FormInput
+                                        id="discount_starts_at"
+                                        name="discount_starts_at"
+                                        type="date"
+                                        label="Discount Starts"
+                                        value={formik.values.discount_starts_at}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.discount_starts_at &&
+                                            formik.errors.discount_starts_at
+                                        }
+                                        helperText="Blank starts immediately."
+                                    />
+                                    <FormInput
+                                        id="discount_ends_at"
+                                        name="discount_ends_at"
+                                        type="date"
+                                        label="Discount Ends"
+                                        value={formik.values.discount_ends_at}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.discount_ends_at &&
+                                            formik.errors.discount_ends_at
+                                        }
+                                        helperText="Blank runs until you change it."
+                                    />
+                                    <FormInput
+                                        id="min_order_quantity"
+                                        name="min_order_quantity"
+                                        type="number"
+                                        label="Minimum Order Qty"
+                                        value={formik.values.min_order_quantity}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.min_order_quantity &&
+                                            formik.errors.min_order_quantity
+                                        }
+                                        helperText="For things not sold singly."
+                                    />
+                                </div>
 
-                    <div className="admin-form-grid-3">
-                        <FormInput
-                            id="checkout_discount"
-                            name="checkout_discount"
-                            type="number"
-                            label="Checkout Discount (BDT)"
-                            value={formik.values.checkout_discount}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.checkout_discount &&
-                                formik.errors.checkout_discount
-                            }
-                            placeholder="1500"
-                            helperText="Only for paying at once. Not given to EMI buyers."
-                        />
-                        <FormInput
-                            id="emi_max_months"
-                            name="emi_max_months"
-                            type="number"
-                            label="EMI Months"
-                            value={formik.values.emi_max_months}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.emi_max_months &&
-                                formik.errors.emi_max_months
-                            }
-                            placeholder="12"
-                            helperText="Instalment is the regular price divided by this."
-                        />
-                        <FormInput
-                            id="out_of_stock_status"
-                            name="out_of_stock_status"
-                            label="When Out of Stock, say"
-                            value={formik.values.out_of_stock_status}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.out_of_stock_status &&
-                                formik.errors.out_of_stock_status
-                            }
-                            placeholder="2-3 Days"
-                            helperText="Blank reads 'Out of Stock'."
-                        />
-                    </div>
+                                <div className="admin-form-grid-3">
+                                    <FormInput
+                                        id="checkout_discount"
+                                        name="checkout_discount"
+                                        type="number"
+                                        label="Checkout Discount (BDT)"
+                                        value={formik.values.checkout_discount}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.checkout_discount &&
+                                            formik.errors.checkout_discount
+                                        }
+                                        placeholder="1500"
+                                        helperText="Only for paying at once. Not given to EMI buyers."
+                                    />
+                                    <FormInput
+                                        id="emi_max_months"
+                                        name="emi_max_months"
+                                        type="number"
+                                        label="EMI Months"
+                                        value={formik.values.emi_max_months}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.emi_max_months &&
+                                            formik.errors.emi_max_months
+                                        }
+                                        placeholder="12"
+                                        helperText="Instalment is the regular price divided by this."
+                                    />
+                                    <FormInput
+                                        id="out_of_stock_status"
+                                        name="out_of_stock_status"
+                                        label="When Out of Stock, say"
+                                        value={
+                                            formik.values.out_of_stock_status
+                                        }
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched
+                                                .out_of_stock_status &&
+                                            formik.errors.out_of_stock_status
+                                        }
+                                        placeholder="2-3 Days"
+                                        helperText="Blank reads 'Out of Stock'."
+                                    />
+                                </div>
 
-                    <Checkbox
-                        id="emi_available"
-                        name="emi_available"
-                        label="Offer EMI on this product"
-                        checked={formik.values.emi_available}
-                        onChange={formik.handleChange}
-                    />
+                                <Checkbox
+                                    id="emi_available"
+                                    name="emi_available"
+                                    label="Offer EMI on this product"
+                                    checked={formik.values.emi_available}
+                                    onChange={formik.handleChange}
+                                />
+                            </>
+                        )}
 
-                    <AttributeEditor formik={formik} />
+                        {tab === 'description' && (
+                            <>
+                                <FormInput
+                                    id="short_description"
+                                    name="short_description"
+                                    label="Short Summary / Key Highlights"
+                                    value={formik.values.short_description}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.short_description &&
+                                        formik.errors.short_description
+                                    }
+                                    placeholder="e.g. 20 Cores (8P + 12E), up to 5.6 GHz, LGA1700 Socket"
+                                />
 
-                    <SpecificationEditor formik={formik} />
+                                {/* The column has existed since the first migration and the
+                            product page has always rendered it, but the form had no
+                            field — so every description on the site came from a
+                            seeder and no admin could write one. */}
+                                <RichTextEditor
+                                    id="description"
+                                    label="Full Description"
+                                    value={formik.values.description}
+                                    onChange={(html) =>
+                                        formik.setFieldValue(
+                                            'description',
+                                            html,
+                                        )
+                                    }
+                                    error={
+                                        formik.touched.description &&
+                                        formik.errors.description
+                                    }
+                                    placeholder="What the product is, who it suits, what is in the box."
+                                    helperText="Shown under the Description tab. Formatting here appears on the product page."
+                                />
 
-                    {/* Written for a search result, not for the page. The shop
-                        this follows keeps the two apart on purpose: the title
-                        reads "… Laptop Price in Bangladesh", the product name
-                        reads "… Core i5 13th Gen RTX 3050 15.6-inch FHD". Blank
-                        falls back to the name, exactly as before. */}
-                    <details className="admin-seo-block">
-                        <summary>Search engine listing (optional)</summary>
+                                <FormInput
+                                    id="warranty_months"
+                                    name="warranty_months"
+                                    type="number"
+                                    label="Warranty (months)"
+                                    value={formik.values.warranty_months}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.warranty_months &&
+                                        formik.errors.warranty_months
+                                    }
+                                    placeholder="24"
+                                    helperText="Counted from the day the customer buys it. Leave blank if the product has none."
+                                />
 
-                        <FormInput
-                            id="meta_title"
-                            name="meta_title"
-                            label="Meta Title"
-                            value={formik.values.meta_title}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.meta_title &&
-                                formik.errors.meta_title
-                            }
-                            placeholder="MSI Cyborg 15 A13UC Laptop Price in Bangladesh"
-                            helperText="Blank uses the product name."
-                        />
+                                {/* A warranty is a list of clauses, not a sentence: what
+                            is covered, what is not, what the customer has to keep.
+                            One line could not hold them, and the column could not
+                            either until it became `text`. */}
+                                <FormInput
+                                    id="warranty_text"
+                                    name="warranty_text"
+                                    type="textarea"
+                                    rows={5}
+                                    label="Warranty Terms"
+                                    value={formik.values.warranty_text}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.warranty_text &&
+                                        formik.errors.warranty_text
+                                    }
+                                    placeholder={
+                                        '2 Years warranty on the unit\n' +
+                                        'Battery and adapter: 1 year\n' +
+                                        'Physical damage and burn marks are not covered\n' +
+                                        'Keep the box and the invoice for any claim'
+                                    }
+                                    helperText="One clause per line. What the customer is told; the months above are what the claims system counts."
+                                />
 
-                        <FormInput
-                            id="meta_description"
-                            name="meta_description"
-                            type="textarea"
-                            rows={3}
-                            label="Meta Description"
-                            value={formik.values.meta_description}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.meta_description &&
-                                formik.errors.meta_description
-                            }
-                            placeholder="Buy … at best price in Bangladesh. Order online for delivery in BD."
-                            helperText="Around 155 characters is what Google shows."
-                        />
+                                {/* One feature per line. The field is stored as markup —
+                            the product page renders it as a list — but that is no
+                            reason to make a shopkeeper type <ul><li>, which the
+                            placeholder used to ask them to do. */}
+                                <FormInput
+                                    id="key_features"
+                                    name="key_features"
+                                    type="textarea"
+                                    rows={6}
+                                    label="Key Features"
+                                    value={formik.values.key_features}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.key_features &&
+                                        formik.errors.key_features
+                                    }
+                                    placeholder={
+                                        'Processor: Intel Core i5-13420H\n' +
+                                        'RAM: 16GB DDR5 5200MHz\n' +
+                                        'Graphics: NVIDIA RTX 3050 4GB'
+                                    }
+                                    helperText="One feature per line. Shown as a bulleted list at the top of the product page."
+                                />
+                            </>
+                        )}
 
-                        <FormInput
-                            id="meta_keyword"
-                            name="meta_keyword"
-                            label="Meta Keywords"
-                            value={formik.values.meta_keyword}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            error={
-                                formik.touched.meta_keyword &&
-                                formik.errors.meta_keyword
-                            }
-                            placeholder='Core i5 13th Gen RTX 3050 15.6" FHD Gaming Laptop'
-                        />
-                    </details>
+                        {tab === 'specs' && (
+                            <>
+                                <AttributeEditor formik={formik} />
 
-                    {/* A product's photos. This was one path field and one
-                        photo, so nothing could show the back of a box or what
-                        is in the carton — the table always could hold more. */}
-                    <ImageGalleryEditor
-                        label="Product Photos"
-                        images={formik.values.images || []}
-                        busy={uploadingImage}
-                        onPick={() => {
-                            setCropTarget('product');
-                            setCropperOpen(true);
-                        }}
-                        onChange={(images) => {
-                            formik.setFieldValue('images', images);
-                            formik.setFieldValue(
-                                'image_path',
-                                images[0]?.image_path || '',
-                            );
-                        }}
-                        helperText="The first photo is the one shown on the catalogue card, in the cart and in search results. Reorder with the arrows."
-                        emptyHint="No photos yet — this product will show the placeholder."
-                    />
+                                <SpecificationEditor formik={formik} />
+                            </>
+                        )}
 
-                    <div className="admin-form-checkbox-row">
-                        <Checkbox
-                            name="is_active"
-                            label="Active in Live Storefront"
-                            checked={formik.values.is_active}
-                            onChange={formik.handleChange}
-                        />
-                        <Checkbox
-                            name="is_featured"
-                            label="Featured Deal (Show on Homepage)"
-                            checked={formik.values.is_featured}
-                            onChange={formik.handleChange}
-                        />
+                        {tab === 'photos' && (
+                            <>
+                                {/* A product's photos. This was one path field and one
+                            photo, so nothing could show the back of a box or what
+                            is in the carton — the table always could hold more. */}
+                                <ImageGalleryEditor
+                                    label="Product Photos"
+                                    images={formik.values.images || []}
+                                    busy={uploadingImage}
+                                    onPick={() => {
+                                        setCropTarget('product');
+                                        setCropperOpen(true);
+                                    }}
+                                    onChange={(images) => {
+                                        formik.setFieldValue('images', images);
+                                        formik.setFieldValue(
+                                            'image_path',
+                                            images[0]?.image_path || '',
+                                        );
+                                    }}
+                                    helperText="The first photo is the one shown on the catalogue card, in the cart and in search results. Reorder with the arrows."
+                                    emptyHint="No photos yet — this product will show the placeholder."
+                                />
+                            </>
+                        )}
+
+                        {tab === 'publishing' && (
+                            <>
+                                {/* Written for a search result, not for the page. The shop
+                            this follows keeps the two apart on purpose: the title
+                            reads "… Laptop Price in Bangladesh", the product name
+                            reads "… Core i5 13th Gen RTX 3050 15.6-inch FHD". Blank
+                            falls back to the name, exactly as before. */}
+                                <details className="admin-seo-block">
+                                    <summary>
+                                        Search engine listing (optional)
+                                    </summary>
+
+                                    <FormInput
+                                        id="meta_title"
+                                        name="meta_title"
+                                        label="Meta Title"
+                                        value={formik.values.meta_title}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.meta_title &&
+                                            formik.errors.meta_title
+                                        }
+                                        placeholder="MSI Cyborg 15 A13UC Laptop Price in Bangladesh"
+                                        helperText="Blank uses the product name."
+                                    />
+
+                                    <FormInput
+                                        id="meta_description"
+                                        name="meta_description"
+                                        type="textarea"
+                                        rows={3}
+                                        label="Meta Description"
+                                        value={formik.values.meta_description}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.meta_description &&
+                                            formik.errors.meta_description
+                                        }
+                                        placeholder="Buy … at best price in Bangladesh. Order online for delivery in BD."
+                                        helperText="Around 155 characters is what Google shows."
+                                    />
+
+                                    <FormInput
+                                        id="meta_keyword"
+                                        name="meta_keyword"
+                                        label="Meta Keywords"
+                                        value={formik.values.meta_keyword}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={
+                                            formik.touched.meta_keyword &&
+                                            formik.errors.meta_keyword
+                                        }
+                                        placeholder='Core i5 13th Gen RTX 3050 15.6" FHD Gaming Laptop'
+                                    />
+                                </details>
+
+                                <div className="admin-form-checkbox-row">
+                                    <Checkbox
+                                        name="is_active"
+                                        label="Active in Live Storefront"
+                                        checked={formik.values.is_active}
+                                        onChange={formik.handleChange}
+                                    />
+                                    <Checkbox
+                                        name="is_featured"
+                                        label="Featured Deal (Show on Homepage)"
+                                        checked={formik.values.is_featured}
+                                        onChange={formik.handleChange}
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <div className="admin-modal-footer-btns">
