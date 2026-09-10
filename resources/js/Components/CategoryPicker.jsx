@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useId } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { API_ENDPOINTS } from '../constants/endpoints';
 import { Search, X } from 'lucide-react';
@@ -43,10 +43,19 @@ export default function CategoryPicker({
     onRemove,
     placeholder = 'Type to find a category…',
     helperText = '',
-    id = 'category-picker-input',
+    /*
+     * Its own by default. The product form carries three of these — the
+     * primary shelf, the other shelves, and the filter above the list — and a
+     * fixed default gave all three the same DOM id, so both labels pointed at
+     * the first input: clicking "Also list under" put the cursor in Category.
+     */
+    id,
 }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
+
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [chosen, setChosen] = useState(
@@ -135,7 +144,7 @@ export default function CategoryPicker({
     return (
         <div className="auth-form-group category-picker" ref={boxRef}>
             {label && (
-                <label className="auth-label" htmlFor={id}>
+                <label className="auth-label" htmlFor={inputId}>
                     {label}{' '}
                     {required && <span className="required-asterisk">*</span>}
                 </label>
@@ -188,7 +197,7 @@ export default function CategoryPicker({
                 <div className="auth-input-wrapper">
                     <Search size={18} className="auth-input-icon" />
                     <input
-                        id={id}
+                        id={inputId}
                         type="text"
                         className={`auth-text-input icon-padded ${error ? 'input-error' : ''}`}
                         autoComplete="off"

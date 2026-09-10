@@ -140,19 +140,6 @@ describe('the product form, panel by panel', () => {
             }
         }
 
-        // eslint-disable-next-line no-console
-        console.log(
-            '\n' +
-                TABS.map(
-                    (t) =>
-                        `  ${t}\n` +
-                        [...seen.entries()]
-                            .filter(([, on]) => on === t)
-                            .map(([l]) => `     · ${l}`)
-                            .join('\n'),
-                ).join('\n'),
-        );
-
         expect(seen.size).toBeGreaterThan(25);
     });
 

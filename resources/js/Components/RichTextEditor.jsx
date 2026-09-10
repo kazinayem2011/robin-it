@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useId } from 'react';
 import {
     Bold,
     Italic,
@@ -47,8 +47,16 @@ export default function RichTextEditor({
     error = '',
     placeholder = '',
     minHeight = 180,
-    id = 'rich-text',
+    /*
+     * Its own by default, the same as CategoryPicker. A fixed one is invalid
+     * the moment a page carries two editors, and the second label then points
+     * at the first editor — which is what it did on the product form, where
+     * three pickers shared an id between them.
+     */
+    id,
 }) {
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
     const ref = useRef(null);
 
     /*
@@ -117,7 +125,7 @@ export default function RichTextEditor({
     return (
         <div className="auth-form-group">
             {label && (
-                <label className="auth-label" htmlFor={id}>
+                <label className="auth-label" htmlFor={inputId}>
                     {label}
                 </label>
             )}
@@ -170,7 +178,7 @@ export default function RichTextEditor({
                 </div>
 
                 <div
-                    id={id}
+                    id={inputId}
                     ref={ref}
                     className="rte-surface"
                     contentEditable
