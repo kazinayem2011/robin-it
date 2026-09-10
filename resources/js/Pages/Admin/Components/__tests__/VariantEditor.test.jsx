@@ -196,3 +196,92 @@ describe('VariantEditor', () => {
         expect(formik.values.variant_attributes).toEqual(['Option']);
     });
 });
+
+/**
+ * A stock code already used by another product is a rule the browser cannot
+ * check, so the only place it can come from is the refused save. It used to
+ * arrive as a toast naming the code and nothing else — on a product with a
+ * dozen options, the reader had to go looking for which one it meant.
+ */
+describe('VariantEditor — what the server said about a row', () => {
+    /*
+     * Its own stub: the helper above lives inside the other describe, and this
+     * one needs the errors and touched maps that helper does not take.
+     */
+    const stub = ({ errors = {}, touched = {} } = {}) => ({
+        values: {
+            has_variants: true,
+            variant_attributes: ['Capacity'],
+            variants: [
+                {
+                    key: 'a',
+                    id: 1,
+                    name: '16GB',
+                    sku: 'A-16',
+                    options: { Capacity: '16GB' },
+                    is_active: true,
+                },
+                {
+                    key: 'b',
+                    id: 2,
+                    name: '32GB',
+                    sku: 'TAKEN',
+                    options: { Capacity: '32GB' },
+                    is_active: true,
+                },
+            ],
+        },
+        setFieldValue: vi.fn(),
+        handleChange: vi.fn(),
+        handleBlur: vi.fn(),
+        errors,
+        touched,
+    });
+
+    const complaint = 'Stock code TAKEN is already on another option.';
+
+    it('shows the message on the option it is about', () => {
+        render(
+            <VariantEditor
+                formik={stub({
+                    errors: { variants: [undefined, { sku: complaint }] },
+                    touched: { variants: [undefined, { sku: true }] },
+                })}
+            />,
+        );
+
+        expect(screen.getByText(complaint)).toBeTruthy();
+    });
+
+    it('leaves the other options unmarked', () => {
+        render(
+            <VariantEditor
+                formik={stub({
+                    errors: { variants: [undefined, { sku: complaint }] },
+                    touched: { variants: [undefined, { sku: true }] },
+                })}
+            />,
+        );
+
+        expect(screen.getAllByText(complaint)).toHaveLength(1);
+    });
+
+    /* Same rule as any other field: an untouched one keeps quiet. */
+    it('says nothing until the row has been touched', () => {
+        render(
+            <VariantEditor
+                formik={stub({
+                    errors: { variants: [undefined, { sku: complaint }] },
+                })}
+            />,
+        );
+
+        expect(screen.queryByText(complaint)).toBeNull();
+    });
+
+    it('is quiet when the server found nothing wrong', () => {
+        render(<VariantEditor formik={stub()} />);
+
+        expect(screen.queryByText(/Stock code/)).toBeNull();
+    });
+});

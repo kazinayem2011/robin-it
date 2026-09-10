@@ -75,6 +75,18 @@ export default function VariantEditor({
 
     const remaining = onHand - allocated;
 
+    /*
+     * Formik keys these `variants[3].sku`, so the errors object is an array
+     * with a hole in it wherever a row was fine. Both that and the row being
+     * touched have to hold before an error shows, the same as any other field.
+     */
+    const rowError = (index, field) => {
+        const errors = formik.errors?.variants?.[index];
+        const touched = formik.touched?.variants?.[index];
+
+        return touched?.[field] ? errors?.[field] : undefined;
+    };
+
     const setVariants = (next) => formik.setFieldValue('variants', next);
 
     const patchVariant = (key, patch) =>
@@ -215,6 +227,15 @@ export default function VariantEditor({
                                     placeholder="Same as product"
                                 />
 
+                                {/*
+                                    The server's word on this row, shown on
+                                    the row. A stock code already used by
+                                    another product is a rule the browser
+                                    cannot check, so the only place it can
+                                    come from is the refused save — and it
+                                    used to arrive as a toast alone, naming
+                                    the code but not the option.
+                                */}
                                 <FormInput
                                     label="SKU"
                                     value={variant.sku || ''}
@@ -224,6 +245,7 @@ export default function VariantEditor({
                                         })
                                     }
                                     placeholder="Optional"
+                                    error={rowError(index, 'sku')}
                                 />
 
                                 <FormInput

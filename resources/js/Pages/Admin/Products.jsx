@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import ConfirmDialog from '@/Components/ConfirmDialog';
+import { applyServerErrors } from '@/utils/serverErrors';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
     Package,
@@ -253,7 +255,10 @@ export default function Products({
         // rebuilt on every render, so Formik would keep resetting the form back
         // to it and wipe the values handleOpenEdit had just loaded. Editing a
         // record opened a completely empty form because of that.
-        onSubmit: async (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (
+            values,
+            { setSubmitting, resetForm, setFieldError, setFieldTouched },
+        ) => {
             try {
                 const payload = buildProductPayload(values, editingProduct);
 
@@ -279,16 +284,57 @@ export default function Products({
                 router.reload({ preserveScroll: true });
             } catch (error) {
                 console.error('Failed to save product', error);
+
+                /*
+                 * Both halves of what the server said: the fields it named get
+                 * marked, and the sentence goes to a toast. Only the sentence
+                 * used to arrive, so "Stock code X is on more than one option
+                 * here" reached the reader with nothing on the form pointing
+                 * at which option it meant.
+                 */
+                const marked = applyServerErrors(
+                    { setFieldError, setFieldTouched },
+                    error,
+                );
+
                 toast.error(
                     error?.message ||
                         'Failed to save product. Please check values.',
-                    'Save Error',
+                    marked > 0 ? 'Check the marked fields' : 'Save Error',
                 );
             } finally {
                 setSubmitting(false);
             }
         },
     });
+
+    /*
+     * Closing a form with work in it asks first.
+     *
+     * The modal closed on a click outside, on Escape and on the cross, and
+     * threw everything away without a word — which on a product form is a
+     * description somebody has just spent ten minutes writing, and there is
+     * nothing to recover it from. Only when there is something to lose:
+     * opening the form and closing it again should not be an interrogation.
+     */
+    const [confirmingClose, setConfirmingClose] = useState(false);
+
+    const closeModal = () => {
+        setConfirmingClose(false);
+        setModalOpen(false);
+        setEditingProduct(null);
+        formik.resetForm();
+    };
+
+    const requestClose = () => {
+        if (formik.dirty) {
+            setConfirmingClose(true);
+
+            return;
+        }
+
+        closeModal();
+    };
 
     /*
      * Typing "keyboard" used to fire eight full page requests, one per
@@ -777,13 +823,20 @@ export default function Products({
                 }
             />
 
+            <ConfirmDialog
+                isOpen={confirmingClose}
+                title="Discard this product?"
+                message="What you have typed here has not been saved. Closing now loses it."
+                confirmLabel="Discard"
+                cancelLabel="Keep editing"
+                onConfirm={closeModal}
+                onCancel={() => setConfirmingClose(false)}
+            />
+
             {/* Single Unified Product Modal (Create & Edit SSOT) */}
             <Modal
                 isOpen={modalOpen}
-                onClose={() => {
-                    setModalOpen(false);
-                    setEditingProduct(null);
-                }}
+                onClose={requestClose}
                 title={
                     editingProduct
                         ? `Edit Product: ${editingProduct.name}`
