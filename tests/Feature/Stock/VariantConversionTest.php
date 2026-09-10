@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Stock;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -9,7 +10,9 @@ use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
+use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 /**
@@ -157,6 +160,56 @@ class VariantConversionTest extends TestCase
      * delivered order left the shape editable and the paperwork pointing at a
      * shelf that no longer existed. Any order line now fixes it for good.
      */
+    /**
+     * A sale landing while the conversion is being saved.
+     *
+     * The structure lock was read before the transaction opened, and nothing
+     * re-read it once the work started — so a product with no history at the
+     * moment of the check could pick one up before the conversion committed,
+     * and the switch went ahead anyway. That leaves a product-level movement
+     * on a product whose stock now lives on its options, and the two stop
+     * adding up.
+     *
+     * True concurrency is not available here — one in-memory SQLite connection
+     * — so the interleaving is staged: the movement is written as the
+     * transaction opens, which is exactly the window, after the guard has run
+     * and before the conversion does its work.
+     */
+    public function test_a_sale_landing_mid_conversion_stops_it(): void
+    {
+        $product = $this->product();
+
+        $fire = function () use ($product) {
+            StockMovement::create([
+                'product_id' => $product->id,
+                'quantity' => -1,
+                'type' => StockMovement::SALE,
+                'balance_after' => -1,
+            ]);
+        };
+
+        Event::listen(TransactionBeginning::class, function () use (&$fire) {
+            // One shot: the conversion's own nested work must not re-trigger it.
+            $run = $fire;
+            $fire = fn () => null;
+            $run();
+        });
+
+        try {
+            $this->variants()->convertToVariants($product, ['Capacity'], [
+                ['options' => ['Capacity' => '16GB'], 'opening_stock' => 0],
+            ]);
+            $this->fail('The conversion went ahead despite a sale landing mid-flight.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('no longer', $e->getMessage());
+        }
+
+        $this->assertFalse(
+            (bool) $product->fresh()->has_variants,
+            'The product was restructured while a sale was landing on it.',
+        );
+    }
+
     public function test_a_product_that_has_been_ordered_can_never_be_restructured(): void
     {
         $product = $this->product();

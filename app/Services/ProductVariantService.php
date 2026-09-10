@@ -44,17 +44,6 @@ class ProductVariantService
      */
     public function convertToVariants(Product $product, array $attributes, array $variants, ?int $userId = null): Product
     {
-        if ($product->has_variants) {
-            throw new StorefrontException(
-                'This product already uses options.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
-        $this->assertStructureIsStillChangeable($product, 'be switched to options');
-        $this->assertNoOpenOrders($product, 'switch it to options');
-
         if ($variants === []) {
             throw new StorefrontException(
                 'Add at least one option before switching this product to variants.',
@@ -63,22 +52,47 @@ class ProductVariantService
             );
         }
 
-        $onHand = (int) $product->stock_quantity;
         $allocated = array_sum(array_map(fn ($v) => (int) ($v['opening_stock'] ?? 0), $variants));
 
-        // The shop's stock must not change at the moment of the switch. With the
-        // structure lock in place $onHand is always 0, so this is what stops an
-        // opening balance being typed in without a purchase behind it.
-        if ($allocated !== $onHand) {
-            throw new StorefrontException(
-                "This product has {$onHand} in stock but you have allocated {$allocated} across the options. "
-                    .'The two must match so no stock is created or lost.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
+        return DB::transaction(function () use ($product, $attributes, $variants, $allocated, $userId) {
+            /*
+             * Lock the product row before deciding anything about it.
+             *
+             * This is the row every stock movement locks on its way through
+             * StockService::record(), so holding it here is what keeps a sale
+             * from landing between these checks and the work below. They used
+             * to run before the transaction opened, which left a product with
+             * no history at the moment of the check free to pick one up before
+             * the conversion committed — leaving a product-level movement on a
+             * product whose stock had just moved to its options.
+             */
+            $product = Product::whereKey($product->id)->lockForUpdate()->firstOrFail();
 
-        return DB::transaction(function () use ($product, $attributes, $variants, $onHand, $userId) {
+            if ($product->has_variants) {
+                throw new StorefrontException(
+                    'This product already uses options.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            $this->assertStructureIsStillChangeable($product, 'be switched to options');
+            $this->assertNoOpenOrders($product, 'switch it to options');
+
+            $onHand = (int) $product->stock_quantity;
+
+            // The shop's stock must not change at the moment of the switch. With the
+            // structure lock in place $onHand is always 0, so this is what stops an
+            // opening balance being typed in without a purchase behind it.
+            if ($allocated !== $onHand) {
+                throw new StorefrontException(
+                    "This product has {$onHand} in stock but you have allocated {$allocated} across the options. "
+                        .'The two must match so no stock is created or lost.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
             // Take everything off the product-level shelf first.
             if ($onHand > 0) {
                 $this->stock->record($product, null, -$onHand, StockMovement::CONVERSION, [
@@ -128,10 +142,14 @@ class ProductVariantService
             );
         }
 
-        $this->assertStructureIsStillChangeable($product, 'be switched back to a single stock pool');
-        $this->assertNoOpenOrders($product, 'switch it back to a single stock pool');
-
         return DB::transaction(function () use ($product, $userId) {
+            // Locked and checked from behind the lock, for the same reason as
+            // the switch in the other direction.
+            $product = Product::whereKey($product->id)->lockForUpdate()->firstOrFail();
+
+            $this->assertStructureIsStillChangeable($product, 'be switched back to a single stock pool');
+            $this->assertNoOpenOrders($product, 'switch it back to a single stock pool');
+
             $variants = ProductVariant::where('product_id', $product->id)->lockForUpdate()->get();
             $total = 0;
 
