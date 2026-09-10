@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\CartService;
+use App\Services\ComparisonService;
 use App\Support\SessionWindow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,8 +30,11 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request, CartService $cartService): RedirectResponse
-    {
+    public function store(
+        LoginRequest $request,
+        CartService $cartService,
+        ComparisonService $comparisons,
+    ): RedirectResponse {
         // Captured before regenerate(), which issues a brand-new session id.
         $guestSessionId = $request->session()->getId();
 
@@ -43,6 +47,7 @@ class AuthenticatedSessionController extends Controller
         // Carry anything the shopper added before signing in onto their account.
         if ($user) {
             $cartService->mergeGuestCart($user->id, $guestSessionId);
+            $comparisons->mergeGuestList($user->id, $guestSessionId);
         }
 
         // Only now is it known whose "remember me" this is, and a staff one is

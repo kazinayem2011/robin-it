@@ -58,8 +58,8 @@ class ComparisonController extends Controller
         }
 
         $exists = (clone $countQuery)->where('product_id', $request->product_id)->exists();
-        if (! $exists && $countQuery->count() >= 4) {
-            return $this->errorResponse('You can compare a maximum of 4 products at a time. Please remove an item first.', 422);
+        if (! $exists && $countQuery->count() >= Comparison::MAX_ITEMS) {
+            return $this->errorResponse('You can compare a maximum of '.Comparison::MAX_ITEMS.' products at a time. Please remove an item first.', 422);
         }
 
         $comparison = Comparison::firstOrCreate($attributes);
