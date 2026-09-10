@@ -204,12 +204,29 @@ class CartService
 
                 $combined = ($existing->exists ? $existing->quantity : 0) + $guestItem->quantity;
 
-                // Merging must never fail the login — clamp instead of throwing.
-                $available = $guestItem->variant?->stock_quantity
-                    ?? $guestItem->product?->stock_quantity
-                    ?? $combined;
+                /*
+                 * Merging must never fail the login — clamp instead of throwing.
+                 *
+                 * The ceiling is the same one every other path asks for, not the
+                 * bare shelf figure: a pre-order line is allowed to sit past what
+                 * is on hand, and measuring it against stock alone shrank a
+                 * four-unit pre-order to one the moment the shopper signed in.
+                 * A null ceiling means the owner set no cap.
+                 */
+                $onHand = $guestItem->variant?->stock_quantity
+                    ?? $guestItem->product?->stock_quantity;
 
-                $existing->quantity = max(1, min($combined, self::MAX_QUANTITY_PER_ITEM, $available));
+                $ceiling = $guestItem->product?->sellableCeiling(
+                    $onHand === null ? null : (int) $onHand
+                );
+
+                $limits = [$combined, self::MAX_QUANTITY_PER_ITEM];
+
+                if ($ceiling !== null) {
+                    $limits[] = $ceiling;
+                }
+
+                $existing->quantity = max(1, min($limits));
                 $existing->save();
             }
 

@@ -196,6 +196,50 @@ class StorefrontContractTest extends TestCase
     }
 
     /**
+     * The clamp above measures the shelf, and a pre-order line is deliberately
+     * allowed to sit past it. Signing in used to quietly shrink such a line to
+     * one unit — the shopper picked four, and the shelf being empty is the
+     * whole point of a pre-order.
+     */
+    public function test_merging_keeps_a_preorder_line_the_shelf_cannot_cover(): void
+    {
+        $product = $this->product(0);
+        $product->update(['allow_preorder' => true, 'preorder_limit' => 10]);
+
+        $cartService = app(CartService::class);
+        $user = User::factory()->create();
+
+        $guestCart = $cartService->getOrCreateCart(null, 'guest-session-preorder');
+        $cartService->addItem($guestCart, $product->id, 4);
+
+        $cartService->mergeGuestCart($user->id, 'guest-session-preorder');
+
+        $merged = $cartService->getCartWithItems($user->id, null);
+        $this->assertSame(4, $merged->items->first()->quantity);
+    }
+
+    /** The pre-order cap is still a cap: merging may not carry a line past it. */
+    public function test_merging_still_stops_at_the_preorder_limit(): void
+    {
+        $product = $this->product(0);
+        $product->update(['allow_preorder' => true, 'preorder_limit' => 3]);
+
+        $cartService = app(CartService::class);
+        $user = User::factory()->create();
+
+        $accountCart = $cartService->getOrCreateCart($user->id, null);
+        $cartService->addItem($accountCart, $product->id, 2);
+
+        $guestCart = $cartService->getOrCreateCart(null, 'guest-session-overcap');
+        $cartService->addItem($guestCart, $product->id, 2);
+
+        $cartService->mergeGuestCart($user->id, 'guest-session-overcap');
+
+        $merged = $cartService->getCartWithItems($user->id, null);
+        $this->assertSame(3, $merged->items->first()->quantity);
+    }
+
+    /**
      * The warranty lookup returned order status and item counts for any guessed
      * order number, to anyone, unauthenticated.
      */

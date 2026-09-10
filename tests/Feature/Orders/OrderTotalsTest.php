@@ -217,4 +217,83 @@ class OrderTotalsTest extends TestCase
         $this->assertEqualsWithDelta(1200, (float) $line->price, 0.01);
         $this->assertEqualsWithDelta(1200, (float) $order->fresh()->subtotal, 0.01);
     }
+
+    /**
+     * The other half of that: a basket is not a quote.
+     *
+     * `cart_items` deliberately carries no price, so a line is worth whatever
+     * the product is worth when it is looked at. A shopper who added at 1,200
+     * and comes back a week later is shown, and charged, the price today — and
+     * because the cart reads the same figure the order does, the two never
+     * disagree in front of them.
+     */
+    public function test_a_price_change_reaches_a_basket_that_was_already_filled(): void
+    {
+        $product = $this->product(1200);
+        $this->actingAs(User::factory()->create(['role' => 'customer']));
+
+        $this->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 2])
+            ->assertSuccessful();
+
+        $product->update(['price' => 1500]);
+
+        $cart = $this->getJson('/api/cart')->assertSuccessful();
+        $this->assertEqualsWithDelta(3000, (float) $cart->json('data.totals.subtotal'), 0.01);
+
+        $this->postJson('/api/checkout', [
+            'name' => 'A Customer',
+            'phone' => '01711111111',
+            'address' => '10 Some Road',
+            'delivery_zone' => ShippingRates::ZONE_INSIDE_DHAKA,
+            'payment_method' => 'COD',
+        ])->assertSuccessful();
+
+        $order = Order::latest('id')->firstOrFail();
+
+        $this->assertEqualsWithDelta(1500, (float) $order->items()->first()->price, 0.01);
+        $this->assertEqualsWithDelta(3000, (float) $order->subtotal, 0.01);
+    }
+
+    /**
+     * A sale ending is the sharpest version of the same thing: the discount
+     * window is read at checkout, not at the moment the item was picked, so a
+     * basket cannot hold yesterday's sale open.
+     */
+    public function test_a_sale_that_ends_before_checkout_is_not_honoured(): void
+    {
+        $product = $this->product(1200);
+        $product->update([
+            'discount_price' => 900,
+            'discount_starts_at' => now()->subDays(3),
+            'discount_ends_at' => now()->addHour(),
+        ]);
+
+        $this->actingAs(User::factory()->create(['role' => 'customer']));
+
+        $this->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 1])
+            ->assertSuccessful();
+
+        $this->assertEqualsWithDelta(
+            900,
+            (float) $this->getJson('/api/cart')->json('data.totals.subtotal'),
+            0.01,
+            'While the sale is on, the basket is worth the sale price.',
+        );
+
+        $product->update(['discount_ends_at' => now()->subMinute()]);
+
+        $this->postJson('/api/checkout', [
+            'name' => 'A Customer',
+            'phone' => '01711111111',
+            'address' => '10 Some Road',
+            'delivery_zone' => ShippingRates::ZONE_INSIDE_DHAKA,
+            'payment_method' => 'COD',
+        ])->assertSuccessful();
+
+        $this->assertEqualsWithDelta(
+            1200,
+            (float) Order::latest('id')->firstOrFail()->items()->first()->price,
+            0.01,
+        );
+    }
 }
