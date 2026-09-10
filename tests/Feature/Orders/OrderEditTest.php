@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Orders;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderEdit;
@@ -290,6 +291,42 @@ class OrderEditTest extends TestCase
         $this->edits->apply($order->fresh()->load('items'), $this->staff, [
             ['order_item_id' => $order->items->first()->id, 'quantity' => 5],
         ]);
+    }
+
+    /**
+     * One person cancels while another has the edit form open.
+     *
+     * canEdit() was asked once, before the transaction, against whatever
+     * instance the caller was holding. The order is locked and re-read inside
+     * — but the answer from the stale instance was never re-checked against the
+     * row that came back, so an edit could settle stock against an order that
+     * had been cancelled and had already handed its units back.
+     */
+    public function test_an_order_cancelled_mid_edit_is_refused(): void
+    {
+        $order = $this->order(2);
+
+        // The edit screen loaded this copy; the cancellation happens after.
+        $stale = Order::with('items')->findOrFail($order->id);
+
+        app(OrderService::class)->updateOrderStatus($order, 'cancelled');
+        $shelfAfterCancel = (int) $this->gpu->fresh()->stock_quantity;
+
+        try {
+            $this->edits->apply($stale, $this->staff, $this->lines($stale, [
+                $stale->items->first()->id => 5,
+            ]));
+            $this->fail('A cancelled order was edited.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('cancelled', $e->getMessage());
+        }
+
+        $this->assertSame(
+            $shelfAfterCancel,
+            (int) $this->gpu->fresh()->stock_quantity,
+            'The edit moved stock on a cancelled order.',
+        );
+        $this->assertSame('cancelled', $order->fresh()->status);
     }
 
     public function test_an_order_cannot_be_emptied(): void

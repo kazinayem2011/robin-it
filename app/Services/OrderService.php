@@ -753,22 +753,33 @@ class OrderService
      */
     public function returnOrder(Order $order, array $lines, ?string $note = null): Order
     {
-        if (! $order->isReturnable()) {
-            throw new StorefrontException(
-                $order->isReturned()
-                    ? 'This order has already been returned.'
-                    : 'Only a dispatched order can be returned — nothing has left the building yet, '
-                        .'so cancel it instead.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
-        $order->loadMissing('items');
-        $byId = $order->items->keyBy('id');
         $movedAny = false;
 
-        DB::transaction(function () use ($order, $lines, $byId, $note, &$movedAny) {
+        DB::transaction(function () use ($order, $lines, $note, &$movedAny) {
+            /*
+             * Lock the order and read its state from behind that lock.
+             *
+             * Both the returnable check and each line's outstanding count used
+             * to be read before the transaction opened. Two people on the
+             * returns desk with the same order open therefore both saw a
+             * delivered order and nothing returned yet, and the units went back
+             * on the shelf twice — once per desk.
+             */
+            $fresh = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if (! $fresh->isReturnable()) {
+                throw new StorefrontException(
+                    $fresh->isReturned()
+                        ? 'This order has already been returned.'
+                        : 'Only a dispatched order can be returned — nothing has left the building yet, '
+                            .'so cancel it instead.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            $byId = $fresh->items()->get()->keyBy('id');
+
             foreach ($lines as $line) {
                 $item = $byId->get((int) ($line['order_item_id'] ?? 0));
 
@@ -836,10 +847,14 @@ class OrderService
                 );
             }
 
-            $order->forceFill([
+            // Written through the locked row, then mirrored onto the caller's
+            // instance so it does not hand back a stale status.
+            $fresh->forceFill([
                 'status' => 'returned',
                 'stock_returned_at' => now(),
             ])->save();
+
+            $order->setRawAttributes($fresh->getAttributes(), true);
 
             /*
              * The units are the shop's again. The serials follow the same
@@ -847,7 +862,7 @@ class OrderService
              * working unit goes back on the shelf where the next sale can pick
              * it up, a damaged one is written off.
              */
-            app(SerialService::class)->returnFromOrder($order, $lines);
+            app(SerialService::class)->returnFromOrder($fresh, $lines);
         });
 
         return $order->fresh('items');

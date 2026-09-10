@@ -193,6 +193,52 @@ class OrderReturnTest extends TestCase
         }
     }
 
+    /**
+     * Two people on the returns desk with the same order open.
+     *
+     * The guard that stops a second return reads the order's status and each
+     * line's outstanding count. Both were read before the transaction opened,
+     * so the second request was still holding the figures from before the
+     * first one committed — it passed the check and put the units back a
+     * second time. The stale instances here are what the second request's
+     * own load would have given it.
+     */
+    public function test_two_desks_returning_the_same_order_only_restock_once(): void
+    {
+        $product = $this->product(10);
+        $order = $this->deliveredOrder(User::factory()->create(), $product, 3);
+
+        $shelfAfterSale = (int) $product->fresh()->stock_quantity;
+
+        // Each desk loaded the order for itself, before either pressed save.
+        $deskOne = Order::with('items')->findOrFail($order->id);
+        $deskTwo = Order::with('items')->findOrFail($order->id);
+
+        $orders = app(OrderService::class);
+        $lines = fn (Order $o) => [[
+            'order_item_id' => $o->items->first()->id,
+            'resellable' => 3,
+            'damaged' => 0,
+        ]];
+
+        $orders->returnOrder($deskOne, $lines($deskOne));
+
+        try {
+            $orders->returnOrder($deskTwo, $lines($deskTwo));
+            $this->fail('The second desk was allowed to return the same order again.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('already been returned', $e->getMessage());
+        }
+
+        $this->assertSame(
+            $shelfAfterSale + 3,
+            (int) $product->fresh()->stock_quantity,
+            'The units went back on the shelf twice.',
+        );
+
+        $this->assertSame(3, (int) $order->items()->first()->returned_quantity);
+    }
+
     public function test_an_order_cannot_be_returned_twice(): void
     {
         $product = $this->product(10);

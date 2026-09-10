@@ -69,21 +69,31 @@ class OrderEditService
      */
     public function apply(Order $order, User $staff, array $lines, ?string $reason = null): Order
     {
-        if (! $this->canEdit($order)) {
-            throw new StorefrontException(
-                $order->status === 'shipped' || $order->status === 'delivered'
-                    ? 'This order is already with the courier. Take it back as a return instead.'
-                    : "An order that is {$order->status} cannot be changed.",
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
         return DB::transaction(function () use ($order, $staff, $lines, $reason) {
             // Locked and re-read: two people editing the same order would
             // otherwise each settle their own difference against a stale
             // picture and move stock twice.
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            /*
+             * Asked of the locked row, not of the copy the caller brought.
+             *
+             * It used to be asked once before the transaction opened, so a
+             * cancellation landing while someone had the edit screen open was
+             * invisible here: the stale copy still said pending, and the edit
+             * settled its difference against an order that had already handed
+             * its units back to the shelf.
+             */
+            if (! $this->canEdit($order)) {
+                throw new StorefrontException(
+                    $order->status === 'shipped' || $order->status === 'delivered'
+                        ? 'This order is already with the courier. Take it back as a return instead.'
+                        : "An order that is {$order->status} cannot be changed.",
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
             $order->load('items');
 
             $totalBefore = (float) $order->total;

@@ -144,18 +144,24 @@ class PurchaseOrderService
      */
     public function receive(PurchaseOrder $order, User $user, array $lines, array $header = []): StockReceipt
     {
-        if (in_array($order->status, [PurchaseOrder::DRAFT, PurchaseOrder::CANCELLED], true)) {
-            throw new StorefrontException(
-                $order->status === PurchaseOrder::DRAFT
-                    ? 'Send the order to the supplier before receiving against it.'
-                    : 'This order was cancelled.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
         return DB::transaction(function () use ($order, $user, $lines, $header) {
             $order = PurchaseOrder::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            /*
+             * Asked of the locked row, not of the copy the caller brought. The
+             * buyer cancelling while the storeroom has the delivery screen open
+             * used to be invisible here, and the goods landed on the shelf
+             * against an order that no longer existed to receive them.
+             */
+            if (in_array($order->status, [PurchaseOrder::DRAFT, PurchaseOrder::CANCELLED], true)) {
+                throw new StorefrontException(
+                    $order->status === PurchaseOrder::DRAFT
+                        ? 'Send the order to the supplier before receiving against it.'
+                        : 'This order was cancelled.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
             $items = $order->items()->get()->keyBy('id');
             $receiptLines = [];
 

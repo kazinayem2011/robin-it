@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Purchasing;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
@@ -233,6 +234,39 @@ class PurchaseOrderTest extends TestCase
 
         $this->expectExceptionMessage('already been delivered in full');
         $this->orders->cancel($order->fresh());
+    }
+
+    /**
+     * The buyer cancels while the storeroom has the delivery screen open.
+     *
+     * The draft/cancelled check was asked of the copy the caller brought, once,
+     * before the transaction. The order is locked and re-read inside — but the
+     * answer was never re-checked, so goods could be received onto the shelf
+     * against an order that had just been cancelled.
+     */
+    public function test_an_order_cancelled_mid_delivery_is_refused(): void
+    {
+        $order = $this->orders->send($this->draft(20));
+
+        // The delivery screen loaded this copy; the cancellation lands after.
+        $stale = PurchaseOrder::with('items')->findOrFail($order->id);
+
+        $this->orders->cancel($order);
+
+        try {
+            $this->orders->receive($stale, $this->buyer, [
+                ['purchase_order_item_id' => $stale->items->first()->id, 'quantity' => 20],
+            ]);
+            $this->fail('A cancelled purchase order was received against.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('cancelled', $e->getMessage());
+        }
+
+        $this->assertSame(
+            0,
+            (int) $this->product->fresh()->stock_quantity,
+            'Stock landed against a cancelled order.',
+        );
     }
 
     // --- through the endpoints ---------------------------------------------
