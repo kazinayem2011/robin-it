@@ -979,7 +979,19 @@ export default function Products({
                         className="admin-product-tabs"
                     />
 
-                    <div className="admin-product-tabpanel">
+                    {/*
+                        role="tab" promises a panel that appears when its tab
+                        is chosen — Tabs says as much in its own docblock. The
+                        panel has to say which tab it belongs to for that
+                        promise to hold.
+                    */}
+                    <div
+                        className="admin-product-tabpanel"
+                        role="tabpanel"
+                        aria-label={
+                            PRODUCT_TABS.find((t) => t.key === tab)?.label
+                        }
+                    >
                         {tab === 'basics' && (
                             <>
                                 <FormInput
