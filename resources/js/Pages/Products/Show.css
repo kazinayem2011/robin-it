@@ -1713,3 +1713,158 @@
     text-align: right;
     font-weight: 600;
 }
+
+/* ── The photo, full size ──────────────────────────────────────────────────── */
+
+/*
+ * Deliberately dark and its own colours rather than the page's tokens: this is
+ * a viewer, and a photograph is read against black whatever theme the shop is
+ * wearing. The controls are drawn to sit on that black, in both themes.
+ */
+.lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: rgba(8, 10, 14, 0.94);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff; /* theme-exempt: on a black viewer, not a themed surface */
+    cursor: pointer;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.lightbox-count {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    margin: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.lightbox-stage {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 1100px;
+    /* Room for the thumbnails and the padding, so the photo never pushes
+       them off the bottom of the screen. */
+    height: min(72vh, 760px);
+}
+
+.lightbox-figure {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-width: 0;
+}
+
+.lightbox-figure img {
+    max-width: 100%;
+    max-height: 100%;
+    /* contain, not cover: a viewer that crops the thing being viewed is
+       worse than the small picture it replaced. */
+    object-fit: contain;
+}
+
+.lightbox-arrow {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff; /* theme-exempt: on a black viewer */
+    cursor: pointer;
+}
+
+.lightbox-arrow:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.lightbox-thumbs {
+    display: flex;
+    gap: 8px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.lightbox-thumb {
+    flex-shrink: 0;
+    width: 62px;
+    height: 62px;
+    padding: 2px;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+}
+
+.lightbox-thumb.is-active {
+    border-color: #fff; /* theme-exempt: on a black viewer */
+}
+
+.lightbox-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/*
+ * The main image says it can be opened. It grew on hover and did nothing when
+ * clicked, which is the one combination that reads as broken.
+ */
+.main-image button.pdp-image-open {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+}
+
+@media (max-width: 640px) {
+    .lightbox-backdrop {
+        padding: 12px;
+    }
+
+    .lightbox-stage {
+        height: min(62vh, 520px);
+        gap: 6px;
+    }
+
+    /* A phone swipes the strip; the arrows would take a third of the width. */
+    .lightbox-arrow {
+        display: none;
+    }
+}

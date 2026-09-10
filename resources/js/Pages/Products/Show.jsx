@@ -20,6 +20,7 @@ import CountdownTimer from '../../Components/CountdownTimer';
 // The gallery renders <ProductImage> but never imported it, so the whole page
 // threw "ProductImage is not defined" and rendered nothing at all.
 import ProductImage from '../../Components/ProductImage';
+import ImageLightbox from '@/Components/ImageLightbox';
 import ProductDescription from '../../Components/ProductDescription';
 import ProductQuestions from '../../Components/ProductQuestions';
 import ProductSpecifications from '../../Components/ProductSpecifications';
@@ -215,6 +216,8 @@ export default function ProductDetails(props) {
      * arrows when nothing is hidden is as wrong as one that hides them when
      * something is.
      */
+    const [lightboxOpen, setLightboxOpen] = useState(false);
+
     const thumbsRef = useRef(null);
     const [thumbNav, setThumbNav] = useState({
         canScrollBack: false,
@@ -760,11 +763,26 @@ export default function ProductDetails(props) {
                     {/* Image Gallery */}
                     <div className="pdp-gallery">
                         <div className="main-image">
-                            <ProductImage
-                                src={images[selectedImageIndex] || images[0]}
-                                product={product}
-                                alt={product.name}
-                            />
+                            {/*
+                                A button, not an image with a click handler:
+                                this is the only way to see the photograph at
+                                any size, so it has to be reachable by keyboard
+                                and announce itself as doing something.
+                            */}
+                            <button
+                                type="button"
+                                className="pdp-image-open"
+                                aria-label={`View photos of ${product.name}`}
+                                onClick={() => setLightboxOpen(true)}
+                            >
+                                <ProductImage
+                                    src={
+                                        images[selectedImageIndex] || images[0]
+                                    }
+                                    product={product}
+                                    alt={product.name}
+                                />
+                            </button>
                         </div>
                         {images.length > 1 && (
                             /*
@@ -1563,6 +1581,17 @@ export default function ProductDetails(props) {
                     </div>
                 </div>
             </div>
+
+            {lightboxOpen && (
+                <ImageLightbox
+                    images={images}
+                    index={selectedImageIndex}
+                    alt={product.name}
+                    product={product}
+                    onIndexChange={setSelectedImageIndex}
+                    onClose={() => setLightboxOpen(false)}
+                />
+            )}
         </>
     );
 }
