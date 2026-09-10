@@ -3,6 +3,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import Tabs from '@/Components/Tabs';
+import ImageLightbox from '@/Components/ImageLightbox';
+import { photosOf } from '@/utils/productPhotos';
 import { applyServerErrors } from '@/utils/serverErrors';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
@@ -414,6 +416,19 @@ export default function Products({
      * nothing to recover it from. Only when there is something to lose:
      * opening the form and closing it again should not be an interrogation.
      */
+    /*
+     * Which product's photos are being looked at, if any. The list draws a
+     * 40px thumbnail per row and that was the whole of what the admin could
+     * see of a product's photography without opening the edit form.
+     */
+    const [viewingPhotos, setViewingPhotos] = useState(null);
+    const [photoIndex, setPhotoIndex] = useState(0);
+
+    const openPhotos = (product) => {
+        setPhotoIndex(0);
+        setViewingPhotos(product);
+    };
+
     const [tab, setTab] = useState('basics');
 
     /*
@@ -660,11 +675,18 @@ export default function Products({
             header: 'Product Details',
             render: (p) => (
                 <div className="admin-product-item-flex">
-                    <ProductImage
-                        product={p}
-                        alt={p.name}
-                        className="admin-product-item-thumb"
-                    />
+                    <button
+                        type="button"
+                        className="admin-product-item-thumb-open"
+                        aria-label={`View photos of ${p.name}`}
+                        onClick={() => openPhotos(p)}
+                    >
+                        <ProductImage
+                            product={p}
+                            alt={p.name}
+                            className="admin-product-item-thumb"
+                        />
+                    </button>
                     <div>
                         <strong className="admin-product-item-title">
                             {p.name}
@@ -948,6 +970,17 @@ export default function Products({
                     </>
                 }
             />
+
+            {viewingPhotos && (
+                <ImageLightbox
+                    images={photosOf(viewingPhotos)}
+                    index={photoIndex}
+                    alt={viewingPhotos.name}
+                    product={viewingPhotos}
+                    onIndexChange={setPhotoIndex}
+                    onClose={() => setViewingPhotos(null)}
+                />
+            )}
 
             <ConfirmDialog
                 isOpen={confirmingClose}

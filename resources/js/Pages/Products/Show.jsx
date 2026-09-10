@@ -36,6 +36,7 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
+import { photosOf } from '../../utils/productPhotos';
 import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
@@ -620,13 +621,7 @@ export default function ProductDetails(props) {
        not been given the worked-out list. */
     const similar = product.similar_products ?? product.related_products ?? [];
 
-    const productImages =
-        product.images && product.images.length > 0
-            ? product.images.map((img) => img.image_path)
-            : [
-                  siteConfig.productPlaceholder ||
-                      '/images/product-placeholder.svg',
-              ];
+    const productImages = photosOf(product);
 
     /*
      * An option carries its own photos — a white card looks nothing like the

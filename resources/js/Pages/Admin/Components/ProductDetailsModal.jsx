@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Modal from '../../../Components/Modal';
 import Button from '../../../Components/Button';
 import ProductImage from '../../../Components/ProductImage';
+import ImageLightbox from '../../../Components/ImageLightbox';
+import { photosOf } from '../../../utils/productPhotos';
 import axiosInstance from '../../../services/axiosInstance';
 import { API_ENDPOINTS } from '../../../constants/endpoints';
 import { formatBdt, formatDate } from '../../../utils/formatters';
@@ -47,6 +49,13 @@ export default function ProductDetailsModal({
     const [loading, setLoading] = useState(false);
     const [failed, setFailed] = useState('');
 
+    /*
+     * null while closed, an index while open. The panel shows one thumbnail
+     * and a product can carry eight photos; this is the only way to see the
+     * rest without leaving for the edit form.
+     */
+    const [photoIndex, setPhotoIndex] = useState(null);
+
     useEffect(() => {
         if (!isOpen || !productId) return;
 
@@ -91,389 +100,440 @@ export default function ProductDetailsModal({
     );
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="920px">
-            {loading && <p className="pd-loading">Loading…</p>}
+        <>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                title={title}
+                maxWidth="920px"
+            >
+                {loading && <p className="pd-loading">Loading…</p>}
 
-            {failed && !loading && <p className="pd-failed">{failed}</p>}
+                {failed && !loading && <p className="pd-failed">{failed}</p>}
 
-            {product && !loading && (
-                <div className="pd-body">
-                    <header className="pd-head">
-                        <ProductImage
-                            product={product}
-                            alt={product.name}
-                            className="pd-thumb"
-                        />
+                {product && !loading && (
+                    <div className="pd-body">
+                        <header className="pd-head">
+                            <button
+                                type="button"
+                                className="pd-thumb-open"
+                                aria-label={`View photos of ${product.name}`}
+                                onClick={() => setPhotoIndex(0)}
+                            >
+                                <ProductImage
+                                    product={product}
+                                    alt={product.name}
+                                    className="pd-thumb"
+                                />
+                            </button>
 
-                        <div className="pd-head-text">
-                            <div className="pd-badges">
-                                <span
-                                    className={`badge ${product.is_active ? 'badge-active' : 'badge-expired'}`}
-                                >
-                                    {product.is_active ? 'Live' : 'Hidden'}
-                                </span>
-                                <span
-                                    className={`badge ${product.in_stock ? 'badge-stock-in' : 'badge-stock-danger'}`}
-                                >
-                                    {product.stock_status_label}
-                                </span>
-                                {product.has_discount && (
-                                    <span className="badge badge-sale">
-                                        {product.discount_window_open
-                                            ? 'Discount running'
-                                            : 'Discount scheduled'}
+                            <div className="pd-head-text">
+                                <div className="pd-badges">
+                                    <span
+                                        className={`badge ${product.is_active ? 'badge-active' : 'badge-expired'}`}
+                                    >
+                                        {product.is_active ? 'Live' : 'Hidden'}
                                     </span>
-                                )}
-                                {product.needs_reorder && (
-                                    <span className="badge badge-hot">
-                                        Below reorder level
+                                    <span
+                                        className={`badge ${product.in_stock ? 'badge-stock-in' : 'badge-stock-danger'}`}
+                                    >
+                                        {product.stock_status_label}
                                     </span>
-                                )}
-                            </div>
-
-                            <p className="pd-price">
-                                <strong>
-                                    {formatBdt(product.effective_price)}
-                                </strong>
-                                {product.saving > 0 && (
-                                    <>
-                                        <s>{formatBdt(product.price)}</s>
-                                        <em>
-                                            Saves {formatBdt(product.saving)}
-                                        </em>
-                                    </>
-                                )}
-                            </p>
-
-                            {product.missing_specs?.length > 0 && (
-                                <p className="pd-warn">
-                                    <AlertTriangle size={13} />
-                                    The PC Builder cannot check compatibility
-                                    without: {product.missing_specs.join(', ')}
-                                </p>
-                            )}
-                        </div>
-                    </header>
-
-                    <div className="pd-columns">
-                        <Section title="Identity">
-                            <dl>
-                                <Row label="Brand">{product.brand?.name}</Row>
-                                <Row label="Model">{product.model}</Row>
-                                <Row label="MPN">{product.mpn}</Row>
-                                <Row label="Slug">{product.slug}</Row>
-                                {/* The terms are typed a clause per line, so
-                                    they are shown that way — without this the
-                                    four lines somebody entered run together
-                                    into one unreadable sentence. */}
-                                <Row label="Warranty">
-                                    {product.warranty_text ? (
-                                        <span className="pd-multiline">
-                                            {product.warranty_text}
+                                    {product.has_discount && (
+                                        <span className="badge badge-sale">
+                                            {product.discount_window_open
+                                                ? 'Discount running'
+                                                : 'Discount scheduled'}
                                         </span>
-                                    ) : product.warranty_months ? (
-                                        `${product.warranty_months} months`
-                                    ) : null}
-                                </Row>
-                            </dl>
-                        </Section>
-
-                        <Section title="Filed under">
-                            <dl>
-                                <Row label="Primary">
-                                    {product.category?.name}
-                                </Row>
-                                <Row label="Also listed under">
-                                    {/*
-                                     * The pivot holds the primary too, so it is
-                                     * filtered out here rather than repeated.
-                                     */}
-                                    {(product.categories || []).filter(
-                                        (c) => c.id !== product.category_id,
-                                    ).length > 0 ? (
-                                        <span className="pd-chips">
-                                            {product.categories
-                                                .filter(
-                                                    (c) =>
-                                                        c.id !==
-                                                        product.category_id,
-                                                )
-                                                .map((c) => (
-                                                    <span
-                                                        key={c.id}
-                                                        className="pd-chip"
-                                                    >
-                                                        {c.parent?.name && (
-                                                            <em>
-                                                                {c.parent.name}{' '}
-                                                                ›{' '}
-                                                            </em>
-                                                        )}
-                                                        {c.name}
-                                                    </span>
-                                                ))}
-                                        </span>
-                                    ) : null}
-                                </Row>
-                            </dl>
-                        </Section>
-
-                        <Section title="Pricing">
-                            <dl>
-                                <Row label="Regular">
-                                    {formatBdt(product.price)}
-                                </Row>
-                                <Row label="Discounted">
-                                    {product.discount_price
-                                        ? formatBdt(product.discount_price)
-                                        : null}
-                                </Row>
-                                <Row label="Discount runs">
-                                    {/*
-                                     * Tested on the raw value: formatDate hands
-                                     * back an em dash for null, so falling back
-                                     * on its result printed "— → 7 Sept" where
-                                     * the window has no start.
-                                     */}
-                                    {product.discount_starts_at ||
-                                    product.discount_ends_at
-                                        ? `${
-                                              product.discount_starts_at
-                                                  ? formatDate(
-                                                        product.discount_starts_at,
-                                                    )
-                                                  : 'now'
-                                          } → ${
-                                              product.discount_ends_at
-                                                  ? formatDate(
-                                                        product.discount_ends_at,
-                                                    )
-                                                  : 'no end date'
-                                          }`
-                                        : null}
-                                </Row>
-                                <Row label="EMI from">
-                                    {product.emi_monthly
-                                        ? `${formatBdt(product.emi_monthly)} / month`
-                                        : null}
-                                </Row>
-                            </dl>
-
-                            {product.quantity_discounts?.length > 0 && (
-                                <table className="pd-table">
-                                    <thead>
-                                        <tr>
-                                            <th>From</th>
-                                            <th>Unit price</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {product.quantity_discounts.map((t) => (
-                                            <tr key={t.id}>
-                                                <td>{t.min_quantity}+</td>
-                                                <td>{formatBdt(t.price)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </Section>
-
-                        <Section title="Stock">
-                            <dl>
-                                <Row label="On hand">
-                                    {product.stock_quantity}
-                                </Row>
-                                <Row label="Reorder level">
-                                    {product.reorder_level_effective}
-                                </Row>
-                                <Row label="Movements recorded">
-                                    {/*
-                                     * Zero here is the tell that a quantity was
-                                     * written straight onto the row rather than
-                                     * bought — see stock:reconcile-opening.
-                                     */}
-                                    {product.stock_movements_count === 0 ? (
-                                        <span className="pd-warn-inline">
-                                            None — this quantity has no history
-                                        </span>
-                                    ) : (
-                                        product.stock_movements_count
                                     )}
-                                </Row>
-                                <Row label="Held at">
-                                    {product.stock_levels?.length > 0 ? (
-                                        <span className="pd-chips">
-                                            {product.stock_levels.map((s) => (
-                                                <span
-                                                    key={s.id}
-                                                    className="pd-chip"
-                                                >
-                                                    {s.store?.name || 'Branch'}:{' '}
-                                                    {s.quantity}
-                                                </span>
-                                            ))}
+                                    {product.needs_reorder && (
+                                        <span className="badge badge-hot">
+                                            Below reorder level
                                         </span>
-                                    ) : null}
-                                </Row>
-                            </dl>
-                        </Section>
-
-                        <Section title="Activity">
-                            <dl>
-                                <Row label="Ordered">
-                                    {product.order_items_count} time(s)
-                                </Row>
-                                <Row label="Reviews">
-                                    {product.reviews_count}
-                                    {product.reviews_count > 0 &&
-                                        ` · ${product.average_rating} ★`}
-                                </Row>
-                                <Row label="Questions">
-                                    {product.questions_count}
-                                </Row>
-                                <Row label="Views">{product.views_count}</Row>
-                                <Row label="Added">
-                                    {formatDate(product.created_at)}
-                                </Row>
-                                <Row label="Last edited">
-                                    {formatDate(product.updated_at)}
-                                </Row>
-                            </dl>
-                        </Section>
-
-                        <Section title="Search listing">
-                            <dl>
-                                <Row label="Meta title">
-                                    {product.meta_title}
-                                </Row>
-                                <Row label="Meta description">
-                                    {product.meta_description}
-                                </Row>
-                            </dl>
-                        </Section>
-                    </div>
-
-                    {product.variants?.length > 0 && (
-                        <Section title={`Options (${product.variants.length})`}>
-                            <div className="pd-scroll">
-                                <table className="pd-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Option</th>
-                                            <th>SKU</th>
-                                            <th>Price</th>
-                                            <th>Stock</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {product.variants.map((v) => (
-                                            <tr key={v.id}>
-                                                <td>
-                                                    {Object.values(
-                                                        v.options || {},
-                                                    ).join(' · ') || '—'}
-                                                </td>
-                                                <td>{v.sku || '—'}</td>
-                                                <td>
-                                                    {v.price
-                                                        ? formatBdt(v.price)
-                                                        : '—'}
-                                                </td>
-                                                <td>{v.stock_quantity}</td>
-                                                <td>
-                                                    {v.is_active
-                                                        ? 'Active'
-                                                        : 'Hidden'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </Section>
-                    )}
-
-                    {Object.keys(specGroups).length > 0 && (
-                        <Section title="Specifications">
-                            {Object.entries(specGroups).map(([group, rows]) => (
-                                <div key={group} className="pd-spec-group">
-                                    <h5>{group}</h5>
-                                    <dl>
-                                        {rows.map((spec) => (
-                                            <Row
-                                                key={spec.id}
-                                                label={spec.name}
-                                            >
-                                                {spec.value}
-                                            </Row>
-                                        ))}
-                                    </dl>
+                                    )}
                                 </div>
-                            ))}
-                        </Section>
-                    )}
 
-                    {product.key_features && (
-                        <Section title="Key features">
-                            <div
-                                className="pd-rich"
-                                dangerouslySetInnerHTML={{
-                                    __html: product.key_features,
+                                <p className="pd-price">
+                                    <strong>
+                                        {formatBdt(product.effective_price)}
+                                    </strong>
+                                    {product.saving > 0 && (
+                                        <>
+                                            <s>{formatBdt(product.price)}</s>
+                                            <em>
+                                                Saves{' '}
+                                                {formatBdt(product.saving)}
+                                            </em>
+                                        </>
+                                    )}
+                                </p>
+
+                                {product.missing_specs?.length > 0 && (
+                                    <p className="pd-warn">
+                                        <AlertTriangle size={13} />
+                                        The PC Builder cannot check
+                                        compatibility without:{' '}
+                                        {product.missing_specs.join(', ')}
+                                    </p>
+                                )}
+                            </div>
+                        </header>
+
+                        <div className="pd-columns">
+                            <Section title="Identity">
+                                <dl>
+                                    <Row label="Brand">
+                                        {product.brand?.name}
+                                    </Row>
+                                    <Row label="Model">{product.model}</Row>
+                                    <Row label="MPN">{product.mpn}</Row>
+                                    <Row label="Slug">{product.slug}</Row>
+                                    {/* The terms are typed a clause per line, so
+                                        they are shown that way — without this the
+                                        four lines somebody entered run together
+                                        into one unreadable sentence. */}
+                                    <Row label="Warranty">
+                                        {product.warranty_text ? (
+                                            <span className="pd-multiline">
+                                                {product.warranty_text}
+                                            </span>
+                                        ) : product.warranty_months ? (
+                                            `${product.warranty_months} months`
+                                        ) : null}
+                                    </Row>
+                                </dl>
+                            </Section>
+
+                            <Section title="Filed under">
+                                <dl>
+                                    <Row label="Primary">
+                                        {product.category?.name}
+                                    </Row>
+                                    <Row label="Also listed under">
+                                        {/*
+                                         * The pivot holds the primary too, so it is
+                                         * filtered out here rather than repeated.
+                                         */}
+                                        {(product.categories || []).filter(
+                                            (c) => c.id !== product.category_id,
+                                        ).length > 0 ? (
+                                            <span className="pd-chips">
+                                                {product.categories
+                                                    .filter(
+                                                        (c) =>
+                                                            c.id !==
+                                                            product.category_id,
+                                                    )
+                                                    .map((c) => (
+                                                        <span
+                                                            key={c.id}
+                                                            className="pd-chip"
+                                                        >
+                                                            {c.parent?.name && (
+                                                                <em>
+                                                                    {
+                                                                        c.parent
+                                                                            .name
+                                                                    }{' '}
+                                                                    ›{' '}
+                                                                </em>
+                                                            )}
+                                                            {c.name}
+                                                        </span>
+                                                    ))}
+                                            </span>
+                                        ) : null}
+                                    </Row>
+                                </dl>
+                            </Section>
+
+                            <Section title="Pricing">
+                                <dl>
+                                    <Row label="Regular">
+                                        {formatBdt(product.price)}
+                                    </Row>
+                                    <Row label="Discounted">
+                                        {product.discount_price
+                                            ? formatBdt(product.discount_price)
+                                            : null}
+                                    </Row>
+                                    <Row label="Discount runs">
+                                        {/*
+                                         * Tested on the raw value: formatDate hands
+                                         * back an em dash for null, so falling back
+                                         * on its result printed "— → 7 Sept" where
+                                         * the window has no start.
+                                         */}
+                                        {product.discount_starts_at ||
+                                        product.discount_ends_at
+                                            ? `${
+                                                  product.discount_starts_at
+                                                      ? formatDate(
+                                                            product.discount_starts_at,
+                                                        )
+                                                      : 'now'
+                                              } → ${
+                                                  product.discount_ends_at
+                                                      ? formatDate(
+                                                            product.discount_ends_at,
+                                                        )
+                                                      : 'no end date'
+                                              }`
+                                            : null}
+                                    </Row>
+                                    <Row label="EMI from">
+                                        {product.emi_monthly
+                                            ? `${formatBdt(product.emi_monthly)} / month`
+                                            : null}
+                                    </Row>
+                                </dl>
+
+                                {product.quantity_discounts?.length > 0 && (
+                                    <table className="pd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>From</th>
+                                                <th>Unit price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {product.quantity_discounts.map(
+                                                (t) => (
+                                                    <tr key={t.id}>
+                                                        <td>
+                                                            {t.min_quantity}+
+                                                        </td>
+                                                        <td>
+                                                            {formatBdt(t.price)}
+                                                        </td>
+                                                    </tr>
+                                                ),
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </Section>
+
+                            <Section title="Stock">
+                                <dl>
+                                    <Row label="On hand">
+                                        {product.stock_quantity}
+                                    </Row>
+                                    <Row label="Reorder level">
+                                        {product.reorder_level_effective}
+                                    </Row>
+                                    <Row label="Movements recorded">
+                                        {/*
+                                         * Zero here is the tell that a quantity was
+                                         * written straight onto the row rather than
+                                         * bought — see stock:reconcile-opening.
+                                         */}
+                                        {product.stock_movements_count === 0 ? (
+                                            <span className="pd-warn-inline">
+                                                None — this quantity has no
+                                                history
+                                            </span>
+                                        ) : (
+                                            product.stock_movements_count
+                                        )}
+                                    </Row>
+                                    <Row label="Held at">
+                                        {product.stock_levels?.length > 0 ? (
+                                            <span className="pd-chips">
+                                                {product.stock_levels.map(
+                                                    (s) => (
+                                                        <span
+                                                            key={s.id}
+                                                            className="pd-chip"
+                                                        >
+                                                            {s.store?.name ||
+                                                                'Branch'}
+                                                            : {s.quantity}
+                                                        </span>
+                                                    ),
+                                                )}
+                                            </span>
+                                        ) : null}
+                                    </Row>
+                                </dl>
+                            </Section>
+
+                            <Section title="Activity">
+                                <dl>
+                                    <Row label="Ordered">
+                                        {product.order_items_count} time(s)
+                                    </Row>
+                                    <Row label="Reviews">
+                                        {product.reviews_count}
+                                        {product.reviews_count > 0 &&
+                                            ` · ${product.average_rating} ★`}
+                                    </Row>
+                                    <Row label="Questions">
+                                        {product.questions_count}
+                                    </Row>
+                                    <Row label="Views">
+                                        {product.views_count}
+                                    </Row>
+                                    <Row label="Added">
+                                        {formatDate(product.created_at)}
+                                    </Row>
+                                    <Row label="Last edited">
+                                        {formatDate(product.updated_at)}
+                                    </Row>
+                                </dl>
+                            </Section>
+
+                            <Section title="Search listing">
+                                <dl>
+                                    <Row label="Meta title">
+                                        {product.meta_title}
+                                    </Row>
+                                    <Row label="Meta description">
+                                        {product.meta_description}
+                                    </Row>
+                                </dl>
+                            </Section>
+                        </div>
+
+                        {product.variants?.length > 0 && (
+                            <Section
+                                title={`Options (${product.variants.length})`}
+                            >
+                                <div className="pd-scroll">
+                                    <table className="pd-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Option</th>
+                                                <th>SKU</th>
+                                                <th>Price</th>
+                                                <th>Stock</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {product.variants.map((v) => (
+                                                <tr key={v.id}>
+                                                    <td>
+                                                        {Object.values(
+                                                            v.options || {},
+                                                        ).join(' · ') || '—'}
+                                                    </td>
+                                                    <td>{v.sku || '—'}</td>
+                                                    <td>
+                                                        {v.price
+                                                            ? formatBdt(v.price)
+                                                            : '—'}
+                                                    </td>
+                                                    <td>{v.stock_quantity}</td>
+                                                    <td>
+                                                        {v.is_active
+                                                            ? 'Active'
+                                                            : 'Hidden'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Section>
+                        )}
+
+                        {Object.keys(specGroups).length > 0 && (
+                            <Section title="Specifications">
+                                {Object.entries(specGroups).map(
+                                    ([group, rows]) => (
+                                        <div
+                                            key={group}
+                                            className="pd-spec-group"
+                                        >
+                                            <h5>{group}</h5>
+                                            <dl>
+                                                {rows.map((spec) => (
+                                                    <Row
+                                                        key={spec.id}
+                                                        label={spec.name}
+                                                    >
+                                                        {spec.value}
+                                                    </Row>
+                                                ))}
+                                            </dl>
+                                        </div>
+                                    ),
+                                )}
+                            </Section>
+                        )}
+
+                        {product.key_features && (
+                            <Section title="Key features">
+                                <div
+                                    className="pd-rich"
+                                    dangerouslySetInnerHTML={{
+                                        __html: product.key_features,
+                                    }}
+                                />
+                            </Section>
+                        )}
+
+                        {product.description && (
+                            <Section title="Description">
+                                <div
+                                    className="pd-rich"
+                                    dangerouslySetInnerHTML={{
+                                        __html: product.description,
+                                    }}
+                                />
+                            </Section>
+                        )}
+
+                        {product.related_products?.length > 0 && (
+                            <Section title="Shown alongside">
+                                <span className="pd-chips">
+                                    {product.related_products.map((r) => (
+                                        <span key={r.id} className="pd-chip">
+                                            {r.name}
+                                        </span>
+                                    ))}
+                                </span>
+                            </Section>
+                        )}
+
+                        <div className="pd-actions">
+                            <Button
+                                variant="outline"
+                                icon={ExternalLink}
+                                onClick={() =>
+                                    window.open(
+                                        `/products/${product.slug}`,
+                                        '_blank',
+                                    )
+                                }
+                            >
+                                View on site
+                            </Button>
+                            <Button
+                                icon={Edit2}
+                                onClick={() => {
+                                    onClose();
+                                    onEdit?.(product);
                                 }}
-                            />
-                        </Section>
-                    )}
-
-                    {product.description && (
-                        <Section title="Description">
-                            <div
-                                className="pd-rich"
-                                dangerouslySetInnerHTML={{
-                                    __html: product.description,
-                                }}
-                            />
-                        </Section>
-                    )}
-
-                    {product.related_products?.length > 0 && (
-                        <Section title="Shown alongside">
-                            <span className="pd-chips">
-                                {product.related_products.map((r) => (
-                                    <span key={r.id} className="pd-chip">
-                                        {r.name}
-                                    </span>
-                                ))}
-                            </span>
-                        </Section>
-                    )}
-
-                    <div className="pd-actions">
-                        <Button
-                            variant="outline"
-                            icon={ExternalLink}
-                            onClick={() =>
-                                window.open(
-                                    `/products/${product.slug}`,
-                                    '_blank',
-                                )
-                            }
-                        >
-                            View on site
-                        </Button>
-                        <Button
-                            icon={Edit2}
-                            onClick={() => {
-                                onClose();
-                                onEdit?.(product);
-                            }}
-                        >
-                            Edit product
-                        </Button>
+                            >
+                                Edit product
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
+            </Modal>
+
+            {product && photoIndex !== null && (
+                <ImageLightbox
+                    images={photosOf(product)}
+                    index={photoIndex}
+                    alt={product.name}
+                    product={product}
+                    onIndexChange={setPhotoIndex}
+                    onClose={() => setPhotoIndex(null)}
+                />
             )}
-        </Modal>
+        </>
     );
 }

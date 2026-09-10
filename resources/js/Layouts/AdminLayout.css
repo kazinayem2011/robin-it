@@ -1289,6 +1289,21 @@ a.admin-card:hover,
     gap: 12px;
 }
 
+/*
+ * The thumbnail is the way into a product's photographs.
+ *
+ * A 40px square was the whole of what the admin could see of them without
+ * opening the edit form, on a page whose job is checking the catalogue.
+ */
+.admin-product-item-thumb-open,
+.pd-thumb-open {
+    display: block;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+}
+
 .admin-product-item-thumb {
     width: 40px;
     height: 40px;
