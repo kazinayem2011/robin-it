@@ -17,6 +17,7 @@ use App\Support\SearchTerm;
 use App\Support\SlugFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -198,33 +199,45 @@ class ProductController extends Controller
         // Every product starts empty. Stock arrives under Purchasing.
         $validated['stock_quantity'] = 0;
 
-        $product = Product::create($validated);
-
         /*
-         * The options editor is on the create form, so a shopkeeper entering a
-         * product sold in sizes fills it in and presses Create. Until now the
-         * request came back 201 with a success toast and the options were
-         * thrown away — the product saved as a single-stock item and had to be
-         * opened again and given its options a second time.
+         * One write or none.
+         *
+         * A product is a row plus its options, photos, spec sheet, attribute
+         * values, shelves, related items and quantity prices — eight writes
+         * that used to run one after another with nothing holding them
+         * together. Anything the database refused after the first left the
+         * product itself behind: active, on the storefront, and missing
+         * whatever came next.
          */
-        if ($variantDefinitions !== []) {
-            $this->createWithOptions(
-                $product,
-                $variantAttributes,
-                $variantDefinitions,
-                $request->user()?->id,
-            );
-        }
+        return DB::transaction(function () use ($validated, $variantDefinitions, $variantAttributes, $request) {
+            $product = Product::create($validated);
 
-        $this->gallery->syncProduct($product, $this->galleryFrom($validated));
+            /*
+             * The options editor is on the create form, so a shopkeeper entering a
+             * product sold in sizes fills it in and presses Create. Until now the
+             * request came back 201 with a success toast and the options were
+             * thrown away — the product saved as a single-stock item and had to be
+             * opened again and given its options a second time.
+             */
+            if ($variantDefinitions !== []) {
+                $this->createWithOptions(
+                    $product,
+                    $variantAttributes,
+                    $variantDefinitions,
+                    $request->user()?->id,
+                );
+            }
 
-        $this->syncSpecifications($product, $validated['specifications'] ?? null);
-        $this->syncAttributeValues($product, $validated['attribute_value_ids'] ?? null);
-        $product->syncCategories($validated['category_ids'] ?? []);
-        $this->syncRelated($product, $validated['related_product_ids'] ?? null);
-        $this->syncQuantityDiscounts($product, $validated['quantity_discounts'] ?? null);
+            $this->gallery->syncProduct($product, $this->galleryFrom($validated));
 
-        return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
+            $this->syncSpecifications($product, $validated['specifications'] ?? null);
+            $this->syncAttributeValues($product, $validated['attribute_value_ids'] ?? null);
+            $product->syncCategories($validated['category_ids'] ?? []);
+            $this->syncRelated($product, $validated['related_product_ids'] ?? null);
+            $this->syncQuantityDiscounts($product, $validated['quantity_discounts'] ?? null);
+
+            return $this->successResponse($product, "New product '{$product->name}' created successfully.", 201);
+        });
     }
 
     /**

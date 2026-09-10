@@ -77,6 +77,11 @@ class ProductUpdateRequest extends AdminRequest
                 (array) $this->input('variants', []),
                 (int) $this->route('id')
             );
+
+            ProductRules::checkSkus(
+                $validator,
+                (array) $this->input('variants', [])
+            );
         });
     }
 }

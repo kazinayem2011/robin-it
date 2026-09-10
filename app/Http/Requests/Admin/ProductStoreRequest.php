@@ -56,6 +56,11 @@ class ProductStoreRequest extends AdminRequest
                 (array) $this->input('variants', []),
                 null
             );
+
+            ProductRules::checkSkus(
+                $validator,
+                (array) $this->input('variants', [])
+            );
         });
     }
 }

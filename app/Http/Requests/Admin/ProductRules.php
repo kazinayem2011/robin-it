@@ -62,6 +62,52 @@ class ProductRules
     }
 
     /**
+     * The same for stock codes, which are unique across product_variants and
+     * were not checked at all.
+     *
+     * A repeated code reached the unique index and came back a 500 — and by
+     * then the product row was already written, so the catalogue gained a live
+     * item with no options on it while the shopkeeper was looking at a server
+     * error and about to type the whole thing again.
+     */
+    public static function checkSkus($validator, array $variants): void
+    {
+        $seen = [];
+
+        foreach ($variants as $i => $variant) {
+            $code = trim((string) ($variant['sku'] ?? ''));
+
+            if ($code === '') {
+                continue;
+            }
+
+            $key = mb_strtolower($code);
+
+            if (isset($seen[$key])) {
+                $validator->errors()->add(
+                    "variants.{$i}.sku",
+                    "Stock code {$code} is on more than one option here. Each one needs its own."
+                );
+
+                continue;
+            }
+
+            $seen[$key] = true;
+
+            $taken = ProductVariant::where('sku', $code)
+                ->when($variant['id'] ?? null, fn ($q, $id) => $q->whereKeyNot($id))
+                ->exists();
+
+            if ($taken) {
+                $validator->errors()->add(
+                    "variants.{$i}.sku",
+                    "Stock code {$code} is already on another option."
+                );
+            }
+        }
+    }
+
+    /**
      * Selling ahead of a delivery, decided per product. The limit is how far the
      * balance may go below zero: without one a single scripted buyer can commit
      * the shop to any number of units, so it is worth setting even though it is
