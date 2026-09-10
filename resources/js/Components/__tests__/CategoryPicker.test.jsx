@@ -1,109 +1,131 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import CategoryPicker from '../CategoryPicker';
+
+const get = vi.fn();
 
 vi.mock('../../services/axiosInstance', () => ({
-    default: {
-        get: vi.fn(() =>
-            Promise.resolve({
-                data: [
-                    { id: 1307, name: 'Mouse', path: 'Accessories' },
-                    { id: 1308, name: 'Mouse Pad', path: 'Accessories' },
-                ],
-            }),
-        ),
-    },
+    default: { get: (...a) => get(...a) },
 }));
 
+const { default: CategoryPicker } = await import('../CategoryPicker');
+
+const ROWS = [
+    { id: 396, name: 'All Laptop', path: 'Laptop' },
+    { id: 411, name: 'Gaming Laptop', path: 'Laptop' },
+];
+
 /**
- * Picking a category, and still being able to read what you picked.
+ * Typing into the picker and getting somewhere.
  *
- * The parent only knows the id: choosing calls onChange(id), which re-ran the
- * effect that syncs from props and replaced the row just selected with
- * {id, name: initialLabel}. On a create form there is no initialLabel, so the
- * field you had this moment filled in fell back to reading "Category #1307".
+ * The two on the product form are the same component in different modes: the
+ * primary shelf takes one, "Also list under" takes several. The multi one was
+ * reported as doing nothing at all when typed into.
  */
 describe('CategoryPicker', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        get.mockResolvedValue({ data: ROWS });
     });
 
-    /* The parent that the real form is: it stores only the id. */
-    const Host = () => {
-        const [value, setValue] = useState('');
-
-        return (
-            <CategoryPicker
-                value={value}
-                onChange={setValue}
-                label="Category"
-            />
-        );
-    };
-
-    it('keeps showing the category that was picked', async () => {
+    it('searches on focus', async () => {
         const user = userEvent.setup();
-        render(<Host />);
+        render(<CategoryPicker label="Category" onChange={vi.fn()} />);
 
         await user.click(screen.getByRole('textbox'));
-        await user.type(screen.getByRole('textbox'), 'mouse');
 
-        // Matched on text rather than accessible name: the path is an <em>
-        // inside the button, so the computed name carries its own spacing.
-        const options = await screen.findAllByRole('button');
-        const option = options.find((b) =>
-            /Mouse$/.test(b.textContent.replace(/\s+/g, ' ').trim()),
-        );
-
-        expect(option).toBeTruthy();
-        await user.click(option);
-
-        await waitFor(() => {
-            expect(
-                screen.queryByText(/Category #1307/),
-            ).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByText('Mouse')).toBeInTheDocument();
+        await waitFor(() => expect(get).toHaveBeenCalled());
     });
 
-    /**
-     * Still follows the parent when the value changes from outside — opening
-     * the form on a different product has to replace what is shown.
-     */
-    it('follows an id set from outside', async () => {
-        const { rerender } = render(
-            <CategoryPicker value="" onChange={() => {}} initialLabel="" />,
-        );
+    it('searches again for what is typed', async () => {
+        const user = userEvent.setup();
+        render(<CategoryPicker label="Category" onChange={vi.fn()} />);
 
-        rerender(
+        await user.type(screen.getByRole('textbox'), 'lap');
+
+        await waitFor(() =>
+            expect(get.mock.calls.at(-1)[1]).toEqual({ params: { q: 'lap' } }),
+        );
+    });
+
+    it('shows what came back', async () => {
+        const user = userEvent.setup();
+        render(<CategoryPicker label="Category" onChange={vi.fn()} />);
+
+        await user.type(screen.getByRole('textbox'), 'lap');
+
+        expect(await screen.findByText('Gaming Laptop')).toBeTruthy();
+    });
+
+    /* Single mode hands back the id. */
+    it('reports the chosen id', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        render(<CategoryPicker label="Category" onChange={onChange} />);
+
+        await user.type(screen.getByRole('textbox'), 'lap');
+        await user.click(await screen.findByText('Gaming Laptop'));
+
+        expect(onChange).toHaveBeenCalledWith(411);
+    });
+
+    // ── the one that was reported ────────────────────────────────────────────
+
+    it('searches when typed into in multi mode', async () => {
+        const user = userEvent.setup();
+        render(
             <CategoryPicker
-                value={42}
-                onChange={() => {}}
-                initialLabel="Graphics Card"
+                label="Also list under"
+                multiple
+                chips={[]}
+                onChange={vi.fn()}
+                onRemove={vi.fn()}
             />,
         );
 
-        expect(await screen.findByText('Graphics Card')).toBeInTheDocument();
+        await user.type(screen.getByRole('textbox'), 'lap');
+
+        await waitFor(() => expect(get).toHaveBeenCalled());
     });
 
-    it('clears when the value is removed', async () => {
-        const { rerender } = render(
+    it('shows the results in multi mode', async () => {
+        const user = userEvent.setup();
+        render(
             <CategoryPicker
-                value={42}
-                onChange={() => {}}
-                initialLabel="Graphics Card"
+                label="Also list under"
+                multiple
+                chips={[]}
+                onChange={vi.fn()}
+                onRemove={vi.fn()}
             />,
         );
 
-        expect(screen.getByText('Graphics Card')).toBeInTheDocument();
+        await user.type(screen.getByRole('textbox'), 'lap');
 
-        rerender(
-            <CategoryPicker value="" onChange={() => {}} initialLabel="" />,
+        expect(await screen.findByText('Gaming Laptop')).toBeTruthy();
+    });
+
+    /* Multi mode hands back the whole row, because the caller draws a chip. */
+    it('reports the whole category in multi mode', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+
+        render(
+            <CategoryPicker
+                label="Also list under"
+                multiple
+                chips={[]}
+                onChange={onChange}
+                onRemove={vi.fn()}
+            />,
         );
 
-        expect(screen.queryByText('Graphics Card')).not.toBeInTheDocument();
+        await user.type(screen.getByRole('textbox'), 'lap');
+        await user.click(await screen.findByText('Gaming Laptop'));
+
+        expect(onChange).toHaveBeenCalledWith(
+            expect.objectContaining({ id: 411, name: 'Gaming Laptop' }),
+        );
     });
 });

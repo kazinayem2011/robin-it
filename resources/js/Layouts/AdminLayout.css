@@ -1915,13 +1915,18 @@ a.admin-card:hover,
     margin-bottom: 18px;
 }
 
+/*
+ * Tall enough that switching panels does not resize the dialog under the
+ * cursor — and deliberately not a scroller.
+ *
+ * It had `overflow-y: auto` and a max-height, which reads as tidy and breaks
+ * the form: the category typeahead's results are positioned absolutely, and an
+ * overflow ancestor clips them. "Also list under" sits low on the Basics
+ * panel, so its list was cut off entirely and typing into it appeared to do
+ * nothing at all. The dialog itself already scrolls.
+ */
 .admin-product-tabpanel {
-    /* Tall enough that switching panels does not resize the dialog under the
-       cursor, short enough to leave the buttons in view on a laptop. */
     min-height: 320px;
-    max-height: min(58vh, 620px);
-    overflow-y: auto;
-    padding-right: 4px;
 }
 
 @media (max-width: 640px) {
@@ -1929,15 +1934,9 @@ a.admin-card:hover,
         margin-bottom: 12px;
     }
 
-    /*
-     * On a phone the dialog is the screen, so the panel takes what is left
-     * rather than a fixed slice of it.
-     */
+    /* On a phone the dialog is the screen; the panel takes what is left. */
     .admin-product-tabpanel {
         min-height: 0;
-        max-height: none;
-        overflow-y: visible;
-        padding-right: 0;
     }
 }
 
