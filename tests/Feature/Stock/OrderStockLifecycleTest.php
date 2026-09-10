@@ -4,6 +4,7 @@ namespace Tests\Feature\Stock;
 
 use App\Exceptions\StorefrontException;
 use App\Models\Category;
+use App\Models\Courier;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockMovement;
@@ -168,6 +169,66 @@ class OrderStockLifecycleTest extends TestCase
         // And the shelf is untouched by the attempts — no unit moved either way.
         $this->assertSame(10, $product->fresh()->stock_quantity);
         $this->assertFalse($this->stockService()->verify($product->fresh())['drifted']);
+    }
+
+    /**
+     * One admin cancels while another is moving the same order on.
+     *
+     * The terminal check read the copy the caller was holding. The order was
+     * then locked and re-read inside the transaction — and the answer from the
+     * stale copy was never re-checked against the row that came back, so a
+     * cancelled order could be marched on to shipped after its units had
+     * already gone back to the shelf.
+     */
+    public function test_an_order_cancelled_mid_status_change_cannot_be_moved_on(): void
+    {
+        $product = $this->product(10);
+        $order = $this->placeOrder(User::factory()->create(), $product);
+
+        // The second admin's screen loaded this copy; the cancellation follows.
+        $stale = Order::findOrFail($order->id);
+
+        $this->orders()->updateOrderStatus($order, 'cancelled');
+        $shelfAfterCancel = (int) $product->fresh()->stock_quantity;
+
+        try {
+            $this->orders()->updateOrderStatus($stale, 'shipped');
+            $this->fail('A cancelled order was moved on to shipped.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('cancelled', $e->getMessage());
+        }
+
+        $this->assertSame('cancelled', $order->fresh()->status);
+        $this->assertSame($shelfAfterCancel, (int) $product->fresh()->stock_quantity);
+    }
+
+    /**
+     * The same race against the dispatch desk, which is worse: it books the
+     * parcel with the carrier before it touches the order, so a cancelled order
+     * could leave the building with a tracking number against it.
+     */
+    public function test_an_order_cancelled_mid_dispatch_is_refused(): void
+    {
+        $product = $this->product(10);
+        $order = $this->placeOrder(User::factory()->create(), $product);
+
+        // No credentials, so this dispatches by hand and books nothing.
+        $courier = Courier::firstOrFail();
+        $courier->update(['credentials' => []]);
+
+        $stale = Order::findOrFail($order->id);
+
+        $this->orders()->updateOrderStatus($order, 'cancelled');
+
+        try {
+            $this->orders()->dispatchOrder($stale, $courier->fresh());
+            $this->fail('A cancelled order was dispatched.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('cancelled', $e->getMessage());
+        }
+
+        $this->assertSame('cancelled', $order->fresh()->status);
+        $this->assertNull($order->fresh()->dispatched_at);
     }
 
     public function test_cancelling_twice_in_a_row_is_a_no_op(): void

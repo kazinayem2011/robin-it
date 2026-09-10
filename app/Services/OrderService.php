@@ -499,17 +499,6 @@ class OrderService
          * its mind wants a new order, which the returned units can cover
          * straight away, not a rewritten one.
          */
-        if ($order->isTerminal()) {
-            throw new StorefrontException(
-                $order->isReturned()
-                    ? 'This order has been returned and can no longer change status.'
-                    : 'This order was cancelled and cannot be reopened. Place a new order instead — '
-                        .'its stock is already back on the shelf.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
         // A return has to say what condition each item came back in, so it
         // cannot be a plain status change.
         if ($status === 'returned') {
@@ -534,20 +523,48 @@ class OrderService
          * actually arrived and in what condition, so damaged units are written
          * off rather than resold.
          */
-        if ($status === 'cancelled' && ! $order->isCancellable()) {
-            throw new StorefrontException(
-                'This order has already been dispatched, so cancelling it would put stock back that '
-                    .'has left the building. Process it as a return instead, so what actually comes '
-                    .'back is recorded.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
+        $changed = true;
 
-        DB::transaction(function () use ($order, $status) {
+        DB::transaction(function () use ($order, $status, &$changed) {
             // Lock the order so two admins clicking at once cannot both decide
             // they are the one releasing the stock.
             $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            // Somebody else got there first with the same change.
+            if ($fresh->status === $status) {
+                $changed = false;
+
+                return;
+            }
+
+            /*
+             * Both guards asked of the locked row, not of the copy the caller
+             * brought. They used to run before the transaction, so one admin
+             * cancelling while another moved the same order on was invisible
+             * here: the stale copy still said pending, and a cancelled order
+             * could be marched on to shipped after its units had already gone
+             * back to the shelf.
+             */
+            if ($fresh->isTerminal()) {
+                throw new StorefrontException(
+                    $fresh->isReturned()
+                        ? 'This order has been returned and can no longer change status.'
+                        : 'This order was cancelled and cannot be reopened. Place a new order instead — '
+                            .'its stock is already back on the shelf.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            if ($status === 'cancelled' && ! $fresh->isCancellable()) {
+                throw new StorefrontException(
+                    'This order has already been dispatched, so cancelling it would put stock back that '
+                        .'has left the building. Process it as a return instead, so what actually comes '
+                        .'back is recorded.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
 
             if ($status === 'cancelled') {
                 $this->releaseStock($fresh);
@@ -559,7 +576,9 @@ class OrderService
 
         // After the commit: the customer is told about a status that is
         // actually saved, never one a failed transaction rolled back.
-        $this->notifier->orderStatusChanged($order, $status);
+        if ($changed) {
+            $this->notifier->orderStatusChanged($order, $status);
+        }
 
         return $order;
     }
@@ -606,6 +625,17 @@ class OrderService
 
         DB::transaction(function () use ($order, $courier, $tracking) {
             $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
+
+            // Asked again from behind the lock. The check above fails fast so a
+            // doomed dispatch does not book with the carrier first; this one is
+            // what stops an order cancelled since then from leaving anyway.
+            if ($fresh->isTerminal()) {
+                throw new StorefrontException(
+                    'This order has been '.$fresh->status.' and can no longer be dispatched.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
 
             $fresh->forceFill([
                 'courier_id' => $courier->id,
