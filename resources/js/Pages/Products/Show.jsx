@@ -42,12 +42,12 @@ import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import {
+    Scale,
     ShoppingCart,
     Check,
     Clock,
     ShieldCheck,
     Bookmark,
-    SquarePlus,
     Link2,
     ChevronLeft,
     ChevronRight,
@@ -749,7 +749,7 @@ export default function ProductDetails(props) {
                             className="pdp-utility-btn"
                             onClick={handleAddToCompare}
                         >
-                            <SquarePlus size={16} /> Add to Compare
+                            <Scale size={16} /> Add to Compare
                         </button>
                     </div>
                 </div>

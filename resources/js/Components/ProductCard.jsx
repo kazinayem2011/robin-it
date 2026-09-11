@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
+    Scale,
     ShoppingCart,
     Heart,
-    RefreshCw,
     Star,
     CheckCircle,
     Flame,
@@ -221,7 +221,7 @@ export const ProductCard = ({
                             className="card-action-btn"
                             title="Compare Product"
                         >
-                            <RefreshCw size={14} />
+                            <Scale size={14} />
                         </button>
                     </div>
 
@@ -410,7 +410,7 @@ export const ProductCard = ({
                         className="card-action-btn"
                         title="Compare Product"
                     >
-                        <RefreshCw size={14} />
+                        <Scale size={14} />
                     </button>
                 </div>
 

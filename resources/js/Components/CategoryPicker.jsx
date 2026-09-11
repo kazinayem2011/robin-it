@@ -33,6 +33,12 @@ export default function CategoryPicker({
     // already selected without fetching the whole tree to look it up.
     initialLabel = '',
     /*
+     * Its ancestry, for the same reason the results and the chips carry theirs:
+     * several shelves share a name, and the field showed only the leaf — so an
+     * edit form said "Accessories" and left you to guess which one.
+     */
+    initialPath = '',
+    /*
      * Multi mode: `value` is an array, choosing appends rather than replaces,
      * and the chosen sit above the box as removable chips. Used for the extra
      * categories a product is listed under, which is the one place a shopkeeper
@@ -77,7 +83,7 @@ export default function CategoryPicker({
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [chosen, setChosen] = useState(
-        value ? { id: value, name: initialLabel, path: '' } : null,
+        value ? { id: value, name: initialLabel, path: initialPath } : null,
     );
 
     const boxRef = useRef(null);
@@ -99,9 +105,9 @@ export default function CategoryPicker({
                 return current;
             }
 
-            return { id: value, name: initialLabel, path: '' };
+            return { id: value, name: initialLabel, path: initialPath };
         });
-    }, [value, initialLabel]);
+    }, [value, initialLabel, initialPath]);
 
     const fetchResults = useCallback(async (term) => {
         setLoading(true);

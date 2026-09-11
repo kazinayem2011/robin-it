@@ -2466,6 +2466,13 @@ textarea.has-error:focus,
     align-items: center;
     gap: 6px;
     margin-bottom: 10px;
+    /*
+     * Held at the height of the reviewed state, which carries a 13px star the
+     * unreviewed one does not. Without it a card grew the day its first review
+     * landed, and a shelf mixing reviewed and unreviewed products had its
+     * prices sitting at two different heights.
+     */
+    min-height: 18px;
 }
 
 .star-rating {

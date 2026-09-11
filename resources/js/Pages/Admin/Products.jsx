@@ -12,8 +12,6 @@ import {
     Plus,
     Edit2,
     Eye,
-    CheckCircle,
-    XCircle,
     AlertTriangle,
     Tag,
     FileText,
@@ -1250,6 +1248,9 @@ export default function Products({
                                         initialLabel={
                                             editingProduct?.category?.name || ''
                                         }
+                                        initialPath={pathOf(
+                                            editingProduct?.category,
+                                        )}
                                         onChange={(id) =>
                                             formik.setFieldValue(
                                                 'category_id',

@@ -332,6 +332,31 @@ describe('publishing a new product', () => {
         ).not.toBeInTheDocument();
     });
 
+    /* The primary field, for the same reason as the chips beside it. */
+    it('names the primary shelf by its ancestry too', async () => {
+        const user = await renderList(
+            listing({
+                category_id: 411,
+                category: {
+                    id: 411,
+                    name: 'Gaming Laptop',
+                    parent: { id: 395, name: 'Laptop' },
+                },
+                categories: [],
+            }),
+        );
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        // Asked of the field, not the page: the table row names the category
+        // as well, so "Gaming Laptop" matches twice.
+        const field = document.querySelector('.category-picker-chosen');
+
+        expect(field).not.toBeNull();
+        expect(field.textContent).toMatch(/Laptop ›\s*Gaming Laptop/);
+    });
+
     // ── the dialogs that interrupt the modal ─────────────────────────
 
     /**
