@@ -1160,47 +1160,6 @@ export default function Products({
                 />
             )}
 
-            {/*
-                Asks rather than refuses. Publishing a thin page is a real
-                choice a shop sometimes makes — a placeholder while the
-                photographs are being taken — so this names what a shopper
-                would notice and lets it through.
-            */}
-            <ConfirmDialog
-                isOpen={Boolean(publishWarning)}
-                title="Publish it like this?"
-                message={
-                    <>
-                        This will go live on the storefront with:
-                        <ul className="admin-thin-publish-list">
-                            {(publishWarning || []).map((reason) => (
-                                <li key={reason}>{reason}</li>
-                            ))}
-                        </ul>
-                        You can save it as a draft instead and finish it first.
-                    </>
-                }
-                confirmLabel="Publish anyway"
-                cancelLabel="Go back"
-                variant="primary"
-                onConfirm={() => {
-                    setPublishWarning(null);
-                    formik.submitForm();
-                }}
-                onCancel={() => setPublishWarning(null)}
-            />
-
-            <ConfirmDialog
-                isOpen={confirmingClose}
-                title="Discard this product?"
-                message="What you have typed here has not been saved. Closing now loses it."
-                confirmLabel="Discard"
-                cancelLabel="Keep editing"
-                onConfirm={closeModal}
-                onCancel={() => setConfirmingClose(false)}
-            />
-
-            {/* Single Unified Product Modal (Create & Edit SSOT) */}
             <Modal
                 isOpen={modalOpen}
                 onClose={requestClose}
@@ -2012,6 +1971,60 @@ export default function Products({
                     )}
                 </form>
             </Modal>
+
+            {/*
+                After the modal they interrupt, not before it.
+
+                Every backdrop in the shop is z-index 9999, so with equal
+                stacking the later element in the DOM paints on top. These
+                sat above the product modal and were drawn underneath it:
+                pressing Cancel opened the question and hid it, so the
+                modal appeared to ignore the click entirely.
+
+                jsdom has neither painting nor stacking, so a test can find
+                the dialog either way — the order is asserted instead.
+            */}
+            {/*
+                Asks rather than refuses. Publishing a thin page is a real
+                choice a shop sometimes makes — a placeholder while the
+                photographs are being taken — so this names what a shopper
+                would notice and lets it through.
+            */}
+            <ConfirmDialog
+                isOpen={Boolean(publishWarning)}
+                title="Publish it like this?"
+                message={
+                    <>
+                        This will go live on the storefront with:
+                        <ul className="admin-thin-publish-list">
+                            {(publishWarning || []).map((reason) => (
+                                <li key={reason}>{reason}</li>
+                            ))}
+                        </ul>
+                        You can save it as a draft instead and finish it first.
+                    </>
+                }
+                confirmLabel="Publish anyway"
+                cancelLabel="Go back"
+                variant="primary"
+                onConfirm={() => {
+                    setPublishWarning(null);
+                    formik.submitForm();
+                }}
+                onCancel={() => setPublishWarning(null)}
+            />
+
+            <ConfirmDialog
+                isOpen={confirmingClose}
+                title="Discard this product?"
+                message="What you have typed here has not been saved. Closing now loses it."
+                confirmLabel="Discard"
+                cancelLabel="Keep editing"
+                onConfirm={closeModal}
+                onCancel={() => setConfirmingClose(false)}
+            />
+
+            {/* Single Unified Product Modal (Create & Edit SSOT) */}
 
             {cropperOpen && (
                 /*

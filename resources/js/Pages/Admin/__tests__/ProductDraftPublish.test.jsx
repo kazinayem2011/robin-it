@@ -234,6 +234,58 @@ describe('publishing a new product', () => {
         expect(await screen.findByRole('switch')).toBeChecked();
     });
 
+    // ── the dialogs that interrupt the modal ─────────────────────────
+
+    /**
+     * A dialog that interrupts the product modal has to paint over it.
+     *
+     * Every backdrop in the shop is z-index 9999, so with equal stacking the
+     * later element in the DOM wins. These were declared above the modal and
+     * drawn underneath it: pressing Cancel opened the question and hid it
+     * behind the form, so the modal looked like it had ignored the click.
+     *
+     * jsdom has neither painting nor stacking — `findByText` found the dialog
+     * whichever way round it was, which is why the tests stayed green while
+     * the screen did not work. Document order is the part that can be checked
+     * here, and it is the part that decides.
+     */
+    const backdrops = () =>
+        Array.from(document.querySelectorAll('.modal-backdrop-overlay'));
+
+    it('draws the discard question over the form, not under it', async () => {
+        const user = await openCreate();
+
+        fireEvent.change(screen.getByLabelText(/Product Title/i), {
+            target: { value: 'Half-typed' },
+        });
+
+        await user.click(screen.getAllByRole('button', { name: /close/i })[0]);
+
+        expect(
+            await screen.findByText(/Discard this product\?/i),
+        ).toBeInTheDocument();
+
+        const open = backdrops();
+        expect(open.length).toBe(2);
+
+        // The question is the last one, so it is the one on top.
+        expect(open[1].textContent).toMatch(/Discard this product\?/i);
+    });
+
+    it('draws the publish question over the form too', async () => {
+        const user = await openCreate();
+        await fillMinimum(user);
+        await publish(user);
+
+        expect(
+            await screen.findByText(/Publish it like this\?/i),
+        ).toBeInTheDocument();
+
+        const open = backdrops();
+        expect(open.length).toBe(2);
+        expect(open[1].textContent).toMatch(/Publish it like this\?/i);
+    });
+
     // ── the walk through the six panels ──────────────────────────────
 
     it('opens on the first step and offers no way back from it', async () => {
