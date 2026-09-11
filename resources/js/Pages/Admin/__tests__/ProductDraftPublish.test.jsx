@@ -155,6 +155,214 @@ describe('publishing a new product', () => {
         ).not.toBeInTheDocument();
     });
 
+    // ── taking one down from the list ────────────────────────────────
+
+    const listing = (overrides = {}) => ({
+        id: 9,
+        name: 'Existing',
+        price: 100,
+        is_active: true,
+        category_id: 411,
+        has_variants: false,
+        variants: [],
+        ...overrides,
+    });
+
+    const renderList = async (product) => {
+        const user = userEvent.setup();
+        render(
+            <Products
+                products={{ data: [product], meta: {} }}
+                categories={[]}
+                brands={[]}
+            />,
+        );
+        return user;
+    };
+
+    /*
+     * Taking a product down was six clicks — open it, find the Publishing tab,
+     * untick, save — for the action most likely to be wanted in a hurry, when
+     * something is listed wrong and shoppers can see it.
+     */
+    it('takes a live product down from the list', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /active/i }),
+        );
+
+        await waitFor(() => expect(updateProduct).toHaveBeenCalled());
+        expect(updateProduct).toHaveBeenCalledWith(9, { is_active: false });
+    });
+
+    it('puts a hidden one back up the same way', async () => {
+        const user = await renderList(listing({ is_active: false }));
+
+        await user.click(
+            await screen.findByRole('button', { name: /inactive/i }),
+        );
+
+        await waitFor(() => expect(updateProduct).toHaveBeenCalled());
+        expect(updateProduct).toHaveBeenCalledWith(9, { is_active: true });
+    });
+
+    /* It decides what shoppers see, so the row waits rather than flipping back. */
+    it('does not change the row when the save fails', async () => {
+        updateProduct.mockRejectedValue({ message: 'Nope' });
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /active/i }),
+        );
+
+        await waitFor(() => expect(updateProduct).toHaveBeenCalled());
+        expect(
+            screen.getByRole('button', { name: /active/i }),
+        ).toBeInTheDocument();
+    });
+
+    // ── the walk through the six panels ──────────────────────────────
+
+    it('opens on the first step and offers no way back from it', async () => {
+        await openCreate();
+
+        expect(screen.getByText(/Step 1 of 6/i)).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /previous/i }),
+        ).toBeDisabled();
+    });
+
+    it('walks forward and back without saving anything', async () => {
+        const user = await openCreate();
+
+        await user.click(screen.getByRole('button', { name: /^next$/i }));
+        expect(screen.getByText(/Step 2 of 6/i)).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /previous/i }));
+        expect(screen.getByText(/Step 1 of 6/i)).toBeInTheDocument();
+
+        expect(createProduct).not.toHaveBeenCalled();
+    });
+
+    /* Clicking a tab header and pressing Next read the same position. */
+    it('keeps the step count in step with the tabs', async () => {
+        const user = await openCreate();
+
+        await goTo(user, 'photos');
+
+        expect(screen.getByText(/Step 5 of 6/i)).toBeInTheDocument();
+    });
+
+    it('offers Publish Now only on the last step', async () => {
+        const user = await openCreate();
+
+        expect(
+            screen.queryByRole('button', { name: /publish now/i }),
+        ).not.toBeInTheDocument();
+
+        await goTo(user, 'publishing');
+
+        expect(
+            screen.getByRole('button', { name: /publish now/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /^next$/i }),
+        ).not.toBeInTheDocument();
+    });
+
+    /*
+     * The walk is a suggestion about order, not a gate. Somebody who only
+     * wants a name and a price should not click through four panels to put it
+     * down, so Save as Draft is on every step.
+     */
+    it('saves a draft from the first step', async () => {
+        const user = await openCreate();
+        await fillMinimum(user);
+        await goTo(user, 'basics');
+
+        await user.click(
+            screen.getByRole('button', { name: /save as draft/i }),
+        );
+
+        await waitFor(() => expect(createProduct).toHaveBeenCalled());
+        expect(createProduct.mock.calls[0][0].is_active).toBe(false);
+    });
+
+    /*
+     * The button says draft, so it saves a draft — even having ticked the
+     * checkbox on the Publishing panel first. Without the explicit set this
+     * passes anyway, because draft is the default; it only bites for somebody
+     * who ticked Active, thought better of it, and pressed Save as Draft
+     * expecting the button to mean what it says.
+     */
+    it('saves a draft even after Active was ticked', async () => {
+        const user = await openCreate();
+        await fillMinimum(user);
+
+        await goTo(user, 'publishing');
+        await user.click(screen.getByLabelText(/Active in Live Storefront/i));
+        expect(
+            screen.getByLabelText(/Active in Live Storefront/i),
+        ).toBeChecked();
+
+        await user.click(
+            screen.getByRole('button', { name: /save as draft/i }),
+        );
+
+        await waitFor(() => expect(createProduct).toHaveBeenCalled());
+        expect(createProduct.mock.calls[0][0].is_active).toBe(false);
+    });
+
+    it('publishes from the last step', async () => {
+        const user = await openCreate();
+        await fillMinimum(user);
+        await goTo(user, 'publishing');
+
+        await user.click(screen.getByRole('button', { name: /publish now/i }));
+
+        // Thin, so it asks first — the same guard as any other publish.
+        await user.click(
+            await screen.findByRole('button', { name: /publish anyway/i }),
+        );
+
+        await waitFor(() => expect(createProduct).toHaveBeenCalled());
+        expect(createProduct.mock.calls[0][0].is_active).toBe(true);
+    });
+
+    /* Editing is not a walk: correcting a price should not be a six-step job. */
+    it('gives an existing product a plain save, not a wizard', async () => {
+        const user = userEvent.setup();
+        render(
+            <Products
+                products={{
+                    data: [
+                        {
+                            id: 9,
+                            name: 'Existing',
+                            price: 100,
+                            is_active: true,
+                            category_id: 411,
+                            has_variants: false,
+                            variants: [],
+                        },
+                    ],
+                    meta: {},
+                }}
+                categories={[]}
+                brands={[]}
+            />,
+        );
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        expect(
+            screen.getByRole('button', { name: /update product/i }),
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/Step 1 of 6/i)).not.toBeInTheDocument();
+    });
+
     /** Enough to pass validation; the gaps are the point. */
     const fillMinimum = async (user) => {
         fireEvent.change(screen.getByLabelText(/Product Title/i), {
@@ -175,10 +383,10 @@ describe('publishing a new product', () => {
         });
     };
 
+    /* Publishing is the last step of the walk, and its one button. */
     const publish = async (user) => {
         await goTo(user, 'publishing');
-        await user.click(screen.getByLabelText(/Active in Live Storefront/i));
-        await user.click(screen.getByRole('button', { name: /create/i }));
+        await user.click(screen.getByRole('button', { name: /publish now/i }));
     };
 
     it('asks before publishing something with no photograph', async () => {
@@ -256,7 +464,9 @@ describe('publishing a new product', () => {
             target: { value: '145000' },
         });
 
-        await user.click(screen.getByRole('button', { name: /create/i }));
+        await user.click(
+            screen.getByRole('button', { name: /save as draft/i }),
+        );
 
         expect(
             screen.queryByText(/Publish it like this\?/i),

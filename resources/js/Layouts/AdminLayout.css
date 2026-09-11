@@ -5310,3 +5310,82 @@ a.admin-card:hover,
     color: var(--text-primary);
     font-weight: 500;
 }
+
+/*
+ * The footer of the add-product walk.
+ *
+ * Save as Draft sits apart from the step controls on purpose: it is available
+ * at every step and is not part of the sequence, so grouping it with Previous
+ * and Next would read as the middle of a three-button progression.
+ */
+.admin-wizard-footer {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-wizard-steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-wizard-count {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+    .admin-wizard-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .admin-wizard-steps {
+        justify-content: space-between;
+    }
+
+    /* The count is the first thing to go; the buttons say where you are. */
+    .admin-wizard-count {
+        order: -1;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/*
+ * Visibility reads as a state and behaves as a control, so it has to look
+ * like both: the colour still says which it is at a glance down the column,
+ * and the border and cursor say it can be changed.
+ */
+.admin-product-status-active,
+.admin-product-status-inactive {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full);
+    background: transparent;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-product-status-active:hover:not(:disabled),
+.admin-product-status-inactive:hover:not(:disabled) {
+    border-color: var(--border-color);
+    background: var(--bg-muted);
+}
+
+.admin-product-status-active:disabled,
+.admin-product-status-inactive:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}

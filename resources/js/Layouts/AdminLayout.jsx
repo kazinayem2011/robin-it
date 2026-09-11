@@ -153,13 +153,25 @@ const NAV_GROUPS = [
     },
     {
         label: 'Catalogue',
+        /*
+         * Ordered by what has to exist before what, because that is the order
+         * somebody setting the shop up actually works in — and the order they
+         * discover they are missing something otherwise.
+         *
+         *   Brands       stand alone, and a brand shelf points at one
+         *   Category     needs its brand; a product cannot be filed without it
+         *   Filters      are declared on a category, so the shelf comes first
+         *   Products     need all three above before they can be entered
+         *   PC Builder   only reports on what the four above produced
+         *
+         * Products used to be first, which read as the important one and left
+         * whoever followed it stuck on the Category field.
+         */
         items: [
             {
-                // Was "Products & Stock", which pointed at neither clearly now
-                // that stock has five screens of its own below.
-                label: 'Products',
-                href: ROUTES.ADMIN_PRODUCTS,
-                icon: Package,
+                label: 'Brands',
+                href: ROUTES.ADMIN_BRANDS,
+                icon: Tag,
                 ability: 'catalogue',
             },
             {
@@ -169,18 +181,17 @@ const NAV_GROUPS = [
                 ability: 'catalogue',
             },
             {
-                label: 'Brands',
-                href: ROUTES.ADMIN_BRANDS,
-                icon: Tag,
-                ability: 'catalogue',
-            },
-            {
-                /* The questions the storefront sidebar asks. Next to the tree
-                   because a filter is declared on a category and inherited by
-                   everything under it. */
                 label: 'Filters',
                 href: ROUTES.ADMIN_ATTRIBUTES,
                 icon: SlidersHorizontal,
+                ability: 'catalogue',
+            },
+            {
+                // Was "Products & Stock", which pointed at neither clearly now
+                // that stock has five screens of its own below.
+                label: 'Products',
+                href: ROUTES.ADMIN_PRODUCTS,
+                icon: Package,
                 ability: 'catalogue',
             },
             {
@@ -194,11 +205,6 @@ const NAV_GROUPS = [
         ],
     },
     {
-        /*
-         * What is on the shelves and what has moved. Purchasing and Suppliers
-         * went to Buying: ordering from a supplier is a different job from
-         * counting what arrived, done by different people at different times.
-         */
         label: 'Stock',
         items: [
             {

@@ -222,7 +222,20 @@ export default function AdminAttributes({
         setForm((f) =>
             f.categories.some((c) => c.id === category.id)
                 ? f
-                : { ...f, categories: [...f.categories, category] },
+                : {
+                      ...f,
+                      categories: [
+                          ...f.categories,
+                          // The ancestry comes back with the search result and
+                          // is kept: four shelves are called Asus, and a chip
+                          // reading "Asus" names none of them.
+                          {
+                              id: category.id,
+                              name: category.name,
+                              path: category.path || '',
+                          },
+                      ],
+                  },
         );
 
     const removeCategory = (id) =>
@@ -346,7 +359,11 @@ export default function AdminAttributes({
             render: (a) =>
                 (a.categories || []).length > 0 ? (
                     <span className="admin-attr-shelf-list">
-                        {a.categories.map((c) => c.name).join(', ')}
+                        {a.categories
+                            .map((c) =>
+                                c.path ? `${c.path} › ${c.name}` : c.name,
+                            )
+                            .join(', ')}
                     </span>
                 ) : (
                     /* Named rather than left blank: this is precisely why a
@@ -473,7 +490,10 @@ export default function AdminAttributes({
                     id="attr_categories"
                     label="Shown on these shelves"
                     multiple
-                    chips={form.categories}
+                    chips={form.categories.map((c) => ({
+                        ...c,
+                        name: c.path ? `${c.path} › ${c.name}` : c.name,
+                    }))}
                     value={form.categories.map((c) => c.id)}
                     onChange={addCategory}
                     onRemove={removeCategory}

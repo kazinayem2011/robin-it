@@ -40,7 +40,9 @@ class AttributeController extends Controller
             ->when($search !== '', fn ($q) => $q->where('name', 'like', SearchTerm::contains($search)))
             ->with([
                 'values' => fn ($q) => $q->withCount('products'),
-                'categories:id,name,slug',
+                'categories:id,name,slug,parent_id',
+                'categories.parent:id,name,parent_id',
+                'categories.parent.parent:id,name',
             ])
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -263,8 +265,24 @@ class AttributeController extends Controller
     {
         return Attribute::with([
             'values' => fn ($q) => $q->withCount('products'),
-            'categories:id,name,slug',
+            'categories:id,name,slug,parent_id',
+            'categories.parent:id,name,parent_id',
+            'categories.parent.parent:id,name',
         ])->findOrFail($attribute->id);
+    }
+
+    /**
+     * A shelf's ancestors, nearest last: "Laptop › Gaming Laptop".
+     *
+     * Two levels up, which is what the category search returns and as deep as
+     * this tree goes before the names start being distinct on their own.
+     */
+    private function pathFor(Category $category): string
+    {
+        return collect([
+            $category->parent?->parent?->name,
+            $category->parent?->name,
+        ])->filter()->implode(' › ');
     }
 
     /**
@@ -282,6 +300,12 @@ class AttributeController extends Controller
             'categories' => $attribute->categories->map(fn (Category $c) => [
                 'id' => $c->id,
                 'name' => $c->name,
+                /*
+                 * The ancestry, not just the name. The tree has four shelves
+                 * called Asus and several called Accessories, so a filter
+                 * listed as shown on "Asus" names none of them in particular.
+                 */
+                'path' => $this->pathFor($c),
             ])->values()->all(),
             'values' => $attribute->values->map(fn (AttributeValue $v) => [
                 'id' => $v->id,

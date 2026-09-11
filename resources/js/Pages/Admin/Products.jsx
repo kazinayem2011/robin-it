@@ -20,6 +20,8 @@ import {
     SlidersHorizontal,
     Image as ImageIcon,
     Globe,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
@@ -484,6 +486,35 @@ export default function Products({
     const [publishWarning, setPublishWarning] = useState(null);
 
     /*
+     * Where the walk has got to. Derived from the open tab rather than held
+     * separately, so clicking a tab header and pressing Next stay in step —
+     * two sources for one position is how a wizard starts disagreeing with
+     * itself.
+     */
+    const stepIndex = Math.max(
+        0,
+        PRODUCT_TABS.findIndex((entry) => entry.key === tab),
+    );
+    const onLastStep = stepIndex === PRODUCT_TABS.length - 1;
+
+    /*
+     * Put it down and come back to it.
+     *
+     * Draft is what is_active already holds on a new product, so this is an
+     * ordinary submit — named for what it does, because "Save" beside a
+     * "Publish Now" is ambiguous about which one goes live.
+     */
+    const saveDraft = async () => {
+        const problems = await formik.validateForm();
+        const landing = firstTabWithProblem(problems);
+
+        if (landing) setTab(landing);
+
+        formik.setFieldValue('is_active', false);
+        formik.submitForm();
+    };
+
+    /*
      * Pressing Save on a form whose problems are all on another panel would
      * otherwise do nothing visible at all.
      */
@@ -505,8 +536,19 @@ export default function Products({
          * already live. A shop that knowingly keeps thin pages up should not
          * be nagged about them each time it corrects a price.
          */
-        const publishing =
-            formik.values.is_active && !editingProduct?.is_active;
+        /*
+         * On a new product the only submit that reaches here is Publish Now,
+         * so it publishes — the Publishing tab's checkbox stays the record of
+         * what was chosen, and Save as Draft sets it the other way before
+         * submitting.
+         */
+        if (!editingProduct) {
+            formik.setFieldValue('is_active', true);
+        }
+
+        const publishing = editingProduct
+            ? formik.values.is_active && !editingProduct.is_active
+            : true;
         const reasons = publishing ? thinPublishReasons() : [];
 
         if (reasons.length > 0) {
@@ -523,6 +565,37 @@ export default function Products({
 
         return problems > 0 ? { ...entry, badge: problems } : entry;
     });
+
+    /*
+     * Taking a product down from the list.
+     *
+     * Optimistic would be wrong here: this decides whether shoppers can see
+     * it, and a row that flips back a second later because the save failed is
+     * worse than a row that waits.
+     */
+    const [togglingId, setTogglingId] = useState(null);
+
+    const toggleVisibility = async (product) => {
+        setTogglingId(product.id);
+
+        try {
+            await adminService.updateProduct(product.id, {
+                is_active: !product.is_active,
+            });
+
+            toast.success(
+                product.is_active
+                    ? `"${product.name}" is no longer shown to shoppers.`
+                    : `"${product.name}" is live on the storefront.`,
+            );
+
+            router.reload({ only: ['products'], preserveScroll: true });
+        } catch (error) {
+            toast.error(error?.message || 'Could not change that.');
+        } finally {
+            setTogglingId(null);
+        }
+    };
 
     const [confirmingClose, setConfirmingClose] = useState(false);
 
@@ -862,16 +935,39 @@ export default function Products({
         {
             key: 'status',
             header: 'Visibility',
-            render: (p) =>
-                p.is_active ? (
-                    <span className="admin-product-status-active">
-                        <CheckCircle size={14} /> Active
-                    </span>
-                ) : (
-                    <span className="admin-product-status-inactive">
-                        <XCircle size={14} /> Inactive
-                    </span>
-                ),
+            /*
+             * A button, not a label. Taking a product down was six clicks —
+             * open it, find the Publishing tab, untick, save — for the one
+             * action most likely to be wanted in a hurry, when something is
+             * listed wrong and a shopper can see it.
+             */
+            render: (p) => (
+                <button
+                    type="button"
+                    className={
+                        p.is_active
+                            ? 'admin-product-status-active'
+                            : 'admin-product-status-inactive'
+                    }
+                    disabled={togglingId === p.id}
+                    onClick={() => toggleVisibility(p)}
+                    title={
+                        p.is_active
+                            ? 'Shown to shoppers. Click to take it down.'
+                            : 'Hidden from shoppers. Click to publish it.'
+                    }
+                >
+                    {p.is_active ? (
+                        <>
+                            <CheckCircle size={14} /> Active
+                        </>
+                    ) : (
+                        <>
+                            <XCircle size={14} /> Inactive
+                        </>
+                    )}
+                </button>
+            ),
         },
         {
             key: 'actions',
@@ -1574,6 +1670,15 @@ export default function Products({
                                     id="short_description"
                                     name="short_description"
                                     label="Short Summary / Key Highlights"
+                                    /*
+                                     * 500 characters is three or four lines of
+                                     * prose, and a single-line box showed one
+                                     * of them — you wrote the summary through
+                                     * a letterbox and could not read back what
+                                     * you had written.
+                                     */
+                                    type="textarea"
+                                    rows={3}
                                     value={formik.values.short_description}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
@@ -1805,27 +1910,98 @@ export default function Products({
                         )}
                     </div>
 
-                    <div className="admin-modal-footer-btns">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                setModalOpen(false);
-                                setEditingProduct(null);
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            loading={formik.isSubmitting}
-                        >
-                            {editingProduct
-                                ? 'Update Product'
-                                : 'Create Product'}
-                        </Button>
-                    </div>
+                    {/*
+                        Two footers, because the two jobs are not the same one.
+                        Entering a product is a walk through six panels in
+                        order; correcting one is opening the panel that is
+                        wrong and saving. A wizard over an edit would make a
+                        price change a six-step errand.
+                    */}
+                    {editingProduct ? (
+                        <div className="admin-modal-footer-btns">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={requestClose}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="primary"
+                                loading={formik.isSubmitting}
+                            >
+                                Update Product
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="admin-modal-footer-btns admin-wizard-footer">
+                            {/*
+                                Saving is always available, on every step. The
+                                walk is a suggestion about order, not a gate —
+                                somebody who only wants a name and a price
+                                should not have to click through four panels to
+                                put it down.
+                            */}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={saveDraft}
+                                loading={formik.isSubmitting}
+                            >
+                                Save as Draft
+                            </Button>
+
+                            <div className="admin-wizard-steps">
+                                <span className="admin-wizard-count">
+                                    Step {stepIndex + 1} of{' '}
+                                    {PRODUCT_TABS.length}
+                                </span>
+
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    icon={ChevronLeft}
+                                    disabled={stepIndex === 0}
+                                    onClick={() =>
+                                        setTab(PRODUCT_TABS[stepIndex - 1].key)
+                                    }
+                                >
+                                    Previous
+                                </Button>
+
+                                {onLastStep ? (
+                                    /*
+                                        The one button that publishes. It runs
+                                        the same guard as any other publish, so
+                                        a product with no photograph or no
+                                        filter answers is still asked about.
+                                    */
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        loading={formik.isSubmitting}
+                                    >
+                                        Publish Now
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        iconPosition="right"
+                                        icon={ChevronRight}
+                                        onClick={() =>
+                                            setTab(
+                                                PRODUCT_TABS[stepIndex + 1].key,
+                                            )
+                                        }
+                                    >
+                                        Next
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </form>
             </Modal>
 

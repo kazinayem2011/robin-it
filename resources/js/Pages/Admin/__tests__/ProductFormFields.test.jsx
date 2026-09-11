@@ -149,9 +149,9 @@ describe('the product form, field by field', () => {
             'Field Sweep Title',
         );
 
-        await user.click(
-            screen.getByRole('button', { name: 'Create Product' }),
-        );
+        // Save as Draft, which is the save available from any panel — these
+        // are about the payload and the refusal, not about publishing.
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }));
 
         await waitFor(() => expect(createProduct).toHaveBeenCalled());
 

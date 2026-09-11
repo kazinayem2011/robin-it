@@ -168,9 +168,9 @@ describe('the product form, panel by panel', () => {
             'A machine for testing panels.',
         );
 
-        await user.click(
-            screen.getByRole('button', { name: 'Create Product' }),
-        );
+        // Save as Draft, which is the save available from any panel — these
+        // are about the payload and the refusal, not about publishing.
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }));
 
         await waitFor(() =>
             expect(adminService.createProduct).toHaveBeenCalled(),
@@ -198,9 +198,9 @@ describe('the product form, panel by panel', () => {
         await user.click(screen.getByRole('button', { name: 'pick Category' }));
 
         // Basics is complete; the missing price is on the next panel.
-        await user.click(
-            screen.getByRole('button', { name: 'Create Product' }),
-        );
+        // Save as Draft, which is the save available from any panel — these
+        // are about the payload and the refusal, not about publishing.
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }));
 
         await waitFor(() =>
             expect(

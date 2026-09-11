@@ -64,6 +64,25 @@ describe('admin navigation groups', () => {
         expect(groupOf(item)).toBe(heading);
     });
 
+    /*
+     * Catalogue is ordered by dependency, not alphabetically or by importance.
+     * Somebody setting the shop up works down it: a brand shelf points at a
+     * brand, a filter is declared on a category, and a product needs all three
+     * before it can be entered. Products used to sit first, which read as the
+     * important one and left whoever followed it stuck on the Category field.
+     */
+    it('orders Catalogue by what has to exist first', () => {
+        const catalogue = groups().find((g) => g.name === 'Catalogue');
+
+        expect(catalogue.items).toEqual([
+            'Brands',
+            'Category Tree',
+            'Filters',
+            'Products',
+            'PC Builder',
+        ]);
+    });
+
     /* Regrouping must not lose a screen or list one twice. */
     it('keeps every screen, exactly once', () => {
         const items = groups().flatMap((g) => g.items);
