@@ -1,6 +1,7 @@
 <?php
 
 use App\Constants\ApiEndpoints;
+use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
@@ -179,6 +180,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_ORDERS, [AdminOrderController::class, 'index'])->name('orders')->middleware('can:orders');
         Route::get(ApiEndpoints::ADMIN_PRODUCTS, [AdminProductController::class, 'index'])->name('products')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_BRANDS, [AdminBrandController::class, 'index'])->name('brands')->middleware('can:catalogue');
+        Route::get(ApiEndpoints::ADMIN_ATTRIBUTES, [AdminAttributeController::class, 'index'])->name('attributes')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_CATEGORIES, [AdminCategoryController::class, 'index'])->name('categories')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_PC_BUILDER, [AdminPcBuilderController::class, 'index'])->name('pc-builder')->middleware('can:catalogue');
         Route::get(ApiEndpoints::ADMIN_BANNERS, [AdminBannerController::class, 'index'])->name('banners')->middleware('can:marketing');

@@ -1,6 +1,7 @@
 <?php
 
 use App\Constants\ApiEndpoints;
+use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Admin\BrandController as AdminBrandController;
@@ -237,6 +238,12 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
     ->name('api.admin.')
     ->group(function () {
         // Catalogue
+        // The filter questions the sidebar asks. The shelf picker on that
+        // screen reuses the category search the product form already uses.
+        Route::post(ApiEndpoints::ADMIN_ATTRIBUTES, [AdminAttributeController::class, 'store'])->middleware('can:catalogue');
+        Route::patch(ApiEndpoints::ADMIN_ATTRIBUTES_ITEM, [AdminAttributeController::class, 'update'])->middleware('can:catalogue');
+        Route::delete(ApiEndpoints::ADMIN_ATTRIBUTES_ITEM, [AdminAttributeController::class, 'destroy'])->middleware('can:catalogue');
+
         Route::post(ApiEndpoints::ADMIN_BRANDS, [AdminBrandController::class, 'store'])->middleware('can:catalogue');
         Route::patch(ApiEndpoints::ADMIN_BRANDS_ITEM, [AdminBrandController::class, 'update'])->middleware('can:catalogue');
         Route::delete(ApiEndpoints::ADMIN_BRANDS_ITEM, [AdminBrandController::class, 'destroy'])->middleware('can:catalogue');

@@ -175,6 +175,15 @@ const NAV_GROUPS = [
                 ability: 'catalogue',
             },
             {
+                /* The questions the storefront sidebar asks. Next to the tree
+                   because a filter is declared on a category and inherited by
+                   everything under it. */
+                label: 'Filters',
+                href: ROUTES.ADMIN_ATTRIBUTES,
+                icon: SlidersHorizontal,
+                ability: 'catalogue',
+            },
+            {
                 /* Read-only. It sits under Catalogue because everything it
                    reports is fixed on a product or a category. */
                 label: 'PC Builder',

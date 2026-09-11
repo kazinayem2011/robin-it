@@ -36,6 +36,55 @@ class SlugFactory
     }
 
     /**
+     * A slug unique only within a group, for rows whose slug is scoped.
+     *
+     * An attribute value's slug is unique per attribute, not per table: two
+     * different questions may both offer "Black", and forcing the second to
+     * become `black-2` would put a suffix in front of a shopper for no reason.
+     *
+     * @param  class-string<Model>  $modelClass
+     * @param  array<string, mixed>  $scope  columns that bound the uniqueness
+     * @param  int|null  $ignoreId  row to disregard, so re-saving a record does
+     *                              not collide with the slug it already owns
+     */
+    public static function uniqueWithin(
+        string $modelClass,
+        string $source,
+        array $scope,
+        ?int $ignoreId = null
+    ): string {
+        $base = Str::slug($source) ?: 'item';
+        $slug = $base;
+        $suffix = 2;
+
+        while (self::takenWithin($modelClass, $slug, $scope, $ignoreId)) {
+            $slug = "{$base}-{$suffix}";
+            $suffix++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * @param  class-string<Model>  $modelClass
+     * @param  array<string, mixed>  $scope
+     */
+    private static function takenWithin(
+        string $modelClass,
+        string $slug,
+        array $scope,
+        ?int $ignoreId
+    ): bool {
+        $query = $modelClass::where('slug', $slug)->where($scope);
+
+        if ($ignoreId !== null) {
+            $query->whereKeyNot($ignoreId);
+        }
+
+        return $query->exists();
+    }
+
+    /**
      * @param  class-string<Model>  $modelClass
      */
     private static function taken(string $modelClass, string $slug, ?int $ignoreId): bool

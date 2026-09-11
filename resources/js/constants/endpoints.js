@@ -188,6 +188,10 @@ export const API_ENDPOINTS = {
         MEDIA: '/admin/media',
         REVIEWS: '/admin/reviews',
         BRANDS: '/admin/brands',
+        // The filter questions themselves, as opposed to one category's view
+        // of them through CATEGORY_ATTRIBUTES below.
+        ATTRIBUTES: '/admin/attributes',
+        ATTRIBUTE_ITEM: (id) => `/admin/attributes/${id}`,
         CATEGORY_SEARCH: '/admin/categories/search',
         // {id} is replaced by the caller; the product form asks a category
         // which questions it wants answered about its products.
@@ -301,6 +305,7 @@ export const ROUTES = {
     ADMIN_STOCK: '/admin/stock',
     ADMIN_SUPPLIERS: '/admin/suppliers',
     ADMIN_BRANDS: '/admin/brands',
+    ADMIN_ATTRIBUTES: '/admin/attributes',
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_PC_BUILDER: '/admin/pc-builder',
     ADMIN_BANNERS: '/admin/banners',

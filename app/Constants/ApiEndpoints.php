@@ -356,6 +356,11 @@ class ApiEndpoints
 
     public const ADMIN_BRANDS = 'brands';
 
+    /** The filter questions themselves, as opposed to one category's view of them. */
+    public const ADMIN_ATTRIBUTES = 'attributes';
+
+    public const ADMIN_ATTRIBUTES_ITEM = 'attributes/{id}';
+
     /** Read-only: what the PC Builder is offering, and why. */
     public const ADMIN_PC_BUILDER = 'pc-builder';
 

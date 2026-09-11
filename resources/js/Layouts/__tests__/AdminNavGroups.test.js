@@ -55,6 +55,9 @@ describe('admin navigation groups', () => {
         // And the ones that were already right.
         ['Orders & Shipping', 'Orders'],
         ['PC Builder', 'Catalogue'],
+        // A filter is declared on a category and inherited by everything under
+        // it, so it belongs beside the tree rather than under Setup.
+        ['Filters', 'Catalogue'],
         ['Stock Take', 'Stock'],
         ['Site Settings', 'Setup'],
     ])('files %s under %s', (item, heading) => {
@@ -65,7 +68,7 @@ describe('admin navigation groups', () => {
     it('keeps every screen, exactly once', () => {
         const items = groups().flatMap((g) => g.items);
 
-        expect(items).toHaveLength(34);
+        expect(items).toHaveLength(35);
         expect(new Set(items).size).toBe(items.length);
     });
 
