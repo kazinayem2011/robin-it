@@ -5170,12 +5170,50 @@ a.admin-card:hover,
     background: var(--bg-surface-subtle);
 }
 
+/*
+ * A real button, so arrow keys can move a row for anyone who cannot drag.
+ * grab/grabbing is the whole affordance: a grip that does not change under the
+ * pointer reads as decoration, which is exactly what it used to be.
+ */
 .admin-attr-value-handle {
     display: flex;
     align-items: center;
+    justify-content: center;
     align-self: center;
-    color: var(--text-faint);
     flex-shrink: 0;
+    width: 22px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-faint);
+    cursor: grab;
+    transition: color var(--transition-fast);
+}
+
+.admin-attr-value-handle:hover:not(:disabled) {
+    color: var(--text-secondary);
+}
+
+.admin-attr-value-handle:active:not(:disabled) {
+    cursor: grabbing;
+}
+
+/* One answer cannot be reordered against itself. */
+.admin-attr-value-handle:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/*
+ * The row being carried. Kept visible rather than hidden: the list rearranges
+ * under the pointer as it crosses each row, so seeing where the carried row
+ * currently sits is the feedback that the move has registered.
+ */
+.admin-attr-value-row.is-dragging {
+    opacity: 0.55;
+    border-color: var(--border-strong);
 }
 
 /*

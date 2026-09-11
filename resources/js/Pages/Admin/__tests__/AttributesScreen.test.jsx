@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -26,7 +26,10 @@ vi.mock('@/Layouts/AdminLayout', () => ({
 vi.mock('@/Components/CategoryPicker', () => ({
     default: ({ chips = [], onChange, onRemove }) => (
         <div>
-            <button type="button" onClick={() => onChange({ id: 7, name: 'Router' })}>
+            <button
+                type="button"
+                onClick={() => onChange({ id: 7, name: 'Router' })}
+            >
                 pick-router
             </button>
             {chips.map((c) => (
@@ -88,10 +91,7 @@ describe('Filters screen', () => {
     it('names a filter that is on no shelf, because it is never offered', () => {
         render(
             <Attributes
-                attributes={[
-                    { ...enumFilter, categories: [] },
-                    enumFilter,
-                ]}
+                attributes={[{ ...enumFilter, categories: [] }, enumFilter]}
                 counts={{ total: 2, values: 4, unattached: 1 }}
             />,
         );
@@ -127,8 +127,16 @@ describe('Filters screen', () => {
         const [, payload] = patch.mock.calls[0];
 
         expect(payload.values).toEqual([
-            expect.objectContaining({ id: 11, label: 'Wi-Fi 5', sort_order: 0 }),
-            expect.objectContaining({ id: 12, label: 'Wi-Fi 6', sort_order: 1 }),
+            expect.objectContaining({
+                id: 11,
+                label: 'Wi-Fi 5',
+                sort_order: 0,
+            }),
+            expect.objectContaining({
+                id: 12,
+                label: 'Wi-Fi 6',
+                sort_order: 1,
+            }),
         ]);
         expect(payload.category_ids).toEqual([7]);
     });
@@ -170,7 +178,9 @@ describe('Filters screen', () => {
         await user.type(screen.getByLabelText(/^Unit$/i), 'Mbps');
 
         await user.selectOptions(screen.getByLabelText(/answer type/i), 'enum');
-        await user.click(screen.getByRole('button', { name: /create filter/i }));
+        await user.click(
+            screen.getByRole('button', { name: /create filter/i }),
+        );
 
         await waitFor(() => expect(post).toHaveBeenCalled());
 
@@ -194,7 +204,9 @@ describe('Filters screen', () => {
 
         await open(user, /add filter/i);
         await user.type(screen.getByLabelText(/question/i), 'Band');
-        await user.click(screen.getByRole('button', { name: /create filter/i }));
+        await user.click(
+            screen.getByRole('button', { name: /create filter/i }),
+        );
 
         await waitFor(() =>
             expect(
@@ -215,11 +227,112 @@ describe('Filters screen', () => {
         await user.click(screen.getByRole('button', { name: 'unpick-Router' }));
         await user.click(screen.getByRole('button', { name: 'pick-router' }));
 
-        await user.click(screen.getByRole('button', { name: /create filter/i }));
+        await user.click(
+            screen.getByRole('button', { name: /create filter/i }),
+        );
         await waitFor(() => expect(post).toHaveBeenCalled());
 
         // Picked twice with a removal between: still one shelf, not two.
         expect(post.mock.calls[0][1].category_ids).toEqual([7]);
+    });
+
+    /**
+     * The order here is the order the sidebar draws the checkboxes in, and it
+     * is sent as each row's position — so a move only has to rearrange the
+     * array, and the save that follows carries it.
+     *
+     * The grip used to be an icon in a span that did nothing at all: a control
+     * that looks draggable and is not.
+     */
+    it('moves an answer down the list with the keyboard', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /edit/i }));
+
+        await user.click(
+            screen.getByRole('button', { name: /reorder answer 1/i }),
+        );
+        await user.keyboard('{ArrowDown}');
+
+        await user.click(screen.getByRole('button', { name: /save filter/i }));
+        await waitFor(() => expect(patch).toHaveBeenCalled());
+
+        // Wi-Fi 6 is now first, and each row's position is what is sent.
+        expect(patch.mock.calls[0][1].values).toEqual([
+            expect.objectContaining({
+                id: 12,
+                label: 'Wi-Fi 6',
+                sort_order: 0,
+            }),
+            expect.objectContaining({
+                id: 11,
+                label: 'Wi-Fi 5',
+                sort_order: 1,
+            }),
+        ]);
+    });
+
+    it('will not move the first answer above itself', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /edit/i }));
+
+        await user.click(
+            screen.getByRole('button', { name: /reorder answer 1/i }),
+        );
+        await user.keyboard('{ArrowUp}');
+
+        await user.click(screen.getByRole('button', { name: /save filter/i }));
+        await waitFor(() => expect(patch).toHaveBeenCalled());
+
+        expect(patch.mock.calls[0][1].values[0]).toEqual(
+            expect.objectContaining({ id: 11, sort_order: 0 }),
+        );
+    });
+
+    it('reorders by dragging a row onto another', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <Attributes attributes={[enumFilter]} counts={{}} />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /edit/i }));
+
+        const rows = container.querySelectorAll('.admin-attr-value-row');
+        expect(rows).toHaveLength(2);
+
+        // The row only becomes draggable while the handle is held, so text in
+        // the label beside it stays selectable.
+        fireEvent.mouseDown(
+            screen.getByRole('button', { name: /reorder answer 1/i }),
+        );
+        expect(rows[0]).toHaveAttribute('draggable', 'true');
+
+        fireEvent.dragStart(rows[0]);
+        fireEvent.dragEnter(rows[1]);
+        fireEvent.dragEnd(rows[0]);
+
+        await user.click(screen.getByRole('button', { name: /save filter/i }));
+        await waitFor(() => expect(patch).toHaveBeenCalled());
+
+        expect(patch.mock.calls[0][1].values.map((v) => v.id)).toEqual([
+            12, 11,
+        ]);
+    });
+
+    /** Dragging from the label would make the text unselectable. */
+    it('is not draggable until the handle is held', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <Attributes attributes={[enumFilter]} counts={{}} />,
+        );
+
+        await user.click(screen.getByRole('button', { name: /edit/i }));
+
+        const row = container.querySelector('.admin-attr-value-row');
+        expect(row).toHaveAttribute('draggable', 'false');
     });
 
     it('warns before deleting a filter that products answer', async () => {

@@ -148,6 +148,76 @@ export default function AdminAttributes({
             values: f.values.filter((v) => v.key !== key),
         }));
 
+    /*
+     * Dragging an answer up or down the list.
+     *
+     * The order is the order the sidebar draws them in, and it is sent as each
+     * row's position on save — so this only rearranges the array and nothing
+     * is written until the form is saved.
+     *
+     * Held in a ref rather than state because it changes on every pointer move
+     * across a row and none of it is drawn; `draggingKey` is the only part the
+     * page renders from, and only to fade the row being carried.
+     */
+    const dragRef = useRef(null);
+    const [draggingKey, setDraggingKey] = useState(null);
+
+    /*
+     * The row is only draggable while the pointer is on the handle. Marking
+     * the whole row draggable would mean a drag starts the moment anyone tries
+     * to select text in the label beside it.
+     */
+    const [armedKey, setArmedKey] = useState(null);
+
+    const moveValue = (from, to) =>
+        setForm((f) => {
+            if (to < 0 || to >= f.values.length || from === to) return f;
+
+            const values = [...f.values];
+            const [row] = values.splice(from, 1);
+            values.splice(to, 0, row);
+
+            return { ...f, values };
+        });
+
+    const startDrag = (key) => {
+        const from = form.values.findIndex((v) => v.key === key);
+        if (from === -1) return;
+
+        dragRef.current = { key, to: from };
+        setDraggingKey(key);
+    };
+
+    // Crossing a row rearranges it there and then, so the list reads the way
+    // it will end up rather than the way it started.
+    const dragOver = (index) => {
+        const drag = dragRef.current;
+        if (!drag || drag.to === index) return;
+
+        moveValue(drag.to, index);
+        drag.to = index;
+    };
+
+    const endDrag = () => {
+        dragRef.current = null;
+        setDraggingKey(null);
+        setArmedKey(null);
+    };
+
+    /*
+     * The same move from the keyboard. A handle that can only be dragged is a
+     * control somebody navigating by keyboard cannot reach at all.
+     */
+    const onHandleKey = (event, index) => {
+        const step =
+            event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+
+        if (step === 0) return;
+
+        event.preventDefault();
+        moveValue(index, index + step);
+    };
+
     const addCategory = (category) =>
         setForm((f) =>
             f.categories.some((c) => c.id === category.id)
@@ -448,14 +518,41 @@ export default function AdminAttributes({
                             return (
                                 <div
                                     key={value.key}
-                                    className="admin-attr-value-row"
+                                    className={`admin-attr-value-row${
+                                        draggingKey === value.key
+                                            ? ' is-dragging'
+                                            : ''
+                                    }`}
+                                    draggable={armedKey === value.key}
+                                    onDragStart={() => startDrag(value.key)}
+                                    onDragEnter={() => dragOver(index)}
+                                    onDragOver={(event) =>
+                                        event.preventDefault()
+                                    }
+                                    onDragEnd={endDrag}
+                                    onDrop={endDrag}
                                 >
-                                    <span
+                                    {/*
+                                        A button, not decoration: arrow keys
+                                        move the row for anyone who cannot
+                                        drag, and the label says which row it
+                                        belongs to when read aloud.
+                                    */}
+                                    <button
+                                        type="button"
                                         className="admin-attr-value-handle"
-                                        aria-hidden="true"
+                                        aria-label={`Reorder answer ${index + 1}. Use the up and down arrow keys.`}
+                                        onMouseDown={() =>
+                                            setArmedKey(value.key)
+                                        }
+                                        onMouseUp={() => setArmedKey(null)}
+                                        onKeyDown={(event) =>
+                                            onHandleKey(event, index)
+                                        }
+                                        disabled={form.values.length === 1}
                                     >
                                         <GripVertical size={14} />
-                                    </span>
+                                    </button>
 
                                     <div className="admin-attr-value-fields">
                                         <FormInput
