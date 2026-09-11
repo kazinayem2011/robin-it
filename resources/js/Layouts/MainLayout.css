@@ -2330,8 +2330,23 @@
         min-width: 0;
     }
 
+    /*
+     * The label is the part that has to survive.
+     *
+     * At 116px the strip spends 24 on padding, 14 on the sliders glyph, 12 on
+     * its gaps and 16 on the chevron, leaving about 50 for the words — and
+     * "All Tech" wants nearer 56. So it ellipsed away to nothing and the
+     * control read as an empty box with two ornaments in it.
+     *
+     * The glyph is the thing to drop: the chevron already says this opens, and
+     * the label is the only part that says what it filters.
+     */
     .search-category-select {
         width: 116px;
+    }
+
+    .search-category-select .ui-select-icon {
+        display: none;
     }
 
     /*
