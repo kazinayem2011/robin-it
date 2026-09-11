@@ -240,6 +240,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Catalogue
         // The filter questions the sidebar asks. The shelf picker on that
         // screen reuses the category search the product form already uses.
+        Route::post(ApiEndpoints::ADMIN_PRODUCTS_DUPLICATE, [AdminProductController::class, 'duplicate'])->middleware('can:catalogue');
         Route::post(ApiEndpoints::ADMIN_ATTRIBUTES, [AdminAttributeController::class, 'store'])->middleware('can:catalogue');
         Route::patch(ApiEndpoints::ADMIN_ATTRIBUTES_ITEM, [AdminAttributeController::class, 'update'])->middleware('can:catalogue');
         Route::delete(ApiEndpoints::ADMIN_ATTRIBUTES_ITEM, [AdminAttributeController::class, 'destroy'])->middleware('can:catalogue');

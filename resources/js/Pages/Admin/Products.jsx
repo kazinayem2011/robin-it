@@ -21,6 +21,7 @@ import {
     ChevronLeft,
     ChevronRight,
     PackagePlus,
+    Copy,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
@@ -44,6 +45,7 @@ import CategoryPicker from '@/Components/CategoryPicker';
 import RichTextEditor from '@/Components/RichTextEditor';
 import { bulletsToLines, linesToBullets } from '@/utils/bulletHtml';
 import { ROUTES } from '@/constants/endpoints';
+import { categoryPath } from '@/utils/categoryPath';
 
 /**
  * Shape the form values for the API.
@@ -596,6 +598,38 @@ export default function Products({
         }
     };
 
+    /*
+     * Start a new product from this one.
+     *
+     * The copy arrives as a draft with no barcode and an empty shelf, and is
+     * opened straight away — the point is to change the two or three things
+     * that differ, and a copy nobody finishes is just another thin product in
+     * the list.
+     */
+    const [copyingId, setCopyingId] = useState(null);
+
+    const duplicate = async (product) => {
+        setCopyingId(product.id);
+
+        try {
+            const response = await adminService.duplicateProduct(product.id);
+            const created = response?.data;
+
+            // The server's own sentence, which names the copy.
+            toast.success(response?.message || 'Copied.');
+
+            // Straight into it, so the edit that makes it a different product
+            // is the next thing that happens.
+            if (created?.id) handleOpenEdit(created);
+
+            router.reload({ only: ['products'], preserveScroll: true });
+        } catch (error) {
+            toast.error(error?.message || 'Could not copy that product.');
+        } finally {
+            setCopyingId(null);
+        }
+    };
+
     const [confirmingClose, setConfirmingClose] = useState(false);
 
     const closeModal = () => {
@@ -714,12 +748,6 @@ export default function Products({
         setModalOpen(true);
     };
 
-    /** "Laptop › Gaming Laptop" for a shelf, from the ancestors the list sends. */
-    const pathOf = (category) =>
-        [category?.parent?.parent?.name, category?.parent?.name]
-            .filter(Boolean)
-            .join(' › ');
-
     const handleOpenEdit = (p) => {
         setEditingProduct(p);
 
@@ -741,7 +769,7 @@ export default function Products({
                 .map((c) => ({
                     id: c.id,
                     name: c.name,
-                    path: pathOf(c),
+                    path: categoryPath(c),
                 })),
         );
 
@@ -890,11 +918,24 @@ export default function Products({
         {
             key: 'category',
             header: 'Category',
-            render: (p) => (
-                <span className="admin-table-item-title">
-                    {p.category?.name || 'Hardware'}
-                </span>
-            ),
+            /*
+             * With its ancestry above it. Four shelves are called Asus and
+             * several Accessories, so the leaf alone told you almost nothing
+             * about where a product had actually been filed.
+             */
+            render: (p) =>
+                p.category?.name ? (
+                    <span className="admin-table-category">
+                        {categoryPath(p.category) && (
+                            <small>{categoryPath(p.category)} ›</small>
+                        )}
+                        <span className="admin-table-item-title">
+                            {p.category.name}
+                        </span>
+                    </span>
+                ) : (
+                    <span className="admin-field-hint">Unfiled</span>
+                ),
         },
         {
             key: 'brand',
@@ -1023,6 +1064,16 @@ export default function Products({
                     >
                         <PackagePlus size={14} />
                     </Link>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
+                        disabled={copyingId === p.id}
+                        onClick={() => duplicate(p)}
+                        title="Start a new product from this one"
+                        aria-label={`Copy ${p.name}`}
+                    >
+                        <Copy size={14} />
+                    </button>
                     <button
                         type="button"
                         className="admin-table-icon-btn"
@@ -1248,7 +1299,7 @@ export default function Products({
                                         initialLabel={
                                             editingProduct?.category?.name || ''
                                         }
-                                        initialPath={pathOf(
+                                        initialPath={categoryPath(
                                             editingProduct?.category,
                                         )}
                                         onChange={(id) =>

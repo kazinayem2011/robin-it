@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const createProduct = vi.fn();
 const updateProduct = vi.fn();
+const duplicateProduct = vi.fn();
 const getCategoryAttributes = vi.fn();
 const httpGet = vi.fn();
 
@@ -17,8 +18,11 @@ vi.mock('@inertiajs/react', () => ({
 vi.mock('@/Layouts/AdminLayout', () => ({
     default: ({ children }) => <div>{children}</div>,
 }));
+const toastSuccess = vi.fn();
+const toastError = vi.fn();
+
 vi.mock('@/Components/Toast', () => ({
-    toast: { error: vi.fn(), success: vi.fn() },
+    toast: { error: toastError, success: toastSuccess },
 }));
 vi.mock('../../../services/axiosInstance', () => ({
     default: {
@@ -32,6 +36,7 @@ vi.mock('@/services', () => ({
     adminService: {
         createProduct,
         updateProduct,
+        duplicateProduct,
         getProducts: vi.fn().mockResolvedValue({ data: [], meta: {} }),
         getCategoryAttributes,
     },
@@ -80,6 +85,15 @@ describe('publishing a new product', () => {
         vi.clearAllMocks();
         createProduct.mockResolvedValue({ id: 1 });
         updateProduct.mockResolvedValue({ id: 1 });
+        duplicateProduct.mockResolvedValue({
+            message: "Copied to 'Existing (Copy)', saved as a draft.",
+            data: {
+                id: 99,
+                name: 'Existing (Copy)',
+                price: 100,
+                is_active: false,
+            },
+        });
         getCategoryAttributes.mockResolvedValue(FILTERS);
 
         /*
@@ -332,6 +346,27 @@ describe('publishing a new product', () => {
         ).not.toBeInTheDocument();
     });
 
+    /* And in the table, where a column of bare leaves said very little. */
+    it('names the shelf by its ancestry in the list', async () => {
+        await renderList(
+            listing({
+                category: {
+                    id: 411,
+                    name: 'Gaming Laptop',
+                    parent: { id: 395, name: 'Laptop' },
+                },
+            }),
+        );
+
+        expect(await screen.findByText('Laptop ›')).toBeInTheDocument();
+    });
+
+    it('says so plainly when a product is on no shelf', async () => {
+        await renderList(listing({ category: null, category_id: null }));
+
+        expect(await screen.findByText('Unfiled')).toBeInTheDocument();
+    });
+
     /* The primary field, for the same reason as the chips beside it. */
     it('names the primary shelf by its ancestry too', async () => {
         const user = await renderList(
@@ -407,6 +442,66 @@ describe('publishing a new product', () => {
         const open = backdrops();
         expect(open.length).toBe(2);
         expect(open[1].textContent).toMatch(/Publish it like this\?/i);
+    });
+
+    // ── copying one ──────────────────────────────────────────────────
+
+    /*
+     * Entering a product is six panels of work, and most of a range differs
+     * from something already listed by two or three lines. The copy is a
+     * draft, so nothing reaches shoppers half-finished.
+     */
+    it('copies a product from the list', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+
+        await waitFor(() => expect(duplicateProduct).toHaveBeenCalledWith(9));
+    });
+
+    /* The server names the copy; the toast should say what it said. */
+    it('passes on what the server called it', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+
+        await waitFor(() =>
+            expect(toastSuccess).toHaveBeenCalledWith(
+                "Copied to 'Existing (Copy)', saved as a draft.",
+            ),
+        );
+    });
+
+    /*
+     * Straight into the copy: the edit that makes it a different product is
+     * the point, and a copy nobody finishes is another thin product in the
+     * list — which is the thing the draft default exists to prevent.
+     */
+    it('opens the copy so it can be finished', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+
+        expect(
+            await screen.findByDisplayValue('Existing (Copy)'),
+        ).toBeInTheDocument();
+    });
+
+    it('says so when the copy is refused', async () => {
+        duplicateProduct.mockRejectedValue({ message: 'Nope' });
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+
+        await waitFor(() => expect(toastError).toHaveBeenCalledWith('Nope'));
     });
 
     // ── the walk through the six panels ──────────────────────────────

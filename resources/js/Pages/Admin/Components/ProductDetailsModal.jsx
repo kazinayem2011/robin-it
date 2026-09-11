@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { categoryPath, categoryFullName } from '@/utils/categoryPath';
 import Modal from '../../../Components/Modal';
 import Button from '../../../Components/Button';
 import ProductImage from '../../../Components/ProductImage';
@@ -207,7 +208,14 @@ export default function ProductDetailsModal({
                             <Section title="Filed under">
                                 <dl>
                                     <Row label="Primary">
-                                        {product.category?.name}
+                                        {/*
+                                            With its ancestry, like the chips
+                                            below and the form's own fields:
+                                            "Asus" on its own names four
+                                            different shelves.
+                                        */}
+                                        {categoryFullName(product.category) ||
+                                            null}
                                     </Row>
                                     <Row label="Also listed under">
                                         {/*
@@ -229,12 +237,13 @@ export default function ProductDetailsModal({
                                                             key={c.id}
                                                             className="pd-chip"
                                                         >
-                                                            {c.parent?.name && (
+                                                            {categoryPath(
+                                                                c,
+                                                            ) && (
                                                                 <em>
-                                                                    {
-                                                                        c.parent
-                                                                            .name
-                                                                    }{' '}
+                                                                    {categoryPath(
+                                                                        c,
+                                                                    )}{' '}
                                                                     ›{' '}
                                                                 </em>
                                                             )}

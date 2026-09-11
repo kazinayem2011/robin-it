@@ -190,6 +190,7 @@ export const API_ENDPOINTS = {
         BRANDS: '/admin/brands',
         // The filter questions themselves, as opposed to one category's view
         // of them through CATEGORY_ATTRIBUTES below.
+        PRODUCT_DUPLICATE: (id) => `/admin/products/${id}/duplicate`,
         ATTRIBUTES: '/admin/attributes',
         ATTRIBUTE_ITEM: (id) => `/admin/attributes/${id}`,
         CATEGORY_SEARCH: '/admin/categories/search',

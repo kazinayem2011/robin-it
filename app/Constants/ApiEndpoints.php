@@ -357,6 +357,9 @@ class ApiEndpoints
     public const ADMIN_BRANDS = 'brands';
 
     /** The filter questions themselves, as opposed to one category's view of them. */
+    /** Start a new product from one that exists. */
+    public const ADMIN_PRODUCTS_DUPLICATE = 'products/{id}/duplicate';
+
     public const ADMIN_ATTRIBUTES = 'attributes';
 
     public const ADMIN_ATTRIBUTES_ITEM = 'attributes/{id}';
