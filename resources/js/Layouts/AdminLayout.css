@@ -5514,3 +5514,22 @@ a.admin-card:hover,
     color: var(--text-primary);
     font-weight: 600;
 }
+
+/*
+ * The destructive one in an icon group.
+ *
+ * Named rather than coloured red outright: a row of three identical grey
+ * glyphs gives the eye nothing to catch on, and the one that cannot be undone
+ * is the one worth catching. It stays quiet until the pointer is on it, so the
+ * column still reads as a column.
+ */
+.admin-table-icon-btn.is-danger:hover {
+    border-color: var(--danger-border);
+    background: var(--danger-tint);
+    color: var(--danger-text);
+}
+
+/* A right-aligned column keeps its group against the edge. */
+.admin-table-icon-group-end {
+    justify-content: flex-end;
+}

@@ -161,26 +161,25 @@ export default function AdminStores({ stores = [] }) {
             header: 'Actions',
             align: 'right',
             render: (row) => (
-                <div
-                    className="admin-input-row-flex"
-                    style={{ justifyContent: 'flex-end', gap: '8px' }}
-                >
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        icon={Edit2}
+                <div className="admin-table-icon-group admin-table-icon-group-end">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
                         onClick={() => handleOpenEdit(row)}
+                        title="Edit this branch"
+                        aria-label={`Edit ${row.name}`}
                     >
-                        Edit
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        icon={Trash2}
+                        <Edit2 size={14} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn is-danger"
                         onClick={() => handleDelete(row.id)}
+                        title="Delete this branch"
+                        aria-label={`Delete ${row.name}`}
                     >
-                        Delete
-                    </Button>
+                        <Trash2 size={14} />
+                    </button>
                 </div>
             ),
         },

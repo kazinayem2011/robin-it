@@ -186,23 +186,25 @@ export default function AdminBanners({ banners = [] }) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="admin-banner-actions">
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    icon={Edit3}
+                            <div className="admin-banner-actions admin-table-icon-group">
+                                <button
+                                    type="button"
+                                    className="admin-table-icon-btn"
                                     onClick={() => handleOpenEdit(b)}
+                                    title="Edit this banner"
+                                    aria-label={`Edit ${b.title || 'banner'}`}
                                 >
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="danger"
-                                    size="sm"
-                                    icon={Trash2}
+                                    <Edit3 size={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="admin-table-icon-btn is-danger"
                                     onClick={() => handleDelete(b.id)}
+                                    title="Delete this banner"
+                                    aria-label={`Delete ${b.title || 'banner'}`}
                                 >
-                                    Delete
-                                </Button>
+                                    <Trash2 size={14} />
+                                </button>
                             </div>
                         </div>
                     ))}

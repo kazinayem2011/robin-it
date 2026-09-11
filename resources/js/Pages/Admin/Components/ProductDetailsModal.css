@@ -293,3 +293,18 @@
         flex-direction: column-reverse;
     }
 }
+
+/*
+ * Whether shoppers can see it — the first thing anybody asks of a product
+ * they cannot find, and read here rather than acted on, so it is coloured
+ * text and not the switch the list carries.
+ */
+.pd-flag-on {
+    color: var(--success-text);
+    font-weight: 600;
+}
+
+.pd-flag-off {
+    color: var(--warning-text);
+    font-weight: 600;
+}

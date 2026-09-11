@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
-import Button from '../../Components/Button';
 import DataTable from '../../Components/DataTable';
 import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
@@ -116,25 +115,43 @@ export default function AdminReviews({
             key: 'actions',
             header: 'Actions',
             render: (r) => (
-                <div className="admin-review-actions">
-                    <Button
-                        variant="outline"
-                        size="sm"
+                <div className="admin-review-actions admin-table-icon-group">
+                    {/*
+                        The glyph says which way it will go, so the label it
+                        replaces is carried by the title and the aria-label —
+                        an eye and a struck-through eye are not self-evident
+                        enough to stand entirely alone.
+                    */}
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
                         disabled={busyId === r.id}
-                        icon={r.is_approved ? EyeOff : Eye}
                         onClick={() => setStatus(r, !r.is_approved)}
+                        title={
+                            r.is_approved
+                                ? 'Hide this review from the product page'
+                                : 'Publish this review'
+                        }
+                        aria-label={`${r.is_approved ? 'Hide' : 'Publish'} the review by ${
+                            r.user?.name || 'a customer'
+                        }`}
                     >
-                        {r.is_approved ? 'Hide' : 'Publish'}
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="sm"
+                        {r.is_approved ? (
+                            <EyeOff size={14} />
+                        ) : (
+                            <Eye size={14} />
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn is-danger"
                         disabled={busyId === r.id}
-                        icon={Trash2}
                         onClick={() => remove(r)}
+                        title="Delete this review"
+                        aria-label={`Delete the review by ${r.user?.name || 'a customer'}`}
                     >
-                        Delete
-                    </Button>
+                        <Trash2 size={14} />
+                    </button>
                 </div>
             ),
         },

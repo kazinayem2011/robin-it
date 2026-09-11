@@ -248,7 +248,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /edit/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^edit wi-fi standard$/i }),
+        );
 
         await user.click(
             screen.getByRole('button', { name: /reorder answer 1/i }),
@@ -277,7 +279,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /edit/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^edit wi-fi standard$/i }),
+        );
 
         await user.click(
             screen.getByRole('button', { name: /reorder answer 1/i }),
@@ -298,7 +302,9 @@ describe('Filters screen', () => {
             <Attributes attributes={[enumFilter]} counts={{}} />,
         );
 
-        await user.click(screen.getByRole('button', { name: /edit/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^edit wi-fi standard$/i }),
+        );
 
         const rows = container.querySelectorAll('.admin-attr-value-row');
         expect(rows).toHaveLength(2);
@@ -329,7 +335,9 @@ describe('Filters screen', () => {
             <Attributes attributes={[enumFilter]} counts={{}} />,
         );
 
-        await user.click(screen.getByRole('button', { name: /edit/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^edit wi-fi standard$/i }),
+        );
 
         const row = container.querySelector('.admin-attr-value-row');
         expect(row).toHaveAttribute('draggable', 'false');
@@ -351,7 +359,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
 
         expect(
             await screen.findByDisplayValue('Wi-Fi Standard'),
@@ -364,7 +374,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
 
         expect(await screen.findByDisplayValue('Wi-Fi 5')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Wi-Fi 6')).toBeInTheDocument();
@@ -379,7 +391,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
         await screen.findByDisplayValue('Wi-Fi Standard');
 
         expect(
@@ -391,7 +405,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
 
         expect(
             await screen.findByText(/Copied from Wi-Fi Standard/i),
@@ -404,7 +420,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
         await screen.findByDisplayValue('Wi-Fi Standard');
 
         // Every answer is removable: none of them is tagged yet.
@@ -416,7 +434,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
         await screen.findByDisplayValue('Wi-Fi Standard');
 
         await user.click(
@@ -442,12 +462,16 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
         expect(
             await screen.findByText(/Copied from Wi-Fi Standard/i),
         ).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: /edit/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^edit wi-fi standard$/i }),
+        );
 
         expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
     });
@@ -456,7 +480,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^copy wi-fi standard$/i }),
+        );
         await screen.findByText(/Copied from Wi-Fi Standard/i);
 
         await user.click(screen.getByRole('button', { name: /add filter/i }));
@@ -469,7 +495,9 @@ describe('Filters screen', () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
-        await user.click(screen.getByRole('button', { name: /delete/i }));
+        await user.click(
+            screen.getByRole('button', { name: /^delete wi-fi standard$/i }),
+        );
 
         expect(
             screen.getByText(/4 product\(s\) answer this filter/i),

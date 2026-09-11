@@ -426,32 +426,41 @@ export default function AdminAttributes({
             key: 'actions',
             header: 'Actions',
             render: (a) => (
-                <div className="admin-attr-actions">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        icon={Edit2}
+                /*
+                    Icons, like every other table in the admin. Each carries a
+                    title for the pointer and an aria-label naming the row it
+                    acts on — an icon column of identical glyphs is unusable
+                    read aloud otherwise, and "Edit" nine times says nothing
+                    about which nine things.
+                */
+                <div className="admin-table-icon-group">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
                         onClick={() => openEdit(a)}
+                        title="Edit this filter"
+                        aria-label={`Edit ${a.name}`}
                     >
-                        Edit
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        icon={Copy}
+                        <Edit2 size={14} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
                         onClick={() => copyFrom(a)}
                         title="Ask this same question on another shelf"
+                        aria-label={`Copy ${a.name}`}
                     >
-                        Copy
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        icon={Trash2}
+                        <Copy size={14} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn is-danger"
                         onClick={() => setConfirming(a)}
+                        title="Delete this filter"
+                        aria-label={`Delete ${a.name}`}
                     >
-                        Delete
-                    </Button>
+                        <Trash2 size={14} />
+                    </button>
                 </div>
             ),
         },

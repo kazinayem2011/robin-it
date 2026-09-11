@@ -188,7 +188,34 @@ export default function ProductDetailsModal({
                                     </Row>
                                     <Row label="Model">{product.model}</Row>
                                     <Row label="MPN">{product.mpn}</Row>
+                                    {/* The number on this shop's own box, and
+                                        the reason a copy never inherits one. */}
+                                    <Row label="Barcode">{product.barcode}</Row>
                                     <Row label="Slug">{product.slug}</Row>
+                                    {/*
+                                        Whether shoppers can see it at all,
+                                        which is the first thing anybody asks
+                                        of a product they cannot find — and was
+                                        the one fact this panel did not carry.
+                                    */}
+                                    <Row label="Storefront">
+                                        <span
+                                            className={
+                                                product.is_active
+                                                    ? 'pd-flag-on'
+                                                    : 'pd-flag-off'
+                                            }
+                                        >
+                                            {product.is_active
+                                                ? 'Live'
+                                                : 'Draft — not shown to shoppers'}
+                                        </span>
+                                    </Row>
+                                    <Row label="Featured">
+                                        {product.is_featured
+                                            ? 'On the homepage'
+                                            : null}
+                                    </Row>
                                     {/* The terms are typed a clause per line, so
                                         they are shown that way — without this the
                                         four lines somebody entered run together
@@ -295,6 +322,20 @@ export default function ProductDetailsModal({
                                             ? `${formatBdt(product.emi_monthly)} / month`
                                             : null}
                                     </Row>
+                                    {/* Taken off for paying at once, which is
+                                        not the same as the discount above. */}
+                                    <Row label="Checkout discount">
+                                        {product.checkout_discount
+                                            ? formatBdt(
+                                                  product.checkout_discount,
+                                              )
+                                            : null}
+                                    </Row>
+                                    <Row label="Minimum order">
+                                        {product.min_order_quantity > 1
+                                            ? `${product.min_order_quantity} units`
+                                            : null}
+                                    </Row>
                                 </dl>
 
                                 {product.quantity_discounts?.length > 0 && (
@@ -330,6 +371,30 @@ export default function ProductDetailsModal({
                                     </Row>
                                     <Row label="Reorder level">
                                         {product.reorder_level_effective}
+                                    </Row>
+                                    {/*
+                                        Selling ahead of a delivery. The limit
+                                        is how far below zero the shelf may go,
+                                        and no limit is the state worth seeing:
+                                        one scripted buyer can commit the shop
+                                        to any number of units.
+                                    */}
+                                    <Row label="Pre-order">
+                                        {product.allow_preorder ? (
+                                            <>
+                                                {product.preorder_limit
+                                                    ? `Up to ${product.preorder_limit} ahead of stock`
+                                                    : 'Allowed, with no limit set'}
+                                                {product.preorder_release_at
+                                                    ? ` · expected ${formatDate(product.preorder_release_at)}`
+                                                    : ''}
+                                            </>
+                                        ) : null}
+                                    </Row>
+                                    {/* The shop's own words, shown when the
+                                        shelf is empty. */}
+                                    <Row label="When empty, says">
+                                        {product.out_of_stock_status}
                                     </Row>
                                     <Row label="Movements recorded">
                                         {/*
@@ -396,6 +461,9 @@ export default function ProductDetailsModal({
                                 <dl>
                                     <Row label="Meta title">
                                         {product.meta_title}
+                                    </Row>
+                                    <Row label="Meta keywords">
+                                        {product.meta_keyword}
                                     </Row>
                                     <Row label="Meta description">
                                         {product.meta_description}

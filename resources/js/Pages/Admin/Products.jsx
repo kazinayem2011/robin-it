@@ -970,21 +970,6 @@ export default function Products({
                 ),
         },
         {
-            key: 'brand',
-            header: 'Brand',
-            render: (p) =>
-                p.brand?.name ? (
-                    <span className="admin-table-item-title">
-                        {p.brand.name}
-                    </span>
-                ) : (
-                    // Not "Standard". There is no such brand — it read as the
-                    // answer to "which brand?" rather than as no answer, and
-                    // disagreed with both the form and the details panel.
-                    <span className="admin-field-hint">No brand</span>
-                ),
-        },
-        {
             key: 'price',
             header: 'Price (BDT)',
             render: (p) => (

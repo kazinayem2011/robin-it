@@ -199,25 +199,27 @@ export default function AdminBrands({
             key: 'actions',
             header: 'Actions',
             render: (b) => (
-                <div className="admin-brand-actions">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        icon={Edit2}
+                <div className="admin-table-icon-group">
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn"
                         disabled={busyId === b.id}
                         onClick={() => openEdit(b)}
+                        title="Edit this brand"
+                        aria-label={`Edit ${b.name}`}
                     >
-                        Edit
-                    </Button>
-                    <Button
-                        variant="danger"
-                        size="sm"
-                        icon={Trash2}
+                        <Edit2 size={14} />
+                    </button>
+                    <button
+                        type="button"
+                        className="admin-table-icon-btn is-danger"
                         disabled={busyId === b.id}
                         onClick={() => remove(b)}
+                        title="Delete this brand"
+                        aria-label={`Delete ${b.name}`}
                     >
-                        Delete
-                    </Button>
+                        <Trash2 size={14} />
+                    </button>
                 </div>
             ),
         },
