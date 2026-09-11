@@ -145,6 +145,67 @@ class ProductDraftTest extends TestCase
         $this->getJson("/api/products/{$slug}")->assertOk();
     }
 
+    /**
+     * What a card lists when the spec sheet has not been filled in yet.
+     *
+     * The summary was handed over whole, so a card carrying a real one drew a
+     * single bullet running the width of the tile — "Core i5 · 16GB · 512GB ·
+     * RTX 3050" as one item — while every seeded product beside it, which does
+     * have specifications, showed three.
+     */
+    public function test_a_summary_is_listed_as_separate_points(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'short_description' => 'Intel Core i5-13420H · 16GB DDR5 · 512GB NVMe SSD · RTX 3050',
+            ]))
+            ->assertStatus(201);
+
+        $card = $this->getJson('/api/products')->json('data.0');
+
+        $this->assertSame([
+            'Intel Core i5-13420H',
+            '16GB DDR5',
+            '512GB NVMe SSD',
+        ], $card['specs'], 'Capped at three, like a spec sheet.');
+    }
+
+    /** Newlines too, which is what the box now invites. */
+    public function test_a_summary_written_on_separate_lines_is_split_the_same_way(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'short_description' => "8 cores, 16 threads\nRTX 3050 4GB\n144Hz display",
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame(
+            ['8 cores, 16 threads', 'RTX 3050 4GB', '144Hz display'],
+            $this->getJson('/api/products')->json('data.0.specs'),
+        );
+    }
+
+    /** A real spec sheet still wins; the summary is only the fallback. */
+    public function test_specifications_are_preferred_over_the_summary(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'short_description' => 'Ignored · Because · Specs exist',
+                'specifications' => [
+                    ['group' => 'Processor', 'name' => 'Model', 'value' => 'Core i5'],
+                ],
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame(
+            ['Model: Core i5'],
+            $this->getJson('/api/products')->json('data.0.specs'),
+        );
+    }
+
     /** Nor listed, which is the half a shopper browsing would notice. */
     public function test_a_draft_is_not_in_the_listing(): void
     {
@@ -154,7 +215,7 @@ class ProductDraftTest extends TestCase
 
         $this->assertSame(
             [],
-            $this->getJson('/api/products')->json('data.data') ?? [],
+            $this->getJson('/api/products')->json('data') ?? [],
         );
     }
 }

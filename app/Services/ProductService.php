@@ -473,10 +473,38 @@ class ProductService
             'wattage' => $product->estimatedWattage(),
             'specs' => $product->specifications->take(3)->map(function ($s) {
                 return $s->name.': '.$s->value;
-            })->values()->toArray() ?: [
-                $product->short_description ?: 'Official Global Warranty',
-            ],
+            })->values()->toArray() ?: $this->summaryLines($product),
         ];
+    }
+
+    /**
+     * What a card lists when a product has no spec sheet yet.
+     *
+     * The summary, cut into the lines it was written as. It used to be handed
+     * over whole, so a card carrying a real summary drew one bullet running
+     * the width of the tile — "Core i5-13420H · 16GB DDR5 · 512GB NVMe · RTX
+     * 3050 · 144Hz" as a single item — while every seeded product beside it
+     * showed three. The separators are the ones people actually type: a new
+     * line, a middot, or a pipe.
+     *
+     * @return array<int, string>
+     */
+    private function summaryLines(Product $product): array
+    {
+        $summary = trim((string) $product->short_description);
+
+        if ($summary === '') {
+            return ['Official Global Warranty'];
+        }
+
+        $lines = collect(preg_split('/\R|\s+[·|•]\s+/u', $summary))
+            ->map(fn ($line) => trim((string) $line))
+            ->filter()
+            ->take(3)
+            ->values()
+            ->all();
+
+        return $lines ?: [$summary];
     }
 
     /**

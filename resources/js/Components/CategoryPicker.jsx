@@ -53,6 +53,24 @@ export default function CategoryPicker({
 }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
+
+    /*
+     * Where to draw the results.
+     *
+     * They used to be absolutely positioned under the field, which works until
+     * the field is inside something that scrolls — and this one usually is, in
+     * a modal whose body has overflow-y: auto. Overflow clips absolutely
+     * positioned descendants, so the list was cut off at the panel edge and a
+     * picker near the bottom of a form appeared to do nothing at all. That is
+     * exactly what "Also list under" did: the primary category picker sits
+     * high enough for its list to fit, and this one is the last field.
+     *
+     * Fixed to the viewport instead, measured from the field each time it
+     * opens. The list stays inside the component, so the click-outside check
+     * and the focus handling are unchanged.
+     */
+    const [menuBox, setMenuBox] = useState(null);
+    const fieldRef = useRef(null);
     const generatedId = useId();
     const inputId = id ?? generatedId;
 
@@ -110,6 +128,49 @@ export default function CategoryPicker({
 
         return () => clearTimeout(timer.current);
     }, [query, open, fetchResults]);
+
+    useEffect(() => {
+        if (!open) {
+            setMenuBox(null);
+
+            return undefined;
+        }
+
+        const place = () => {
+            const field = fieldRef.current;
+
+            if (!field) return;
+
+            const rect = field.getBoundingClientRect();
+            const below = window.innerHeight - rect.bottom;
+            const room = Math.max(below - 16, 0);
+
+            // Flips above when there is more room there, so a field near the
+            // bottom of the screen still shows its list.
+            const openUp = room < 180 && rect.top > below;
+
+            setMenuBox({
+                left: rect.left,
+                width: rect.width,
+                ...(openUp
+                    ? { bottom: window.innerHeight - rect.top + 4 }
+                    : { top: rect.bottom + 4 }),
+                maxHeight: Math.max(openUp ? rect.top - 16 : room, 120),
+            });
+        };
+
+        place();
+
+        // Capture, so scrolling the modal body moves it too and not just the
+        // window — the list would otherwise sit where the field used to be.
+        window.addEventListener('scroll', place, true);
+        window.addEventListener('resize', place);
+
+        return () => {
+            window.removeEventListener('scroll', place, true);
+            window.removeEventListener('resize', place);
+        };
+    }, [open, results.length]);
 
     // Clicking away closes it; without this the list stays over the fields
     // underneath and swallows the next click.
@@ -169,6 +230,7 @@ export default function CategoryPicker({
 
             {!multiple && chosen && !open ? (
                 <button
+                    ref={fieldRef}
                     type="button"
                     className={`auth-text-input category-picker-chosen ${error ? 'input-error' : ''}`}
                     onClick={() => {
@@ -194,7 +256,7 @@ export default function CategoryPicker({
                     />
                 </button>
             ) : (
-                <div className="auth-input-wrapper">
+                <div className="auth-input-wrapper" ref={fieldRef}>
                     <Search size={18} className="auth-input-icon" />
                     <input
                         id={inputId}
@@ -213,7 +275,10 @@ export default function CategoryPicker({
             )}
 
             {open && (
-                <ul className="category-picker-results">
+                <ul
+                    className="category-picker-results"
+                    style={menuBox ?? undefined}
+                >
                     {loading && (
                         <li className="category-picker-empty">Searching…</li>
                     )}

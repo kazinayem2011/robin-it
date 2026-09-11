@@ -4685,9 +4685,15 @@ a.admin-card:hover,
 }
 
 .category-picker-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
+    /*
+     * Fixed, with the coordinates measured from the field in JS.
+     *
+     * Absolute made it a descendant of whatever scrolls, and an overflow
+     * ancestor clips absolutely positioned children — so inside a modal body
+     * with overflow-y: auto the list was cut off at the panel edge, and a
+     * picker near the bottom of a long form looked like it did nothing.
+     */
+    position: fixed;
     right: 0;
     z-index: 40;
     max-height: 280px;
@@ -5358,34 +5364,86 @@ a.admin-card:hover,
 }
 
 /*
- * Visibility reads as a state and behaves as a control, so it has to look
- * like both: the colour still says which it is at a glance down the column,
- * and the border and cursor say it can be changed.
+ * Visibility: a switch, because the previous version was a coloured word that
+ * happened to be clickable and nobody would ever have tried it. The colour
+ * said "state" and nothing said "control".
+ *
+ * The word stays beside the track — a switch alone tells you there are two
+ * positions but not which one means visible.
  */
-.admin-product-status-active,
-.admin-product-status-inactive {
+.admin-visibility-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border: 1px solid transparent;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
-    background: transparent;
+    background: var(--bg-surface);
     font: inherit;
     font-size: 0.76rem;
     font-weight: 600;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.admin-product-status-active:hover:not(:disabled),
-.admin-product-status-inactive:hover:not(:disabled) {
-    border-color: var(--border-color);
+.admin-visibility-toggle:hover:not(:disabled) {
+    border-color: var(--border-strong);
     background: var(--bg-muted);
 }
 
-.admin-product-status-active:disabled,
-.admin-product-status-inactive:disabled {
-    opacity: 0.5;
+.admin-visibility-toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.admin-visibility-toggle:disabled {
+    opacity: 0.55;
     cursor: wait;
+}
+
+.admin-visibility-track {
+    position: relative;
+    flex-shrink: 0;
+    width: 30px;
+    height: 17px;
+    border-radius: var(--radius-full);
+    background: var(--bg-muted-strong);
+    transition: background var(--transition-fast);
+}
+
+.admin-visibility-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+    transition: transform var(--transition-fast);
+}
+
+.admin-visibility-toggle.is-on {
+    color: var(--success-text);
+    border-color: var(--success-border);
+}
+
+.admin-visibility-toggle.is-on .admin-visibility-track {
+    background: var(--success);
+}
+
+.admin-visibility-toggle.is-on .admin-visibility-knob {
+    transform: translateX(13px);
+}
+
+.admin-visibility-label {
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-visibility-knob,
+    .admin-visibility-track {
+        transition: none;
+    }
 }

@@ -22,6 +22,7 @@ import {
     Globe,
     ChevronLeft,
     ChevronRight,
+    PackagePlus,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
@@ -898,38 +899,26 @@ export default function Products({
         {
             key: 'stock',
             header: 'Stock Status',
+            /*
+             * The figure only. Receiving is an action and now sits with the
+             * other actions — a button in a column of numbers made the column
+             * hard to read down, which is the one thing a stock column is for.
+             *
+             * There used to be a "+5 Stock" button here as well, which added
+             * five units with no supplier, no cost and no record of who did
+             * it. Restocking goes through a delivery.
+             */
             render: (p) => (
-                <div className="admin-input-row-flex">
-                    <span
-                        className={`admin-badge-stock ${
-                            p.stock_quantity <= 5
-                                ? 'admin-badge-stock-danger'
-                                : 'admin-badge-stock-ok'
-                        }`}
-                    >
-                        {p.stock_quantity <= 5 && '⚠️ '}
-                        {p.stock_quantity} in Stock
-                    </span>
-                    {/*
-                     * There used to be a "+5 Stock" button here that added five
-                     * units with no supplier, no cost and no record of who did
-                     * it. Restocking now goes through a delivery.
-                     */}
-                    {/*
-                        Carries the product across. The title has always said
-                        "for this product" and the link went to the bare stock
-                        screen, leaving whoever followed it to find one row
-                        among thirteen hundred by hand.
-                    */}
-                    <Link
-                        href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(p.name || '')}`}
-                        className="btn btn-secondary btn-sm admin-btn-quick-restock"
-                        title="Record a delivery for this product"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        Receive
-                    </Link>
-                </div>
+                <span
+                    className={`admin-badge-stock ${
+                        p.stock_quantity <= 5
+                            ? 'admin-badge-stock-danger'
+                            : 'admin-badge-stock-ok'
+                    }`}
+                >
+                    {p.stock_quantity <= 5 && '⚠️ '}
+                    {p.stock_quantity} in Stock
+                </span>
             ),
         },
         {
@@ -942,13 +931,22 @@ export default function Products({
              * listed wrong and a shopper can see it.
              */
             render: (p) => (
+                /*
+                    A switch, drawn as one.
+                    
+                    It was a coloured word that happened to be clickable, which
+                    nobody would ever try: the colour said "state", and nothing
+                    said "control". A track with a knob in it is the one shape
+                    people already know means this can be flipped, and the word
+                    beside it still says which way it is.
+                */
                 <button
                     type="button"
-                    className={
-                        p.is_active
-                            ? 'admin-product-status-active'
-                            : 'admin-product-status-inactive'
-                    }
+                    role="switch"
+                    aria-checked={Boolean(p.is_active)}
+                    className={`admin-visibility-toggle${
+                        p.is_active ? ' is-on' : ''
+                    }`}
                     disabled={togglingId === p.id}
                     onClick={() => toggleVisibility(p)}
                     title={
@@ -957,15 +955,12 @@ export default function Products({
                             : 'Hidden from shoppers. Click to publish it.'
                     }
                 >
-                    {p.is_active ? (
-                        <>
-                            <CheckCircle size={14} /> Active
-                        </>
-                    ) : (
-                        <>
-                            <XCircle size={14} /> Inactive
-                        </>
-                    )}
+                    <span className="admin-visibility-track" aria-hidden="true">
+                        <span className="admin-visibility-knob" />
+                    </span>
+                    <span className="admin-visibility-label">
+                        {p.is_active ? 'Active' : 'Inactive'}
+                    </span>
                 </button>
             ),
         },
@@ -984,6 +979,19 @@ export default function Products({
                     >
                         <Eye size={14} />
                     </button>
+                    {/*
+                        Carries the product across, so the stock screen opens
+                        filtered to it rather than to thirteen hundred rows.
+                    */}
+                    <Link
+                        href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(p.name || '')}`}
+                        className="admin-table-icon-btn"
+                        title="Record a delivery for this product"
+                        aria-label={`Receive stock for ${p.name}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <PackagePlus size={14} />
+                    </Link>
                     <button
                         type="button"
                         className="admin-table-icon-btn"

@@ -188,9 +188,10 @@ describe('publishing a new product', () => {
     it('takes a live product down from the list', async () => {
         const user = await renderList(listing());
 
-        await user.click(
-            await screen.findByRole('button', { name: /active/i }),
-        );
+        const toggle = await screen.findByRole('switch');
+        expect(toggle).toBeChecked();
+
+        await user.click(toggle);
 
         await waitFor(() => expect(updateProduct).toHaveBeenCalled());
         expect(updateProduct).toHaveBeenCalledWith(9, { is_active: false });
@@ -199,12 +200,27 @@ describe('publishing a new product', () => {
     it('puts a hidden one back up the same way', async () => {
         const user = await renderList(listing({ is_active: false }));
 
-        await user.click(
-            await screen.findByRole('button', { name: /inactive/i }),
-        );
+        const toggle = await screen.findByRole('switch');
+        expect(toggle).not.toBeChecked();
+
+        await user.click(toggle);
 
         await waitFor(() => expect(updateProduct).toHaveBeenCalled());
         expect(updateProduct).toHaveBeenCalledWith(9, { is_active: true });
+    });
+
+    /*
+     * A switch, so it announces itself as one and says which way it is. It was
+     * a coloured word that happened to be clickable, which nobody would try:
+     * the colour said "state" and nothing said "control".
+     */
+    it('is announced as a switch, not read as a label', async () => {
+        await renderList(listing());
+
+        const toggle = await screen.findByRole('switch');
+
+        expect(toggle).toHaveAccessibleName(/active/i);
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
     });
 
     /* It decides what shoppers see, so the row waits rather than flipping back. */
@@ -212,14 +228,10 @@ describe('publishing a new product', () => {
         updateProduct.mockRejectedValue({ message: 'Nope' });
         const user = await renderList(listing());
 
-        await user.click(
-            await screen.findByRole('button', { name: /active/i }),
-        );
+        await user.click(await screen.findByRole('switch'));
 
         await waitFor(() => expect(updateProduct).toHaveBeenCalled());
-        expect(
-            screen.getByRole('button', { name: /active/i }),
-        ).toBeInTheDocument();
+        expect(await screen.findByRole('switch')).toBeChecked();
     });
 
     // ── the walk through the six panels ──────────────────────────────

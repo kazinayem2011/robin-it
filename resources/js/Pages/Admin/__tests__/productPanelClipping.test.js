@@ -20,13 +20,19 @@ const declaration = (rule, property) => {
 };
 
 /**
- * The product panels must not clip what opens out of them.
+ * Nothing may clip the category typeahead's results.
  *
- * The category typeahead positions its results absolutely, so any ancestor
- * with an overflow other than visible cuts them off. "Also list under" sits
- * low on the Basics panel, so giving the panel `overflow-y: auto` — which
- * looks like tidiness — hid its results completely, and typing into the field
- * appeared to do nothing at all. The dialog around it already scrolls.
+ * It went wrong twice, the same way at two different heights. First the panel
+ * itself was given `overflow-y: auto`, which looks like tidiness and cut the
+ * list off — "Also list under" sits low on the Basics panel, so typing into it
+ * appeared to do nothing at all. Removing that fixed the panel and not the
+ * cause: the modal body around it scrolls too, and has to, so an absolutely
+ * positioned list was still clipped by the dialog instead of by the panel.
+ *
+ * The list is fixed to the viewport now, measured from the field, which is
+ * what actually settles it — overflow does not clip fixed descendants. The
+ * panel assertions below are kept because a scrolling panel would still be
+ * wrong for other reasons, but the position is the load-bearing one.
  *
  * Asserted against the stylesheet because jsdom has no layout: nothing
  * rendered in a test can tell you a box was clipped.
@@ -54,12 +60,25 @@ describe('the product form panels', () => {
     });
 
     /*
-     * The results are absolute, which is the reason all of the above matters.
-     * If that ever changes, this test is the thing that should be revisited.
+     * The one that actually keeps the list visible. An overflow ancestor
+     * cannot clip a fixed descendant, so this holds however deeply the picker
+     * is nested and whatever scrolls around it — which absolute never did.
      */
-    it('is guarding an absolutely positioned list', () => {
+    it('fixes the list to the viewport so no ancestor can clip it', () => {
         expect(
             declaration(ruleFor('.category-picker-results {'), 'position'),
-        ).toBe('absolute');
+        ).toBe('fixed');
+    });
+
+    /*
+     * Fixed coordinates come from measuring the field, so the component has to
+     * be the thing placing it. A stylesheet top/left would pin every picker in
+     * the shop to the same corner of the screen.
+     */
+    it('leaves the coordinates to the component', () => {
+        const rule = ruleFor('.category-picker-results {');
+
+        expect(declaration(rule, 'top')).toBeNull();
+        expect(declaration(rule, 'left')).toBeNull();
     });
 });
