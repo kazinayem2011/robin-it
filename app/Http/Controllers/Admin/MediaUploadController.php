@@ -8,6 +8,7 @@ use App\Support\UploadedImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -124,6 +125,26 @@ class MediaUploadController extends Controller
      * Scoped to the uploads directory so this cannot be used to delete
      * seeded artwork or anything else on the disk.
      */
+    /**
+     * How many rows still point at a stored file.
+     *
+     * Matched on the tail rather than the whole string: the columns hold the
+     * public form — "/storage/uploads/products/x.jpg" — while what arrives
+     * here has already been trimmed to "uploads/products/x.jpg".
+     *
+     * Avatars are counted too. Nothing in the admin should be able to delete
+     * a customer's photograph by knowing its address.
+     */
+    private function rowsUsing(string $path): int
+    {
+        $tail = '%'.$path;
+
+        return DB::table('product_images')->where('image_path', 'like', $tail)->count()
+            + DB::table('product_variants')->where('image_url', 'like', $tail)->count()
+            + DB::table('brands')->where('logo_path', 'like', $tail)->count()
+            + DB::table('users')->where('avatar', 'like', $tail)->count();
+    }
+
     public function destroy(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -135,6 +156,31 @@ class MediaUploadController extends Controller
         if (! Str::startsWith($path, 'uploads/') || Str::contains($path, '..')) {
             return $this->errorResponse(
                 'That file cannot be removed from here.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        /*
+         * Not while anything is still pointing at it.
+         *
+         * One file is referenced by any number of rows, and deliberately so:
+         * copying a product shares its photographs rather than duplicating
+         * them on disk, because the copy is usually the same machine with a
+         * different amount of memory in it. Deleting the file on the copy's
+         * behalf would empty the original's gallery too, and the first anyone
+         * would know is a product page with a placeholder on it.
+         *
+         * Refused rather than reference-counted: this is a shop's photo
+         * library, the answer is almost always "it is still in use", and a
+         * sentence saying where is more use than a silent deletion.
+         */
+        $uses = $this->rowsUsing($path);
+
+        if ($uses > 0) {
+            return $this->errorResponse(
+                "That image is still used by {$uses} product(s), option(s) or brand(s). "
+                    .'Take it off those first, or upload a replacement instead of deleting this one.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );
