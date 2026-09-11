@@ -329,7 +329,17 @@ export default function Products({
             image_path: '',
             images: [],
             is_featured: false,
-            is_active: true,
+            /*
+             * A new product starts as a draft.
+             *
+             * This used to be true, so "Create Product" meant "publish", and
+             * the form actively encourages saving early — stock cannot be
+             * received against a product that does not exist yet. The result
+             * was live pages with no photograph, no spec sheet and no filter
+             * answers, which is worse than not being listed: unfindable in the
+             * sidebar, and the shop looks broken to anyone who does reach it.
+             */
+            is_active: false,
             reorder_level: '',
             barcode: '',
             allow_preorder: false,
@@ -440,13 +450,70 @@ export default function Products({
      * Pressing Save on a form whose problems are all on another panel would
      * otherwise do nothing visible at all.
      */
+    /*
+     * How many questions this product's shelf asks, reported by AttributeEditor.
+     *
+     * Needed to tell "this shelf asks nothing" apart from "this shelf asks and
+     * nothing was answered". Only the second is a reason to stop a publish —
+     * most shelves declare no filters at all yet.
+     */
+    const [filtersOffered, setFiltersOffered] = useState(0);
+
+    /*
+     * What is missing that a shopper would notice, on a product about to go
+     * live. Not validation: every one of these is a legitimate thing to
+     * publish deliberately, so it asks rather than refuses.
+     */
+    const thinPublishReasons = () => {
+        const v = formik.values;
+        const reasons = [];
+
+        if ((v.images || []).length === 0 && !v.image_path) {
+            reasons.push('no photograph — the page will show a placeholder');
+        }
+
+        if (filtersOffered > 0 && (v.attribute_value_ids || []).length === 0) {
+            reasons.push(
+                'no filter answers — it will not appear when shoppers narrow this category down',
+            );
+        }
+
+        return reasons;
+    };
+
+    const [publishWarning, setPublishWarning] = useState(null);
+
+    /*
+     * Pressing Save on a form whose problems are all on another panel would
+     * otherwise do nothing visible at all.
+     */
     const handleSubmit = async (event) => {
         event.preventDefault();
 
         const problems = await formik.validateForm();
         const landing = firstTabWithProblem(problems);
 
-        if (landing) setTab(landing);
+        if (landing) {
+            setTab(landing);
+            formik.handleSubmit(event);
+
+            return;
+        }
+
+        /*
+         * Asked on the way into publication, not on every save of something
+         * already live. A shop that knowingly keeps thin pages up should not
+         * be nagged about them each time it corrects a price.
+         */
+        const publishing =
+            formik.values.is_active && !editingProduct?.is_active;
+        const reasons = publishing ? thinPublishReasons() : [];
+
+        if (reasons.length > 0) {
+            setPublishWarning(reasons);
+
+            return;
+        }
 
         formik.handleSubmit(event);
     };
@@ -557,7 +624,8 @@ export default function Products({
                 image_path: '',
                 images: [],
                 is_featured: false,
-                is_active: true,
+                // Draft, as above.
+                is_active: false,
                 reorder_level: '',
                 allow_preorder: false,
                 preorder_limit: '',
@@ -987,6 +1055,36 @@ export default function Products({
                     onClose={() => setViewingPhotos(null)}
                 />
             )}
+
+            {/*
+                Asks rather than refuses. Publishing a thin page is a real
+                choice a shop sometimes makes — a placeholder while the
+                photographs are being taken — so this names what a shopper
+                would notice and lets it through.
+            */}
+            <ConfirmDialog
+                isOpen={Boolean(publishWarning)}
+                title="Publish it like this?"
+                message={
+                    <>
+                        This will go live on the storefront with:
+                        <ul className="admin-thin-publish-list">
+                            {(publishWarning || []).map((reason) => (
+                                <li key={reason}>{reason}</li>
+                            ))}
+                        </ul>
+                        You can save it as a draft instead and finish it first.
+                    </>
+                }
+                confirmLabel="Publish anyway"
+                cancelLabel="Go back"
+                variant="primary"
+                onConfirm={() => {
+                    setPublishWarning(null);
+                    formik.submitForm();
+                }}
+                onCancel={() => setPublishWarning(null)}
+            />
 
             <ConfirmDialog
                 isOpen={confirmingClose}
@@ -1579,7 +1677,10 @@ export default function Products({
 
                         {tab === 'specs' && (
                             <>
-                                <AttributeEditor formik={formik} />
+                                <AttributeEditor
+                                    formik={formik}
+                                    onCount={setFiltersOffered}
+                                />
 
                                 <SpecificationEditor formik={formik} />
                             </>
@@ -1684,6 +1785,22 @@ export default function Products({
                                         onChange={formik.handleChange}
                                     />
                                 </div>
+
+                                {/*
+                                    Said out loud, because the default changed:
+                                    a new product used to go live the moment it
+                                    was created, and somebody who knows that is
+                                    otherwise left wondering where it went.
+                                */}
+                                {!editingProduct &&
+                                    !formik.values.is_active && (
+                                        <span className="admin-field-hint">
+                                            Leave this unticked to save a draft.
+                                            Nothing is shown to shoppers until
+                                            it is on, so you can come back and
+                                            finish the photos and filters first.
+                                        </span>
+                                    )}
                             </>
                         )}
                     </div>

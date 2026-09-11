@@ -22,7 +22,12 @@ export const ConfirmDialog = ({
 }) => (
     <Modal isOpen={isOpen} onClose={onCancel} title={title} maxWidth="420px">
         <div className="admin-modal-body-pad">
-            <p className="admin-confirm-text">{message}</p>
+            {/*
+                A div, not a p: a message is sometimes a sentence and sometimes
+                a sentence with a list under it, and a ul inside a p is invalid
+                nesting that React warns about and the parser silently repairs.
+            */}
+            <div className="admin-confirm-text">{message}</div>
         </div>
 
         <div className="admin-modal-footer-btns">

@@ -18,7 +18,7 @@ import { payloadFrom } from '../../../utils/apiPayload';
  * none shows nothing at all — most do not have them yet, and an empty panel
  * headed "Filters" would read as something broken.
  */
-export default function AttributeEditor({ formik }) {
+export default function AttributeEditor({ formik, onCount }) {
     const categoryId = formik.values.category_id;
     const chosen = formik.values.attribute_value_ids || [];
 
@@ -28,6 +28,10 @@ export default function AttributeEditor({ formik }) {
     useEffect(() => {
         if (!categoryId) {
             setAttributes([]);
+            // Reported upward so the form can tell "this shelf asks nothing"
+            // apart from "this shelf asks and nothing was answered" — only the
+            // second is worth stopping a publish over.
+            onCount?.(0);
 
             return undefined;
         }
@@ -44,10 +48,18 @@ export default function AttributeEditor({ formik }) {
                 ),
             )
             .then((res) => {
-                if (!cancelled) setAttributes(payloadFrom(res) || []);
+                if (cancelled) return;
+
+                const loaded = payloadFrom(res) || [];
+
+                setAttributes(loaded);
+                onCount?.(loaded.length);
             })
             .catch(() => {
-                if (!cancelled) setAttributes([]);
+                if (cancelled) return;
+
+                setAttributes([]);
+                onCount?.(0);
             })
             .finally(() => {
                 if (!cancelled) setLoading(false);
@@ -56,6 +68,9 @@ export default function AttributeEditor({ formik }) {
         return () => {
             cancelled = true;
         };
+        // categoryId only: onCount is a fresh closure on every parent render,
+        // and depending on it would re-ask the server on each keystroke.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categoryId]);
 
     const toggle = (valueId) => {

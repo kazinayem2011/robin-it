@@ -5292,3 +5292,21 @@ a.admin-card:hover,
         grid-column: 1 / -1;
     }
 }
+
+/*
+ * What a thin product is missing, listed inside the publish confirmation.
+ * Indented rather than bulleted flush, so the sentence above it still reads as
+ * the lead and the reasons read as its consequences.
+ */
+.admin-thin-publish-list {
+    margin: 9px 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.admin-thin-publish-list li {
+    color: var(--text-primary);
+    font-weight: 500;
+}
