@@ -335,6 +335,64 @@ describe('Filters screen', () => {
         expect(row).toHaveAttribute('draggable', 'false');
     });
 
+    // ── asking the same question elsewhere ───────────────────────────
+
+    /*
+     * Twenty-nine of the sixty-six filters in this shop are already a repeat
+     * of another by name, so this is nearly half of what the screen is for.
+     * Processor Model carries sixteen answers; retyping those to ask the same
+     * thing about desktops is the work this removes.
+     */
+    it('copies a filter from the list', async () => {
+        const user = userEvent.setup();
+        post.mockResolvedValue({
+            message: "Copied 'Wi-Fi Standard' with 2 answer(s).",
+            data: { ...enumFilter, id: 77, categories: [] },
+        });
+
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+
+        await waitFor(() =>
+            expect(post).toHaveBeenCalledWith('/admin/attributes/1/duplicate'),
+        );
+        expect(toastSuccess).toHaveBeenCalledWith(
+            "Copied 'Wi-Fi Standard' with 2 answer(s).",
+        );
+    });
+
+    /*
+     * Straight into it, because the shelves are the one thing that differs
+     * and choosing them is the whole remaining decision.
+     */
+    it('opens the copy so its shelves can be chosen', async () => {
+        const user = userEvent.setup();
+        post.mockResolvedValue({
+            message: 'Copied.',
+            data: { ...enumFilter, id: 77, categories: [] },
+        });
+
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+
+        expect(
+            await screen.findByDisplayValue('Wi-Fi Standard'),
+        ).toBeInTheDocument();
+    });
+
+    it('says so when the copy is refused', async () => {
+        const user = userEvent.setup();
+        post.mockRejectedValue({ message: 'Nope' });
+
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+
+        await waitFor(() => expect(toastError).toHaveBeenCalledWith('Nope'));
+    });
+
     it('warns before deleting a filter that products answer', async () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);

@@ -19,6 +19,7 @@ import {
     GripVertical,
     X,
     AlertTriangle,
+    Copy,
 } from 'lucide-react';
 
 /**
@@ -291,6 +292,37 @@ export default function AdminAttributes({
         }
     };
 
+    /*
+     * Ask the same question on another shelf.
+     *
+     * Twenty-nine of the sixty-six filters here are already a repeat of
+     * another by name, so this is nearly half of what the screen is for. The
+     * copy arrives attached to nothing — the shelves are the one thing that
+     * differs — and opens straight away, since choosing them is the whole
+     * remaining decision.
+     */
+    const [copyingId, setCopyingId] = useState(null);
+
+    const duplicate = async (attribute) => {
+        setCopyingId(attribute.id);
+
+        try {
+            const response = await axiosInstance.post(
+                API_ENDPOINTS.ADMIN.ATTRIBUTE_DUPLICATE(attribute.id),
+            );
+
+            toast.success(response?.message || 'Copied.');
+
+            if (response?.data) openEdit(response.data);
+
+            router.reload({ only: ['attributes', 'counts'] });
+        } catch (error) {
+            toast.error(error?.message || 'Could not copy that filter.');
+        } finally {
+            setCopyingId(null);
+        }
+    };
+
     const remove = async () => {
         const attribute = confirming;
         if (!attribute) return;
@@ -390,6 +422,16 @@ export default function AdminAttributes({
                         onClick={() => openEdit(a)}
                     >
                         Edit
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        icon={Copy}
+                        disabled={copyingId === a.id}
+                        onClick={() => duplicate(a)}
+                        title="Ask this same question on another shelf"
+                    >
+                        Copy
                     </Button>
                     <Button
                         variant="danger"

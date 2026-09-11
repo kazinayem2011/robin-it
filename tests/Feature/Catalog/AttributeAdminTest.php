@@ -333,6 +333,134 @@ class AttributeAdminTest extends TestCase
         $this->assertDatabaseMissing('attribute_values', ['id' => $value->id]);
     }
 
+    // --- asking the same question elsewhere --------------------------------
+
+    /**
+     * Twenty-nine of the sixty-six filters in this shop are already a repeat
+     * of another by name — Features is asked by six shelves, Type by four — so
+     * re-creating a question for a different shelf is nearly half of them.
+     * Processor Model carries sixteen answers, and retyping those to ask the
+     * same thing about desktops is the work this removes.
+     */
+    public function test_copying_brings_every_answer_with_it(): void
+    {
+        $attribute = Attribute::create([
+            'name' => 'Display Type', 'slug' => 'display-type', 'input_type' => Attribute::ENUM,
+        ]);
+        $attribute->values()->create(['label' => 'LED', 'slug' => 'led', 'sort_order' => 0]);
+        $attribute->values()->create(['label' => 'OLED', 'slug' => 'oled', 'sort_order' => 1]);
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertStatus(201);
+
+        $copy = Attribute::with('values')->latest('id')->first();
+
+        $this->assertSame(['LED', 'OLED'], $copy->values->pluck('label')->all());
+        $this->assertSame(Attribute::ENUM, $copy->input_type);
+    }
+
+    /**
+     * Not suffixed, for the same reason the name is not unique: asking
+     * "Display Type" about monitors as well as laptops is the intended shape,
+     * and a copy called "Display Type (Copy)" would be renamed back every
+     * time. The slug takes the suffix, where nobody has to read it.
+     */
+    public function test_the_copy_keeps_the_question_and_takes_a_new_address(): void
+    {
+        $attribute = Attribute::create([
+            'name' => 'Display Type', 'slug' => 'display-type', 'input_type' => Attribute::ENUM,
+        ]);
+        $attribute->values()->create(['label' => 'LED', 'slug' => 'led']);
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertStatus(201);
+
+        $copy = Attribute::latest('id')->first();
+
+        $this->assertSame('Display Type', $copy->name);
+        $this->assertSame('display-type-2', $copy->slug);
+    }
+
+    /**
+     * The shelves are the one thing that differs between the two, and an
+     * unattached filter is marked as such on the list — so what arrives is
+     * visibly the thing still needing a decision, rather than a second filter
+     * quietly answering for the shelf the first already covers.
+     */
+    public function test_the_copy_is_attached_to_nothing(): void
+    {
+        $shelf = $this->shelf();
+        $attribute = Attribute::create([
+            'name' => 'Display Type', 'slug' => 'display-type', 'input_type' => Attribute::ENUM,
+        ]);
+        $attribute->values()->create(['label' => 'LED', 'slug' => 'led']);
+        $attribute->categories()->sync([$shelf->id]);
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertStatus(201);
+
+        $this->assertSame([], Attribute::latest('id')->first()->categories->pluck('id')->all());
+        $this->assertSame([$shelf->id], $attribute->fresh()->categories->pluck('id')->all());
+    }
+
+    /** A band carries its bounds, or the copy places nothing. */
+    public function test_a_number_filter_copies_its_bands(): void
+    {
+        $attribute = Attribute::create([
+            'name' => 'Speed', 'slug' => 'speed',
+            'unit' => 'Mbps', 'input_type' => Attribute::NUMBER,
+        ]);
+        $attribute->values()->create([
+            'label' => '301 to 750 Mbps', 'slug' => '301-750',
+            'range_from' => 301, 'range_to' => 750,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertStatus(201);
+
+        $copy = Attribute::with('values')->latest('id')->first();
+
+        $this->assertSame('Mbps', $copy->unit);
+        $this->assertSame('301 to 750 Mbps', $copy->bandFor(500)->label);
+    }
+
+    /** Nobody answers a filter that did not exist a moment ago. */
+    public function test_the_copy_carries_no_products(): void
+    {
+        $shelf = $this->shelf();
+        $attribute = Attribute::create([
+            'name' => 'Band', 'slug' => 'band', 'input_type' => Attribute::ENUM,
+        ]);
+        $value = $attribute->values()->create(['label' => 'Dual Band', 'slug' => 'dual-band']);
+        $this->tag($this->product($shelf), $value);
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertStatus(201);
+
+        $copy = Attribute::with('values')->latest('id')->first();
+
+        $this->assertSame(0, $copy->values->first()->products()->count());
+        $this->assertSame(1, $value->products()->count(), 'The original lost its tags.');
+    }
+
+    public function test_copying_needs_the_catalogue_ability(): void
+    {
+        $attribute = Attribute::create([
+            'name' => 'Band', 'slug' => 'band', 'input_type' => Attribute::ENUM,
+        ]);
+
+        $this->actingAs(User::factory()->create(['role' => 'customer']))
+            ->postJson("/api/admin/attributes/{$attribute->id}/duplicate")
+            ->assertForbidden();
+
+        $this->assertSame(1, Attribute::count());
+    }
+
     // --- reaching the product form ----------------------------------------
 
     /**

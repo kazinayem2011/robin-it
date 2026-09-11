@@ -364,6 +364,9 @@ class ApiEndpoints
 
     public const ADMIN_ATTRIBUTES_ITEM = 'attributes/{id}';
 
+    /** Ask the same question on another shelf. */
+    public const ADMIN_ATTRIBUTES_DUPLICATE = 'attributes/{id}/duplicate';
+
     /** Read-only: what the PC Builder is offering, and why. */
     public const ADMIN_PC_BUILDER = 'pc-builder';
 

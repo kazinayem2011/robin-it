@@ -193,6 +193,7 @@ export const API_ENDPOINTS = {
         PRODUCT_DUPLICATE: (id) => `/admin/products/${id}/duplicate`,
         ATTRIBUTES: '/admin/attributes',
         ATTRIBUTE_ITEM: (id) => `/admin/attributes/${id}`,
+        ATTRIBUTE_DUPLICATE: (id) => `/admin/attributes/${id}/duplicate`,
         CATEGORY_SEARCH: '/admin/categories/search',
         // {id} is replaced by the caller; the product form asks a category
         // which questions it wants answered about its products.
