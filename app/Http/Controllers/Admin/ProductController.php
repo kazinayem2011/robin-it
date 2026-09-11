@@ -180,7 +180,15 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         $validated['slug'] = SlugFactory::unique(Product::class, $validated['name']);
-        $validated['is_active'] = true;
+
+        /*
+         * Draft unless the form says otherwise.
+         *
+         * This was `= true` outright, which is why unticking the box did
+         * nothing. The column defaults to 1 as well, so leaving the key out
+         * entirely would publish it just the same — it has to be written.
+         */
+        $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
 
         /*
          * Options are applied after the row exists, through the same service

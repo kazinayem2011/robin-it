@@ -127,6 +127,8 @@ class ProductStockLifecycleTest extends TestCase
             'name' => 'Corsair Vengeance 16GB',
             'category_id' => $this->category()->id,
             'price' => 10500,
+            // A draft cannot be added to a cart, and this walks it to checkout.
+            'is_active' => true,
         ])->assertCreated();
 
         $product = Product::firstWhere('name', 'Corsair Vengeance 16GB');
@@ -204,6 +206,7 @@ class ProductStockLifecycleTest extends TestCase
             'name' => 'Corsair Vengeance DDR5',
             'category_id' => $this->category()->id,
             'price' => 10500,
+            'is_active' => true,
             'has_variants' => true,
             'variant_attributes' => ['Capacity'],
             'variants' => [

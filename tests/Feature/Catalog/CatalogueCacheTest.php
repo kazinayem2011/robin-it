@@ -93,6 +93,9 @@ class CatalogueCacheTest extends TestCase
                 'category_id' => $empty->id,
                 'name' => 'Dell UltraSharp',
                 'price' => 45000,
+                // Published deliberately. Creating one leaves a draft now, and
+                // a draft is correctly absent from the navigation.
+                'is_active' => true,
                 'stock_quantity' => 3,
             ])->assertStatus(201);
 

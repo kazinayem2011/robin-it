@@ -34,6 +34,18 @@ class ProductStoreRequest extends AdminRequest
              * is the only way the ledger can be trusted.
              */
             'short_description' => 'nullable|string|max:500',
+
+            /*
+             * Whether it goes on the storefront.
+             *
+             * Absent here until now, so it never survived validation and
+             * store() set it to true regardless: the "Active in Live
+             * Storefront" checkbox has never had any effect on a product being
+             * created. Omitting it now means a draft, so nothing reaches
+             * shoppers because a caller forgot to mention it.
+             */
+            'is_active' => 'nullable|boolean',
+
             'is_featured' => 'nullable|boolean',
             'image_path' => 'nullable|string',
 

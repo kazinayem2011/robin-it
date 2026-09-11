@@ -79,6 +79,13 @@ class ProductCycleTest extends TestCase
             'min_order_quantity' => 1,
             'reorder_level' => 3,
             'is_featured' => true,
+            /*
+             * Published, because this walks a product through to the shop
+             * front. Creating one leaves a draft now — the checkbox on the
+             * form used to be ignored outright, and store() published
+             * everything regardless of what was sent.
+             */
+            'is_active' => true,
         ], $extra);
     }
 
