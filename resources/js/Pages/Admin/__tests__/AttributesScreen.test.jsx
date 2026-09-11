@@ -338,41 +338,17 @@ describe('Filters screen', () => {
     // ── asking the same question elsewhere ───────────────────────────
 
     /*
-     * Twenty-nine of the sixty-six filters in this shop are already a repeat
-     * of another by name, so this is nearly half of what the screen is for.
+     * Twenty-nine of the sixty-six filters here are already a repeat of
+     * another by name, so this is nearly half of what the screen is for.
      * Processor Model carries sixteen answers; retyping those to ask the same
      * thing about desktops is the work this removes.
+     *
+     * It fills the form in rather than writing a row: nothing exists until it
+     * is saved, so the shelves are chosen before anything reaches the
+     * catalogue rather than corrected afterwards.
      */
-    it('copies a filter from the list', async () => {
+    it('fills the form in rather than writing a filter', async () => {
         const user = userEvent.setup();
-        post.mockResolvedValue({
-            message: "Copied 'Wi-Fi Standard' with 2 answer(s).",
-            data: { ...enumFilter, id: 77, categories: [] },
-        });
-
-        render(<Attributes attributes={[enumFilter]} counts={{}} />);
-
-        await user.click(screen.getByRole('button', { name: /^copy$/i }));
-
-        await waitFor(() =>
-            expect(post).toHaveBeenCalledWith('/admin/attributes/1/duplicate'),
-        );
-        expect(toastSuccess).toHaveBeenCalledWith(
-            "Copied 'Wi-Fi Standard' with 2 answer(s).",
-        );
-    });
-
-    /*
-     * Straight into it, because the shelves are the one thing that differs
-     * and choosing them is the whole remaining decision.
-     */
-    it('opens the copy so its shelves can be chosen', async () => {
-        const user = userEvent.setup();
-        post.mockResolvedValue({
-            message: 'Copied.',
-            data: { ...enumFilter, id: 77, categories: [] },
-        });
-
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
         await user.click(screen.getByRole('button', { name: /^copy$/i }));
@@ -380,17 +356,85 @@ describe('Filters screen', () => {
         expect(
             await screen.findByDisplayValue('Wi-Fi Standard'),
         ).toBeInTheDocument();
+        expect(post).not.toHaveBeenCalled();
+        expect(patch).not.toHaveBeenCalled();
     });
 
-    it('says so when the copy is refused', async () => {
+    it('brings every answer across', async () => {
         const user = userEvent.setup();
-        post.mockRejectedValue({ message: 'Nope' });
-
         render(<Attributes attributes={[enumFilter]} counts={{}} />);
 
         await user.click(screen.getByRole('button', { name: /^copy$/i }));
 
-        await waitFor(() => expect(toastError).toHaveBeenCalledWith('Nope'));
+        expect(await screen.findByDisplayValue('Wi-Fi 5')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('Wi-Fi 6')).toBeInTheDocument();
+    });
+
+    /*
+     * The shelves are the one thing that differs, and a filter on no shelf is
+     * offered to nobody — so leaving them is the decision being made, not an
+     * oversight to be inherited.
+     */
+    it('leaves the shelves for the copy to be given its own', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await screen.findByDisplayValue('Wi-Fi Standard');
+
+        expect(
+            screen.queryByRole('button', { name: 'unpick-Router' }),
+        ).not.toBeInTheDocument();
+    });
+
+    it('says where it came from and what it left out', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+
+        expect(
+            await screen.findByText(/Copied from Wi-Fi Standard/i),
+        ).toBeInTheDocument();
+        expect(screen.getByText(/Shelves/)).toBeInTheDocument();
+    });
+
+    /* Nobody has answered a filter that does not exist yet. */
+    it('carries no product counts into the copy', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await screen.findByDisplayValue('Wi-Fi Standard');
+
+        // Every answer is removable: none of them is tagged yet.
+        expect(screen.queryByText(/tagged/i)).not.toBeInTheDocument();
+    });
+
+    /* Saving it is an ordinary create, so it goes through the same guards. */
+    it('creates it when saved', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await screen.findByDisplayValue('Wi-Fi Standard');
+
+        await user.click(
+            screen.getByRole('button', { name: /create filter/i }),
+        );
+
+        await waitFor(() => expect(post).toHaveBeenCalled());
+
+        const [, payload] = post.mock.calls[0];
+
+        expect(payload.name).toBe('Wi-Fi Standard');
+        expect(payload.category_ids).toEqual([]);
+        expect(payload.values.map((v) => v.label)).toEqual([
+            'Wi-Fi 5',
+            'Wi-Fi 6',
+        ]);
+        // New rows, not the originals moved across.
+        expect(payload.values.every((v) => v.id === undefined)).toBe(true);
     });
 
     it('warns before deleting a filter that products answer', async () => {

@@ -57,23 +57,6 @@ export const adminService = {
         return response;
     },
 
-    /**
-     * Start a new product from an existing one.
-     *
-     * The copy comes back as a draft with no barcode, no stock and a name
-     * saying what it is — everything that describes the goods is carried over,
-     * everything that identifies a particular box is not.
-     *
-     * @param {number|string} productId the one to copy
-     * @returns {Promise<Object>} the envelope; `.data` is the new draft and
-     *   `.message` the sentence naming it, like every other method here
-     */
-    async duplicateProduct(productId) {
-        return axiosInstance.post(
-            API_ENDPOINTS.ADMIN.PRODUCT_DUPLICATE(productId),
-        );
-    },
-
     // ── Inventory ────────────────────────────────────────────────────────────
     // There is deliberately no "set stock to N" call. Units enter through a
     // receipt, leave through an order, and are corrected only by an adjustment
@@ -545,6 +528,22 @@ export const adminService = {
             params,
         });
         return response;
+    },
+
+    /**
+     * One product, with everything on it.
+     *
+     * The list ships a thin row deliberately — twenty a page, and the tree
+     * alone was 113 KB — so anything needing the spec sheet, the filter
+     * answers or the options has to ask for them. The details panel reads
+     * this, and so does copying, which cannot fill a form from a row that
+     * does not carry most of it.
+     *
+     * @param {number|string} productId
+     * @returns {Promise<Object>} the envelope; `.data` is the product
+     */
+    async getProduct(productId) {
+        return axiosInstance.get(API_ENDPOINTS.ADMIN.PRODUCT_ITEM(productId));
     },
 
     /**

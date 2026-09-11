@@ -108,12 +108,14 @@ export default function AdminAttributes({
         setEditing(null);
         setForm(emptyForm());
         setErrors({});
+        setCopiedFrom(null);
         setModalOpen(true);
     };
 
     const openEdit = (attribute) => {
         setEditing(attribute);
         setErrors({});
+        setCopiedFrom(null);
         setForm({
             name: attribute.name || '',
             input_type: attribute.input_type || 'enum',
@@ -296,31 +298,41 @@ export default function AdminAttributes({
      * Ask the same question on another shelf.
      *
      * Twenty-nine of the sixty-six filters here are already a repeat of
-     * another by name, so this is nearly half of what the screen is for. The
-     * copy arrives attached to nothing — the shelves are the one thing that
-     * differs — and opens straight away, since choosing them is the whole
-     * remaining decision.
+     * another by name, so this is nearly half of what the screen is for.
+     *
+     * It fills the form in rather than writing a row: nothing exists until it
+     * is saved, so thinking better of it costs nothing, and the shelves — the
+     * one thing that differs between the two — are chosen before anything
+     * reaches the catalogue rather than corrected afterwards.
+     *
+     * The list already carries the answers, so unlike a product this needs no
+     * trip to the server to read them.
      */
-    const [copyingId, setCopyingId] = useState(null);
+    const [copiedFrom, setCopiedFrom] = useState(null);
 
-    const duplicate = async (attribute) => {
-        setCopyingId(attribute.id);
-
-        try {
-            const response = await axiosInstance.post(
-                API_ENDPOINTS.ADMIN.ATTRIBUTE_DUPLICATE(attribute.id),
-            );
-
-            toast.success(response?.message || 'Copied.');
-
-            if (response?.data) openEdit(response.data);
-
-            router.reload({ only: ['attributes', 'counts'] });
-        } catch (error) {
-            toast.error(error?.message || 'Could not copy that filter.');
-        } finally {
-            setCopyingId(null);
-        }
+    const copyFrom = (attribute) => {
+        setEditing(null);
+        setErrors({});
+        setCopiedFrom(attribute.name);
+        setForm({
+            name: attribute.name || '',
+            input_type: attribute.input_type || 'enum',
+            unit: attribute.unit || '',
+            sort_order: attribute.sort_order ?? 0,
+            // Not the shelves: that is the decision being made.
+            categories: [],
+            values: (attribute.values || []).map((v, index) => ({
+                // No id — these are new rows, not the originals moved across.
+                key: `copy-${index}-${Math.random().toString(36).slice(2)}`,
+                id: null,
+                label: v.label || '',
+                range_from: v.range_from ?? '',
+                range_to: v.range_to ?? '',
+                // Nobody has answered a filter that does not exist yet.
+                products_count: 0,
+            })),
+        });
+        setModalOpen(true);
     };
 
     const remove = async () => {
@@ -427,8 +439,7 @@ export default function AdminAttributes({
                         variant="outline"
                         size="sm"
                         icon={Copy}
-                        disabled={copyingId === a.id}
-                        onClick={() => duplicate(a)}
+                        onClick={() => copyFrom(a)}
                         title="Ask this same question on another shelf"
                     >
                         Copy
@@ -482,6 +493,28 @@ export default function AdminAttributes({
                 title={editing ? `Edit ${editing.name}` : 'Add filter'}
                 maxWidth="680px"
             >
+                {/*
+                    A form that filled itself in, saying so — and naming the
+                    one thing it deliberately left out, because an unattached
+                    filter is offered to nobody.
+                */}
+                {copiedFrom && (
+                    <div className="admin-copy-banner">
+                        <Copy size={15} />
+                        <div>
+                            <strong>Copied from {copiedFrom}.</strong> Nothing
+                            is saved until you save it.
+                            <ul>
+                                <li>
+                                    <b>Shelves</b> were left empty — that is
+                                    what differs between the two, and a filter
+                                    on no shelf is never offered to anyone.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                )}
+
                 <FormInput
                     id="attr_name"
                     name="name"

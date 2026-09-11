@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const createProduct = vi.fn();
 const updateProduct = vi.fn();
-const duplicateProduct = vi.fn();
+const getProduct = vi.fn();
 const getCategoryAttributes = vi.fn();
 const httpGet = vi.fn();
 
@@ -36,7 +36,7 @@ vi.mock('@/services', () => ({
     adminService: {
         createProduct,
         updateProduct,
-        duplicateProduct,
+        getProduct,
         getProducts: vi.fn().mockResolvedValue({ data: [], meta: {} }),
         getCategoryAttributes,
     },
@@ -85,13 +85,19 @@ describe('publishing a new product', () => {
         vi.clearAllMocks();
         createProduct.mockResolvedValue({ id: 1 });
         updateProduct.mockResolvedValue({ id: 1 });
-        duplicateProduct.mockResolvedValue({
-            message: "Copied to 'Existing (Copy)', saved as a draft.",
+        getProduct.mockResolvedValue({
             data: {
-                id: 99,
-                name: 'Existing (Copy)',
+                id: 9,
+                name: 'Existing',
                 price: 100,
-                is_active: false,
+                is_active: true,
+                category_id: 411,
+                barcode: '4711387475836',
+                mpn: 'FA507NU-LP031W',
+                model: 'TUF Gaming A15',
+                has_variants: false,
+                variants: [],
+                categories: [],
             },
         });
         getCategoryAttributes.mockResolvedValue(FILTERS);
@@ -447,41 +453,47 @@ describe('publishing a new product', () => {
     // ── copying one ──────────────────────────────────────────────────
 
     /*
-     * Entering a product is six panels of work, and most of a range differs
-     * from something already listed by two or three lines. The copy is a
-     * draft, so nothing reaches shoppers half-finished.
+     * A create, not a write. Nothing exists until it is saved, so thinking
+     * better of it costs nothing and leaves no half-finished row behind — and
+     * every field is reviewed before it reaches the catalogue, which matters
+     * most for the ones a copy is likely to get wrong.
      */
-    it('copies a product from the list', async () => {
+    it('fills the form in rather than writing a product', async () => {
         const user = await renderList(listing());
 
         await user.click(
             await screen.findByRole('button', { name: /copy existing/i }),
         );
 
-        await waitFor(() => expect(duplicateProduct).toHaveBeenCalledWith(9));
+        await waitFor(() => expect(getProduct).toHaveBeenCalledWith(9));
+
+        expect(
+            await screen.findByDisplayValue('Existing (Copy)'),
+        ).toBeInTheDocument();
+        expect(createProduct).not.toHaveBeenCalled();
+        expect(updateProduct).not.toHaveBeenCalled();
     });
 
-    /* The server names the copy; the toast should say what it said. */
-    it('passes on what the server called it', async () => {
+    /* It is a create, so it walks like one and publishes like one. */
+    it('opens it as a new product, not as an edit', async () => {
         const user = await renderList(listing());
 
         await user.click(
             await screen.findByRole('button', { name: /copy existing/i }),
         );
 
-        await waitFor(() =>
-            expect(toastSuccess).toHaveBeenCalledWith(
-                "Copied to 'Existing (Copy)', saved as a draft.",
-            ),
-        );
+        expect(await screen.findByText(/Step 1 of 6/i)).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: /update product/i }),
+        ).not.toBeInTheDocument();
     });
 
     /*
-     * Straight into the copy: the edit that makes it a different product is
-     * the point, and a copy nobody finishes is another thin product in the
-     * list — which is the thing the draft default exists to prevent.
+     * A form that fills itself in has to be honest about it, and about the
+     * fields it deliberately left empty — otherwise they read as ones the
+     * original never had.
      */
-    it('opens the copy so it can be finished', async () => {
+    it('says where the values came from and what it left out', async () => {
         const user = await renderList(listing());
 
         await user.click(
@@ -489,12 +501,32 @@ describe('publishing a new product', () => {
         );
 
         expect(
-            await screen.findByDisplayValue('Existing (Copy)'),
+            await screen.findByText(/Copied from Existing/i),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/Nothing is saved until you save it/i),
         ).toBeInTheDocument();
     });
 
-    it('says so when the copy is refused', async () => {
-        duplicateProduct.mockRejectedValue({ message: 'Nope' });
+    it('empties the barcode and the MPN, and keeps the model', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+        await screen.findByDisplayValue('Existing (Copy)');
+
+        await goTo(user, 'price');
+        expect(screen.getByLabelText(/Barcode/i)).toHaveValue('');
+
+        await goTo(user, 'basics');
+        expect(screen.getByLabelText(/MPN/i)).toHaveValue('');
+        // Two builds of one machine share it, which is the case copying is for.
+        expect(screen.getByLabelText(/^Model/i)).toHaveValue('TUF Gaming A15');
+    });
+
+    it('says so when the product cannot be read', async () => {
+        getProduct.mockRejectedValue({ message: 'Nope' });
         const user = await renderList(listing());
 
         await user.click(
@@ -502,6 +534,7 @@ describe('publishing a new product', () => {
         );
 
         await waitFor(() => expect(toastError).toHaveBeenCalledWith('Nope'));
+        expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
     });
 
     // ── the walk through the six panels ──────────────────────────────

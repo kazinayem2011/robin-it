@@ -117,65 +117,6 @@ class AttributeController extends Controller
     }
 
     /**
-     * Ask the same question on another shelf.
-     *
-     * Twenty-nine of the sixty-six filters in this shop are already a repeat
-     * of another by name — Features is asked by six shelves, Type by four,
-     * Interface by four — so re-creating a question for a different shelf is
-     * not an edge case, it is nearly half of them. Processor Model carries
-     * sixteen answers, and retyping those to ask the same thing about desktops
-     * is the work this removes.
-     *
-     * The shelves are deliberately not copied. They are the one thing that
-     * differs between the original and the copy, and an unattached filter is
-     * marked as such on the list — so what arrives is visibly the thing still
-     * needing a decision, rather than a second filter quietly answering for
-     * the same shelf as the first.
-     *
-     * The name is not suffixed either, for the same reason it is not unique:
-     * asking "Display Type" about monitors as well as laptops is the intended
-     * shape, and a copy called "Display Type (Copy)" would have to be renamed
-     * back every single time. The slug takes the suffix instead, where nobody
-     * has to read it.
-     */
-    public function duplicate(int $id): JsonResponse
-    {
-        $source = Attribute::with('values')->findOrFail($id);
-
-        $copy = DB::transaction(function () use ($source) {
-            $copy = Attribute::create([
-                'name' => $source->name,
-                'slug' => SlugFactory::unique(Attribute::class, $source->name),
-                'unit' => $source->unit,
-                'input_type' => $source->input_type,
-                'sort_order' => $source->sort_order,
-            ]);
-
-            foreach ($source->values as $value) {
-                $copy->values()->create([
-                    'label' => $value->label,
-                    'slug' => SlugFactory::uniqueWithin(
-                        AttributeValue::class,
-                        $value->label,
-                        ['attribute_id' => $copy->id]
-                    ),
-                    'range_from' => $value->range_from,
-                    'range_to' => $value->range_to,
-                    'sort_order' => $value->sort_order,
-                ]);
-            }
-
-            return $copy;
-        });
-
-        return $this->successResponse(
-            $this->present($this->reload($copy)),
-            "Copied '{$copy->name}' with {$source->values->count()} answer(s). Choose the shelves it asks about.",
-            201
-        );
-    }
-
-    /**
      * Deleting takes the answers with it, and with them every product's tick.
      *
      * The foreign key cascades, so this would quietly un-tag products rather

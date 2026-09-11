@@ -5470,3 +5470,47 @@ a.admin-card:hover,
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/*
+ * A form that filled itself in, saying so.
+ *
+ * It sits above the tabs rather than on one, because what it explains — where
+ * the values came from and which were deliberately left empty — is true of the
+ * whole form, and the fields it names are on two different panels.
+ */
+.admin-copy-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    border: 1px solid var(--info-border, var(--border-color));
+    border-radius: var(--radius-md);
+    background: var(--bg-surface-subtle);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.admin-copy-banner > svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--text-muted);
+}
+
+.admin-copy-banner strong {
+    color: var(--text-primary);
+}
+
+.admin-copy-banner ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-copy-banner b {
+    color: var(--text-primary);
+    font-weight: 600;
+}

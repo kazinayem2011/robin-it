@@ -46,6 +46,7 @@ import RichTextEditor from '@/Components/RichTextEditor';
 import { bulletsToLines, linesToBullets } from '@/utils/bulletHtml';
 import { ROUTES } from '@/constants/endpoints';
 import { categoryPath } from '@/utils/categoryPath';
+import { withoutIdentity, CLEARED_BY_COPY } from '@/utils/productCopy';
 
 /**
  * Shape the form values for the API.
@@ -599,36 +600,11 @@ export default function Products({
     };
 
     /*
-     * Start a new product from this one.
-     *
-     * The copy arrives as a draft with no barcode and an empty shelf, and is
-     * opened straight away — the point is to change the two or three things
-     * that differ, and a copy nobody finishes is just another thin product in
-     * the list.
+     * Which product a filled-in form was copied from, so it can say so. Null
+     * on an ordinary create, which is the difference the banner announces.
      */
+    const [copiedFrom, setCopiedFrom] = useState(null);
     const [copyingId, setCopyingId] = useState(null);
-
-    const duplicate = async (product) => {
-        setCopyingId(product.id);
-
-        try {
-            const response = await adminService.duplicateProduct(product.id);
-            const created = response?.data;
-
-            // The server's own sentence, which names the copy.
-            toast.success(response?.message || 'Copied.');
-
-            // Straight into it, so the edit that makes it a different product
-            // is the next thing that happens.
-            if (created?.id) handleOpenEdit(created);
-
-            router.reload({ only: ['products'], preserveScroll: true });
-        } catch (error) {
-            toast.error(error?.message || 'Could not copy that product.');
-        } finally {
-            setCopyingId(null);
-        }
-    };
 
     const [confirmingClose, setConfirmingClose] = useState(false);
 
@@ -640,6 +616,7 @@ export default function Products({
         // Not part of the form values, so resetForm does not reach it — and
         // left behind it would follow into whatever is opened next.
         setExtraCategoryChips([]);
+        setCopiedFrom(null);
         formik.resetForm();
     };
 
@@ -703,6 +680,7 @@ export default function Products({
     const handleOpenCreate = () => {
         setEditingProduct(null);
         setExtraCategoryChips([]);
+        setCopiedFrom(null);
         formik.resetForm({
             values: {
                 name: '',
@@ -748,9 +726,14 @@ export default function Products({
         setModalOpen(true);
     };
 
-    const handleOpenEdit = (p) => {
-        setEditingProduct(p);
-
+    /*
+     * Put a product's values into the form.
+     *
+     * Shared by editing and copying: a copy is the same mapping over a product
+     * with the fields that identify a particular item stripped off, so the two
+     * cannot drift into disagreeing about what a field is called.
+     */
+    const loadIntoForm = (p) => {
         /*
          * The chips for "Also list under".
          *
@@ -867,7 +850,46 @@ export default function Products({
                     })),
             },
         });
+    };
+
+    const handleOpenEdit = (p) => {
+        setEditingProduct(p);
+        loadIntoForm(p);
         setModalOpen(true);
+    };
+
+    /*
+     * Start a new product from an existing one.
+     *
+     * A create, not a write: the form opens filled in and nothing exists until
+     * it is saved, so thinking better of it costs nothing and leaves no half-
+     * finished row behind. It also means every field is reviewed before it
+     * reaches the catalogue, which matters most for the ones a copy is likely
+     * to get wrong.
+     *
+     * The thin row in the table is not enough to copy from — it carries no
+     * spec sheet, no filter answers, no options — so the full product is
+     * fetched first. That request is the same one the details panel makes.
+     */
+    const copyFrom = async (product) => {
+        setCopyingId(product.id);
+
+        try {
+            const response = await adminService.getProduct(product.id);
+            const source = response?.data;
+
+            if (!source) throw new Error('Could not read that product.');
+
+            setEditingProduct(null);
+            setTab('basics');
+            loadIntoForm(withoutIdentity(source));
+            setCopiedFrom(source.name);
+            setModalOpen(true);
+        } catch (error) {
+            toast.error(error?.message || 'Could not copy that product.');
+        } finally {
+            setCopyingId(null);
+        }
     };
 
     const columns = [
@@ -1068,7 +1090,7 @@ export default function Products({
                         type="button"
                         className="admin-table-icon-btn"
                         disabled={copyingId === p.id}
-                        onClick={() => duplicate(p)}
+                        onClick={() => copyFrom(p)}
                         title="Start a new product from this one"
                         aria-label={`Copy ${p.name}`}
                     >
@@ -1253,6 +1275,33 @@ export default function Products({
                 maxWidth="860px"
             >
                 <form onSubmit={handleSubmit} noValidate>
+                    {/*
+                        Says where the values came from and what was left out.
+                        A form that fills itself in is only safe if it is
+                        honest about having done so — and the two empty fields
+                        are the ones somebody would otherwise assume had simply
+                        never been filled in on the original.
+                    */}
+                    {copiedFrom && (
+                        <div className="admin-copy-banner">
+                            <Copy size={15} />
+                            <div>
+                                <strong>Copied from {copiedFrom}.</strong>{' '}
+                                Nothing is saved until you save it.
+                                <ul>
+                                    {CLEARED_BY_COPY.map(
+                                        ({ field, label, why }) => (
+                                            <li key={field}>
+                                                <b>{label}</b> was left empty —{' '}
+                                                {why}.
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
                     <Tabs
                         tabs={tabsWithProblems}
                         activeTab={tab}
