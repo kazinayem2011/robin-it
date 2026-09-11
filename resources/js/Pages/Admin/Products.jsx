@@ -774,8 +774,14 @@ export default function Products({
                      * units with no supplier, no cost and no record of who did
                      * it. Restocking now goes through a delivery.
                      */}
+                    {/*
+                        Carries the product across. The title has always said
+                        "for this product" and the link went to the bare stock
+                        screen, leaving whoever followed it to find one row
+                        among thirteen hundred by hand.
+                    */}
                     <Link
-                        href={ROUTES.ADMIN_STOCK}
+                        href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(p.name || '')}`}
                         className="btn btn-secondary btn-sm admin-btn-quick-restock"
                         title="Record a delivery for this product"
                         onClick={(e) => e.stopPropagation()}
@@ -1304,19 +1310,43 @@ export default function Products({
                                                         : `${editingProduct.stock_quantity} on hand`
                                                     : 'None yet'}
                                             </span>
-                                            <Link
-                                                href={ROUTES.ADMIN_STOCK}
-                                                className="admin-stock-readonly-link"
-                                            >
-                                                {editingProduct
-                                                    ? 'Receive or adjust'
-                                                    : 'Receive stock'}
-                                            </Link>
+                                            {/*
+                                                A plain anchor opening a new
+                                                tab, not an Inertia Link.
+                                                Following it in this tab tears
+                                                the modal down and takes every
+                                                unsaved field with it — and it
+                                                did so straight past the
+                                                "Discard this product?" guard,
+                                                because that only covers
+                                                closing the modal, not
+                                                navigating out from inside it.
+
+                                                Offered only once the product
+                                                exists. On a new one there is
+                                                nothing to receive stock
+                                                against, so the link could only
+                                                ever lose work — while the hint
+                                                beside it said to save first.
+                                            */}
+                                            {editingProduct && (
+                                                <a
+                                                    href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(
+                                                        editingProduct.name ||
+                                                            '',
+                                                    )}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="admin-stock-readonly-link"
+                                                >
+                                                    Receive or adjust
+                                                </a>
+                                            )}
                                         </div>
                                         <span className="admin-field-hint">
                                             {editingProduct
-                                                ? 'Changed by deliveries, orders and recorded adjustments — never edited here.'
-                                                : 'Save the product first, then receive what you hold against the "Opening balance" source.'}
+                                                ? 'Changed by deliveries, orders and recorded adjustments — never edited here. Opens in a new tab so this form is not lost.'
+                                                : 'Save the product first. You can then receive what you hold against the "Opening balance" source.'}
                                         </span>
                                     </div>
                                 </div>
