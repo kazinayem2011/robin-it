@@ -490,10 +490,7 @@ export default function AdminAttributes({
                     id="attr_categories"
                     label="Shown on these shelves"
                     multiple
-                    chips={form.categories.map((c) => ({
-                        ...c,
-                        name: c.path ? `${c.path} › ${c.name}` : c.name,
-                    }))}
+                    chips={form.categories}
                     value={form.categories.map((c) => c.id)}
                     onChange={addCategory}
                     onRemove={removeCategory}

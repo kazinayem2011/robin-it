@@ -605,6 +605,9 @@ export default function Products({
         setTab('basics');
         setModalOpen(false);
         setEditingProduct(null);
+        // Not part of the form values, so resetForm does not reach it — and
+        // left behind it would follow into whatever is opened next.
+        setExtraCategoryChips([]);
         formik.resetForm();
     };
 
@@ -667,6 +670,7 @@ export default function Products({
 
     const handleOpenCreate = () => {
         setEditingProduct(null);
+        setExtraCategoryChips([]);
         formik.resetForm({
             values: {
                 name: '',
@@ -712,8 +716,37 @@ export default function Products({
         setModalOpen(true);
     };
 
+    /** "Laptop › Gaming Laptop" for a shelf, from the ancestors the list sends. */
+    const pathOf = (category) =>
+        [category?.parent?.parent?.name, category?.parent?.name]
+            .filter(Boolean)
+            .join(' › ');
+
     const handleOpenEdit = (p) => {
         setEditingProduct(p);
+
+        /*
+         * The chips for "Also list under".
+         *
+         * These were never populated on edit — the state started empty and
+         * only ever grew as somebody picked — so a product already listed
+         * under three shelves opened showing none of them. The ids were
+         * loaded and saved correctly underneath, so nothing was lost; it just
+         * could not be seen or removed.
+         *
+         * The primary is excluded: it has its own field above, and the server
+         * adds it back regardless.
+         */
+        setExtraCategoryChips(
+            (p.categories || [])
+                .filter((c) => Number(c.id) !== Number(p.category_id))
+                .map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    path: pathOf(c),
+                })),
+        );
+
         formik.resetForm({
             values: {
                 name: p.name || '',

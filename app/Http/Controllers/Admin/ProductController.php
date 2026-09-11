@@ -42,7 +42,18 @@ class ProductController extends Controller
         // compatibility gap check below reads both. Loading them per product
         // instead turned this page into 61 queries for 20 rows.
         $query = Product::with([
-            'category.parent.parent', 'categories:id', 'brand', 'images', 'specifications',
+            'category.parent.parent',
+            /*
+             * Names and ancestry, not just ids. The edit form draws a chip per
+             * extra category and had nothing to write in it, so a product
+             * already listed under three shelves opened showing none — and
+             * "Access Control Accessories" alone would not say which of them
+             * it is anyway.
+             */
+            'categories:id,name,slug,parent_id',
+            'categories.parent:id,name,parent_id',
+            'categories.parent.parent:id,name',
+            'brand', 'images', 'specifications',
             'attributeValues:id',
             // variants.images so the edit form can show each option's own
             // photos without a second request per row.

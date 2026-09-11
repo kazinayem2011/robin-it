@@ -215,6 +215,17 @@ export default function CategoryPicker({
                 <div className="category-picker-chips">
                     {chips.map((chip) => (
                         <span key={chip.id} className="category-picker-chip">
+                            {/*
+                                The ancestry, like the single-value field above
+                                and the results below it. Four shelves are
+                                called Asus and several Accessories, so a chip
+                                reading just the name names none of them.
+                            */}
+                            {chip.path && (
+                                <em className="category-picker-path">
+                                    {chip.path} ›{' '}
+                                </em>
+                            )}
                             {chip.name}
                             <button
                                 type="button"

@@ -234,6 +234,104 @@ describe('publishing a new product', () => {
         expect(await screen.findByRole('switch')).toBeChecked();
     });
 
+    // ── "Also list under" ────────────────────────────────────────────
+
+    /* A product filed under two extra shelves, as the list sends it. */
+    const withExtras = () =>
+        listing({
+            category_id: 411,
+            categories: [
+                {
+                    id: 411,
+                    name: 'Gaming Laptop',
+                    parent: { id: 395, name: 'Laptop' },
+                },
+                {
+                    id: 396,
+                    name: 'All Laptop',
+                    parent: { id: 395, name: 'Laptop' },
+                },
+                {
+                    id: 500,
+                    name: 'Access Control Accessories',
+                    parent: {
+                        id: 499,
+                        name: 'Accessories',
+                        parent: { id: 498, name: 'Security' },
+                    },
+                },
+            ],
+        });
+
+    /**
+     * These were never populated on edit: the state started empty and only
+     * grew as somebody picked, so a product already listed under three shelves
+     * opened showing none. The ids were loaded and saved correctly underneath,
+     * so nothing was lost — it just could not be seen or taken off.
+     */
+    it('shows the shelves a product is already listed under', async () => {
+        const user = await renderList(withExtras());
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        expect(
+            screen.getByRole('button', { name: /Remove All Laptop/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', {
+                name: /Remove Access Control Accessories/i,
+            }),
+        ).toBeInTheDocument();
+    });
+
+    /* The primary has its own field above, and the server adds it back anyway. */
+    it('leaves the primary shelf out of the extras', async () => {
+        const user = await renderList(withExtras());
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        expect(
+            screen.queryByRole('button', { name: /Remove Gaming Laptop/i }),
+        ).not.toBeInTheDocument();
+    });
+
+    /* Several shelves are called Accessories; the name alone names none. */
+    it('names each shelf by its ancestry', async () => {
+        const user = await renderList(withExtras());
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        expect(
+            screen.getByText(/Security › Accessories ›/),
+        ).toBeInTheDocument();
+    });
+
+    /* They are not form values, so resetForm does not reach them. */
+    it("does not carry one product's shelves into the next form", async () => {
+        const user = await renderList(withExtras());
+
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+        expect(
+            screen.getByRole('button', { name: /Remove All Laptop/i }),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getAllByRole('button', { name: /close/i })[0]);
+        await user.click(
+            screen.getByRole('button', {
+                name: /Add New Product|Add Product/i,
+            }),
+        );
+
+        expect(
+            screen.queryByRole('button', { name: /Remove All Laptop/i }),
+        ).not.toBeInTheDocument();
+    });
+
     // ── the dialogs that interrupt the modal ─────────────────────────
 
     /**
