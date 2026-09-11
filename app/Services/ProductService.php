@@ -190,6 +190,20 @@ class ProductService
             $query->where('stock_quantity', '>', 0);
         }
 
+        /*
+         * What can be ordered ahead of a delivery.
+         *
+         * The shelf being empty is the point, so this is deliberately the
+         * opposite of in_stock rather than a narrowing of it: a pre-order
+         * product with units on the shelf is just a product in stock, and
+         * listing it here would tell somebody they were waiting for something
+         * they could have today.
+         */
+        if (! empty($filters['preorder'])) {
+            $query->where('allow_preorder', true)
+                ->where('stock_quantity', '<=', 0);
+        }
+
         // Price range, measured against the price the customer actually pays
         // rather than the list price — otherwise a heavily discounted card is
         // filtered out of the bracket it visibly sits in.

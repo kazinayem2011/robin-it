@@ -27,6 +27,16 @@ import ProductImage from './ProductImage';
  * matching categories still reach the shopper as suggestions while they type,
  * which is where a name is worth showing because they asked for it.
  */
+/*
+ * Every scope but "all" is a query parameter of the same name, which is what
+ * keeps the list cheap to extend: adding one is adding a row to searchIn, as
+ * long as the listing already understands the filter.
+ *
+ * Module scope rather than inside the component — it never changes, and as a
+ * fresh array each render it was a dependency the sync effect had to list.
+ */
+const SCOPE_PARAMS = ['in_stock', 'preorder', 'on_sale', 'is_featured'];
+
 export const SearchBar = ({ onSearch }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedScope, setSelectedScope] = useState('all');
@@ -71,13 +81,9 @@ export const SearchBar = ({ onSearch }) => {
 
         const params = new URLSearchParams(query);
 
-        if (params.get('in_stock')) {
-            setSelectedScope('in_stock');
-        } else if (params.get('on_sale')) {
-            setSelectedScope('on_sale');
-        } else {
-            setSelectedScope('all');
-        }
+        setSelectedScope(
+            SCOPE_PARAMS.find((name) => params.get(name)) ?? 'all',
+        );
     }, [url]);
 
     /*
@@ -97,7 +103,16 @@ export const SearchBar = ({ onSearch }) => {
         () => [
             { value: 'all', label: 'All Tech' },
             { value: 'in_stock', label: 'In Stock' },
+            /*
+             * Deliberately not a narrowing of In Stock but its opposite: a
+             * pre-order product that has units is simply in stock, and the
+             * shop has sold ahead of its shelf for a while with nothing
+             * listing those products together — the only way to find one was
+             * to already know its name.
+             */
+            { value: 'preorder', label: 'Pre-order' },
             { value: 'on_sale', label: 'On Offer' },
+            { value: 'is_featured', label: 'Featured' },
         ],
         [],
     );
@@ -200,10 +215,9 @@ export const SearchBar = ({ onSearch }) => {
 
         if (q) params.set('search', q);
 
-        // The listing reads both from the query string, and validates them as
-        // booleans — the same two the sidebar ticks.
-        if (scope === 'in_stock') params.set('in_stock', '1');
-        if (scope === 'on_sale') params.set('on_sale', '1');
+        // The listing reads each from the query string and validates it as a
+        // boolean — the same ones the sidebar ticks.
+        if (SCOPE_PARAMS.includes(scope)) params.set(scope, '1');
 
         const query = params.toString();
 

@@ -41,6 +41,7 @@ class ProductController extends Controller
             'is_featured' => 'nullable|boolean',
             'in_stock' => 'nullable|boolean',
             'on_sale' => 'nullable|boolean',
+            'preorder' => 'nullable|boolean',
             'min_price' => 'nullable|numeric|min:0',
             'max_price' => 'nullable|numeric|min:0',
             'search' => 'nullable|string|max:120',
@@ -86,6 +87,7 @@ class ProductController extends Controller
             'attributes.*.*' => 'string|max:80',
             'in_stock' => 'nullable|boolean',
             'on_sale' => 'nullable|boolean',
+            'preorder' => 'nullable|boolean',
             'search' => 'nullable|string|max:120',
         ]);
 

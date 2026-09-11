@@ -57,7 +57,13 @@ describe('the header search scope', () => {
 
         expect(
             screen.getAllByRole('option').map((o) => o.textContent.trim()),
-        ).toEqual(['All Tech', 'In Stock', 'On Offer']);
+        ).toEqual([
+            'All Tech',
+            'In Stock',
+            'Pre-order',
+            'On Offer',
+            'Featured',
+        ]);
     });
 
     /* The whole point: three short labels, where a category name never fit. */
@@ -89,6 +95,31 @@ describe('the header search scope', () => {
         await user.click(screen.getByRole('option', { name: 'On Offer' }));
 
         expect(visit).toHaveBeenCalledWith('/shop?on_sale=1');
+    });
+
+    /*
+     * Not a narrowing of In Stock but its opposite. The shop has sold ahead
+     * of its shelf for a while and nothing listed those products together, so
+     * the only way to find one was to already know its name.
+     */
+    it('narrows to what can be ordered ahead', async () => {
+        const user = userEvent.setup();
+        render(<SearchBar />);
+
+        await open(user);
+        await user.click(screen.getByRole('option', { name: 'Pre-order' }));
+
+        expect(visit).toHaveBeenCalledWith('/shop?preorder=1');
+    });
+
+    it('narrows to what the shop is featuring', async () => {
+        const user = userEvent.setup();
+        render(<SearchBar />);
+
+        await open(user);
+        await user.click(screen.getByRole('option', { name: 'Featured' }));
+
+        expect(visit).toHaveBeenCalledWith('/shop?is_featured=1');
     });
 
     /* Narrowing mid-search runs that search inside the narrower set. */
@@ -158,6 +189,21 @@ describe('the header search scope', () => {
             ).toHaveTextContent('In Stock');
         },
     );
+
+    /* Every scope, so adding one to the list cannot leave the sync behind. */
+    it.each([
+        ['in_stock', 'In Stock'],
+        ['preorder', 'Pre-order'],
+        ['on_sale', 'On Offer'],
+        ['is_featured', 'Featured'],
+    ])('follows ?%s=1 on a listing', (param, label) => {
+        currentUrl = `/shop?${param}=1`;
+        render(<SearchBar />);
+
+        expect(
+            screen.getByRole('combobox', { name: /search within/i }),
+        ).toHaveTextContent(label);
+    });
 
     /* Elsewhere the choice is the shopper's and nothing should undo it. */
     it('leaves the choice alone away from a listing', () => {
