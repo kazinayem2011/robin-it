@@ -40,12 +40,23 @@ const DEFAULT_SORT = 'latest';
  * whoever is sent the link. Anything else in the URL is left alone, so a
  * parameter this listing does not know about cannot be mistaken for a filter.
  */
+/*
+ * The plain yes/no narrowings, as their own parameters.
+ *
+ * One list, read by the parser, written by the builder and reserved below, so
+ * the three cannot drift apart. They did: the header gained "Pre-order" and
+ * "Featured" scopes and sent ?preorder=1, which was not reserved here — so it
+ * fell through to the shelf-attribute branch and asked for products whose
+ * attribute "preorder" is "1". Nothing has one, so the listing came back
+ * empty, which is the same trap `category_slug` fell into before it.
+ */
+export const FLAGS = ['in_stock', 'on_sale', 'preorder', 'is_featured'];
+
 const RESERVED = new Set([
     'min_price',
     'max_price',
     'brand_ids',
-    'in_stock',
-    'on_sale',
+    ...FLAGS,
     'sort',
     'page',
     'per_page',
@@ -85,8 +96,9 @@ export const parseShopQuery = (search = '', defaultSort = DEFAULT_SORT) => {
     if (brands.length) filters.brand_ids = brands;
 
     // Present-and-"1" only: a stray `in_stock=0` should not read as true.
-    if (params.get('in_stock') === '1') filters.in_stock = true;
-    if (params.get('on_sale') === '1') filters.on_sale = true;
+    for (const flag of FLAGS) {
+        if (params.get(flag) === '1') filters[flag] = true;
+    }
 
     /*
      * What the shopper typed.
@@ -150,8 +162,9 @@ export const buildShopSearch = ({
         params.set('brand_ids', filters.brand_ids.join(','));
     }
 
-    if (filters.in_stock) params.set('in_stock', '1');
-    if (filters.on_sale) params.set('on_sale', '1');
+    for (const flag of FLAGS) {
+        if (filters[flag]) params.set(flag, '1');
+    }
     if (filters.search) params.set('search', filters.search);
 
     // Sorted, so the same selection always produces the same address — two

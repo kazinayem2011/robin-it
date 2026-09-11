@@ -87,6 +87,32 @@ describe('parseShopQuery', () => {
         expect(parseShopQuery('?brand_ids=oops').filters).toEqual({});
     });
 
+    /*
+     * Every flag, because the header offers five scopes and each is a plain
+     * parameter of its own name. One the parser does not know falls through to
+     * the shelf-attribute branch and asks for products whose attribute is
+     * "1" — nothing has one, so the listing comes back empty rather than
+     * unfiltered. That is exactly how ?preorder=1 showed nothing at all.
+     */
+    it.each(['in_stock', 'on_sale', 'preorder', 'is_featured'])(
+        'reads ?%s=1 as a narrowing, not as a shelf question',
+        (flag) => {
+            const { filters } = parseShopQuery(`?${flag}=1`);
+
+            expect(filters).toEqual({ [flag]: true });
+            expect(filters.attributes).toBeUndefined();
+        },
+    );
+
+    it.each(['in_stock', 'on_sale', 'preorder', 'is_featured'])(
+        'writes %s back out the way it read it',
+        (flag) => {
+            expect(buildShopSearch({ filters: { [flag]: true } })).toBe(
+                `?${flag}=1`,
+            );
+        },
+    );
+
     /* A checkbox that is off should not come back on. */
     it('treats anything but 1 as unchecked', () => {
         expect(parseShopQuery('?in_stock=0&on_sale=false').filters).toEqual({});
