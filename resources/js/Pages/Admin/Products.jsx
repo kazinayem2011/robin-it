@@ -854,6 +854,16 @@ export default function Products({
 
     const handleOpenEdit = (p) => {
         setEditingProduct(p);
+        /*
+         * Belt and braces, and deliberately so: closing already clears this,
+         * and no path opens an edit without closing first, so removing the
+         * line breaks no test today. It is here because every other entry
+         * point states what the form is rather than inheriting it, and an
+         * edit claiming to be a copy would be describing fields it never
+         * touched — on the one screen somebody checks to find out what
+         * happened to a value.
+         */
+        setCopiedFrom(null);
         loadIntoForm(p);
         setModalOpen(true);
     };

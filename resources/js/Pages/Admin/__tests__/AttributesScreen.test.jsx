@@ -437,6 +437,34 @@ describe('Filters screen', () => {
         expect(payload.values.every((v) => v.id === undefined)).toBe(true);
     });
 
+    /* The same contract as the product copy: an edit is never a copy. */
+    it('never claims an edit is a copy', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        expect(
+            await screen.findByText(/Copied from Wi-Fi Standard/i),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /edit/i }));
+
+        expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
+    });
+
+    it('never claims a fresh filter is a copy', async () => {
+        const user = userEvent.setup();
+        render(<Attributes attributes={[enumFilter]} counts={{}} />);
+
+        await user.click(screen.getByRole('button', { name: /^copy$/i }));
+        await screen.findByText(/Copied from Wi-Fi Standard/i);
+
+        await user.click(screen.getByRole('button', { name: /add filter/i }));
+
+        expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
+        expect(screen.getByLabelText(/question/i)).toHaveValue('');
+    });
+
     it('warns before deleting a filter that products answer', async () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[enumFilter]} counts={{}} />);

@@ -537,6 +537,49 @@ describe('publishing a new product', () => {
         expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
     });
 
+    /*
+     * The banner describes fields this form filled in and emptied. An edit
+     * touched neither, so claiming otherwise would be describing work nobody
+     * did — and the form it appears on is the one place somebody checks what
+     * happened to a value.
+     */
+    it('never claims an edit is a copy', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+        expect(
+            await screen.findByText(/Copied from Existing/i),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getAllByRole('button', { name: /close/i })[0]);
+        await user.click(
+            (await screen.findAllByRole('button', { name: /edit/i }))[0],
+        );
+
+        expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
+    });
+
+    it('never claims a fresh product is a copy', async () => {
+        const user = await renderList(listing());
+
+        await user.click(
+            await screen.findByRole('button', { name: /copy existing/i }),
+        );
+        await screen.findByText(/Copied from Existing/i);
+
+        await user.click(screen.getAllByRole('button', { name: /close/i })[0]);
+        await user.click(
+            screen.getByRole('button', {
+                name: /Add New Product|Add Product/i,
+            }),
+        );
+
+        expect(screen.queryByText(/Copied from/i)).not.toBeInTheDocument();
+        expect(screen.getByLabelText(/Product Title/i)).toHaveValue('');
+    });
+
     // ── the walk through the six panels ──────────────────────────────
 
     it('opens on the first step and offers no way back from it', async () => {
