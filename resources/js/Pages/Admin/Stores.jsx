@@ -173,7 +173,7 @@ export default function AdminStores({ stores = [] }) {
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn is-danger"
+                        className="admin-table-icon-btn btn-danger"
                         onClick={() => handleDelete(row.id)}
                         title="Delete this branch"
                         aria-label={`Delete ${row.name}`}

@@ -454,7 +454,7 @@ export default function AdminAttributes({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn is-danger"
+                        className="admin-table-icon-btn btn-danger"
                         onClick={() => setConfirming(a)}
                         title="Delete this filter"
                         aria-label={`Delete ${a.name}`}

@@ -183,7 +183,7 @@ export default function AdminCoupons({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn is-danger"
+                        className="admin-table-icon-btn btn-danger"
                         onClick={() => handleDelete(row.id)}
                         title="Delete this coupon"
                         aria-label={`Delete ${row.code || row.name}`}

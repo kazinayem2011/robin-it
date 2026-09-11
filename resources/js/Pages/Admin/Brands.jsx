@@ -212,7 +212,7 @@ export default function AdminBrands({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn is-danger"
+                        className="admin-table-icon-btn btn-danger"
                         disabled={busyId === b.id}
                         onClick={() => remove(b)}
                         title="Delete this brand"

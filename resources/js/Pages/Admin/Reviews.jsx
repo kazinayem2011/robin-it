@@ -144,7 +144,7 @@ export default function AdminReviews({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn is-danger"
+                        className="admin-table-icon-btn btn-danger"
                         disabled={busyId === r.id}
                         onClick={() => remove(r)}
                         title="Delete this review"
