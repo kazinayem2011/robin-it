@@ -21,16 +21,15 @@ import ProductImage from './ProductImage';
  * Enhanced High-Conversion SearchBar component with multi-facet instant suggestions (SSOT)
  */
 /**
- * @param categories the mega-menu tree the header has already fetched. The
- *   dropdown used to offer six names written down in siteConfig — of which
- *   `components`, `laptops`, `monitors` and `gaming` matched no category in
- *   the shop at all, the real slugs being `component`, `laptop` and `monitor`,
- *   with nothing called gaming. A list kept by hand beside a list kept by the
- *   shop is a list that drifts; this is the shop's own.
+ * The category tree used to be passed in for the scope dropdown, which the
+ * header already draws as the mega menu directly below. It scopes by
+ * availability now and needs no tree, so the header stops handing it one —
+ * matching categories still reach the shopper as suggestions while they type,
+ * which is where a name is worth showing because they asked for it.
  */
-export const SearchBar = ({ onSearch, categories = [] }) => {
+export const SearchBar = ({ onSearch }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedScope, setSelectedScope] = useState('all');
     const [suggestions, setSuggestions] = useState({
         products: [],
         categories: [],
@@ -45,28 +44,62 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
     /*
      * The dropdown follows the page.
      *
-     * Reaching /shop/laptop from the nav bar or the sidebar left this saying
-     * "All Tech", so the shop and its own search box disagreed about what you
-     * were looking at — and searching from there would have thrown you back
-     * out to the whole catalogue. Only on a listing: elsewhere the choice is
-     * the shopper's and nothing should quietly undo it.
+     * Ticking "In Stock" in the filter sidebar used to leave this saying
+     * something else entirely, so the shop and its own search box disagreed
+     * about what you were looking at — and searching from there would have
+     * thrown the narrowing away. Read from the query string now rather than
+     * the path, because that is where the scope lives.
+     *
+     * Only on a listing: elsewhere the choice is the shopper's and nothing
+     * should quietly undo it.
      */
     useEffect(() => {
-        const path = (url || '').split('?')[0].replace(/\/$/, '');
+        const [rawPath, query = ''] = (url || '').split('?');
+        const path = rawPath.replace(/\/$/, '');
 
-        if (path !== ROUTES.SHOP && !path.startsWith(`${ROUTES.SHOP}/`)) return;
+        /*
+         * Both, because the listing answers at both: shop.index and
+         * products.index render the same screen, and the sidebar's own links
+         * use /products — so recognising only /shop meant ticking "In Stock"
+         * there left the box still saying "All Tech".
+         */
+        const onListing = ['/shop', '/products'].some(
+            (root) => path === root || path.startsWith(`${root}/`),
+        );
 
-        setSelectedCategory(path.slice(ROUTES.SHOP.length + 1) || 'all');
+        if (!onListing) return;
+
+        const params = new URLSearchParams(query);
+
+        if (params.get('in_stock')) {
+            setSelectedScope('in_stock');
+        } else if (params.get('on_sale')) {
+            setSelectedScope('on_sale');
+        } else {
+            setSelectedScope('all');
+        }
     }, [url]);
 
+    /*
+     * What to search within.
+     *
+     * This used to be the category tree, which the header already draws twice
+     * over: the mega menu below is fed the very same prop, and typing returns
+     * matching categories as suggestions. A third copy of it, flattened into a
+     * 116px box holding thirteen hundred names, was the least useful of the
+     * three — and the only one that could not show a name long enough to read.
+     *
+     * These cut across the catalogue instead, which is the thing browsing
+     * cannot do: "RTX 4090, but only what you can ship today". Both are
+     * filters the listing already understands.
+     */
     const searchIn = useMemo(
         () => [
             { value: 'all', label: 'All Tech' },
-            ...categories
-                .filter((c) => c?.slug && c?.name)
-                .map((c) => ({ value: c.slug, label: c.name })),
+            { value: 'in_stock', label: 'In Stock' },
+            { value: 'on_sale', label: 'On Offer' },
         ],
-        [categories],
+        [],
     );
 
     // Same speed as the announcement ticker, from the measured content width.
@@ -161,34 +194,40 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
      * asking for products whose spec "category_slug" is "laptops". No product
      * has one, so every category but "All Tech" used to return nothing.
      */
-    const destination = (category, term) => {
-        const base =
-            category && category !== 'all'
-                ? ROUTES.SHOP_CATEGORY(category)
-                : ROUTES.SHOP;
+    const destination = (scope, term) => {
+        const params = new URLSearchParams();
         const q = (term || '').trim();
 
-        return q ? `${base}?search=${encodeURIComponent(q)}` : base;
+        if (q) params.set('search', q);
+
+        // The listing reads both from the query string, and validates them as
+        // booleans — the same two the sidebar ticks.
+        if (scope === 'in_stock') params.set('in_stock', '1');
+        if (scope === 'on_sale') params.set('on_sale', '1');
+
+        const query = params.toString();
+
+        return query ? `${ROUTES.SHOP}?${query}` : ROUTES.SHOP;
     };
 
     /*
-     * Choosing a category goes there.
+     * Choosing a scope goes there.
      *
-     * It used to only set a variable: with an empty search box, picking
-     * "Laptop" did nothing at all, and neither did Enter or the button
-     * afterwards, because submitting was guarded on there being a term. The
-     * shopper had made a choice and the shop ignored it.
+     * It used to only set a variable: with an empty search box, picking one
+     * did nothing at all, and neither did Enter or the button afterwards,
+     * because submitting was guarded on there being a term. The shopper had
+     * made a choice and the shop ignored it.
      *
-     * Any term already typed comes along, so choosing a category mid-search
-     * runs that search inside it rather than starting over.
+     * Any term already typed comes along, so narrowing mid-search runs that
+     * search inside the narrower set rather than starting over.
      */
-    const chooseCategory = (slug) => {
-        setSelectedCategory(slug);
+    const chooseScope = (scope) => {
+        setSelectedScope(scope);
 
-        if (slug === selectedCategory) return;
+        if (scope === selectedScope) return;
 
         setSearchFocused(false);
-        router.visit(destination(slug, searchQuery));
+        router.visit(destination(scope, searchQuery));
     };
 
     const handleSubmit = (e) => {
@@ -196,15 +235,15 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
         setSearchFocused(false);
 
         if (onSearch) {
-            onSearch(searchQuery, selectedCategory);
+            onSearch(searchQuery, selectedScope);
 
             return;
         }
 
-        // A term, a category, or both. Only an empty box on "All Tech" has
+        // A term, a scope, or both. Only an empty box on "All Tech" has
         // nowhere to go.
-        if (searchQuery.trim() || selectedCategory !== 'all') {
-            router.visit(destination(selectedCategory, searchQuery));
+        if (searchQuery.trim() || selectedScope !== 'all') {
+            router.visit(destination(selectedScope, searchQuery));
         }
     };
 
@@ -231,8 +270,8 @@ export const SearchBar = ({ onSearch, categories = [] }) => {
                  */}
                 <div className="search-category-selector">
                     <Select
-                        value={selectedCategory}
-                        onChange={(e) => chooseCategory(e.target.value)}
+                        value={selectedScope}
+                        onChange={(e) => chooseScope(e.target.value)}
                         options={searchIn}
                         aria-label="Search within"
                         icon={SlidersHorizontal}
