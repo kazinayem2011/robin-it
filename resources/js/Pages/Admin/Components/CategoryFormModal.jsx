@@ -4,6 +4,7 @@ import Checkbox from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
 import FormSelect from '@/Components/FormSelect';
 import Modal from '@/Components/Modal';
+import Select from '@/Components/Select';
 import { NAVBAR_BADGE_OPTIONS } from '@/constants';
 
 /**
@@ -11,6 +12,25 @@ import { NAVBAR_BADGE_OPTIONS } from '@/constants';
  */
 /* Not an id, so it cannot collide with one. */
 const NEW_BRAND = 'new';
+
+/**
+ * The shelves a category may sit under.
+ *
+ * Only level 1 and 2, because the tree is three deep — a parent at level 3
+ * would make a level 4, which no screen draws and nothing on the server
+ * refuses. The list arrives already filtered that way; this adds the top-level
+ * choice and, when editing, takes the category itself out so it cannot be made
+ * its own parent.
+ *
+ * @param {Array<{id: number, name: string}>} options
+ * @param {number|undefined} editingId
+ */
+const parentChoicesFrom = (options, editingId) => [
+    { value: '', label: 'None (Top-Level Root Category)' },
+    ...options
+        .filter((p) => !editingId || p.id !== editingId)
+        .map((p) => ({ value: String(p.id), label: p.name })),
+];
 
 export const CategoryFormModal = ({
     modalState,
@@ -21,6 +41,11 @@ export const CategoryFormModal = ({
     isSubmitting = false,
 }) => {
     const trimmedName = (formik.values.name || '').trim();
+
+    const parentChoices = parentChoicesFrom(
+        parentOptions,
+        modalState.mode === 'create' ? undefined : modalState.category?.id,
+    );
 
     return (
         <Modal
@@ -49,28 +74,32 @@ export const CategoryFormModal = ({
                     </div>
                 )}
 
-                {/* Parent Selector */}
-                <FormSelect
+                {/*
+                    Searchable, like every other long list in the shop.
+
+                    A native select holding 252 shelves is scrolled, not read,
+                    and the names repeat — several are called Accessories — so
+                    finding the right one meant counting down a list where the
+                    right answer looks like three wrong ones. Select turns on
+                    its own search above eight options.
+
+                    Deliberately this list and not the category search the
+                    product form uses: only a level 1 or 2 shelf may be a
+                    parent, because the tree is three deep and nothing else
+                    enforces that — the server accepts any parent_id that
+                    exists. Searching all 1,390 here would quietly allow a
+                    fourth level that no screen can draw.
+                */}
+                <Select
                     id="cat_parent_id"
                     name="parent_id"
                     label="Parent Category"
                     value={formik.values.parent_id || ''}
                     onChange={formik.handleChange}
+                    options={parentChoices}
+                    searchPlaceholder="Search shelves…"
                     className="mb-4"
-                >
-                    <option value="">None (Top-Level Root Category)</option>
-                    {parentOptions
-                        .filter(
-                            (p) =>
-                                modalState.mode === 'create' ||
-                                p.id !== modalState.category?.id,
-                        )
-                        .map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.name}
-                            </option>
-                        ))}
-                </FormSelect>
+                />
 
                 {/*
                     A shelf can stand for a brand: "ASUS" under Brand PC is a
