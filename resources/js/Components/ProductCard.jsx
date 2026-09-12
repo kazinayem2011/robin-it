@@ -178,9 +178,18 @@ export const ProductCard = ({
             <>
                 <div className="flash-product-card">
                     {/* Discount Badge */}
+                    {/*
+                        The money off, not the percentage off.
+                        
+                        A percentage has to be worked against a price the badge
+                        does not show — "-15%" on a ৳8,000 board and on a
+                        ৳285,000 laptop look identical and are two hundred
+                        pounds apart. The trade here quotes the saving, and so
+                        does the shop this one is modelled on.
+                    */}
                     {discountInfo && (
                         <span className="card-badge discount-badge">
-                            <Flame size={12} /> {discountInfo.percent}
+                            <Flame size={12} /> Save {discountInfo.saving}
                         </span>
                     )}
 
@@ -367,9 +376,10 @@ export const ProductCard = ({
     return (
         <>
             <div className="standard-product-card">
+                {/* The money off, as on the flash card above. */}
                 {discountInfo && (
                     <span className="card-badge discount-badge">
-                        {discountInfo.percent} OFF
+                        Save {discountInfo.saving}
                     </span>
                 )}
 
