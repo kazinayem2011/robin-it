@@ -202,7 +202,7 @@ export default function AdminCoupons({
         >
             <Head title="Admin Coupons" />
 
-            <div className="admin-page-container">
+            <div>
                 {/* Reusable DataTable Component with Header Actions */}
                 <DataTable
                     title="Active Promo Codes"

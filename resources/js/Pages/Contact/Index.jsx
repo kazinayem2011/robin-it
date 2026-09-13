@@ -206,7 +206,7 @@ export default function Contact({
                         </form>
                     </div>
 
-                    <aside className="contact-aside">
+                    <aside>
                         <div className="contact-card">
                             <h2>Faster than email</h2>
                             <a

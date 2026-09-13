@@ -44,9 +44,7 @@ export const Checkbox = ({
                     disabled={disabled}
                     className="custom-checkbox-input"
                 />
-                {label && (
-                    <span className="custom-checkbox-label">{label}</span>
-                )}
+                {label && <span>{label}</span>}
             </label>
             {error && <span className="form-control-error">{error}</span>}
         </div>

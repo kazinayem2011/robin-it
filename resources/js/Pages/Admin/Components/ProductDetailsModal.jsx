@@ -519,10 +519,7 @@ export default function ProductDetailsModal({
                             <Section title="Specifications">
                                 {Object.entries(specGroups).map(
                                     ([group, rows]) => (
-                                        <div
-                                            key={group}
-                                            className="pd-spec-group"
-                                        >
+                                        <div key={group}>
                                             <h5>{group}</h5>
                                             <dl>
                                                 {rows.map((spec) => (

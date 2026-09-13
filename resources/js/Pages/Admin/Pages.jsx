@@ -143,7 +143,7 @@ export default function AdminPages({ pages = [] }) {
             header: '',
             align: 'right',
             render: (p) => (
-                <div className="admin-input-row-flex admin-order-actions">
+                <div className="admin-input-row-flex">
                     <a
                         className="admin-table-icon-btn"
                         href={p.url}

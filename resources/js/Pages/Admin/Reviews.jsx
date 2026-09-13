@@ -164,7 +164,7 @@ export default function AdminReviews({
         >
             <Head title="Review Moderation" />
 
-            <div className="admin-page-container">
+            <div>
                 <div className="admin-settings-tabs-bar">
                     {TABS.map((tab) => (
                         <button

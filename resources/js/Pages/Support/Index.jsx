@@ -191,7 +191,7 @@ export default function SupportIndex() {
                     </div>
                 </section>
 
-                <section className="support-faq" aria-label="Common questions">
+                <section aria-label="Common questions">
                     <h2 className="support-section-title">Common questions</h2>
                     <div className="support-faq-list">
                         {faqs.map((faq, index) => {

@@ -113,10 +113,7 @@ export default function BlogShow({ slug }) {
             <div className="article-reader-wrapper">
                 <div className="container article-reader-container">
                     {/* Breadcrumbs */}
-                    <div
-                        className="breadcrumb-nav"
-                        style={{ marginBottom: '20px' }}
-                    >
+                    <div style={{ marginBottom: '20px' }}>
                         <Link href={ROUTES.HOME}>Home</Link>
                         <ChevronRight size={13} />
                         <Link href={ROUTES.BLOGS}>Tech Journal</Link>

@@ -202,7 +202,7 @@ export const Header = () => {
                                 href={`tel:${siteSettings.hotline_number || siteConfig.hotline}`}
                                 className="ticker-link hotline-pill"
                             >
-                                <PhoneCall size={13} className="ticker-icon" />
+                                <PhoneCall size={13} />
                                 <span>
                                     {siteSettings.hotline_number ||
                                         siteConfig.hotline}{' '}
@@ -219,12 +219,12 @@ export const Header = () => {
                                 href={ROUTES.TRACK}
                                 className="ticker-link ticker-link-featured"
                             >
-                                <Truck size={13} className="ticker-icon" />
+                                <Truck size={13} />
                                 <span>Track Order</span>
                             </Link>
                             <span className="ticker-divider"></span>
                             <Link href={ROUTES.STORES} className="ticker-link">
-                                <MapPin size={13} className="ticker-icon" />
+                                <MapPin size={13} />
                                 <span>Showrooms</span>
                             </Link>
                             <span className="ticker-divider"></span>
@@ -272,7 +272,7 @@ export const Header = () => {
                         {/* Signature Highlighted "PC Builder" Button */}
                         <Link
                             href={ROUTES.PC_BUILDER}
-                            className="header-highlight-btn pc-builder-glow-btn"
+                            className="pc-builder-glow-btn"
                         >
                             <div className="btn-glow-icon">
                                 <Cpu size={18} />
@@ -299,7 +299,7 @@ export const Header = () => {
                         {offersRunning > 0 && (
                             <Link
                                 href={ROUTES.OFFERS}
-                                className="header-highlight-btn offers-glow-btn"
+                                className="offers-glow-btn"
                             >
                                 <div className="btn-glow-icon">
                                     <Tag size={18} />

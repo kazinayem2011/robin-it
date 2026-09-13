@@ -163,7 +163,7 @@ export default function AdminSuppliers({ suppliers = {}, filters = {} }) {
             header: '',
             align: 'right',
             render: (s) => (
-                <div className="admin-input-row-flex admin-order-actions">
+                <div className="admin-input-row-flex">
                     <button
                         type="button"
                         className="admin-table-icon-btn"

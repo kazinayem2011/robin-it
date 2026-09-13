@@ -38,10 +38,7 @@ export default function Success({ orderNumber, suggestions = [] }) {
                 </p>
 
                 <div className="order-success-cta-row">
-                    <Link
-                        href={ROUTES.HOME}
-                        className="btn btn-secondary hover-lift"
-                    >
+                    <Link href={ROUTES.HOME} className="btn btn-secondary">
                         Return Home
                     </Link>
                     {/* Carrying the number means the page opens on this order
@@ -55,7 +52,7 @@ export default function Success({ orderNumber, suggestions = [] }) {
                                 ? `${ROUTES.TRACK}/${encodeURIComponent(orderNumber)}`
                                 : ROUTES.TRACK
                         }
-                        className="btn btn-primary hover-lift"
+                        className="btn btn-primary"
                     >
                         Track Order
                     </Link>
@@ -63,7 +60,6 @@ export default function Success({ orderNumber, suggestions = [] }) {
                 <ProductSuggestions
                     products={suggestions}
                     title="You might like these too"
-                    className="order-success-suggestions"
                 />
             </div>
         </>

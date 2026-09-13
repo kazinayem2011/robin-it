@@ -475,7 +475,7 @@ export default function AdminAttributes({
         >
             <Head title="Filters" />
 
-            <div className="admin-page-container">
+            <div>
                 <DataTable
                     title="Filters"
                     subtitle={`${counts.total ?? 0} filters · ${counts.values ?? 0} answers · ${counts.unattached ?? 0} on no shelf`}

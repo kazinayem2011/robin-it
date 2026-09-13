@@ -382,7 +382,7 @@ export const SearchBar = ({ onSearch }) => {
                             <span>Searching catalogue...</span>
                         </div>
                     ) : hasResults ? (
-                        <div className="search-results-content">
+                        <div>
                             {/* Matching Categories & Brands Quick Pills */}
                             {(suggestions.categories.length > 0 ||
                                 suggestions.brands.length > 0) && (
@@ -458,7 +458,7 @@ export const SearchBar = ({ onSearch }) => {
 
                             {/* Matching Products List */}
                             {suggestions.products.length > 0 && (
-                                <div className="search-results-list">
+                                <div>
                                     <div className="search-section-label">
                                         Products Matching "{searchQuery}"
                                     </div>

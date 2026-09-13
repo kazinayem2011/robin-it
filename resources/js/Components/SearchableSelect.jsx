@@ -218,7 +218,7 @@ export default function SearchableSelect({
                 )}
             </div>
 
-            {error && <span className="auth-error-text">{error}</span>}
+            {error && <span className="form-control-error">{error}</span>}
         </div>
     );
 }

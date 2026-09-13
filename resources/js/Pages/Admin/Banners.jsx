@@ -130,7 +130,7 @@ export default function AdminBanners({ banners = [] }) {
         >
             <Head title="Admin Banners &amp; Sliders" />
 
-            <div className="admin-page-container">
+            <div>
                 {/* The same bar as every table screen: heading left, action
                     right, one control height. This page is a grid rather than
                     a table, which is no reason for its header to differ. */}
@@ -328,7 +328,7 @@ export default function AdminBanners({ banners = [] }) {
                                     formik={formik}
                                 />
 
-                                <div className="admin-checkbox-align-center">
+                                <div>
                                     <Checkbox
                                         name="is_active"
                                         label="Active in Live Storefront"

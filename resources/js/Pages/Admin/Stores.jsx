@@ -192,7 +192,7 @@ export default function AdminStores({ stores = [] }) {
         >
             <Head title="Admin Stores &amp; Outlets" />
 
-            <div className="admin-page-container">
+            <div>
                 {/* Reusable DataTable Component with Header Actions */}
                 <DataTable
                     title="Active Storefront Outlets"

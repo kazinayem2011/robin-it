@@ -254,7 +254,7 @@ export default function AdminProductQuestions({
         >
             <Head title="Product Questions" />
 
-            <div className="admin-page-container">
+            <div>
                 <div className="admin-settings-tabs-bar">
                     {TABS.map((tab) => (
                         <button

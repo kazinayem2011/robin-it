@@ -139,8 +139,8 @@ export default function Profile({ user, navCounts, techPoints }) {
                         </label>
                         <div className="auth-input-wrapper">
                             <div className="phone-prefix-box">
-                                <span className="bd-flag">🇧🇩</span>
-                                <span className="prefix-text">+880</span>
+                                <span>🇧🇩</span>
+                                <span>+880</span>
                             </div>
                             <input
                                 type="tel"

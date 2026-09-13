@@ -281,9 +281,7 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                                     }
                                                     className={`slider-dot ${activeHeroSlide === i ? 'dot-active' : ''}`}
                                                     aria-label={`Slide ${i + 1}`}
-                                                >
-                                                    <span className="dot-fill"></span>
-                                                </button>
+                                                />
                                             ))}
                                         </div>
 

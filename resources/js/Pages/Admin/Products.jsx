@@ -999,7 +999,7 @@ export default function Products({
              */
             render: (p) => (
                 <span
-                    className={`admin-badge-stock ${
+                    className={`${
                         p.stock_quantity <= 5
                             ? 'admin-badge-stock-danger'
                             : 'admin-badge-stock-ok'

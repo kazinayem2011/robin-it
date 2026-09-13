@@ -255,7 +255,7 @@ export default function AdminBlogs({ blogs = [] }) {
         >
             <Head title="Admin Tech Journal" />
 
-            <div className="admin-page-container">
+            <div>
                 {/* Standard Reusable DataTable Component */}
                 <DataTable
                     title="Published Articles &amp; Guides"

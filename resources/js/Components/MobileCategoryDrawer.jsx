@@ -210,7 +210,7 @@ export const MobileCategoryDrawer = ({ isOpen, onClose, categories = [] }) => {
                                                                         },
                                                                     )}
                                                                 </span>
-                                                                <span className="mobile-cat-l2-name">
+                                                                <span>
                                                                     {sub.name}
                                                                 </span>
                                                             </Link>

@@ -201,14 +201,14 @@ export default function Cart() {
 
                 <div className="checkout-grid">
                     {/* Left Column: Cart Items List */}
-                    <div className="cart-items-section">
+                    <div>
                         <div className="cart-items-card">
                             <div className="cart-table-header">
                                 <span>Product</span>
                                 <span>Quantity & Subtotal</span>
                             </div>
 
-                            <div className="cart-table-body">
+                            <div>
                                 {cart.items.map((item) => {
                                     // Price belongs to the option when there
                                     // is one — the parent's price is not what
@@ -325,7 +325,7 @@ export default function Cart() {
                     </div>
 
                     {/* Right Column: Cart Summary */}
-                    <div className="checkout-summary-section">
+                    <div>
                         <div className="summary-card">
                             <h3 className="summary-card-title">
                                 Order Summary
@@ -362,7 +362,7 @@ export default function Cart() {
                             ) : (
                                 <Link
                                     href={ROUTES.CHECKOUT}
-                                    className="btn btn-primary btn-block hover-lift"
+                                    className="btn btn-primary btn-block"
                                 >
                                     <span>PROCEED TO CHECKOUT</span>
                                     <ArrowRight size={16} />

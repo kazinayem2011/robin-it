@@ -102,7 +102,7 @@ export const ImageLightbox = ({
                 {count > 1 && (
                     <button
                         type="button"
-                        className="lightbox-arrow is-back"
+                        className="lightbox-arrow"
                         aria-label="Previous photo"
                         onClick={() => step(-1)}
                     >
@@ -121,7 +121,7 @@ export const ImageLightbox = ({
                 {count > 1 && (
                     <button
                         type="button"
-                        className="lightbox-arrow is-next"
+                        className="lightbox-arrow"
                         aria-label="Next photo"
                         onClick={() => step(1)}
                     >

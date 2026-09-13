@@ -322,7 +322,7 @@ export default function Checkout({
                 <h1 className="checkout-title">Checkout</h1>
 
                 <div className="checkout-grid">
-                    <div className="checkout-form-section">
+                    <div>
                         <div className="checkout-form-card">
                             <h3 className="checkout-section-header">
                                 1. Delivery Information
@@ -564,7 +564,7 @@ export default function Checkout({
                         </div>
                     </div>
 
-                    <div className="checkout-summary-section">
+                    <div>
                         <div className="summary-card">
                             <h3 className="summary-card-title">
                                 Order Overview
@@ -756,7 +756,7 @@ export default function Checkout({
                                     </span>
                                 </div>
                                 {appliedCoupon && (
-                                    <div className="summary-line discount-line">
+                                    <div className="summary-line">
                                         <span>Promo Discount</span>
                                         <span className="summary-line-val text-success">
                                             - {formatBdt(discount)}

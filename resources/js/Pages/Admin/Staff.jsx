@@ -159,7 +159,7 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
             header: '',
             align: 'right',
             render: (m) => (
-                <div className="admin-input-row-flex admin-order-actions">
+                <div className="admin-input-row-flex">
                     <button
                         type="button"
                         className="admin-table-icon-btn"

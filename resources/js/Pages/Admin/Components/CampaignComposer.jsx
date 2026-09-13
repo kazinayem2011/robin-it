@@ -245,7 +245,7 @@ export default function CampaignComposer({
             <div
                 className={`cmp-composer ${showing && preview ? 'is-previewing' : ''}`}
             >
-                <div className="cmp-main">
+                <div>
                     {showing && preview ? (
                         <PreviewPane
                             form={form}

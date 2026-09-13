@@ -153,7 +153,7 @@ export default function AdminStock({
 
                 return (
                     <span
-                        className={`admin-badge-stock ${
+                        className={`${
                             low
                                 ? 'admin-badge-stock-danger'
                                 : 'admin-badge-stock-ok'

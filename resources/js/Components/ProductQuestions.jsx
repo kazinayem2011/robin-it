@@ -83,7 +83,7 @@ export default function ProductQuestions({
     };
 
     return (
-        <div className="pdp-questions">
+        <div>
             {questions.length > 0 ? (
                 <>
                     <h4 className="pdp-questions-heading">

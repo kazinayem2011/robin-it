@@ -95,7 +95,7 @@ export default function Index({
                         {recentOrders.slice(0, 2).map((order) => (
                             <div key={order.id} className="order-history-card">
                                 <div className="order-card-header">
-                                    <div className="order-num-tag">
+                                    <div>
                                         <span>ORDER </span>
                                         <strong>#{order.order_number}</strong>
                                     </div>

@@ -85,7 +85,7 @@ const SpecificationEditor = ({ formik }) => {
 
                             <input
                                 type="text"
-                                className="auth-input"
+
                                 aria-label={`Specification ${index + 1} group`}
                                 placeholder="Processor"
                                 value={row.group}
@@ -96,7 +96,7 @@ const SpecificationEditor = ({ formik }) => {
 
                             <input
                                 type="text"
-                                className="auth-input"
+
                                 aria-label={`Specification ${index + 1} name`}
                                 placeholder="Processor Model"
                                 value={row.name}
@@ -107,7 +107,7 @@ const SpecificationEditor = ({ formik }) => {
 
                             <input
                                 type="text"
-                                className="auth-input"
+
                                 aria-label={`Specification ${index + 1} value`}
                                 placeholder="Intel Core i7-14700HX"
                                 value={row.value}

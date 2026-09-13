@@ -226,7 +226,7 @@ export default function Orders({
              * from the list itself, without needing to look at the order.
              */
             render: (order) => (
-                <div className="admin-input-row-flex admin-order-actions">
+                <div className="admin-input-row-flex">
                     <button
                         type="button"
                         className="admin-table-icon-btn"

@@ -91,7 +91,7 @@ export default function BrandMark({ name = '', logo = null, size = 18 }) {
 
     return (
         <span
-            className="brand-mark brand-mark-letters"
+            className="brand-mark"
             aria-hidden="true"
             style={{
                 width: size,

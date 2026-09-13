@@ -1048,6 +1048,43 @@ textarea.has-error:focus,
     border: 1px solid var(--success-border);
 }
 
+/*
+ * The rest of the set. `badge-info`, `badge-secondary` and the live/hidden
+ * and in-stock/out-of-stock pairs have been written in the markup since the
+ * screens that use them were built, with no rule behind any of them — so a
+ * hidden product's badge read "Hidden" in exactly the colours of a live one,
+ * and an out-of-stock badge matched the in-stock badge beside it.
+ */
+.badge-active {
+    background: var(--success-light);
+    color: var(--success-text);
+    border: 1px solid var(--success-border);
+}
+
+.badge-expired {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.badge-stock-danger {
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+}
+
+.badge-info {
+    background: var(--info-light);
+    color: var(--info-text);
+    border: 1px solid var(--info-border);
+}
+
+.badge-secondary {
+    background: var(--bg-muted);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
 .badge-hot {
     background: linear-gradient(135deg, var(--accent-amber) 0%, #ea580c 100%);
     color: var(--text-on-accent);
@@ -1379,6 +1416,33 @@ textarea.has-error:focus,
     font-size: 0.76rem;
     font-weight: 700;
     text-transform: capitalize;
+}
+
+/*
+ * On, off and waiting.
+ *
+ * The order statuses below have had their own colours from the start, but
+ * the blog, coupon and warranty tables write `active`, `inactive` and
+ * `pending` straight onto the pill — and `.active` is only ever styled
+ * compounded with a button class, never on its own. So a published blog and
+ * a draft were the same grey pill with different words in it.
+ */
+.status-pill.active {
+    background: var(--success-light);
+    color: var(--success-text);
+    border: 1px solid var(--success-border);
+}
+
+.status-pill.inactive {
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.status-pill.pending {
+    background: var(--warning-light);
+    color: var(--warning-text);
+    border: 1px solid var(--warning-border);
 }
 
 .status-pending {
@@ -2495,6 +2559,31 @@ textarea.has-error:focus,
      * prices sitting at two different heights.
      */
     min-height: 18px;
+}
+
+/*
+ * Stars shown rather than picked.
+ *
+ * Every caller passes its own class and styles the row and the stars through
+ * it, so the component had nothing of its own — `<StarRating value={4} />`
+ * with no class drew five identical outlines, the rating invisible. These are
+ * the defaults, written with :where() so they carry no specificity at all
+ * and `.rating-stars-row` or `.review-stars-pill` still decides.
+ */
+:where(.star-display-row) {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+:where(.star-display-row) .star-filled {
+    fill: var(--accent-amber-ink);
+    color: var(--accent-amber-ink);
+}
+
+:where(.star-display-row) .star-empty {
+    fill: var(--bg-muted-strong);
+    color: var(--text-faint);
 }
 
 .star-rating {

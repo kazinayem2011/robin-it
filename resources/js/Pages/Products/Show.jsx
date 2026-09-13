@@ -809,7 +809,7 @@ export default function ProductDetails(props) {
                                 {thumbNav.canScrollBack && (
                                     <button
                                         type="button"
-                                        className="thumb-nav is-back"
+                                        className="thumb-nav"
                                         aria-label="Show earlier photos"
                                         onClick={() => slideThumbs(-1)}
                                     >
@@ -1007,7 +1007,6 @@ export default function ProductDetails(props) {
 
                             {product.key_features ? (
                                 <div
-                                    className="pdp-key-features"
                                     dangerouslySetInnerHTML={{
                                         __html: product.key_features,
                                     }}

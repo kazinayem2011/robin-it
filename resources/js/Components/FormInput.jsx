@@ -69,8 +69,8 @@ export const FormInput = ({
 
                 {isBdPhone && (
                     <div className="phone-prefix-box">
-                        <span className="bd-flag">🇧🇩</span>
-                        <span className="prefix-text">+880</span>
+                        <span>🇧🇩</span>
+                        <span>+880</span>
                     </div>
                 )}
 

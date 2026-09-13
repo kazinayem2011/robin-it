@@ -158,7 +158,7 @@ export default function AdminOffers({ offers = [] }) {
                             className="admin-table-thumb"
                         />
                     ) : (
-                        <span className="admin-table-thumb admin-table-thumb-empty">
+                        <span className="admin-table-thumb">
                             <Tag size={16} />
                         </span>
                     )}
@@ -222,7 +222,7 @@ export default function AdminOffers({ offers = [] }) {
             key: 'actions',
             header: 'Actions',
             render: (offer) => (
-                <div className="admin-table-action-row">
+                <div>
                     <a
                         href={ROUTES.OFFER_DETAIL(offer.slug)}
                         target="_blank"
@@ -260,7 +260,7 @@ export default function AdminOffers({ offers = [] }) {
         >
             <Head title="Admin Offers" />
 
-            <div className="admin-page-container">
+            <div>
                 <DataTable
                     title="Offers"
                     subtitle="Each one has a window, the outlets it applies at, and a page of terms. Discounted products are a separate thing and need no entry here."

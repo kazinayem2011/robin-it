@@ -101,10 +101,7 @@ export default function BlogsIndex() {
                 </div>
 
                 {loading ? (
-                    <div
-                        className="loading-state-box"
-                        style={{ padding: '60px', textAlign: 'center' }}
-                    >
+                    <div style={{ padding: '60px', textAlign: 'center' }}>
                         <div className="spinner-large"></div>
                         <p
                             style={{
@@ -118,7 +115,6 @@ export default function BlogsIndex() {
                     </div>
                 ) : filteredBlogs.length === 0 ? (
                     <div
-                        className="empty-state-card"
                         style={{
                             padding: '60px',
                             textAlign: 'center',

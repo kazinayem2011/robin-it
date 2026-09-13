@@ -21,7 +21,7 @@ export default function MainLayout({ children }) {
             <Header />
 
             {/* Main Page Content */}
-            <main className="site-main-content">{children}</main>
+            <main>{children}</main>
 
             {/* Modular Site Footer (Trust badges, 5-col navigation, newsletter, copyright) */}
             <Footer />

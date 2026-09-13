@@ -177,9 +177,7 @@ export default function AdminCouriers({
             header: 'Booking',
             render: (c) =>
                 c.can_book ? (
-                    <span className="admin-badge-stock admin-badge-stock-ok">
-                        Books via API
-                    </span>
+                    <span className="admin-badge-stock-ok">Books via API</span>
                 ) : c.driver && c.driver !== 'manual' ? (
                     // A driver exists but there are no keys, so it still
                     // dispatches by hand. Worth saying, because it looks
@@ -201,7 +199,7 @@ export default function AdminCouriers({
             header: '',
             align: 'right',
             render: (c) => (
-                <div className="admin-input-row-flex admin-order-actions">
+                <div className="admin-input-row-flex">
                     <button
                         type="button"
                         className="admin-table-icon-btn"

@@ -327,7 +327,7 @@ export default function AdminSettings({
         >
             <Head title="Admin Settings" />
 
-            <div className="admin-page-container admin-settings-layout">
+            <div className="admin-settings-layout">
                 {/*
                  * Down the side rather than across the top. Seven tabs, one of
                  * them called "Announcement Ticker", either wrapped to a second
@@ -397,7 +397,7 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <div className="form-row-2col">
                                     <FormInput
                                         label="Platform / Brand Name"
@@ -617,7 +617,7 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <div className="form-row-2col">
                                     <FormInput
                                         label="Delivery Inside Dhaka (৳ BDT)"
@@ -658,7 +658,7 @@ export default function AdminSettings({
                                     <h3 className="admin-card-title">VAT</h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <Checkbox
                                     name="vat_enabled"
                                     label="Charge VAT on orders"
@@ -754,7 +754,7 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <div className="form-row-2col">
                                     <FormSelect
                                         label="Mail Driver"
@@ -897,8 +897,8 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body admin-settings-panel">
-                                <p className="admin-field-hint admin-settings-intro">
+                            <div className="admin-settings-panel">
+                                <p className="admin-field-hint">
                                     Most customers here read a text and never
                                     open the email. Every message costs, so
                                     choose which ones are worth sending — your
@@ -1068,7 +1068,7 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <FormInput
                                     label="Homepage Meta Title"
                                     name="meta_title"
@@ -1176,7 +1176,7 @@ export default function AdminSettings({
                                     </h3>
                                 </div>
                             </div>
-                            <div className="admin-card-body">
+                            <div>
                                 <div className="admin-field-group">
                                     <FormInput
                                         label="Broadcast Message Text"

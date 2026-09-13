@@ -152,7 +152,7 @@ export default function AdminWarranty({ claims = [] }) {
         >
             <Head title="Admin Warranty & RMA" />
 
-            <div className="admin-page-container">
+            <div>
                 {/* Standard Reusable DataTable Component */}
                 <DataTable
                     title="Active Warranty Claims & RMA Tickets"

@@ -26,7 +26,7 @@ export default function ProductWarranty({ months = null, terms = '' }) {
         .filter(Boolean);
 
     return (
-        <div className="pdp-warranty">
+        <div>
             {period > 0 && (
                 <p className="pdp-warranty-period">
                     <strong>

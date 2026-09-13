@@ -284,7 +284,7 @@ export default function AdminBrands({
         >
             <Head title="Brands" />
 
-            <div className="admin-page-container">
+            <div>
                 {/*
                  * The counts read as the subtitle and the action sits in the
                  * header bar, like every other screen. This page had its own

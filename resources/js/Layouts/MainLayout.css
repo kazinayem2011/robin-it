@@ -2080,7 +2080,8 @@
     background: rgba(234, 72, 79, 0.05);
 }
 
-.mobile-cat-l1-item.l1-open > .mobile-cat-l1-row .mobile-accordion-toggle-btn {
+.mobile-cat-l1-item.l1-open > .mobile-cat-l1-row .mobile-accordion-toggle-btn,
+.mobile-cat-l2-item.l2-open > .mobile-cat-l2-row .mobile-accordion-toggle-btn {
     color: var(--primary-ink);
 }
 

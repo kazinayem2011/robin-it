@@ -36,7 +36,7 @@ export const Button = ({
             {loading && (
                 <Loader2
                     size={size === 'sm' ? 14 : 16}
-                    className="btn-spinner animate-spin"
+                    className="animate-spin"
                 />
             )}
             {!loading && Icon && iconPosition === 'left' && (

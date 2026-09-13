@@ -53,16 +53,13 @@ export default function Tabs({
 
                     const inner = (
                         <>
-                            {Icon && (
-                                <Icon size={16} className="reusable-tab-icon" />
-                            )}
-                            <span className="reusable-tab-label">
-                                {tab.label}
-                            </span>
+                            {Icon && <Icon size={16} />}
+                            <span>{tab.label}</span>
+                            {/* No active modifier: the look of an active
+                                badge comes from the button around it, through
+                                `.reusable-tab-btn.active .reusable-tab-badge`. */}
                             {tab.badge !== undefined && tab.badge !== null && (
-                                <span
-                                    className={`reusable-tab-badge ${isActive ? 'badge-active' : ''}`}
-                                >
+                                <span className="reusable-tab-badge">
                                     {tab.badge}
                                 </span>
                             )}

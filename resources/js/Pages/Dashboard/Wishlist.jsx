@@ -65,13 +65,11 @@ export default function Wishlist({
                                         alt={item.product?.name}
                                     />
                                 </Link>
-                                <div className="card-content-body">
-                                    <span className="card-brand-tag">
-                                        {item.product?.brand?.name}
-                                    </span>
+                                <div>
+                                    <span>{item.product?.brand?.name}</span>
                                     <Link
                                         href={`/products/${item.product?.slug}`}
-                                        className="card-product-title truncate-2"
+                                        className="truncate-2"
                                     >
                                         {item.product?.name}
                                     </Link>
