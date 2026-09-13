@@ -406,6 +406,26 @@ export const SearchBar = ({ onSearch }) => {
                                                             )
                                                         }
                                                     >
+                                                        {/*
+                                                            The shelf, named by
+                                                            where it sits. Six
+                                                            shelves are called
+                                                            SteelSeries and
+                                                            four are called
+                                                            Asus — a strip of
+                                                            chips reading the
+                                                            same word four
+                                                            times asks the
+                                                            shopper to choose
+                                                            between things it
+                                                            has not told apart.
+                                                        */}
+                                                        {cat.path && (
+                                                            <em className="facet-pill-path">
+                                                                {cat.path}{' '}
+                                                                ›{' '}
+                                                            </em>
+                                                        )}
                                                         {cat.name}
                                                     </Link>
                                                 ),

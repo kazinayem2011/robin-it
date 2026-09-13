@@ -671,16 +671,30 @@ export default function ProductDetails(props) {
 
             <div className="container pdp-page-wrapper">
                 {/* Breadcrumbs */}
+                {/*
+                    The whole trail, not just the shelf it sits on.
+                    
+                    It read "Home > SteelSeries", which names the one level the
+                    shopper could already see and drops the two that would tell
+                    them where they are — and six different shelves are called
+                    SteelSeries, so it did not even identify that one.
+                */}
                 <div className="breadcrumbs">
                     <Link href={ROUTES.HOME}>Home</Link> &gt;
-                    <Link
-                        href={ROUTES.SHOP_CATEGORY(
-                            product.category?.slug || '',
-                        )}
-                    >
-                        {product.category?.name || 'Category'}
-                    </Link>{' '}
-                    &gt;
+                    {[
+                        product.category?.parent?.parent,
+                        product.category?.parent,
+                        product.category,
+                    ]
+                        .filter((c) => c?.slug)
+                        .map((c) => (
+                            <React.Fragment key={c.id}>
+                                <Link href={ROUTES.SHOP_CATEGORY(c.slug)}>
+                                    {c.name}
+                                </Link>{' '}
+                                &gt;{' '}
+                            </React.Fragment>
+                        ))}
                     <span className="current">{product.name}</span>
                 </div>
                 {/*

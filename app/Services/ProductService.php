@@ -552,7 +552,16 @@ class ProductService
         $product = Product::active()
             ->where('slug', $slug)
             ->with([
-                'category', 'brand', 'images', 'specifications', 'quantityDiscounts',
+                /*
+                 * The shelf and everything above it, because the page draws a
+                 * breadcrumb. Only the shelf itself was loaded, so a product on
+                 * "Accessories > Headphone > SteelSeries" had a trail reading
+                 * "Home > SteelSeries" — which names the one level a shopper
+                 * could already see and drops the two that would tell them
+                 * where they are.
+                 */
+                'category.parent.parent',
+                'brand', 'images', 'specifications', 'quantityDiscounts',
                 /*
                  * The shelf's own answers — RAM, Wi-Fi Standard, Panel Type —
                  * which the sidebar filters on and which the compare page can
@@ -1207,11 +1216,28 @@ class ProductService
             ->get()
             ->map(fn (Product $p) => $this->formatProductCardData($p));
 
+        /*
+         * With their ancestry, because the name alone does not identify one.
+         * SteelSeries is six shelves and Asus is four, so a strip of chips all
+         * reading "SteelSeries" asks the shopper to pick between four things
+         * it has given them no way to tell apart.
+         */
         $categories = Category::where('is_active', true)
             ->inMenuOrder()
             ->where('name', 'LIKE', "%{$needle}%")
+            ->with('parent:id,name,parent_id', 'parent.parent:id,name')
             ->take(4)
-            ->get(['id', 'name', 'slug', 'icon']);
+            ->get(['id', 'name', 'slug', 'icon', 'parent_id'])
+            ->map(fn (Category $c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'slug' => $c->slug,
+                'icon' => $c->icon,
+                'path' => collect([
+                    $c->parent?->parent?->name,
+                    $c->parent?->name,
+                ])->filter()->implode(' › '),
+            ]);
 
         $brands = Brand::where('name', 'LIKE', "%{$needle}%")
             ->take(4)

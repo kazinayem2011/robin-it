@@ -546,6 +546,17 @@
     text-decoration: none;
 }
 
+/*
+ * The ancestry, quieter than the shelf's own name: it is there to tell two
+ * chips apart, not to be read first. Both sit on one line, so a pill stays a
+ * pill rather than becoming a paragraph.
+ */
+.facet-pill-path {
+    font-style: normal;
+    color: var(--text-subtle);
+    font-weight: 400;
+}
+
 .facet-pill:hover {
     border-color: var(--primary);
     color: var(--primary-ink);
