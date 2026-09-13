@@ -130,12 +130,20 @@ export const CategorySubCard = ({
 
             {/* Level 3: Children Series & Lineups */}
             <div className="admin-cat-tree-l3-list">
-                {sub.children?.map((child) => (
+                {sub.children?.map((child, childIndex) => (
                     <CategoryChip
                         key={child.id}
                         child={child}
+                        index={childIndex}
+                        /* Its shelf is this sub-card, not the root above. */
+                        parentId={sub.id}
+                        draggingId={draggingId}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        onDragStart={onDragStart}
+                        onDragEnterRow={onDragEnterRow}
+                        onDrop={onDrop}
+                        onDragEnd={onDragEnd}
                     />
                 ))}
 

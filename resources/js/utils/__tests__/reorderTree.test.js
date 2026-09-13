@@ -1,11 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { moveItem, reorderSiblings, indexOnShelf } from '../reorderTree';
 
+/*
+ * Three deep, like the real one. The makers live on the third level — a dozen
+ * or more under a single shelf — and both functions used to look one level
+ * down and no further, so those could not be moved at all.
+ */
 const tree = () => [
     {
         id: 1,
         name: 'Component',
-        children: [{ id: 10 }, { id: 11 }, { id: 12 }],
+        children: [
+            { id: 10, children: [{ id: 100 }, { id: 101 }, { id: 102 }] },
+            { id: 11 },
+            { id: 12 },
+        ],
     },
     { id: 2, name: 'Laptop', children: [{ id: 20 }, { id: 21 }] },
     { id: 3, name: 'Monitor', children: [] },
@@ -105,5 +114,45 @@ describe('indexOnShelf', () => {
     it('does not find a child on another parent’s shelf', () => {
         expect(indexOnShelf(tree(), 2, 12)).toBe(-1);
         expect(indexOnShelf(tree(), null, 12)).toBe(-1);
+    });
+});
+
+describe('the third level', () => {
+    it('reorders makers under their own shelf', () => {
+        const moved = reorderSiblings(tree(), 10, 0, 2);
+
+        expect(ids(moved[0].children[0].children)).toEqual([101, 102, 100]);
+    });
+
+    it('finds a maker among its siblings', () => {
+        expect(indexOnShelf(tree(), 10, 102)).toBe(2);
+    });
+
+    /* The levels above it are untouched by a move on the level below. */
+    it('leaves the shelves above it alone', () => {
+        const moved = reorderSiblings(tree(), 10, 0, 2);
+
+        expect(ids(moved)).toEqual([1, 2, 3]);
+        expect(ids(moved[0].children)).toEqual([10, 11, 12]);
+    });
+
+    /*
+     * Copied the whole way down, because a card drawn from a mutated array
+     * does not re-render — and the node being changed is two levels in.
+     */
+    it('copies every node on the path to the one that changed', () => {
+        const before = tree();
+        const after = reorderSiblings(before, 10, 0, 2);
+
+        expect(after).not.toBe(before);
+        expect(after[0]).not.toBe(before[0]);
+        expect(after[0].children[0]).not.toBe(before[0].children[0]);
+        // And leaves the branches it did not touch as they were.
+        expect(after[1]).toBe(before[1]);
+    });
+
+    it('is still only ever one shelf', () => {
+        expect(indexOnShelf(tree(), 11, 100)).toBe(-1);
+        expect(indexOnShelf(tree(), null, 100)).toBe(-1);
     });
 });

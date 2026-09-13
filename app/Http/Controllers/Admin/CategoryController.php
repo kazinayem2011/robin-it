@@ -27,17 +27,34 @@ class CategoryController extends Controller
          * was `orderBy('id')` — the order they happened to be created in —
          * so the tree an admin reordered still showed itself unchanged.
          */
+        /*
+         * The columns this screen draws, and no others.
+         *
+         * The tree is 1,390 rows and every one of them was arriving whole —
+         * sixteen columns including four spotlight fields and two timestamps
+         * that nothing here reads — for 491 KB of Inertia prop on every load
+         * of the page. Half of that was being shipped to be ignored.
+         *
+         * `products` went with them: eager-loaded on every root and referenced
+         * by nothing but a comment. The delete refusal counts products, but it
+         * does that on the server when somebody actually presses delete.
+         */
+        $fields = [
+            'id', 'parent_id', 'brand_id', 'name', 'slug',
+            'position', 'icon', 'badge', 'is_offer', 'is_active',
+        ];
+
         $categories = Category::whereNull('parent_id')
             ->with([
-                'children.children',
-                'products',
+                'children' => fn ($q) => $q->select($fields)->inMenuOrder(),
+                'children.children' => fn ($q) => $q->select($fields)->inMenuOrder(),
                 // Every level, because a brand shelf is usually the third one.
                 'brand:id,name',
                 'children.brand:id,name',
                 'children.children.brand:id,name',
             ])
             ->inMenuOrder()
-            ->get();
+            ->get($fields);
 
         // Flat list for parent selector (Level 1 & Level 2 categories)
         $parentOptions = Category::where('is_active', true)

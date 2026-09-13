@@ -5592,3 +5592,19 @@ a.admin-card:hover,
 .admin-field-warning b {
     font-weight: 700;
 }
+
+/*
+ * A chip being carried. Faded like the cards above it, so the same gesture
+ * looks the same at every level of the tree.
+ */
+.admin-cat-tree-l3-chip.is-dragging {
+    opacity: 0.5;
+}
+
+.admin-cat-tree-l3-chip[draggable='true'] {
+    cursor: grab;
+}
+
+.admin-cat-tree-l3-chip[draggable='true']:active {
+    cursor: grabbing;
+}

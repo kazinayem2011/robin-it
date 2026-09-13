@@ -16,9 +16,56 @@ import { Edit2, XCircle } from 'lucide-react';
  * a pencil that appears on hover or focus — quiet at rest, because twenty
  * permanent pencils in a row is its own kind of noise.
  */
-export const CategoryChip = ({ child, onEdit, onDelete }) => {
+export const CategoryChip = ({
+    child,
+    onEdit,
+    onDelete,
+    /*
+     * The same drag the cards above use, one level further down. A shelf
+     * commonly holds a dozen makers and the order is somebody's decision —
+     * it just had no way to be made until now.
+     */
+    parentId = null,
+    index = 0,
+    draggingId = null,
+    onDragStart,
+    onDragEnterRow,
+    onDrop,
+    onDragEnd,
+}) => {
+    const isDraggable = Boolean(onDragStart);
+
     return (
-        <span className="admin-cat-tree-l3-chip">
+        <span
+            className={`admin-cat-tree-l3-chip${
+                draggingId === child.id ? ' is-dragging' : ''
+            }`}
+            draggable={isDraggable}
+            /*
+             * Stopped, like the sub-card's. A chip sits inside two draggable
+             * cards, so without this picking one up starts its shelf's drag
+             * as well and carries the lot.
+             */
+            onDragStart={(event) => {
+                event.stopPropagation();
+                event.dataTransfer.effectAllowed = 'move';
+                onDragStart?.(child, parentId);
+            }}
+            onDragEnter={(event) => {
+                event.stopPropagation();
+                onDragEnterRow?.(parentId, index);
+            }}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onDrop?.();
+            }}
+            onDragEnd={(event) => {
+                event.stopPropagation();
+                onDragEnd?.();
+            }}
+        >
             <button
                 type="button"
                 className="l3-chip-label"
