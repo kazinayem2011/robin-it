@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@inertiajs/react', () => ({
@@ -50,6 +51,30 @@ describe('a level-3 shelf chip', () => {
         );
 
         expect(onEdit).toHaveBeenCalledWith(child);
+    });
+
+    /*
+     * Drawn at rest, not on hover. It was hover-only at first, which answers
+     * the wrong question: the fault was that nobody could tell the chip opens,
+     * and an affordance you have to hover to find is one you only find if you
+     * already suspected it was there.
+     */
+    it('shows the pencil without being hovered', () => {
+        const { container } = render(
+            <CategoryChip child={child} onEdit={vi.fn()} onDelete={vi.fn()} />,
+        );
+
+        expect(container.querySelector('.l3-chip-pencil')).toBeInTheDocument();
+
+        const css = readFileSync(
+            'resources/js/Layouts/AdminLayout.css',
+            'utf8',
+        );
+        const at = css.indexOf('.l3-chip-pencil {');
+        const rule = css.slice(at, css.indexOf('}', at));
+
+        // jsdom applies no stylesheet, so the rule itself is what is checked.
+        expect(rule).not.toMatch(/opacity:\s*0/);
     });
 
     /* The destructive one must not be the only thing that looks like an action. */

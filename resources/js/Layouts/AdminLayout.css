@@ -1808,22 +1808,23 @@ a.admin-card:hover,
 }
 
 /*
- * Shown on hover or focus, not always. There are dozens of these under one
- * parent and twenty permanent pencils is its own kind of noise — but with
- * none at all the only visible mark on the chip was the delete, which is how
- * somebody hunting for "edit" ended up editing the card it sits in.
+ * Always drawn, and quiet.
  *
- * Width is held so the chip does not jump wider as the pointer crosses it.
+ * It was shown on hover only, on the reasoning that twenty permanent pencils
+ * under one parent is its own kind of noise. That reasoning answered the
+ * wrong question: the thing being fixed was that nobody could tell the chip
+ * opens, and an affordance you have to hover to find is one you only find if
+ * you already suspected it. So it sits there — faint enough not to compete
+ * with the names, present enough to be the answer to "how do I edit this".
  */
 .l3-chip-pencil {
-    opacity: 0;
-    transition: opacity var(--transition-fast);
+    color: var(--text-faint);
+    transition: color var(--transition-fast);
 }
 
 .l3-chip-label:hover .l3-chip-pencil,
-.l3-chip-label:focus-visible .l3-chip-pencil,
-.admin-cat-tree-l3-chip:hover .l3-chip-pencil {
-    opacity: 1;
+.l3-chip-label:focus-visible .l3-chip-pencil {
+    color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
