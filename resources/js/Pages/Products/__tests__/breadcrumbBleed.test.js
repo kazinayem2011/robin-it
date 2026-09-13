@@ -50,10 +50,24 @@ describe('the listing breadcrumb', () => {
     });
 
     /*
-     * The chip sits under the breadcrumb rather than beside it, so a left
-     * margin indented it out of line with everything above.
+     * The chip sits under the breadcrumb rather than beside it. It carried a
+     * left margin from when the two shared a line, and swapping that for a top
+     * margin only moved the problem — a child deciding its own spacing is what
+     * made both wrong. The stack declares one gap for the pair instead.
      */
-    it('leaves the search chip aligned with the trail above it', () => {
-        expect(rule(listing, '.plp-search-chip {')).not.toMatch(/margin-left/);
+    it('leaves the chip no margin of its own', () => {
+        expect(rule(listing, '.plp-search-chip {')).not.toMatch(/margin/);
+    });
+
+    /*
+     * The chip is inline-flex on its own line, and the space above it is that
+     * line's. Making the wrapper a flex column takes the line boxes away and
+     * leaves only whatever gap is declared, which closed the pair up.
+     */
+    it('leaves the trail and the chip in normal block flow', () => {
+        const stack = rule(listing, '.plp-header-stack {');
+
+        expect(stack).not.toMatch(/flex-direction:\s*column/);
+        expect(stack).not.toMatch(/gap:/);
     });
 });

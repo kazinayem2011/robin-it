@@ -371,7 +371,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                 <div className="plp-container">
                     {/* Header Banner */}
                     <div className="plp-header-banner">
-                        <div>
+                        <div className="plp-header-stack">
                             <div className="breadcrumbs plp-breadcrumbs-spacer">
                                 <Link href={ROUTES.HOME}>Home</Link>
                                 <span className="current">{listingName}</span>

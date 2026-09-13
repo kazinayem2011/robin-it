@@ -30,6 +30,19 @@
 }
 
 /*
+ * The trail and the search chip under it.
+ *
+ * Deliberately not a flex column. The chip is inline-flex and sits on its own
+ * line below the trail, and the space between them is that line's own — make
+ * this a column and the line boxes go with it, leaving whatever gap is
+ * declared here and nothing else. Which is what happened: a 6px gap replaced
+ * the spacing the block flow was already giving, and the pair closed up.
+ */
+.plp-header-stack {
+    display: block;
+}
+
+/*
  * Two rules used to say this, one of them adding a margin of its own.
  *
  * The class it shares, `.breadcrumbs`, is declared in Products/Show.css with
@@ -689,12 +702,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    /*
-     * Aligned with the breadcrumb above it, not indented from it. The 10px
-     * was from when the two shared a line; they stack now, and the offset
-     * read as the chip belonging to something further in.
-     */
-    margin-top: 8px;
+    /* Spacing is the stack's, above. This carries none of its own. */
     padding: 3px 10px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
