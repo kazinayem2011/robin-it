@@ -45,6 +45,17 @@
     gap: 6px;
     margin-bottom: 0;
     padding-bottom: 0;
+    /*
+     * And the rule beneath it, which this page never asked for.
+     *
+     * `.breadcrumbs` is also declared in Products/Show.css — margin, padding
+     * and a border-bottom the detail page wants under its trail. Page
+     * stylesheets are bundled together and stay loaded once visited, so from
+     * the first product page onward this listing drew a line under its
+     * breadcrumb that it had never drawn before. The margin and padding were
+     * already being undone here; the border was missed.
+     */
+    border-bottom: none;
     font-size: 0.82rem;
     color: var(--text-muted);
 }
@@ -678,7 +689,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-left: 10px;
+    /*
+     * Aligned with the breadcrumb above it, not indented from it. The 10px
+     * was from when the two shared a line; they stack now, and the offset
+     * read as the chip belonging to something further in.
+     */
+    margin-top: 8px;
     padding: 3px 10px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
