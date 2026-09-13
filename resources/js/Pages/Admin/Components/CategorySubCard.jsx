@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
     Edit2,
     Trash2,
@@ -13,7 +13,7 @@ import { getCategoryIcon } from '@/utils/iconMap';
 /**
  * Reusable Level 2 Subcategory Card
  */
-export const CategorySubCard = ({
+const CategorySubCardInner = ({
     sub,
     onEdit,
     onDelete,
@@ -137,7 +137,7 @@ export const CategorySubCard = ({
                         index={childIndex}
                         /* Its shelf is this sub-card, not the root above. */
                         parentId={sub.id}
-                        draggingId={draggingId}
+                        isDragging={draggingId === child.id}
                         onEdit={onEdit}
                         onDelete={onDelete}
                         onDragStart={onDragStart}
@@ -158,5 +158,11 @@ export const CategorySubCard = ({
         </div>
     );
 };
+
+/*
+ * Memoised. The page re-renders on any state it holds — a modal opening, a
+ * field typed into — and without this that redrew the whole tree each time.
+ */
+export const CategorySubCard = memo(CategorySubCardInner);
 
 export default CategorySubCard;

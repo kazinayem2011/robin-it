@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
     Plus,
     Edit2,
@@ -15,7 +15,7 @@ import { getCategoryIcon } from '@/utils/iconMap';
 /**
  * Reusable Level 1 Root Category Card
  */
-export const CategoryParentCard = ({
+const CategoryParentCardInner = ({
     parent,
     isCollapsed,
     onToggleCollapse,
@@ -235,5 +235,11 @@ export const CategoryParentCard = ({
         </div>
     );
 };
+
+/*
+ * Memoised. The page re-renders on any state it holds — a modal opening, a
+ * field typed into — and without this that redrew the whole tree each time.
+ */
+export const CategoryParentCard = memo(CategoryParentCardInner);
 
 export default CategoryParentCard;

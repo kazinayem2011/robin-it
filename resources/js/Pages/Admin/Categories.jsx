@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, {
+    useState,
+    useMemo,
+    useEffect,
+    useRef,
+    useCallback,
+} from 'react';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -159,7 +165,19 @@ export default function Categories({
                 }
 
                 closeModal();
-                router.reload({ preserveScroll: true });
+
+                /*
+                 * The tree, and the brands when one was just minted from this
+                 * form. Not the whole page: a bare reload also re-fetched the
+                 * 252 parent options and every brand, none of which a save
+                 * can change unless it created one.
+                 */
+                router.reload({
+                    only: payload.create_brand
+                        ? ['categories', 'brandOptions']
+                        : ['categories'],
+                    preserveScroll: true,
+                });
             } catch (error) {
                 console.error('Category action failed', error);
                 toast.error(
@@ -174,7 +192,7 @@ export default function Categories({
 
     // Modal open handlers
     const openCreateRootModal = () => {
-        formik.resetForm({
+        formikRef.current.resetForm({
             values: {
                 name: '',
                 slug: '',
@@ -196,8 +214,8 @@ export default function Categories({
         });
     };
 
-    const openCreateChildModal = (parent, level) => {
-        formik.resetForm({
+    const openCreateChildModal = useCallback((parent, level) => {
+        formikRef.current.resetForm({
             values: {
                 name: '',
                 slug: '',
@@ -217,7 +235,7 @@ export default function Categories({
             category: null,
             defaultLevel: level,
         });
-    };
+    }, []);
 
     /*
      * Move a shelf one place among its siblings.
@@ -260,23 +278,39 @@ export default function Categories({
      * renders from a drag is the rearranged list itself, and `draggingId`,
      * which is what fades the card being carried.
      */
+    /*
+     * Formik in a ref, read rather than closed over.
+     *
+     * These handlers are passed to memoised cards, so they have to keep their
+     * identity — and formik hands back a new object on every keystroke, so
+     * naming it as a dependency would rebuild them constantly and re-render
+     * the 1,390 cards this memoisation exists to spare. Only resetForm is
+     * called through it, which is stable in its own right; the ref is what
+     * lets the linter see that.
+     */
+    const formikRef = useRef(formik);
+    formikRef.current = formik;
+
     const dragRef = useRef(null);
     const [draggingId, setDraggingId] = useState(null);
 
-    const startDrag = (cat, parentId) => {
-        const from = indexOnShelf(tree, parentId, cat.id);
-        if (from === -1) return;
+    const startDrag = useCallback(
+        (cat, parentId) => {
+            const from = indexOnShelf(tree, parentId, cat.id);
+            if (from === -1) return;
 
-        dragRef.current = { id: cat.id, parentId, from, to: from };
-        setDraggingId(cat.id);
-    };
+            dragRef.current = { id: cat.id, parentId, from, to: from };
+            setDraggingId(cat.id);
+        },
+        [tree],
+    );
 
     /*
      * Crossing a row rearranges the list immediately, so the shelf reads the
      * way it will end up rather than the way it started. Only the drop is
      * sent to the server.
      */
-    const dragOver = (parentId, index) => {
+    const dragOver = useCallback((parentId, index) => {
         const drag = dragRef.current;
 
         /*
@@ -293,7 +327,7 @@ export default function Categories({
             drag.to = index;
             return reorderSiblings(current, parentId, at, index);
         });
-    };
+    }, []);
 
     const drop = async () => {
         const drag = dragRef.current;
@@ -323,8 +357,8 @@ export default function Categories({
         setTree(categories);
     };
 
-    const openEditModal = (cat) => {
-        formik.resetForm({
+    const openEditModal = useCallback((cat) => {
+        formikRef.current.resetForm({
             values: {
                 name: cat.name || '',
                 slug: cat.slug || '',
@@ -345,7 +379,7 @@ export default function Categories({
             category: cat,
             defaultLevel: cat.parent_id ? 2 : 1,
         });
-    };
+    }, []);
 
     const closeModal = () => {
         setModalState({
@@ -368,7 +402,12 @@ export default function Categories({
                 'Deleted',
             );
             setDeleteModalState({ isOpen: false, category: null });
-            router.reload({ preserveScroll: true });
+            // Deleting a shelf changes the tree and the shelves that may be
+            // a parent; nothing else on the page.
+            router.reload({
+                only: ['categories', 'parentOptions'],
+                preserveScroll: true,
+            });
         } catch (error) {
             console.error('Delete failed', error);
             /*

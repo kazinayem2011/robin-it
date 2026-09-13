@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Edit2, XCircle } from 'lucide-react';
 
 /**
@@ -16,7 +16,7 @@ import { Edit2, XCircle } from 'lucide-react';
  * a pencil that appears on hover or focus — quiet at rest, because twenty
  * permanent pencils in a row is its own kind of noise.
  */
-export const CategoryChip = ({
+const Chip = ({
     child,
     onEdit,
     onDelete,
@@ -27,7 +27,7 @@ export const CategoryChip = ({
      */
     parentId = null,
     index = 0,
-    draggingId = null,
+    isDragging = false,
     onDragStart,
     onDragEnterRow,
     onDrop,
@@ -38,7 +38,7 @@ export const CategoryChip = ({
     return (
         <span
             className={`admin-cat-tree-l3-chip${
-                draggingId === child.id ? ' is-dragging' : ''
+                isDragging ? ' is-dragging' : ''
             }`}
             draggable={isDraggable}
             /*
@@ -92,5 +92,16 @@ export const CategoryChip = ({
         </span>
     );
 };
+
+/*
+ * Memoised, and told only whether *it* is the one being dragged.
+ *
+ * There are 1,138 of these on the tree. Without this, every keystroke and
+ * every modal opening re-rendered all of them — the page has no other state
+ * to change — which is what made opening a dialog feel like work. Handed the
+ * shared draggingId it would have re-rendered them all on every pointer move
+ * too; a boolean means the two that actually changed do.
+ */
+export const CategoryChip = memo(Chip);
 
 export default CategoryChip;
