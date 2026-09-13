@@ -89,6 +89,12 @@ const CategoryParentCardInner = ({
                                 ? 'Expand subcategories'
                                 : 'Collapse subcategories'
                         }
+                        /* Named, because fifteen of these sit on the page and
+                           "Expand subcategories" does not say whose. */
+                        aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${
+                            parent.name
+                        }`}
+                        aria-expanded={!isCollapsed}
                     >
                         {isCollapsed ? (
                             <ChevronRight size={15} />

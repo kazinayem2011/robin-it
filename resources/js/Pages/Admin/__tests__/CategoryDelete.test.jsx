@@ -72,11 +72,16 @@ describe('Categories — a delete that is refused', () => {
 
     beforeEach(() => vi.clearAllMocks());
 
+    /*
+     * Roots arrive shut, so the tree is opened before anything beneath one can
+     * be reached. See CategoryTreeRedraw for why they start that way.
+     */
     const openDeleteFor = async (name) => {
         const user = userEvent.setup();
         render(<Categories categories={categories} parentOptions={[]} />);
 
-        await user.click(screen.getByLabelText(`Delete ${name}`));
+        await user.click(screen.getByRole('button', { name: /expand all/i }));
+        await user.click(await screen.findByLabelText(`Delete ${name}`));
         return user;
     };
 

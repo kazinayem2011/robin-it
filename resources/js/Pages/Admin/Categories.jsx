@@ -46,7 +46,18 @@ export default function Categories({
     useEffect(() => {
         setTree(categories);
     }, [categories]);
-    const [collapsedIds, setCollapsedIds] = useState(new Set());
+    /*
+     * Every root starts closed.
+     *
+     * Open, the tree is 15 root cards, 237 shelves and 1,138 maker chips, all
+     * of it drawn before the page can be shown — and no one reads 1,138 chips
+     * at once. A root is one click away, and a root added after this point is
+     * not in the set, so it arrives open, which is where a shelf just made
+     * should be.
+     */
+    const [collapsedIds, setCollapsedIds] = useState(
+        () => new Set(categories.map((c) => c.id)),
+    );
     const [modalState, setModalState] = useState({
         isOpen: false,
         mode: 'create', // 'create' | 'edit'
@@ -61,7 +72,7 @@ export default function Categories({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Toggle collapse for parent cards
-    const toggleCollapse = (id) => {
+    const toggleCollapse = useCallback((id) => {
         setCollapsedIds((prev) => {
             const next = new Set(prev);
             if (next.has(id)) {
@@ -71,7 +82,7 @@ export default function Categories({
             }
             return next;
         });
-    };
+    }, []);
 
     // Expand all / Collapse all toggle
     const toggleAll = () => {
@@ -237,6 +248,14 @@ export default function Categories({
         });
     }, []);
 
+    const openDeleteModal = useCallback((cat) => {
+        setDeleteModalState({ isOpen: true, category: cat });
+    }, []);
+
+    const closeDeleteModal = useCallback(() => {
+        setDeleteModalState({ isOpen: false, category: null });
+    }, []);
+
     /*
      * Move a shelf one place among its siblings.
      *
@@ -252,23 +271,29 @@ export default function Categories({
      */
     const canReorder = !searchQuery.trim();
 
-    const reorderFailed = (err) => {
-        toast.error(
-            err?.message || 'Could not move that category.',
-            'Reorder Failed',
-        );
-        /* Put the shelf back the way the server still has it. */
-        setTree(categories);
-    };
+    const reorderFailed = useCallback(
+        (err) => {
+            toast.error(
+                err?.message || 'Could not move that category.',
+                'Reorder Failed',
+            );
+            /* Put the shelf back the way the server still has it. */
+            setTree(categories);
+        },
+        [categories],
+    );
 
-    const moveCategory = async (cat, direction) => {
-        try {
-            await adminService.moveCategory(cat.id, direction);
-            router.reload({ only: ['categories'], preserveScroll: true });
-        } catch (err) {
-            reorderFailed(err);
-        }
-    };
+    const moveCategory = useCallback(
+        async (cat, direction) => {
+            try {
+                await adminService.moveCategory(cat.id, direction);
+                router.reload({ only: ['categories'], preserveScroll: true });
+            } catch (err) {
+                reorderFailed(err);
+            }
+        },
+        [reorderFailed],
+    );
 
     /*
      * Dragging a card to a place on its shelf.
@@ -329,7 +354,7 @@ export default function Categories({
         });
     }, []);
 
-    const drop = async () => {
+    const drop = useCallback(async () => {
         const drag = dragRef.current;
         dragRef.current = null;
         setDraggingId(null);
@@ -342,20 +367,20 @@ export default function Categories({
         } catch (err) {
             reorderFailed(err);
         }
-    };
+    }, [reorderFailed]);
 
     /*
      * Fires whether the card was dropped or the drag was abandoned — on Esc,
      * or outside the list. `drop` clears the ref, so anything still in it here
      * was abandoned, and the preview has to be put back.
      */
-    const endDrag = () => {
+    const endDrag = useCallback(() => {
         if (!dragRef.current) return;
 
         dragRef.current = null;
         setDraggingId(null);
         setTree(categories);
-    };
+    }, [categories]);
 
     const openEditModal = useCallback((cat) => {
         formikRef.current.resetForm({
@@ -496,15 +521,12 @@ export default function Categories({
                                 onDragEnterRow={dragOver}
                                 onDrop={drop}
                                 onDragEnd={endDrag}
-                                isCollapsed={collapsedIds.has(parent.id)}
+                                isCollapsed={
+                                    canReorder && collapsedIds.has(parent.id)
+                                }
                                 onToggleCollapse={toggleCollapse}
                                 onEdit={openEditModal}
-                                onDelete={(cat) =>
-                                    setDeleteModalState({
-                                        isOpen: true,
-                                        category: cat,
-                                    })
-                                }
+                                onDelete={openDeleteModal}
                                 onAddSubcategory={openCreateChildModal}
                                 onAddChild={openCreateChildModal}
                             />
@@ -526,9 +548,7 @@ export default function Categories({
             {/* Delete Confirmation Modal */}
             <CategoryDeleteModal
                 deleteModalState={deleteModalState}
-                onClose={() =>
-                    setDeleteModalState({ isOpen: false, category: null })
-                }
+                onClose={closeDeleteModal}
                 onConfirmDelete={handleDelete}
                 isSubmitting={isSubmitting}
             />
