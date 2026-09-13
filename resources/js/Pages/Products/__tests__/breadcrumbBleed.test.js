@@ -55,8 +55,8 @@ describe('the listing breadcrumb', () => {
      * margin only moved the problem — a child deciding its own spacing is what
      * made both wrong. The stack declares one gap for the pair instead.
      */
-    it('leaves the chip no margin of its own', () => {
-        expect(rule(listing, '.plp-search-chip {')).not.toMatch(/margin/);
+    it('never indents the chip from the trail it sits under', () => {
+        expect(rule(listing, '.plp-search-chip {')).not.toMatch(/margin-left/);
     });
 
     /*

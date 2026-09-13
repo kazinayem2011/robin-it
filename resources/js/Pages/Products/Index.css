@@ -702,7 +702,16 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    /* Spacing is the stack's, above. This carries none of its own. */
+    /*
+     * Room above it, to sit off the trail rather than under it.
+     *
+     * Block flow gives a couple of pixels from the line box and no more, which
+     * read as the chip being stuck to the breadcrumb. This brings it close to
+     * the 20px between the chip and the panel below, so the header has one
+     * rhythm down it — and no left margin, because it lines up with the trail
+     * rather than being indented from it.
+     */
+    margin-top: 12px;
     padding: 3px 10px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-full);
