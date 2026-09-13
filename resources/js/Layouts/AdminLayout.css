@@ -1783,14 +1783,53 @@ a.admin-card:hover,
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
+/*
+ * A button now, not a span with a click on it. It needs the reset because a
+ * chip is not a control shaped like one — what says it opens is the pencil
+ * and the hover, not a border.
+ */
 .l3-chip-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
     font-size: 0.72rem;
     line-height: 1.2;
 }
 
-.l3-chip-label:hover {
+.l3-chip-label:hover,
+.l3-chip-label:focus-visible {
     color: var(--primary-ink);
+}
+
+/*
+ * Shown on hover or focus, not always. There are dozens of these under one
+ * parent and twenty permanent pencils is its own kind of noise — but with
+ * none at all the only visible mark on the chip was the delete, which is how
+ * somebody hunting for "edit" ended up editing the card it sits in.
+ *
+ * Width is held so the chip does not jump wider as the pointer crosses it.
+ */
+.l3-chip-pencil {
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.l3-chip-label:hover .l3-chip-pencil,
+.l3-chip-label:focus-visible .l3-chip-pencil,
+.admin-cat-tree-l3-chip:hover .l3-chip-pencil {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .l3-chip-pencil {
+        transition: none;
+    }
 }
 
 .l3-chip-remove-btn {
@@ -5523,4 +5562,32 @@ a.admin-card:hover,
 /* A right-aligned column keeps its group against the edge. */
 .admin-table-icon-group-end {
     justify-content: flex-end;
+}
+
+/*
+ * Something worth saying before a save, which is not the same as something
+ * wrong. It sits under the field it is about, in the warning colour rather
+ * than the error one, and never stops the form being submitted.
+ */
+.admin-field-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: -6px 0 14px;
+    padding: 9px 11px;
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-sm);
+    background: var(--warning-light);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--warning-text);
+}
+
+.admin-field-warning > svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.admin-field-warning b {
+    font-weight: 700;
 }

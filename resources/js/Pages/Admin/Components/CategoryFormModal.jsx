@@ -4,6 +4,7 @@ import Checkbox from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
 import FormSelect from '@/Components/FormSelect';
 import Modal from '@/Components/Modal';
+import { AlertTriangle } from 'lucide-react';
 import Select from '@/Components/Select';
 import { NAVBAR_BADGE_OPTIONS } from '@/constants';
 
@@ -41,6 +42,24 @@ export const CategoryFormModal = ({
     isSubmitting = false,
 }) => {
     const trimmedName = (formik.values.name || '').trim();
+
+    /*
+     * The brand this shelf claims, when its own name is not that brand's.
+     * Null when there is no brand, or when the two agree.
+     */
+    const brandMismatch = (() => {
+        if (formik.values.create_brand || !formik.values.brand_id) return null;
+
+        const brand = brandOptions.find(
+            (b) => String(b.id) === String(formik.values.brand_id),
+        );
+
+        if (!brand || !trimmedName) return null;
+
+        return brand.name.trim().toLowerCase() === trimmedName.toLowerCase()
+            ? null
+            : brand.name;
+    })();
 
     const parentChoices = parentChoicesFrom(
         parentOptions,
@@ -149,6 +168,36 @@ export const CategoryFormModal = ({
                         </option>
                     ))}
                 </FormSelect>
+
+                {/*
+                    Said, not refused.
+                    
+                    A shelf that stands for a brand is normally named after it —
+                    "Asus" under Gaming Laptop, "Samsung" under Phone. When the
+                    two names disagree it is usually the wrong row being edited:
+                    the level-3 shelves are drawn as small chips and the card
+                    around them has the visible pencil, so "Headphone" got set to
+                    stand for SteelSeries, which is not a thing that can be true.
+                    
+                    Not a rule, though. "Asus ROG" standing for Asus is a shelf
+                    somebody may well want, and blocking it would be inventing a
+                    constraint the shop does not have — so this asks rather than
+                    decides.
+                */}
+                {brandMismatch && (
+                    /* A status, not an alert: worth reading before saving,
+                       never urgent enough to interrupt. */
+                    <p className="admin-field-warning" role="status">
+                        <AlertTriangle size={13} />
+                        <span>
+                            This shelf is called <b>{trimmedName}</b> but stands
+                            for <b>{brandMismatch}</b>. That is right for a
+                            shelf like &ldquo;ROG&rdquo; under Asus — but if you
+                            meant to mark a maker, edit that maker&apos;s own
+                            chip rather than the shelf holding it.
+                        </span>
+                    </p>
+                )}
 
                 {/* Category Name */}
                 <FormInput
