@@ -36,6 +36,20 @@ export default function AdminBrands({
         logo_path: '',
         is_featured: false,
     });
+
+    /*
+     * The chosen file, held rather than sent.
+     *
+     * Picking one used to upload it there and then, so a logo chosen and then
+     * thought better of — the modal closed, the name left blank, the save
+     * refused — left a file on the disk that nothing ever pointed at, and no
+     * screen lists those. It goes up when the brand is saved and not before.
+     *
+     * `preview` is a blob URL for the picked file, so the mark beside the
+     * button still shows what was chosen without anything leaving the browser.
+     */
+    const [pendingLogo, setPendingLogo] = useState(null);
+    const [preview, setPreview] = useState('');
     const [search, setSearch] = useState(filters.search || '');
     const fileRef = useRef(null);
     const searchTimer = useRef(null);
@@ -56,14 +70,28 @@ export default function AdminBrands({
         }, 350);
     };
 
+    const clearLogo = () => {
+        if (preview) URL.revokeObjectURL(preview);
+
+        setPendingLogo(null);
+        setPreview('');
+        setForm((f) => ({ ...f, logo_path: '' }));
+    };
+
+    /*
+     * A pick belongs to the brand it was made for. Left behind it would follow
+     * into whatever is opened next and be uploaded against that one instead.
+     */
     const openCreate = () => {
         setEditing(null);
+        clearLogo();
         setForm({ name: '', logo_path: '', is_featured: false });
         setModalOpen(true);
     };
 
     const openEdit = (brand) => {
         setEditing(brand);
+        clearLogo();
         setForm({
             name: brand.name || '',
             logo_path: brand.logo_path || '',
@@ -72,33 +100,20 @@ export default function AdminBrands({
         setModalOpen(true);
     };
 
-    const pickLogo = async (event) => {
+    const pickLogo = (event) => {
         const file = event.target.files?.[0];
+
         if (!file) return;
 
-        setUploading(true);
-        try {
-            /*
-             * Destructured, like every other upload screen.
-             *
-             * uploadImage resolves to the whole payload — { path, disk_path,
-             * name, size } — and this took the object itself as the path. The
-             * upload succeeded and said so, then saving the brand was rejected
-             * with "The logo path field must be a string", because logo_path
-             * is validated as one. So no brand could ever be given a logo:
-             * all twenty-eight rows still have none, and the mega menu falls
-             * back to a lettermark for every one of them — the very thing this
-             * screen was built to fix.
-             */
-            const { path } = await uploadService.uploadImage(file, 'brands');
-            setForm((f) => ({ ...f, logo_path: path }));
-            toast.success('Logo uploaded.');
-        } catch (error) {
-            toast.error(error?.message || 'Could not upload that image.');
-        } finally {
-            setUploading(false);
-            if (fileRef.current) fileRef.current.value = '';
-        }
+        // Replacing a pick before saving: the old preview's blob is released
+        // rather than left for the tab to hold until it is closed.
+        if (preview) URL.revokeObjectURL(preview);
+
+        setPendingLogo(file);
+        setPreview(URL.createObjectURL(file));
+
+        // So choosing the same file twice in a row still fires a change.
+        if (fileRef.current) fileRef.current.value = '';
     };
 
     const save = async () => {
@@ -108,22 +123,59 @@ export default function AdminBrands({
         }
 
         setBusyId('save');
+
+        // Named outside the try so the cleanup below can reach it: a file that
+        // went up for a brand that was then refused is one nothing points at.
+        let uploadedPath = null;
+
         try {
+            if (pendingLogo) {
+                setUploading(true);
+
+                const { path } = await uploadService.uploadImage(
+                    pendingLogo,
+                    'brands',
+                );
+
+                uploadedPath = path;
+                setUploading(false);
+            }
+
+            const payload = {
+                ...form,
+                ...(uploadedPath ? { logo_path: uploadedPath } : {}),
+            };
+
             if (editing) {
                 await axiosInstance.patch(
                     API_ENDPOINTS.ADMIN.BRAND_ITEM(editing.id),
-                    form,
+                    payload,
                 );
                 toast.success(`Brand "${form.name}" updated.`);
             } else {
-                await axiosInstance.post(API_ENDPOINTS.ADMIN.BRANDS, form);
+                await axiosInstance.post(API_ENDPOINTS.ADMIN.BRANDS, payload);
                 toast.success(`Brand "${form.name}" created.`);
             }
+
+            clearLogo();
             setModalOpen(false);
             router.reload({ only: ['brands', 'counts'] });
         } catch (error) {
+            /*
+             * Take the picture back down. It was uploaded a moment ago for a
+             * brand that does not exist, so nothing references it and the
+             * media endpoint will let it go — that endpoint refuses to delete
+             * anything still in use, which is exactly why this is safe.
+             */
+            if (uploadedPath) {
+                uploadService.deleteImage(uploadedPath).catch(() => {
+                    /* An orphan is not worth a second error message. */
+                });
+            }
+
             toast.error(error?.message || 'Could not save that brand.');
         } finally {
+            setUploading(false);
             setBusyId(null);
         }
     };
@@ -261,7 +313,10 @@ export default function AdminBrands({
 
             <Modal
                 isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
+                onClose={() => {
+                    clearLogo();
+                    setModalOpen(false);
+                }}
                 title={editing ? `Edit ${editing.name}` : 'Add brand'}
                 maxWidth="520px"
             >
@@ -283,7 +338,8 @@ export default function AdminBrands({
                     <div className="admin-brand-logo-row">
                         <BrandMark
                             name={form.name || '?'}
-                            logo={form.logo_path}
+                            /* The pick if there is one, else what is saved. */
+                            logo={preview || form.logo_path}
                             size={46}
                         />
                         <div className="admin-brand-logo-actions">
@@ -294,18 +350,15 @@ export default function AdminBrands({
                                 loading={uploading}
                                 onClick={() => fileRef.current?.click()}
                             >
-                                {form.logo_path ? 'Replace' : 'Upload'}
+                                {preview || form.logo_path
+                                    ? 'Replace'
+                                    : 'Upload'}
                             </Button>
-                            {form.logo_path && (
+                            {(preview || form.logo_path) && (
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    onClick={() =>
-                                        setForm((f) => ({
-                                            ...f,
-                                            logo_path: '',
-                                        }))
-                                    }
+                                    onClick={clearLogo}
                                 >
                                     Remove
                                 </Button>
@@ -322,6 +375,9 @@ export default function AdminBrands({
                     <span className="admin-field-hint">
                         Square works best. Without one, the menu shows the
                         brand&apos;s initials.
+                        {preview
+                            ? ' This one is uploaded when you save the brand.'
+                            : ''}
                     </span>
                 </div>
 
