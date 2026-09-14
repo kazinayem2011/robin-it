@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React, { useCallback } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -147,7 +148,7 @@ export default function AdminRefunds({
                     >
                         Reason
                     </label>
-                    <select
+                    <Select
                         id="reason-filter"
                         value={filters.reason || 'all'}
                         onChange={(e) =>
@@ -158,14 +159,14 @@ export default function AdminRefunds({
                                         : e.target.value,
                             })
                         }
-                    >
-                        <option value="all">All reasons</option>
-                        {reasons.map((r) => (
-                            <option key={r.value} value={r.value}>
-                                {r.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={[
+                            { value: 'all', label: 'All reasons' },
+                            ...reasons.map((r) => ({
+                                value: r.value,
+                                label: r.label,
+                            })),
+                        ]}
+                    />
                 </div>
 
                 <div className="admin-stock-stat refund-range-filter">

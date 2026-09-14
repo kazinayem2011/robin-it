@@ -16,7 +16,7 @@ import Pagination from '@/Components/Pagination';
 import Tabs from '@/Components/Tabs';
 import Modal from '@/Components/Modal';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
@@ -430,7 +430,7 @@ function WriteOrderModal({
             }
         >
             <div className="po-header-grid">
-                <FormSelect
+                <Select
                     label="Supplier"
                     name="po_supplier"
                     required
@@ -454,7 +454,7 @@ function WriteOrderModal({
                 />
 
                 {stores.length > 1 && (
-                    <FormSelect
+                    <Select
                         label="Coming into"
                         name="po_store"
                         value={storeId}

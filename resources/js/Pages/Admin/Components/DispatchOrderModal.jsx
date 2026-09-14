@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Truck } from 'lucide-react';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
@@ -81,7 +81,7 @@ export default function DispatchOrderModal({
             }
         >
             <form onSubmit={formik.handleSubmit} noValidate>
-                <FormSelect
+                <Select
                     label="Courier"
                     name="courier_id"
                     formik={formik}

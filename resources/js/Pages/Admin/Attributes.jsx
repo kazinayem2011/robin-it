@@ -4,7 +4,7 @@ import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import DataTable from '../../Components/DataTable';
 import FormInput from '../../Components/FormInput';
-import { FormSelect } from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import Modal from '../../Components/Modal';
 import ConfirmDialog from '../../Components/ConfirmDialog';
 import CategoryPicker from '../../Components/CategoryPicker';
@@ -538,7 +538,7 @@ export default function AdminAttributes({
                     helperText="What the sidebar calls this group of checkboxes."
                 />
 
-                <FormSelect
+                <Select
                     id="attr_type"
                     name="input_type"
                     label="Answer type"

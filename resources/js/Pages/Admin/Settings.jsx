@@ -4,7 +4,6 @@ import { useFormik } from 'formik';
 import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
-import FormSelect from '../../Components/FormSelect';
 import Select from '../../Components/Select';
 import Checkbox from '../../Components/Checkbox';
 import Tabs from '../../Components/Tabs';
@@ -756,7 +755,7 @@ export default function AdminSettings({
                             </div>
                             <div>
                                 <div className="form-row-2col">
-                                    <FormSelect
+                                    <Select
                                         label="Mail Driver"
                                         name="mail_mailer"
                                         formik={formik}
@@ -775,7 +774,7 @@ export default function AdminSettings({
                                             },
                                         ]}
                                     />
-                                    <FormSelect
+                                    <Select
                                         label="Mail Encryption"
                                         name="mail_encryption"
                                         formik={formik}

@@ -15,7 +15,7 @@ import Tabs from '@/Components/Tabs';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { ROUTES } from '@/constants/endpoints';
@@ -363,7 +363,7 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
                 placeholder="Type part of the name…"
             />
 
-            <FormSelect
+            <Select
                 label="Product"
                 name="serial_unit"
                 required
@@ -376,7 +376,7 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
             />
 
             {stores.length > 1 && (
-                <FormSelect
+                <Select
                     label="Branch"
                     name="serial_store"
                     required

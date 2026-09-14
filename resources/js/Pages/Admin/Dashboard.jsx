@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -18,6 +19,15 @@ import { adminService } from '@/services';
 import ProductImage from '@/Components/ProductImage';
 import EmptyState from '@/Components/EmptyState';
 import { toast } from '@/Components/Toast';
+
+/* The statuses an order can be moved to from this table. */
+const ORDER_STATUSES = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+    { value: 'shipped', label: 'Shipped' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
 
 export default function Dashboard({
     metrics = {},
@@ -363,7 +373,7 @@ export default function Dashboard({
                                                 />
                                             </td>
                                             <td>
-                                                <select
+                                                <Select
                                                     value={order.status}
                                                     onChange={(e) =>
                                                         handleStatusChange(
@@ -372,23 +382,8 @@ export default function Dashboard({
                                                         )
                                                     }
                                                     className="admin-status-dropdown"
-                                                >
-                                                    <option value="pending">
-                                                        Pending
-                                                    </option>
-                                                    <option value="processing">
-                                                        Processing
-                                                    </option>
-                                                    <option value="shipped">
-                                                        Shipped
-                                                    </option>
-                                                    <option value="delivered">
-                                                        Delivered
-                                                    </option>
-                                                    <option value="cancelled">
-                                                        Cancelled
-                                                    </option>
-                                                </select>
+                                                    options={ORDER_STATUSES}
+                                                />
                                             </td>
                                         </tr>
                                     ))}

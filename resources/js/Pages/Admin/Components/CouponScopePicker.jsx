@@ -1,5 +1,5 @@
 import React from 'react';
-import FormSelect from '../../../Components/FormSelect';
+import Select from '../../../Components/Select';
 
 const SCOPE_LABELS = {
     all: 'The whole order',
@@ -39,7 +39,7 @@ export default function CouponScopePicker({
 
     return (
         <div className="admin-coupon-scope">
-            <FormSelect
+            <Select
                 label="Applies to"
                 name="scope"
                 value={scope}

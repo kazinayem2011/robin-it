@@ -6,7 +6,7 @@ import Button from '../../Components/Button';
 import Checkbox from '../../Components/Checkbox';
 import DataTable from '../../Components/DataTable';
 import FormInput from '../../Components/FormInput';
-import FormSelect from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import ImageCropperModal from '../../Components/ImageCropperModal';
 import Modal from '../../Components/Modal';
 import { toast } from '../../Components/Toast';
@@ -302,7 +302,7 @@ export default function AdminBlogs({ blogs = [] }) {
                             />
 
                             <div className="admin-form-grid-2">
-                                <FormSelect
+                                <Select
                                     label="Article Category"
                                     name="category"
                                     required

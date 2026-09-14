@@ -54,12 +54,35 @@ describe('the brand field on a category', () => {
 
         return {
             setFieldValue,
-            select: screen.getByLabelText(/Stands for a Brand/i),
+            select: screen.getByRole('combobox', {
+                name: /Stands for a Brand/i,
+            }),
         };
     };
 
-    it('offers to mint a brand named after the shelf', () => {
+    /*
+     * The field is the custom Select, not a native one, so its options exist
+     * only while the panel is open and are chosen by clicking rather than by
+     * `selectOptions`. What it shows when closed is the chosen option's label;
+     * the value behind it is what `setFieldValue` is asked for.
+     */
+    const openList = async (user) => {
+        await user.click(
+            screen.getByRole('combobox', { name: /Stands for a Brand/i }),
+        );
+
+        return screen.getByRole('listbox');
+    };
+
+    const choose = async (user, name) => {
+        await openList(user);
+        await user.click(screen.getByRole('option', { name }));
+    };
+
+    it('offers to mint a brand named after the shelf', async () => {
+        const user = userEvent.setup();
         draw();
+        await openList(user);
 
         expect(
             screen.getByRole('option', {
@@ -68,16 +91,20 @@ describe('the brand field on a category', () => {
         ).toBeTruthy();
     });
 
-    it('offers the brands that already exist', () => {
+    it('offers the brands that already exist', async () => {
+        const user = userEvent.setup();
         draw();
+        await openList(user);
 
         expect(screen.getByRole('option', { name: 'ASUS' })).toBeTruthy();
         expect(screen.getByRole('option', { name: 'Lenovo' })).toBeTruthy();
     });
 
     /* Nothing to name it after yet. */
-    it('does not offer to mint one before the shelf has a name', () => {
+    it('does not offer to mint one before the shelf has a name', async () => {
+        const user = userEvent.setup();
         draw({ name: '   ' });
+        await openList(user);
 
         expect(
             screen.queryByRole('option', { name: /as a new brand/ }),
@@ -90,9 +117,9 @@ describe('the brand field on a category', () => {
      */
     it('asking for a new brand clears the chosen one', async () => {
         const user = userEvent.setup();
-        const { setFieldValue, select } = draw({ brand_id: 9 });
+        const { setFieldValue } = draw({ brand_id: 9 });
 
-        await user.selectOptions(select, 'new');
+        await choose(user, /as a new brand/);
 
         expect(setFieldValue).toHaveBeenCalledWith('create_brand', true);
         expect(setFieldValue).toHaveBeenCalledWith('brand_id', '');
@@ -100,19 +127,24 @@ describe('the brand field on a category', () => {
 
     it('choosing an existing brand cancels the request for a new one', async () => {
         const user = userEvent.setup();
-        const { setFieldValue, select } = draw({ create_brand: true });
+        const { setFieldValue } = draw({ create_brand: true });
 
-        await user.selectOptions(select, '7');
+        await choose(user, 'ASUS');
 
         expect(setFieldValue).toHaveBeenCalledWith('create_brand', false);
-        expect(setFieldValue).toHaveBeenCalledWith('brand_id', '7');
+        /*
+         * The id as it was given, not a string of it. A native select coerced
+         * every value to text; this control hands back what the option holds,
+         * and `brand_id` is a number on the way in and on the way out.
+         */
+        expect(setFieldValue).toHaveBeenCalledWith('brand_id', 7);
     });
 
     it('“not a brand shelf” clears both', async () => {
         const user = userEvent.setup();
-        const { setFieldValue, select } = draw({ brand_id: 7 });
+        const { setFieldValue } = draw({ brand_id: 7 });
 
-        await user.selectOptions(select, '');
+        await choose(user, 'Not a brand shelf');
 
         expect(setFieldValue).toHaveBeenCalledWith('create_brand', false);
         expect(setFieldValue).toHaveBeenCalledWith('brand_id', '');
@@ -122,12 +154,12 @@ describe('the brand field on a category', () => {
     it('shows the brand a shelf already has', () => {
         const { select } = draw({ brand_id: 9 });
 
-        expect(select.value).toBe('9');
+        expect(select).toHaveTextContent('Lenovo');
     });
 
     it('shows the mint option as chosen while it is being asked for', () => {
         const { select } = draw({ create_brand: true });
 
-        expect(select.value).toBe('new');
+        expect(select).toHaveTextContent(/as a new brand/);
     });
 });

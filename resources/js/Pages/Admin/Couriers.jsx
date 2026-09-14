@@ -7,7 +7,7 @@ import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import Checkbox from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
@@ -295,7 +295,7 @@ export default function AdminCouriers({
                         placeholder="Pathao Courier"
                     />
 
-                    <FormSelect
+                    <Select
                         label="How parcels are booked"
                         name="driver"
                         formik={formik}

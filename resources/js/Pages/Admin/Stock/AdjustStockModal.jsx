@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormik } from 'formik';
 import Button from '../../../Components/Button';
 import FormInput from '../../../Components/FormInput';
-import FormSelect from '../../../Components/FormSelect';
+import Select from '../../../Components/Select';
 import Modal from '../../../Components/Modal';
 import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
@@ -128,7 +128,7 @@ export default function AdjustStockModal({
                     placeholder="e.g. -2 to remove two, 3 to add three"
                 />
 
-                <FormSelect
+                <Select
                     label="Reason"
                     name="reason"
                     required

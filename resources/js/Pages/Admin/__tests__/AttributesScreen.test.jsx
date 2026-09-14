@@ -145,6 +145,17 @@ describe('Filters screen', () => {
      * A bound belongs to a measurement. Sending one on a list of names is
      * refused server-side, so the form must not offer the boxes at all.
      */
+    /*
+     * The answer type is the custom Select rather than a native one, so it is
+     * opened and clicked instead of `selectOptions`.
+     */
+    const chooseType = async (user, name) => {
+        await user.click(
+            screen.getByRole('combobox', { name: /answer type/i }),
+        );
+        await user.click(screen.getByRole('option', { name }));
+    };
+
     it('shows band bounds only for a number filter', async () => {
         const user = userEvent.setup();
         render(<Attributes attributes={[]} counts={{}} />);
@@ -152,10 +163,7 @@ describe('Filters screen', () => {
         await open(user, /add filter/i);
         expect(screen.queryByLabelText(/^From$/i)).not.toBeInTheDocument();
 
-        await user.selectOptions(
-            screen.getByLabelText(/answer type/i),
-            'number',
-        );
+        await chooseType(user, /A number, shown as bands/i);
 
         expect(screen.getByLabelText(/^From$/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/^To$/i)).toBeInTheDocument();
@@ -170,14 +178,11 @@ describe('Filters screen', () => {
         await open(user, /add filter/i);
         await user.type(screen.getByLabelText(/question/i), 'Panel Type');
 
-        await user.selectOptions(
-            screen.getByLabelText(/answer type/i),
-            'number',
-        );
+        await chooseType(user, /A number, shown as bands/i);
         await user.type(screen.getByLabelText(/^From$/i), '301');
         await user.type(screen.getByLabelText(/^Unit$/i), 'Mbps');
 
-        await user.selectOptions(screen.getByLabelText(/answer type/i), 'enum');
+        await chooseType(user, /One answer from a list/i);
         await user.click(
             screen.getByRole('button', { name: /create filter/i }),
         );

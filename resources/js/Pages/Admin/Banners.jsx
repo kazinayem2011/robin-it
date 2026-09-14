@@ -5,7 +5,7 @@ import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import Checkbox from '../../Components/Checkbox';
 import FormInput from '../../Components/FormInput';
-import FormSelect from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import ImageCropperModal from '../../Components/ImageCropperModal';
 import Modal from '../../Components/Modal';
 import { toast } from '../../Components/Toast';
@@ -239,7 +239,7 @@ export default function AdminBanners({ banners = [] }) {
                             />
 
                             <div className="admin-form-grid-2">
-                                <FormSelect
+                                <Select
                                     label="Position Placement"
                                     name="position"
                                     required

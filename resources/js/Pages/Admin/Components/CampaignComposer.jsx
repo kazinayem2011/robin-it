@@ -13,7 +13,7 @@ import {
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
@@ -265,7 +265,7 @@ export default function CampaignComposer({
                             />
 
                             <div className="cmp-row">
-                                <FormSelect
+                                <Select
                                     label="Send by"
                                     name="cmp_channel"
                                     required
@@ -276,7 +276,7 @@ export default function CampaignComposer({
                                         ([value, label]) => ({ value, label }),
                                     )}
                                 />
-                                <FormSelect
+                                <Select
                                     label="Who to"
                                     name="cmp_audience"
                                     required

@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -474,7 +475,7 @@ export default function Orders({
                                         <span className="admin-field-hint">
                                             Move to
                                         </span>
-                                        <select
+                                        <Select
                                             value={selectedOrder.status}
                                             onChange={(e) =>
                                                 handleStatusChange(
@@ -483,18 +484,10 @@ export default function Orders({
                                                 )
                                             }
                                             className="admin-status-dropdown"
-                                        >
-                                            {orderStatusOptionsFor(
+                                            options={orderStatusOptionsFor(
                                                 selectedOrder.status,
-                                            ).map((option) => (
-                                                <option
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            )}
+                                        />
                                     </label>
                                 )}
                             </div>

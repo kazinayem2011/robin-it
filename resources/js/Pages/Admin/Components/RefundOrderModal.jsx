@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Undo2 } from 'lucide-react';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
@@ -139,14 +139,14 @@ export default function RefundOrderModal({
                     </div>
 
                     <div className="admin-grid-equal-2col">
-                        <FormSelect
+                        <Select
                             label="How it went back"
                             name="method"
                             formik={formik}
                             required
                             options={methods}
                         />
-                        <FormSelect
+                        <Select
                             label="Why"
                             name="reason"
                             formik={formik}

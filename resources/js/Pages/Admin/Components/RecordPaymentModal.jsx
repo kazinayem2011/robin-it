@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Wallet } from 'lucide-react';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
@@ -128,7 +128,7 @@ export default function RecordPaymentModal({
                             formik={formik}
                             required
                         />
-                        <FormSelect
+                        <Select
                             label="How"
                             name="method"
                             formik={formik}

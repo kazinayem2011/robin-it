@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Button from '../../../Components/Button';
 import FormInput from '../../../Components/FormInput';
-import FormSelect from '../../../Components/FormSelect';
+import Select from '../../../Components/Select';
 import Modal from '../../../Components/Modal';
 import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
@@ -154,14 +154,14 @@ export default function TransferStockModal({
                 </div>
 
                 <div className="admin-grid-equal-2col">
-                    <FormSelect
+                    <Select
                         label="From"
                         name="from_store_id"
                         formik={formik}
                         placeholder="Where it is now…"
                         options={storeOptions}
                     />
-                    <FormSelect
+                    <Select
                         label="To"
                         name="to_store_id"
                         formik={formik}

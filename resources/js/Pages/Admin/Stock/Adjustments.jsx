@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -186,35 +187,34 @@ export default function StockAdjustments({
                             value={filters.to || ''}
                             onChange={(e) => go({ to: e.target.value })}
                         />
-                        <select
+                        <Select
                             className="count-branch-select"
                             value={filters.reason || ''}
                             onChange={(e) =>
                                 go({ reason: e.target.value || undefined })
                             }
-                        >
-                            <option value="">Any reason</option>
-                            {Object.entries(reasons).map(([key, label]) => (
-                                <option key={key} value={key}>
-                                    {label}
-                                </option>
-                            ))}
-                        </select>
+                            options={[
+                                { value: '', label: 'Any reason' },
+                                ...Object.entries(reasons).map(
+                                    ([value, label]) => ({ value, label }),
+                                ),
+                            ]}
+                        />
                         {!branch && stores.length > 1 && (
-                            <select
+                            <Select
                                 className="count-branch-select"
                                 value={filters.store || ''}
                                 onChange={(e) =>
                                     go({ store: e.target.value || undefined })
                                 }
-                            >
-                                <option value="">All branches</option>
-                                {stores.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
+                                options={[
+                                    { value: '', label: 'All branches' },
+                                    ...stores.map((s) => ({
+                                        value: s.id,
+                                        label: s.name,
+                                    })),
+                                ]}
+                            />
                         )}
                     </div>
                 }

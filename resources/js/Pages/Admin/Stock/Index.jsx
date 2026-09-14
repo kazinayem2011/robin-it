@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
@@ -357,7 +358,7 @@ export default function AdminStock({
                                     >
                                         Showing
                                     </label>
-                                    <select
+                                    <Select
                                         id="branch-filter"
                                         value={filters.store || ''}
                                         onChange={(e) =>
@@ -380,14 +381,17 @@ export default function AdminStock({
                                                 },
                                             )
                                         }
-                                    >
-                                        <option value="">All branches</option>
-                                        {stores.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        options={[
+                                            {
+                                                value: '',
+                                                label: 'All branches',
+                                            },
+                                            ...stores.map((s) => ({
+                                                value: s.id,
+                                                label: s.name,
+                                            })),
+                                        ]}
+                                    />
                                 </div>
                             )}
 

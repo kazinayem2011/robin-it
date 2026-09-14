@@ -6,7 +6,7 @@ import { Wallet, Plus, Edit2, Trash2 } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
@@ -255,7 +255,7 @@ export default function AdminExpenses({
                     >
                         Category
                     </label>
-                    <select
+                    <Select
                         id="category-filter"
                         value={filters.category || 'all'}
                         onChange={(e) =>
@@ -266,14 +266,11 @@ export default function AdminExpenses({
                                         : e.target.value,
                             })
                         }
-                    >
-                        <option value="all">All categories</option>
-                        {categoryOptions.map((c) => (
-                            <option key={c.value} value={c.value}>
-                                {c.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={[
+                            { value: 'all', label: 'All categories' },
+                            ...categoryOptions,
+                        ]}
+                    />
                 </div>
 
                 <div className="admin-stock-stat expense-range-filter">
@@ -373,7 +370,7 @@ export default function AdminExpenses({
                     />
 
                     <div className="admin-grid-equal-2col">
-                        <FormSelect
+                        <Select
                             label="Category"
                             name="expense_category_id"
                             formik={formik}
@@ -409,7 +406,7 @@ export default function AdminExpenses({
                         />
                     </div>
 
-                    <FormSelect
+                    <Select
                         label="Supplier"
                         name="supplier_id"
                         formik={formik}

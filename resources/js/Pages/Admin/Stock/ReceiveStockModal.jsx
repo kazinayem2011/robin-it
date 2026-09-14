@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormik } from 'formik';
 import Button from '../../../Components/Button';
 import FormInput from '../../../Components/FormInput';
-import FormSelect from '../../../Components/FormSelect';
+import Select from '../../../Components/Select';
 import Modal from '../../../Components/Modal';
 import SearchableSelect from '../../../Components/SearchableSelect';
 import { listFrom } from '../../../utils/apiPayload';
@@ -220,7 +220,7 @@ export default function ReceiveStockModal({
                      * started keeping books, which used to be typed onto the
                      * product form instead and left no paperwork behind it.
                      */}
-                    <FormSelect
+                    <Select
                         label="Source"
                         name="supplier_id"
                         formik={formik}

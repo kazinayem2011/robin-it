@@ -6,7 +6,7 @@ import { UserCog, Plus, Edit2, Ban } from 'lucide-react';
 import Button from '@/Components/Button';
 import DataTable from '@/Components/DataTable';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { Checkbox } from '@/Components/Checkbox';
 import { toast } from '@/Components/Toast';
@@ -264,7 +264,7 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
                     </p>
 
                     <div className="admin-grid-equal-2col">
-                        <FormSelect
+                        <Select
                             label="Role"
                             name="role"
                             formik={formik}
@@ -274,7 +274,7 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
                                 label: r.label,
                             }))}
                         />
-                        <FormSelect
+                        <Select
                             label="Branch"
                             name="store_id"
                             formik={formik}

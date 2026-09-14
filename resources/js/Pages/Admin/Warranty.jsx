@@ -3,7 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import Button from '../../Components/Button';
 import DataTable from '../../Components/DataTable';
-import FormSelect from '../../Components/FormSelect';
+import Select from '../../Components/Select';
 import Modal from '../../Components/Modal';
 import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
@@ -197,7 +197,7 @@ export default function AdminWarranty({ claims = [] }) {
                             </div>
 
                             <div className="admin-form-stack">
-                                <FormSelect
+                                <Select
                                     label="Service / Repair Stage"
                                     value={updatingStatus}
                                     onChange={(e) =>

@@ -27,7 +27,7 @@ import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
 import DataTable from '@/Components/DataTable';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import ImageCropperModal from '@/Components/ImageCropperModal';
 import Modal from '@/Components/Modal';
 import ProductImage from '@/Components/ProductImage';
@@ -1358,7 +1358,7 @@ export default function Products({
                                         }
                                         helperText="Where the product lives. Type a few letters."
                                     />
-                                    <FormSelect
+                                    <Select
                                         label="Brand"
                                         name="brand_id"
                                         formik={formik}

@@ -2,10 +2,9 @@ import React from 'react';
 import Button from '@/Components/Button';
 import Checkbox from '@/Components/Checkbox';
 import FormInput from '@/Components/FormInput';
-import FormSelect from '@/Components/FormSelect';
+import Select from '@/Components/Select';
 import Modal from '@/Components/Modal';
 import { AlertTriangle } from 'lucide-react';
-import Select from '@/Components/Select';
 import { NAVBAR_BADGE_OPTIONS } from '@/constants';
 
 /**
@@ -127,7 +126,7 @@ export const CategoryFormModal = ({
                     and keeps the pair joined through a rename — they used to be
                     matched on their names alone.
                 */}
-                <FormSelect
+                <Select
                     id="cat_brand_id"
                     name="brand_id"
                     label="Stands for a Brand (Optional)"
@@ -148,26 +147,29 @@ export const CategoryFormModal = ({
                         );
                     }}
                     className="mb-4"
-                >
-                    <option value="">Not a brand shelf</option>
-                    {/*
-                        Offered here rather than sending the admin to the brands
-                        screen and back. That trip is the one nobody makes: 386
-                        shelves are named after makers with no brand row, so they
-                        show no logo, no maker on the product page, and cannot be
-                        filtered or featured.
-                    */}
-                    {trimmedName ? (
-                        <option value={NEW_BRAND}>
-                            ➕ Create “{trimmedName}” as a new brand
-                        </option>
-                    ) : null}
-                    {brandOptions.map((b) => (
-                        <option key={b.id} value={b.id}>
-                            {b.name}
-                        </option>
-                    ))}
-                </FormSelect>
+                    /*
+                     * Creating a brand is offered here rather than sending the
+                     * admin to the brands screen and back. That trip is the one
+                     * nobody makes: 386 shelves are named after makers with no
+                     * brand row, so they show no logo, no maker on the product
+                     * page, and cannot be filtered or featured.
+                     */
+                    options={[
+                        { value: '', label: 'Not a brand shelf' },
+                        ...(trimmedName
+                            ? [
+                                  {
+                                      value: NEW_BRAND,
+                                      label: `➕ Create “${trimmedName}” as a new brand`,
+                                  },
+                              ]
+                            : []),
+                        ...brandOptions.map((b) => ({
+                            value: b.id,
+                            label: b.name,
+                        })),
+                    ]}
+                />
 
                 {/*
                     Said, not refused.
@@ -235,7 +237,7 @@ export const CategoryFormModal = ({
                     />
 
                     {/* Badge Selector (for Root & Mega Menu) */}
-                    <FormSelect
+                    <Select
                         id="cat_badge"
                         name="badge"
                         label="Navbar Badge"

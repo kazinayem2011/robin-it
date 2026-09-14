@@ -1,3 +1,4 @@
+import Select from '@/Components/Select';
 import React, { useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -192,17 +193,15 @@ export default function StockCount({
                         {branch ? (
                             <span className="count-branch-fixed">{branch}</span>
                         ) : (
-                            <select
+                            <Select
                                 className="count-branch-select"
                                 value={store?.id ?? ''}
                                 onChange={(e) => goToBranch(e.target.value)}
-                            >
-                                {stores.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
+                                options={stores.map((s) => ({
+                                    value: s.id,
+                                    label: s.name,
+                                }))}
+                            />
                         )}
 
                         <SearchInput
