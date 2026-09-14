@@ -221,10 +221,17 @@ export default function CategoryNav({ categories = [] }) {
         if (!flyoutOffset || flyoutOffset.clamped) return;
 
         const nav = navRef.current;
-        const panel = nav?.querySelector(
-            '.cat-nav-item.is-open > .cat-nav-drop',
-        );
         const flyout = nav?.querySelector(`[data-flyout="${flyoutOffset.id}"]`);
+
+        /*
+         * The panel this hangs off, taken from the flyout rather than looked
+         * up by name. It is the flyout's containing block — the same element
+         * `openFlyout` measured against — so the two can never disagree, and
+         * a flyout opened from inside "More" is clamped like any other. Asking
+         * for `.cat-nav-item.is-open > .cat-nav-drop` found only panels in the
+         * bar, and a "More" flyout went unclamped and off the window.
+         */
+        const panel = flyout?.offsetParent;
 
         if (!panel || !flyout) return;
 
@@ -327,7 +334,11 @@ export default function CategoryNav({ categories = [] }) {
                             key={sub.id}
                             className={`cat-nav-subitem ${openSub === sub.id ? 'is-open' : ''}`}
                             onMouseEnter={(event) =>
-                                openFlyout(event, sub, index >= alignRightFrom)
+                                openFlyout(
+                                    event,
+                                    sub,
+                                    inMore || index >= alignRightFrom,
+                                )
                             }
                         >
                             <Link
@@ -336,7 +347,7 @@ export default function CategoryNav({ categories = [] }) {
                             >
                                 {markFor(sub, 15)}
                                 <span>{sub.name}</span>
-                                {!inMore && sub.children?.length > 0 && (
+                                {sub.children?.length > 0 && (
                                     <ChevronRight
                                         size={13}
                                         className="cat-nav-chevron"
@@ -349,11 +360,18 @@ export default function CategoryNav({ categories = [] }) {
                              * nineteen and Keyboard twenty-eight: one column
                              * would run off the bottom of the screen.
                              *
-                             * Not nested a third time inside "More" — a panel
-                             * hanging off a panel hanging off a button is not
-                             * navigable with a mouse.
+                             * Drawn inside "More" as well. It is a third panel
+                             * there rather than a second, which is why it was
+                             * left out — but the three departments that
+                             * overflow on a laptop are Accessories, Gadget and
+                             * Server & Storage, and leaving it out put 448
+                             * brand chips beyond reach of the menu: every
+                             * keyboard, mouse, headphone and earbud maker the
+                             * shop sells. The row it hangs off is the same
+                             * size as any other, and the panel is clamped into
+                             * the window below.
                              */}
-                            {!inMore && sub.children?.length > 0 && (
+                            {sub.children?.length > 0 && (
                                 <ul
                                     className="cat-nav-brands"
                                     data-flyout={sub.id}
