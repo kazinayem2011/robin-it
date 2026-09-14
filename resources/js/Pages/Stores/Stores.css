@@ -233,8 +233,3 @@
     border-color: var(--primary);
     color: var(--primary-ink);
 }
-
-.stores-loading-box {
-    text-align: center;
-    padding: 60px 0;
-}

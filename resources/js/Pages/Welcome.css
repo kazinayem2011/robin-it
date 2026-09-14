@@ -92,165 +92,8 @@
     position: relative;
 }
 
-/* Left Tools Column */
-.hero-left-tools-col {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.hero-tool-card {
-    flex: 1;
-    border-radius: var(--radius-md);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.pc-builder-hero-card {
-    background: linear-gradient(
-        145deg,
-        var(--bg-inverse) 0%,
-        var(--bg-inverse-soft) 100%
-    );
-    border-color: var(--primary-glow);
-    color: var(--text-on-accent);
-}
-
-.pc-builder-hero-card .tool-card-sub {
-    color: var(--text-subtle);
-}
-
-.pc-builder-hero-card h2 {
-    color: var(--text-on-accent);
-}
-
-.pc-builder-hero-card p {
-    color: var(--text-faint);
-}
-
-.laptop-finder-hero-card {
-    background: var(--bg-surface);
-    border-color: var(--border-color);
-}
-
-.tool-card-glow-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.6px;
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-    background: var(--primary-light);
-    color: var(--primary-ink);
-    border: 1px solid var(--primary-glow);
-    align-self: flex-start;
-    margin-bottom: 12px;
-}
-
-.pill-blue {
-    background: var(--info-light);
-    color: var(--accent-blue-ink);
-    border-color: var(--info-border);
-}
-
-.tool-card-body {
-    flex: 1;
-}
-
-.tool-card-sub {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.6px;
-    color: var(--text-muted);
-    display: block;
-    margin-bottom: 4px;
-}
-
-.tool-card-body h2 {
-    font-size: 1.35rem;
-    margin-bottom: 8px;
-}
-
-.tool-card-body p {
-    font-size: 0.84rem;
-    line-height: 1.5;
-    color: var(--text-body);
-    margin-bottom: 14px;
-}
-
-.tool-card-stats-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.stat-badge-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--white-alpha-10);
-    border: 1px solid var(--white-alpha-20);
-    padding: 3px 8px;
-    border-radius: var(--radius-xs);
-    font-size: 0.72rem;
-    font-weight: 600;
-    /* A glass chip on the dark hero: light in both themes, like the
-       white-alpha fill and border it is drawn with. */
-    color: var(--white-alpha-85);
-}
-
 .text-emerald {
     color: var(--success-ink) !important;
-}
-.text-amber {
-    color: var(--warning-ink) !important;
-}
-
-.laptop-quick-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 16px;
-}
-
-.quick-chip {
-    background: var(--bg-muted);
-    color: var(--text-secondary);
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: var(--radius-xs);
-    border: 1px solid var(--border-color);
-}
-
-.tool-card-cta {
-    width: 100%;
-    justify-content: space-between;
-}
-
-/* Right Flagship Slider */
-.hero-right-slider-col {
-    position: relative;
-}
-
-.flagship-slider-container {
-    width: 100%;
-    height: 100%;
-    min-height: 480px;
-    border-radius: var(--radius-md);
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-md);
-    background-color: var(--bg-inverse-deep);
 }
 
 .hero-slide-item {
@@ -266,18 +109,6 @@
     transform: scale(1.04);
     display: flex;
     align-items: center;
-}
-
-.hero-slide-1 {
-    background-image: url('/images/slider_gaming_pc.jpg');
-}
-
-.hero-slide-2 {
-    background-image: url('/images/slider_laptop.jpg');
-}
-
-.hero-slide-3 {
-    background-image: url('/images/promo_creator.jpg');
 }
 
 .hero-slide-item.slide-active {
@@ -343,21 +174,6 @@
     line-height: 1.5;
     margin-bottom: 20px;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.slide-price-callout {
-    margin-bottom: 28px;
-}
-
-.price-callout-pill {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(8px);
-    color: var(--text-on-accent);
-    font-size: 0.92rem;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: var(--radius-sm);
 }
 
 .slide-action-btns {
@@ -638,51 +454,6 @@
     box-shadow: 0 4px 14px rgba(234, 72, 79, 0.4);
 }
 
-.flash-countdown-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.ends-in-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.6px;
-    color: var(--text-subtle);
-    margin-right: 4px;
-}
-
-.countdown-digit-box {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-on-accent);
-    font-size: 0.95rem;
-    font-weight: 800;
-    font-family: var(--font-heading);
-    padding: 4px 8px;
-    border-radius: var(--radius-xs);
-}
-
-.accent-digit {
-    background: var(--primary);
-    border-color: var(--primary);
-}
-
-.countdown-colon {
-    color: var(--text-subtle);
-    font-weight: 800;
-}
-
-.card-top-badges {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    z-index: 5;
-}
-
 .card-floating-actions {
     position: absolute;
     top: 10px;
@@ -693,65 +464,12 @@
     z-index: 5;
 }
 
-.action-circle-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.action-circle-btn:hover,
-.wished-active {
-    background: var(--primary);
-    color: var(--text-on-accent) !important;
-    border-color: var(--primary);
-}
-
 .flash-product-card:hover .card-image-wrapper img {
     transform: scale(1.06);
 }
 
-.spec-item {
-    font-size: 0.74rem;
-    color: var(--text-muted);
-}
-
-.rating-score {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-}
-
-.rating-count {
-    font-size: 0.72rem;
-    color: var(--text-subtle);
-}
-
-.stock-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--success-hover);
-}
-
 .card-pricing-row {
     margin-bottom: 12px;
-}
-
-.prices-group {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
 }
 
 .current-price-tag {
@@ -759,47 +477,6 @@
     font-weight: 800;
     font-family: var(--font-heading);
     color: var(--primary-ink);
-}
-
-.old-price-tag {
-    font-size: 0.82rem;
-    color: var(--text-subtle);
-    text-decoration: line-through;
-}
-
-.card-urgency-box {
-    margin-bottom: 14px;
-}
-
-.urgency-label-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.72rem;
-    color: var(--text-body);
-    margin-bottom: 4px;
-}
-
-.urgency-progress-track {
-    width: 100%;
-    height: 6px;
-    background: var(--bg-muted-strong);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-}
-
-.urgency-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--warning) 0%, #ea484f 100%);
-    border-radius: var(--radius-full);
-}
-
-.card-buy-btn {
-    margin-top: auto;
-}
-
-.card-buy-btn.added {
-    background: var(--bg-inverse);
-    color: var(--text-on-accent);
 }
 
 /* ==========================================================================
@@ -824,32 +501,8 @@
     box-shadow: var(--shadow-sm);
 }
 
-.promo-gaming-banner {
-    background-image: url('/images/slider_gaming_pc.jpg');
-}
-
-.promo-creator-banner {
-    background-image: url('/images/promo_creator.jpg');
-}
-
-.promo-gpu-banner {
-    background-image: url('/images/promo_gpu.jpg');
-}
-
 .showrooms-graphic-right {
     background-image: url('/images/slider_gaming_pc.jpg');
-}
-
-.journal-img-pc {
-    background-image: url('/images/slider_gaming_pc.jpg');
-}
-
-.journal-img-laptop {
-    background-image: url('/images/slider_laptop.jpg');
-}
-
-.journal-img-display {
-    background-image: url('/images/promo_creator.jpg');
 }
 
 .promo-overlay-dark {
@@ -888,13 +541,6 @@
     color: var(--text-faint);
     line-height: 1.4;
     margin-bottom: 8px;
-}
-
-.promo-offer-text {
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: #f87171;
-    letter-spacing: 0.6px;
 }
 
 /* ==========================================================================
@@ -1069,11 +715,6 @@
     font-size: 1rem;
     font-weight: 800;
     color: var(--text-primary);
-}
-
-.builder-step-card h4 {
-    font-size: 0.95rem;
-    margin-bottom: 14px;
 }
 
 /* Builder Summary Box */

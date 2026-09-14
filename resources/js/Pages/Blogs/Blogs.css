@@ -82,43 +82,6 @@
     color: var(--text-subtle);
 }
 
-/* Category Filter Tabs Strip */
-.journal-categories-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 14px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.journal-cat-tab {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    padding: 8px 18px;
-    border-radius: var(--radius-full);
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all var(--transition-fast);
-}
-
-.journal-cat-tab:hover {
-    border-color: var(--primary);
-    color: var(--primary-ink);
-    background: var(--primary-light);
-}
-
-.journal-cat-tab.tab-active {
-    background: var(--primary);
-    color: var(--text-on-accent);
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px var(--primary-glow);
-}
-
 /* Featured Lead Story Card */
 .featured-story-card {
     display: grid;

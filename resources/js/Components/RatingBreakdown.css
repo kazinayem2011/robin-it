@@ -53,16 +53,9 @@
     gap: 4px;
     margin-bottom: 6px;
 }
-
-.rating-star-icon.star-filled,
 .rating-star-label .star-filled {
     fill: var(--accent-amber-ink);
     color: var(--accent-amber-ink);
-}
-
-.rating-star-icon.star-empty {
-    fill: var(--bg-muted-strong);
-    color: var(--text-faint);
 }
 
 .rating-total-text {

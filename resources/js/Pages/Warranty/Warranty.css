@@ -35,42 +35,6 @@
     line-height: 1.6;
 }
 
-/* Tabs Navigation */
-.warranty-tabs-nav {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 36px;
-}
-
-.warranty-tab-btn {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    padding: 10px 24px;
-    border-radius: var(--radius-full);
-    font-weight: 700;
-    font-size: 0.92rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all var(--transition-fast);
-}
-
-.warranty-tab-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary-ink);
-    background: var(--primary-light);
-}
-
-.warranty-tab-btn.tab-active {
-    background: var(--primary);
-    color: var(--text-on-accent);
-    border-color: var(--primary);
-    box-shadow: 0 4px 14px var(--primary-glow);
-}
-
 /* Lookup Search Surface */
 .warranty-lookup-card {
     background: var(--bg-surface);

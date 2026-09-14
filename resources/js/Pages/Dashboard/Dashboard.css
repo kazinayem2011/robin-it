@@ -791,10 +791,6 @@
     color: var(--danger-ink);
 }
 
-.dash-address-remove-btn {
-    color: var(--danger-ink) !important;
-}
-
 /* Profile and Password Form */
 .dash-profile-form {
     max-width: 480px;

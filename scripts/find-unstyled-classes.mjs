@@ -64,6 +64,9 @@ for (const file of cssFiles) {
 
 /* ---- classes the markup uses -------------------------------------------- */
 const used = new Map();
+
+/* Literal fragments sitting either side of a `${...}` hole. */
+const dynamic = new Set();
 const record = (name, file, line) => {
     /*
      * A CSS identifier, or it is not a class name.
@@ -186,7 +189,24 @@ const scanExpression = (text, file, line) => {
 
     const take = (chunk) => {
         for (const c of chunk.split(/\s+/)) {
-            if (!c.includes(HOLE)) record(c, file, line);
+            if (!c.includes(HOLE)) {
+                record(c, file, line);
+
+                continue;
+            }
+
+            /*
+             * A token with a hole in it cannot be checked against the
+             * stylesheet — but its literal halves say which rules might be
+             * involved, and --unused has to know. `badge-${tone}` could mean
+             * any `.badge-*`; `card${on ? ' is-open' : ''}` is the far more
+             * common React idiom where the space lives inside the hole, and
+             * `card` is a whole class name that the earlier `.badge-` fix had
+             * reporting as used by nothing.
+             */
+            for (const piece of c.split(HOLE)) {
+                if (/^-?[A-Za-z_][\w-]*$/.test(piece)) dynamic.add(piece);
+            }
         }
     };
 
@@ -245,7 +265,17 @@ for (const file of jsxFiles) {
 
 /* ---- report -------------------------------------------------------------- */
 const unstyled = [...used.keys()].filter((c) => !defined.has(c)).sort();
-const unused = [...defined.keys()].filter((c) => !used.has(c)).sort();
+
+/*
+ * A rule counts as used when its name is written in the markup, or when a
+ * class built at run time could produce it — `.badge-sale` is reached only
+ * through `` `badge-${tone}` ``, and nothing names it outright.
+ */
+const reachable = (name) =>
+    used.has(name) ||
+    [...dynamic].some((piece) => name === piece || name.startsWith(piece));
+
+const unused = [...defined.keys()].filter((c) => !reachable(c)).sort();
 
 if (process.argv.includes('--json')) {
     console.log(JSON.stringify({ unstyled, unused }, null, 2));
