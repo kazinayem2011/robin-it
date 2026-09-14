@@ -1,3 +1,4 @@
+import Spinner from '@/Components/Spinner';
 import React, { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
@@ -63,16 +64,10 @@ export default function BlogShow({ slug }) {
                     className="container"
                     style={{ padding: '80px 0', textAlign: 'center' }}
                 >
-                    <div className="spinner-large"></div>
-                    <p
-                        style={{
-                            marginTop: '16px',
-                            color: 'var(--text-muted)',
-                            fontWeight: 600,
-                        }}
-                    >
-                        Loading Tech Journal Article...
-                    </p>
+                    <Spinner
+                        fullHeight
+                        text="Loading Tech Journal Article..."
+                    />
                 </div>
             </>
         );

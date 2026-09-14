@@ -624,28 +624,6 @@ textarea:focus {
     }
 }
 
-/*
- * The same spinner at reading size, for a panel waiting on its first answer
- * rather than a row inside one. Both blog screens draw it as an empty <div>,
- * which without a rule is nothing at all — the page sat on "padding and a
- * caption" while it loaded, with no sign anything was happening.
- */
-.spinner-large {
-    width: 36px;
-    height: 36px;
-    margin: 0 auto;
-    border: 3px solid var(--border-color);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .spinner-large {
-        animation-duration: 2s;
-    }
-}
-
 /* ==========================================================================
    SELECT CONTROLS
    Applied to the element, so every dropdown in the app picks this up without

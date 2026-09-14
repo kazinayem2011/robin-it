@@ -1,3 +1,4 @@
+import Spinner from '@/Components/Spinner';
 import React, { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
@@ -101,18 +102,10 @@ export default function BlogsIndex() {
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: '60px', textAlign: 'center' }}>
-                        <div className="spinner-large"></div>
-                        <p
-                            style={{
-                                marginTop: '16px',
-                                color: 'var(--text-muted)',
-                                fontWeight: 600,
-                            }}
-                        >
-                            Loading latest hardware journals &amp; guides...
-                        </p>
-                    </div>
+                    <Spinner
+                        fullHeight
+                        text="Loading latest hardware journals & guides..."
+                    />
                 ) : filteredBlogs.length === 0 ? (
                     <div
                         style={{
