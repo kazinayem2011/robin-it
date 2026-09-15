@@ -14,6 +14,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\AddressBook;
 use App\Services\ProductService;
+use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -107,8 +108,18 @@ class StorefrontPageController extends Controller
      */
     public function shopCategory(string $categorySlug): Response|RedirectResponse
     {
-        if (Category::where('slug', $categorySlug)->where('is_active', true)->exists()) {
-            return Inertia::render('Products/Index', ['categorySlug' => $categorySlug]);
+        $shelf = Category::where('slug', $categorySlug)
+            ->where('is_active', true)
+            ->first(['id', 'name']);
+
+        if ($shelf) {
+            return Inertia::render('Products/Index', [
+                'categorySlug' => $categorySlug,
+                'seo' => Seo::for([
+                    'title' => $shelf->name,
+                    'description' => "Buy {$shelf->name} at the best price in Bangladesh.",
+                ]),
+            ]);
         }
 
         /*
@@ -133,7 +144,21 @@ class StorefrontPageController extends Controller
 
     public function product(string $slug): Response
     {
-        return Inertia::render('Products/Show', ['productSlug' => $slug]);
+        /*
+         * Looked up here as well as on the client. The page's own data still
+         * arrives from the API, but a share card and a search result are read
+         * out of the HTML by machines that run no JavaScript, and until this
+         * every product answered them with the shop's name and nothing else.
+         */
+        $product = Product::where('slug', $slug)
+            ->where('is_active', true)
+            ->with('images:id,product_id,image_path')
+            ->first();
+
+        return Inertia::render('Products/Show', [
+            'productSlug' => $slug,
+            'seo' => $product ? Seo::forProduct($product) : Seo::for(),
+        ]);
     }
 
     /**
@@ -166,14 +191,15 @@ class StorefrontPageController extends Controller
 
     public function cart(): Response
     {
-        return Inertia::render('Checkout/Cart');
+        return Inertia::render('Checkout/Cart', ['seo' => Seo::for(['title' => 'Your Cart', 'noindex' => true])]);
     }
 
     public function checkout(): Response
     {
         // A signed-in customer has told us where they live, sometimes several
         // times over. Handing them five empty boxes asks them to say it again.
-        return Inertia::render('Checkout/Index', AddressBook::forCheckout(Auth::user()));
+        return Inertia::render('Checkout/Index', AddressBook::forCheckout(Auth::user())
+            + ['seo' => Seo::for(['title' => 'Checkout', 'noindex' => true])]);
     }
 
     public function orderSuccess(Request $request): Response
@@ -229,12 +255,12 @@ class StorefrontPageController extends Controller
 
     public function wishlist(): Response
     {
-        return Inertia::render('Wishlist/Index');
+        return Inertia::render('Wishlist/Index', ['seo' => Seo::for(['title' => 'Wishlist', 'noindex' => true])]);
     }
 
     public function compare(): Response
     {
-        return Inertia::render('Compare/Index');
+        return Inertia::render('Compare/Index', ['seo' => Seo::for(['title' => 'Compare', 'noindex' => true])]);
     }
 
     public function stores(): Response
@@ -359,6 +385,19 @@ class StorefrontPageController extends Controller
 
     public function blog(string $slug): Response
     {
-        return Inertia::render('Blogs/Show', ['slug' => $slug]);
+        $post = BlogPost::where('slug', $slug)->where('is_published', true)->first();
+
+        return Inertia::render('Blogs/Show', [
+            'slug' => $slug,
+            'seo' => $post
+                ? Seo::for([
+                    'title' => $post->meta_title ?: $post->title,
+                    'description' => $post->meta_description
+                        ?: strip_tags((string) ($post->excerpt ?: $post->content)),
+                    'image' => $post->featured_image ?: null,
+                    'type' => 'article',
+                ])
+                : Seo::for(),
+        ]);
     }
 }

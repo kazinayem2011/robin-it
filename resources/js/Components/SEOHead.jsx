@@ -86,7 +86,6 @@ export default function SEOHead({
             {noindex && <meta name="robots" content="noindex, follow" />}
 
             <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-            <link rel="alternate icon" href="/favicon.ico" />
 
             {/* Open Graph / Facebook */}
             <meta property="og:type" content={type} />

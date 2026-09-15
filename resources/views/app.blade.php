@@ -52,9 +52,51 @@
             })();
         </script>
 
-        {{-- The shop names itself in Site Settings; APP_NAME is only the
-             fallback for an install where nobody has set one yet. --}}
-        <title inertia>{{ \App\Support\BrandDetails::name() }}</title>
+        {{--
+            What a crawler reads.
+
+            The shop is Inertia, so every one of these used to be written by
+            React once the bundle had run. Google gets there on a second pass;
+            Facebook, WhatsApp, LinkedIn and Twitter never do — they read the
+            HTML as delivered and stop, which is why a shared product link
+            arrived with no title, no description and no picture.
+
+            `inertia` on each tag hands it to Inertia's head manager, so
+            SEOHead replaces these on the client rather than adding a second
+            copy beside them. The shop names itself in Site Settings; APP_NAME
+            is only the fallback for an install where nobody has set one yet.
+        --}}
+        @php($seo = \App\Support\Seo::for($page['props']['seo'] ?? []))
+
+        <title inertia>{{ $seo['title'] }}</title>
+        <meta inertia name="description" content="{{ $seo['description'] }}">
+        @if ($seo['keywords'])
+            <meta inertia name="keywords" content="{{ $seo['keywords'] }}">
+        @endif
+        @if ($seo['noindex'])
+            <meta inertia name="robots" content="noindex, follow">
+        @endif
+        @if ($seo['verification'])
+            <meta inertia name="google-site-verification" content="{{ $seo['verification'] }}">
+        @endif
+        <link inertia rel="canonical" href="{{ $seo['canonical'] }}">
+
+        {{-- Open Graph: the share card on Facebook, WhatsApp and LinkedIn. --}}
+        <meta inertia property="og:type" content="{{ $seo['type'] }}">
+        <meta inertia property="og:title" content="{{ $seo['title'] }}">
+        <meta inertia property="og:description" content="{{ $seo['description'] }}">
+        <meta inertia property="og:url" content="{{ $seo['canonical'] }}">
+        <meta inertia property="og:site_name" content="{{ $seo['site_name'] }}">
+        @if ($seo['image'])
+            <meta inertia property="og:image" content="{{ $seo['image'] }}">
+        @endif
+
+        <meta inertia name="twitter:card" content="summary_large_image">
+        <meta inertia name="twitter:title" content="{{ $seo['title'] }}">
+        <meta inertia name="twitter:description" content="{{ $seo['description'] }}">
+        @if ($seo['image'])
+            <meta inertia name="twitter:image" content="{{ $seo['image'] }}">
+        @endif
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
