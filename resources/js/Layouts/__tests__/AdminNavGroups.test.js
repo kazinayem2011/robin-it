@@ -60,6 +60,11 @@ describe('admin navigation groups', () => {
         ['Filters', 'Catalogue'],
         ['Stock Take', 'Stock'],
         ['Site Settings', 'Setup'],
+        /*
+         * Beside Settings rather than inside it: Settings is how the shop is
+         * configured, and this is what it says. The same person edits both.
+         */
+        ['Message Templates', 'Setup'],
     ])('files %s under %s', (item, heading) => {
         expect(groupOf(item)).toBe(heading);
     });
@@ -87,7 +92,7 @@ describe('admin navigation groups', () => {
     it('keeps every screen, exactly once', () => {
         const items = groups().flatMap((g) => g.items);
 
-        expect(items).toHaveLength(35);
+        expect(items).toHaveLength(36);
         expect(new Set(items).size).toBe(items.length);
     });
 

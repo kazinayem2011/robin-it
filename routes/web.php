@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
+use App\Http\Controllers\Admin\MessageTemplateController as AdminMessageTemplateController;
 use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PcBuilderController as AdminPcBuilderController;
@@ -190,6 +191,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_REFUNDS, [AdminRefundController::class, 'index'])->name('refunds')->middleware('can:refunds');
         Route::get(ApiEndpoints::ADMIN_STAFF, [AdminStaffController::class, 'index'])->name('staff')->middleware('can:staff');
         Route::get(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'index'])->name('settings')->middleware('can:settings');
+        Route::get(ApiEndpoints::ADMIN_TEMPLATES, [AdminMessageTemplateController::class, 'index'])->name('templates')->middleware('can:settings');
         Route::get(ApiEndpoints::ADMIN_CUSTOMERS, [AdminCustomerController::class, 'index'])->name('customers')->middleware('can:customers');
         Route::get(ApiEndpoints::ADMIN_EXPENSES, [AdminExpenseController::class, 'index'])->name('expenses')->middleware('can:finance');
         Route::get(ApiEndpoints::ADMIN_EXPENSE_CATEGORIES, [AdminExpenseCategoryController::class, 'index'])->name('expense-categories')->middleware('can:finance');

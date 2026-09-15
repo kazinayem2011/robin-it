@@ -762,6 +762,33 @@ export const adminService = {
         return response;
     },
 
+    /* ---- what the shop says, in an email and a text ------------------- */
+
+    async updateTemplate(type, id, payload) {
+        return axiosInstance.patch(
+            API_ENDPOINTS.ADMIN.TEMPLATE_ITEM(type, id),
+            payload,
+        );
+    },
+
+    /** The message as it will arrive, filled with plausible values. */
+    async previewTemplate(type, id) {
+        return axiosInstance.get(
+            API_ENDPOINTS.ADMIN.TEMPLATE_PREVIEW(type, id),
+        );
+    },
+
+    /**
+     * Send one for real. Rejects with the gateway's own refusal, the way the
+     * SMTP test does — a wording check needs the actual error, not a job that
+     * failed quietly an hour later.
+     */
+    async sendTemplateTest(type, id, to) {
+        return axiosInstance.post(API_ENDPOINTS.ADMIN.TEMPLATE_TEST(type, id), {
+            to,
+        });
+    },
+
     async updateSettings(settingsData) {
         const response = await axiosInstance.post(
             API_ENDPOINTS.ADMIN.SETTINGS,

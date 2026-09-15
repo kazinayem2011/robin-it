@@ -5059,3 +5059,185 @@ a.admin-card:hover,
 .admin-cat-tree-l3-chip[draggable='true']:active {
     cursor: grabbing;
 }
+
+/* ==========================================================================
+   MESSAGE TEMPLATES
+   What the shop says in an email and a text, and the two ways to check it.
+   ========================================================================== */
+
+.tpl-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tpl-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.tpl-row:last-child {
+    border-bottom: 0;
+}
+
+.tpl-what {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tpl-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.tpl-hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    max-width: 62ch;
+}
+
+/*
+ * What one message costs to send. Shown on the row rather than only inside the
+ * editor, because the number somebody needs before opening it is whether this
+ * one is already two parts.
+ */
+.tpl-cost {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-subtle);
+}
+
+.tpl-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.tpl-vars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tpl-var-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tpl-var-chip {
+    padding: 3px 9px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary-ink);
+    background: var(--primary-light);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.tpl-var-chip:hover {
+    background: var(--danger-light);
+}
+
+.tpl-var-chip:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+.tpl-sms-box {
+    width: 100%;
+    padding: 11px 13px;
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+}
+
+.tpl-sms-box:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+/*
+ * The cost, as it is typed. Turns when the message crosses into a second part,
+ * because that is the moment it doubles what every order costs to notify.
+ */
+.tpl-meter {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.tpl-meter.is-over {
+    color: var(--warning-text);
+    font-weight: 600;
+}
+
+.tpl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.tpl-test {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.tpl-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: var(--bg-surface-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.tpl-preview-subject {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--text-body);
+}
+
+/*
+ * In a frame, so the email's own styles cannot reach the admin around it —
+ * these templates carry the inline CSS Outlook needs, and a stray rule
+ * escaping into the dashboard would be hard to trace back here.
+ */
+.tpl-preview-frame {
+    width: 100%;
+    height: 460px;
+    background: #ffffff; /* theme-exempt: an email is drawn on white */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.tpl-preview-sms {
+    margin: 0;
+    padding: 11px 13px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    max-width: 46ch;
+}

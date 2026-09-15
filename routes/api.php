@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ExpenseCategoryController as AdminExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController as AdminExpenseController;
 use App\Http\Controllers\Admin\MediaUploadController;
+use App\Http\Controllers\Admin\MessageTemplateController as AdminMessageTemplateController;
 use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -432,6 +433,9 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Settings
         Route::post(ApiEndpoints::ADMIN_SETTINGS, [AdminSettingController::class, 'update'])->middleware('can:settings');
         Route::post(ApiEndpoints::ADMIN_SETTINGS_TEST_EMAIL, [AdminSettingController::class, 'sendTestEmail'])->middleware('can:settings');
+        Route::patch(ApiEndpoints::ADMIN_TEMPLATE_ITEM, [AdminMessageTemplateController::class, 'update'])->middleware('can:settings');
+        Route::get(ApiEndpoints::ADMIN_TEMPLATE_PREVIEW, [AdminMessageTemplateController::class, 'preview'])->middleware('can:settings');
+        Route::post(ApiEndpoints::ADMIN_TEMPLATE_TEST, [AdminMessageTemplateController::class, 'test'])->middleware('can:settings');
 
         // Media uploads
         // Either ability opens the endpoint; the folder decides which of them

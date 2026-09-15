@@ -380,6 +380,15 @@ class ApiEndpoints
 
     public const ADMIN_SETTINGS = 'settings';
 
+    /* What the shop says in an email and a text, and the two ways to check it. */
+    public const ADMIN_TEMPLATES = 'templates';
+
+    public const ADMIN_TEMPLATE_ITEM = 'templates/{type}/{id}';
+
+    public const ADMIN_TEMPLATE_PREVIEW = 'templates/{type}/{id}/preview';
+
+    public const ADMIN_TEMPLATE_TEST = 'templates/{type}/{id}/test';
+
     public const ADMIN_CUSTOMERS = 'customers';
 
     // Running costs, and the statement built from them.

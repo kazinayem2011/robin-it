@@ -180,6 +180,13 @@ export const API_ENDPOINTS = {
         STORE_ITEM: (id) => `/admin/stores/${id}`,
         SETTINGS: '/admin/settings',
         SETTINGS_TEST_EMAIL: '/admin/settings/test-email',
+
+        // What the shop says in an email and a text.
+        TEMPLATES: '/admin/templates',
+        TEMPLATE_ITEM: (type, id) => `/admin/templates/${type}/${id}`,
+        TEMPLATE_PREVIEW: (type, id) =>
+            `/admin/templates/${type}/${id}/preview`,
+        TEMPLATE_TEST: (type, id) => `/admin/templates/${type}/${id}/test`,
         CUSTOMERS: '/admin/customers',
         BLOGS: '/admin/blogs',
         BLOG_ITEM: (id) => `/admin/blogs/${id}`,
@@ -325,6 +332,7 @@ export const ROUTES = {
     ADMIN_STOCK_ADJUSTMENTS: '/admin/stock/adjustments',
     ADMIN_SUBSCRIBERS: '/admin/subscribers',
     ADMIN_SETTINGS: '/admin/settings',
+    ADMIN_TEMPLATES: '/admin/templates',
     ADMIN_CUSTOMERS: '/admin/customers',
     ADMIN_BLOGS: '/admin/blogs',
     ADMIN_OFFERS: '/admin/offers',
