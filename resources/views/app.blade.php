@@ -58,7 +58,6 @@
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-        <link rel="alternate icon" href="/favicon.ico">
 
         <!-- Local Tech Fonts (Plus Jakarta Sans & Inter) -->
         <link rel="stylesheet" href="/fonts/fonts.css">
