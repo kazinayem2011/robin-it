@@ -137,16 +137,6 @@ export default function MessageTemplates({
     };
 
     const sendTest = async () => {
-        if (!testTo.trim()) {
-            toast.error(
-                kind === 'email'
-                    ? 'Enter an address to send the test to.'
-                    : 'Enter a mobile number to send the test to.',
-                'Where to?',
-            );
-            return;
-        }
-
         setSending(true);
         try {
             const res = await adminService.sendTemplateTest(
@@ -246,7 +236,7 @@ export default function MessageTemplates({
                 isOpen={Boolean(editing)}
                 onClose={close}
                 title={editing ? `Edit — ${editing.name}` : ''}
-                size="lg"
+                maxWidth="820px"
             >
                 {editing && (
                     <div className="tpl-editor">
@@ -331,46 +321,49 @@ export default function MessageTemplates({
                             </>
                         )}
 
+                        {/* Labelled, and on a line of its own, the same
+                            shape as the SMTP test in Settings. Wedged between
+                            the buttons it read as an orphan box, and the
+                            field's own bottom margin left it floating above
+                            everything beside it. */}
+                        <div className="admin-test-email-row">
+                            <FormInput
+                                label={
+                                    kind === 'email'
+                                        ? 'Send a test email to'
+                                        : 'Send a test SMS to'
+                                }
+                                name="test_to"
+                                type={kind === 'email' ? 'email' : 'tel'}
+                                placeholder={
+                                    kind === 'email'
+                                        ? 'you@example.com'
+                                        : '01XXXXXXXXX'
+                                }
+                                value={testTo}
+                                onChange={(e) => setTestTo(e.target.value)}
+                            />
+                            <Button
+                                variant="secondary"
+                                icon={Send}
+                                loading={sending}
+                                disabled={sending || !testTo.trim()}
+                                onClick={sendTest}
+                            >
+                                {sending ? 'Sending…' : 'Send test'}
+                            </Button>
+                        </div>
+
                         <div className="tpl-actions">
                             <Button
                                 variant="outline"
-                                size="sm"
                                 icon={Eye}
                                 onClick={showPreview}
                             >
                                 Preview
                             </Button>
-
-                            <div className="tpl-test">
-                                <FormInput
-                                    name="test_to"
-                                    placeholder={
-                                        kind === 'email'
-                                            ? 'you@example.com'
-                                            : '01XXXXXXXXX'
-                                    }
-                                    value={testTo}
-                                    aria-label={
-                                        kind === 'email'
-                                            ? 'Send a test to this address'
-                                            : 'Send a test to this number'
-                                    }
-                                    onChange={(e) => setTestTo(e.target.value)}
-                                />
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    icon={Send}
-                                    loading={sending}
-                                    onClick={sendTest}
-                                >
-                                    Send test
-                                </Button>
-                            </div>
-
                             <Button
                                 variant="primary"
-                                size="sm"
                                 icon={Save}
                                 loading={saving}
                                 onClick={save}

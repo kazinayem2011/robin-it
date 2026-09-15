@@ -5186,19 +5186,21 @@ a.admin-card:hover,
     font-weight: 600;
 }
 
+/*
+ * Preview and Save, right-aligned the way every other admin modal ends.
+ *
+ * These three used to share a line with the test field, and both of that row's
+ * faults were invisible in the markup: the modal was asking for a `size` prop
+ * Modal does not take, so it stayed at the 600px default and squeezed "Send
+ * test" onto two lines, and the field carried `.auth-form-group`'s 18px bottom
+ * margin, which in a centred row lifted the box above the buttons next to it.
+ */
 .tpl-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
-}
-
-.tpl-test {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1 1 260px;
-    min-width: 0;
 }
 
 .tpl-preview {
