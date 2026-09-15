@@ -152,7 +152,9 @@ class StorefrontPageController extends Controller
          */
         $product = Product::where('slug', $slug)
             ->where('is_active', true)
-            ->with('images:id,product_id,image_path')
+            ->with(['images:id,product_id,image_path', 'brand:id,name'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->first();
 
         return Inertia::render('Products/Show', [

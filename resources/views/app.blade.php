@@ -91,6 +91,16 @@
             <meta inertia property="og:image" content="{{ $seo['image'] }}">
         @endif
 
+        {{--
+            What puts a price, a stock state and a star rating in a search
+            result rather than a bare blue link. Built here as well as on the
+            page, because only Google reads the page's copy, and only on a
+            second pass.
+        --}}
+        @if ($seo['schema'])
+            <script type="application/ld+json">{!! json_encode($seo['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        @endif
+
         <meta inertia name="twitter:card" content="summary_large_image">
         <meta inertia name="twitter:title" content="{{ $seo['title'] }}">
         <meta inertia name="twitter:description" content="{{ $seo['description'] }}">

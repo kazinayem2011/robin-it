@@ -82,6 +82,62 @@ class Seo
         ];
     }
 
+    /**
+     * The Product markup a search engine reads, settled on the server.
+     *
+     * This is what puts a price, availability and a star rating in a search
+     * result rather than a bare blue link. The page builds the same thing in
+     * JavaScript, and Google reaches that on a second pass — but only Google,
+     * and only eventually.
+     *
+     * The rules are the ones productSchema.js already worked out the hard way.
+     * `checkout_price` rather than `effective_price`, because the markup is
+     * rejected when it disagrees with the price the page headlines. Anything
+     * the shop has not recorded is left out rather than guessed at: a brand or
+     * a part number invented here is published straight into a search result.
+     * And a rating only with reviews behind it — the page falls back to five
+     * stars when a product has none, and an invented rating is the one thing
+     * that gets a shop's results suppressed rather than merely ignored.
+     *
+     * @return array<string, mixed>
+     */
+    public static function productSchema(Product $product): array
+    {
+        $availability = $product->in_stock
+            ? 'InStock'
+            : ($product->allow_preorder ? 'PreOrder' : 'OutOfStock');
+
+        $reviewCount = (int) ($product->reviews_count ?? 0);
+
+        return array_filter([
+            '@context' => 'https://schema.org/',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'image' => self::absolute($product->images->first()->image_path ?? null),
+            'description' => $product->short_description ?: $product->name,
+            'brand' => $product->brand
+                ? ['@type' => 'Brand', 'name' => $product->brand->name]
+                : null,
+            'mpn' => $product->mpn ?: null,
+            'model' => $product->model ?: null,
+            'offers' => [
+                '@type' => 'Offer',
+                'priceCurrency' => 'BDT',
+                'price' => $product->checkout_price,
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'availability' => "https://schema.org/{$availability}",
+                'seller' => ['@type' => 'Organization', 'name' => BrandDetails::name()],
+            ],
+            'aggregateRating' => $reviewCount > 0
+                ? [
+                    '@type' => 'AggregateRating',
+                    'ratingValue' => round((float) $product->reviews_avg_rating, 1),
+                    'reviewCount' => $reviewCount,
+                ]
+                : null,
+        ], fn ($value) => $value !== null);
+    }
+
     /** A product's own page: its name, its blurb, its photograph. */
     public static function forProduct(Product $product): array
     {
@@ -94,6 +150,7 @@ class Seo
             'keywords' => $product->meta_keyword ?: null,
             'image' => $product->images->first()->image_path ?? null,
             'type' => 'product',
+            'schema' => self::productSchema($product),
         ]);
     }
 

@@ -122,6 +122,51 @@ class SeoTagsTest extends TestCase
         $this->get('/shop')->assertDontSee('name="robots"', false);
     }
 
+    /**
+     * The Product markup. This is what puts a price and a stock state in a
+     * search result rather than a bare blue link.
+     */
+    public function test_a_product_page_carries_its_schema(): void
+    {
+        $product = $this->product(['name' => 'Corsair K70', 'price' => 12500]);
+
+        $response = $this->get("/products/{$product->slug}");
+
+        $response->assertSee('application/ld+json', false);
+        $response->assertSee('"@type":"Product"', false);
+        $response->assertSee('"priceCurrency":"BDT"', false);
+        $response->assertSee('"name":"Corsair K70"', false);
+    }
+
+    public function test_the_schema_says_out_of_stock_when_it_is(): void
+    {
+        $product = $this->product(['name' => 'Sold Out Thing', 'stock_quantity' => 0]);
+
+        $this->get("/products/{$product->slug}")
+            ->assertSee('schema.org/OutOfStock', false);
+    }
+
+    public function test_the_schema_says_in_stock_when_it_is(): void
+    {
+        $product = $this->product(['name' => 'Available Thing', 'stock_quantity' => 9]);
+
+        $this->get("/products/{$product->slug}")
+            ->assertSee('schema.org/InStock', false);
+    }
+
+    /**
+     * The one piece of markup that gets a shop's results suppressed rather
+     * than merely ignored. The page falls back to five stars when a product
+     * has no reviews, and that must never reach here.
+     */
+    public function test_no_rating_is_published_for_a_product_with_no_reviews(): void
+    {
+        $product = $this->product(['name' => 'Unreviewed Thing']);
+
+        $this->get("/products/{$product->slug}")
+            ->assertDontSee('aggregateRating', false);
+    }
+
     /** A page that sets nothing still answers with the shop's own details. */
     public function test_a_page_with_no_details_of_its_own_still_has_tags(): void
     {
