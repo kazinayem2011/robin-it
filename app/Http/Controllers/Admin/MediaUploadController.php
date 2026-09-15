@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Support\ImageDownscale;
 use App\Support\UploadedImage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -90,11 +91,21 @@ class MediaUploadController extends Controller
             );
         }
 
+        /*
+         * Brought down to a size a shopper can receive. Nothing resized
+         * anything before this, so a 6000px camera original was stored and
+         * served whole — and the shop moves about 10 KB a second, which makes
+         * one 5 MB photograph eight minutes. Best-effort: an image already
+         * small enough, or one GD cannot read, is left exactly as it is.
+         */
+        $downscale = ImageDownscale::apply($path);
+
         return $this->successResponse([
             'path' => Storage::url($path),   // e.g. /storage/uploads/products/<uuid>.jpg
             'disk_path' => $path,
             'name' => $name,
-            'size' => $file->getSize(),
+            'size' => Storage::disk('public')->size($path),
+            'resized' => $downscale['resized'],
         ], 'Image uploaded successfully.', 201);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Support\ImageDownscale;
 use App\Support\UploadedImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,9 @@ class AvatarController extends Controller
         if (! $path) {
             return back()->with('error', 'We could not save that picture. Please try again.');
         }
+
+        // A face shown at 40px does not need a 4000px photograph behind it.
+        ImageDownscale::apply($path);
 
         $this->forgetPrevious($user->avatar);
 
