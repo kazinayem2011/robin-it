@@ -53,6 +53,29 @@ describe('UserMenu', () => {
         return person;
     };
 
+    /**
+     * Which role somebody is signed in as decides what they can see, and it
+     * used to share a line with the email behind an `email || phone ||
+     * role_label` chain — every staff account has an email, so it never won.
+     * The only place it appeared was the sidebar footer at 0.7rem, which is
+     * how somebody signed in as Manager spent an afternoon looking for a menu
+     * that Owners see and they do not.
+     */
+    it('says which role a staff account is signed in as', async () => {
+        await openMenu(staff, 'admin');
+
+        expect(screen.getByText('Administrator')).toBeInTheDocument();
+        /* Beside the email, not instead of it: both answer a question. */
+        expect(screen.getByText('nayem@example.com')).toBeInTheDocument();
+    });
+
+    /* A customer has no role worth naming. */
+    it('says nothing about the role of a customer', async () => {
+        await openMenu(customer);
+
+        expect(screen.queryByText(/administrator|manager/i)).toBeNull();
+    });
+
     it('shows nothing at all when nobody is signed in', () => {
         const { container } = render(<UserMenu user={null} />);
 

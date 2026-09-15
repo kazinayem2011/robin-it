@@ -172,12 +172,24 @@ export default function UserMenu({ user, variant = 'site' }) {
                      */}
                     <div className="user-menu-head">
                         <strong>{user.name}</strong>
-                        <span>
-                            {user.email ||
-                                user.phone ||
-                                user.role_label ||
-                                'Signed in'}
-                        </span>
+                        <span>{user.email || user.phone || 'Signed in'}</span>
+
+                        {/*
+                         * What this account can do, beside who it is.
+                         *
+                         * The role used to share the line above, behind an
+                         * `email || phone || role_label` chain — and every
+                         * staff account has an email, so it never once won.
+                         * The only place it appeared was the sidebar footer at
+                         * 0.7rem, which is how somebody signed in as Manager
+                         * spent an afternoon looking for a menu that Owners
+                         * see and they do not.
+                         */}
+                        {staff && user.role_label && (
+                            <em className="user-menu-role">
+                                {user.role_label}
+                            </em>
+                        )}
                     </div>
 
                     {/* Its own group above the rest: it is the one link that

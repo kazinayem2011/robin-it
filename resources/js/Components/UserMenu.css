@@ -231,3 +231,23 @@
         animation: none;
     }
 }
+
+/*
+ * What the account can do, as opposed to who it is.
+ *
+ * Its own line rather than sharing one with the email, and marked rather than
+ * muted: which role somebody is signed in as decides what they can see, so it
+ * is worth reading at a glance instead of being the quietest thing on the panel.
+ */
+.user-menu-role {
+    align-self: flex-start;
+    margin-top: 5px;
+    padding: 1px 7px;
+    border-radius: var(--radius-xs);
+    background: var(--primary-light);
+    color: var(--primary-ink);
+    font-size: 0.7rem;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
