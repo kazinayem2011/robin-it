@@ -24,8 +24,28 @@ use Illuminate\Support\Str;
  */
 class Seo
 {
-    /** Sensible when nothing else is known; a picture is better than none. */
-    private const FALLBACK_IMAGE = '/images/hero_gaming_pc.png';
+    /**
+     * The shop's own card, for every page with no picture of its own.
+     *
+     * This pointed at /images/hero_gaming_pc.png, a file that has never been
+     * in this repository — so the default og:image was a 404 and the default
+     * share card had no picture, which is most of what was being reported.
+     *
+     * It is not one of the hero banners either. Every one of those is a
+     * manufacturer's own advertisement, down to the product name set in their
+     * type; a multi-brand retailer whose every shared link carries one
+     * supplier's advert is advertising them rather than itself.
+     */
+    private const FALLBACK_IMAGE = '/images/og-default.jpg';
+
+    /**
+     * What a share crawler will actually draw.
+     *
+     * Facebook, WhatsApp and LinkedIn render this fixed set and show nothing
+     * at all for anything outside it — SVG included, which happens to be the
+     * only image 1,265 of this shop's 1,267 products carry.
+     */
+    private const DRAWABLE = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
     /**
      * @param  array<string, mixed>  $overrides
@@ -33,10 +53,26 @@ class Seo
      */
     public static function for(array $overrides = []): array
     {
+        /*
+         * Already settled, so leave it alone.
+         *
+         * A controller builds this array with this very method and hands it to
+         * the page as a prop; the layout then calls the method again on
+         * whatever the page provided, because most pages provide nothing.
+         * Passing a resolved array back through is harmless in every field but
+         * one — by then `image` is an absolute URL rather than a path, which is
+         * no longer a file this can measure, so every page that set its own
+         * title silently lost its image dimensions.
+         */
+        if (isset($overrides['resolved'])) {
+            return $overrides;
+        }
+
         $brand = BrandDetails::name();
         $tagline = SiteSetting::get('site_tagline') ?: 'The Store of Technology';
 
         $title = $overrides['title'] ?? null;
+        $image = self::shareImage($overrides['image'] ?? null);
 
         return [
             /*
@@ -62,10 +98,15 @@ class Seo
 
             'keywords' => ($overrides['keywords'] ?? null) ?: (SiteSetting::get('meta_keywords') ?: null),
 
-            'image' => self::absolute(
-                ($overrides['image'] ?? null)
-                    ?: (SiteSetting::get('og_image') ?: self::FALLBACK_IMAGE)
-            ),
+            'image' => $image['url'],
+
+            /*
+             * Not required, and worth sending anyway: told the size up front,
+             * a crawler lays out the large card on the first share instead of
+             * waiting until it has fetched the picture to find out.
+             */
+            'image_width' => $image['width'],
+            'image_height' => $image['height'],
 
             /*
              * Without the query string. `?page=2`, `?sort=price` and `?ref=fb`
@@ -79,6 +120,9 @@ class Seo
             'site_name' => $brand,
             'verification' => SiteSetting::get('google_site_verification') ?: null,
             'schema' => $overrides['schema'] ?? null,
+
+            /* What the check at the top of this method reads. */
+            'resolved' => true,
         ];
     }
 
@@ -113,7 +157,14 @@ class Seo
             '@context' => 'https://schema.org/',
             '@type' => 'Product',
             'name' => $product->name,
-            'image' => self::absolute($product->images->first()->image_path ?? null),
+            /*
+             * Through the same check as the share card. Google's Product
+             * markup takes the same raster formats a share crawler does and
+             * rejects an SVG, which is the only picture nearly every product
+             * in this catalogue has — and rejected markup is no rich result
+             * at all, where the shop's own card is at least valid.
+             */
+            'image' => self::shareImage($product->images->first()->image_path ?? null)['url'],
             'description' => $product->short_description ?: $product->name,
             'brand' => $product->brand
                 ? ['@type' => 'Brand', 'name' => $product->brand->name]
@@ -152,6 +203,67 @@ class Seo
             'type' => 'product',
             'schema' => self::productSchema($product),
         ]);
+    }
+
+    /**
+     * The picture on the share card, and its size.
+     *
+     * Two things have to be true of it and neither was checked. It has to be
+     * a format the crawler can draw, or the card arrives with a blank where
+     * the picture goes — and nearly every product in this catalogue carries
+     * an SVG placeholder, which is exactly such a format. And it has to
+     * exist, which the old fallback did not.
+     *
+     * @return array{url: string|null, width: int|null, height: int|null}
+     */
+    private static function shareImage(?string $candidate): array
+    {
+        $path = $candidate ?: (SiteSetting::get('og_image') ?: null);
+
+        if (! $path || ! self::drawable($path)) {
+            $path = self::FALLBACK_IMAGE;
+        }
+
+        return ['url' => self::absolute($path)] + self::measure($path);
+    }
+
+    private static function drawable(string $path): bool
+    {
+        $extension = mb_strtolower(pathinfo(
+            parse_url($path, PHP_URL_PATH) ?: '',
+            PATHINFO_EXTENSION,
+        ));
+
+        /*
+         * A URL somebody typed into the settings screen, with nothing in it to
+         * judge by. Their word is better than a guess here — the alternative
+         * is quietly ignoring the picture the shop chose.
+         */
+        if ($extension === '' && Str::startsWith($path, ['http://', 'https://'])) {
+            return true;
+        }
+
+        return in_array($extension, self::DRAWABLE, true);
+    }
+
+    /** Measured only when the file is one of ours; a remote one stays unstated. */
+    private static function measure(string $path): array
+    {
+        $unknown = ['width' => null, 'height' => null];
+
+        if (Str::startsWith($path, ['http://', 'https://'])) {
+            return $unknown;
+        }
+
+        $file = public_path(ltrim((string) parse_url($path, PHP_URL_PATH), '/'));
+
+        if (! is_file($file)) {
+            return $unknown;
+        }
+
+        $size = @getimagesize($file);
+
+        return $size ? ['width' => $size[0], 'height' => $size[1]] : $unknown;
     }
 
     /**

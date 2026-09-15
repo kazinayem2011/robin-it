@@ -89,6 +89,14 @@
         <meta inertia property="og:site_name" content="{{ $seo['site_name'] }}">
         @if ($seo['image'])
             <meta inertia property="og:image" content="{{ $seo['image'] }}">
+            @if (str_starts_with($seo['image'], 'https://'))
+                <meta inertia property="og:image:secure_url" content="{{ $seo['image'] }}">
+            @endif
+            <meta inertia property="og:image:alt" content="{{ $seo['title'] }}">
+            @if ($seo['image_width'] && $seo['image_height'])
+                <meta inertia property="og:image:width" content="{{ $seo['image_width'] }}">
+                <meta inertia property="og:image:height" content="{{ $seo['image_height'] }}">
+            @endif
         @endif
 
         {{--

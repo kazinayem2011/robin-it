@@ -5,6 +5,7 @@ namespace Tests\Feature\Catalog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Support\Seo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -84,6 +85,93 @@ class SeoTagsTest extends TestCase
 
         $this->get("/products/{$product->slug}")
             ->assertSee('property="og:image" content="'.url('/storage/uploads/products/rog.jpg').'"', false);
+    }
+
+    /**
+     * The picture the share card falls back to has to be a file that exists.
+     *
+     * It pointed at /images/hero_gaming_pc.png, which has never been in this
+     * repository — so the default og:image was a 404 and every card without a
+     * picture of its own arrived blank, which is the whole of what was being
+     * reported from WhatsApp.
+     */
+    public function test_the_fallback_share_image_is_a_file_that_exists(): void
+    {
+        $image = Seo::for()['image'];
+
+        $this->assertStringStartsWith(url('/'), $image);
+        $this->assertFileExists(
+            public_path(ltrim((string) parse_url($image, PHP_URL_PATH), '/')),
+        );
+    }
+
+    /**
+     * An SVG is not a share picture.
+     *
+     * Facebook, WhatsApp and LinkedIn draw a fixed set of raster formats and
+     * show nothing at all for anything else. This matters far more than it
+     * sounds: 1,265 of the shop's 1,267 products carry the SVG placeholder as
+     * their only image, so offering it meant every one of those links arrived
+     * with a blank where the picture goes.
+     */
+    public function test_a_placeholder_svg_is_not_offered_as_the_share_picture(): void
+    {
+        $product = $this->product(['name' => 'Sample AI PC']);
+        ProductImage::create([
+            'product_id' => $product->id,
+            'image_path' => '/images/product-placeholder.svg',
+        ]);
+
+        $response = $this->get("/products/{$product->slug}");
+
+        $response->assertDontSee('og:image" content="'.url('/images/product-placeholder.svg'), false);
+        $response->assertSee('property="og:image" content="'.url('/images/og-default.jpg').'"', false);
+    }
+
+    /** Google's Product markup rejects one just as surely, and says nothing. */
+    public function test_the_schema_does_not_publish_an_svg_either(): void
+    {
+        $product = $this->product(['name' => 'Sample AI PC']);
+        ProductImage::create([
+            'product_id' => $product->id,
+            'image_path' => '/images/product-placeholder.svg',
+        ]);
+
+        $schema = Seo::productSchema($product->fresh()->load('images'));
+
+        $this->assertStringEndsWith('.jpg', $schema['image']);
+    }
+
+    /**
+     * The size, on a page that named itself.
+     *
+     * A controller settles these tags and hands them to the page as a prop;
+     * the layout then calls the same method again on whatever the page gave
+     * it, because most pages give nothing. Running a settled array back
+     * through was harmless in every field but the picture — by then it is an
+     * absolute URL rather than a path, so there was no file left to measure,
+     * and every page with a title of its own quietly lost its dimensions.
+     */
+    public function test_the_image_keeps_its_dimensions_on_a_page_that_names_itself(): void
+    {
+        $this->get('/shop')
+            ->assertSee('property="og:image:width" content="1200"', false)
+            ->assertSee('property="og:image:height" content="630"', false);
+    }
+
+    /** Written by hand for years; now each of these says what it is. */
+    public function test_the_pages_that_had_no_tags_of_their_own_now_have_them(): void
+    {
+        foreach ([
+            '/shop' => 'Shop All Products',
+            '/about' => 'About Us',
+            '/contact' => 'Contact Us',
+            '/stores' => 'Showrooms',
+            '/warranty' => 'Warranty',
+            '/pc-builder' => 'PC Builder',
+        ] as $path => $expected) {
+            $this->get($path)->assertSee("<title inertia>{$expected} | ", false);
+        }
     }
 
     public function test_a_category_page_is_named_after_its_shelf(): void

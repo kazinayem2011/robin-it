@@ -95,7 +95,12 @@ class StorefrontPageController extends Controller
             );
         }
 
-        return Inertia::render('Products/Index');
+        return Inertia::render('Products/Index', [
+            'seo' => Seo::for([
+                'title' => 'Shop All Products',
+                'description' => 'Buy at the best price in Bangladesh, with warranty and nationwide delivery.',
+            ]),
+        ]);
     }
 
     /**
@@ -177,18 +182,32 @@ class StorefrontPageController extends Controller
      */
     public function offers(): Response
     {
-        return Inertia::render('Offers/Index');
+        return Inertia::render('Offers/Index', [
+            'seo' => Seo::for([
+                'title' => 'Offers',
+                'description' => 'Running offers, what they apply to and when they end.',
+            ]),
+        ]);
     }
 
     public function offer(string $slug): Response
     {
-        return Inertia::render('Offers/Show', ['slug' => $slug]);
+        return Inertia::render('Offers/Show', [
+            'slug' => $slug,
+            'seo' => Seo::for(['title' => 'Offer']),
+        ]);
     }
 
     /** Every product whose price is cut. */
     public function discounts(): Response
     {
-        return Inertia::render('Products/Index', ['onSaleOnly' => true]);
+        return Inertia::render('Products/Index', [
+            'onSaleOnly' => true,
+            'seo' => Seo::for([
+                'title' => 'Discounts',
+                'description' => 'Every product in the shop whose price is cut right now.',
+            ]),
+        ]);
     }
 
     public function cart(): Response
@@ -229,17 +248,26 @@ class StorefrontPageController extends Controller
         return Inertia::render('Checkout/Success', [
             'orderNumber' => $number,
             'suggestions' => $suggestions->values(),
+            'seo' => Seo::for(['title' => 'Order Placed', 'noindex' => true]),
         ]);
     }
 
     public function pcBuilder(): Response
     {
-        return Inertia::render('PcBuilder/Index');
+        return Inertia::render('PcBuilder/Index', [
+            'seo' => Seo::for([
+                'title' => 'PC Builder',
+                'description' => 'Pick your parts and we check they fit together before you buy.',
+            ]),
+        ]);
     }
 
     public function pcBuilderChoose(string $categorySlug): Response
     {
-        return Inertia::render('PcBuilder/SelectComponent', ['categorySlug' => $categorySlug]);
+        return Inertia::render('PcBuilder/SelectComponent', [
+            'categorySlug' => $categorySlug,
+            'seo' => Seo::for(['title' => 'Choose a part', 'noindex' => true]),
+        ]);
     }
 
     /**
@@ -252,6 +280,7 @@ class StorefrontPageController extends Controller
     {
         return Inertia::render('Track/Index', [
             'orderNumber' => $orderNumber ? (Order::normalizeNumber($orderNumber) ?: null) : null,
+            'seo' => Seo::for(['title' => 'Track Your Order', 'noindex' => true]),
         ]);
     }
 
@@ -267,12 +296,22 @@ class StorefrontPageController extends Controller
 
     public function stores(): Response
     {
-        return Inertia::render('Stores/Index');
+        return Inertia::render('Stores/Index', [
+            'seo' => Seo::for([
+                'title' => 'Showrooms',
+                'description' => 'Where to find us: addresses, phone numbers and opening hours.',
+            ]),
+        ]);
     }
 
     public function support(): Response
     {
-        return Inertia::render('Support/Index');
+        return Inertia::render('Support/Index', [
+            'seo' => Seo::for([
+                'title' => 'Support',
+                'description' => 'Warranty claims, repairs and anything else you need a hand with.',
+            ]),
+        ]);
     }
 
     /**
@@ -284,11 +323,17 @@ class StorefrontPageController extends Controller
      */
     public function about(): Response
     {
+        $about = ContentPage::published()->where('slug', 'about')->first();
+
         return Inertia::render('About/Index', [
             // The words are the shop's, kept in the database; the figures and
             // the showrooms are counted, so they cannot go stale.
-            'page' => ContentPage::published()->where('slug', 'about')->first()
-                ?->only(['title', 'subtitle', 'body', 'meta_description']),
+            'page' => $about?->only(['title', 'subtitle', 'body', 'meta_description']),
+
+            'seo' => Seo::for([
+                'title' => 'About Us',
+                'description' => $about?->meta_description ?: null,
+            ]),
             'stats' => [
                 'products' => Product::where('is_active', true)->count(),
                 'brands' => Brand::count(),
@@ -316,6 +361,12 @@ class StorefrontPageController extends Controller
                 'slug', 'title', 'subtitle', 'body', 'meta_title', 'meta_description',
             ]),
             'updatedAt' => $page->updated_at?->format('j F Y'),
+
+            'seo' => Seo::for([
+                'title' => $page->meta_title ?: $page->title,
+                'description' => $page->meta_description
+                    ?: strip_tags((string) ($page->subtitle ?: $page->body)),
+            ]),
         ]);
     }
 
@@ -333,12 +384,22 @@ class StorefrontPageController extends Controller
                 'email' => Auth::user()->email,
                 'phone' => Auth::user()->phone,
             ] : null,
+
+            'seo' => Seo::for([
+                'title' => 'Contact Us',
+                'description' => 'Phone, email and the address of every showroom.',
+            ]),
         ]);
     }
 
     public function warranty(): Response
     {
-        return Inertia::render('Warranty/Index');
+        return Inertia::render('Warranty/Index', [
+            'seo' => Seo::for([
+                'title' => 'Warranty',
+                'description' => 'What is covered, for how long, and how to make a claim.',
+            ]),
+        ]);
     }
 
     /**
@@ -365,6 +426,11 @@ class StorefrontPageController extends Controller
                 ->pluck('category')
                 ->map(fn (string $c) => ['key' => $c, 'label' => self::titleCase($c)])
                 ->values(),
+
+            'seo' => Seo::for([
+                'title' => 'Journal',
+                'description' => 'Build guides, buying advice and what is new in the shop.',
+            ]),
         ]);
     }
 

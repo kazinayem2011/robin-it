@@ -36,7 +36,7 @@ export default function SEOHead({
     const pageDescription =
         description || settings.meta_description || siteConfig.description;
     const pageImage =
-        image || settings.og_image || '/images/hero_gaming_pc.png';
+        image || settings.og_image || '/images/og-default.jpg';
     const pageKeywords = keywords || settings.meta_keywords || '';
     const pageUrl =
         url || (typeof window !== 'undefined' ? window.location.href : '');
