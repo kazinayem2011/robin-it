@@ -6,6 +6,7 @@ use App\Models\Courier;
 use App\Models\Order;
 use App\Models\SmsTemplate;
 use App\Support\SmsTemplates;
+use Database\Seeders\MessageTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -134,6 +135,54 @@ class StoredWordingTest extends TestCase
         );
 
         $this->assertSame('(Robins Computer) ORD-24081 পাঠানো হয়েছে (Pathao Courier)।', $message);
+    }
+
+    /**
+     * The one I missed first time round, and one of the four switched on.
+     *
+     * Wiring six of seven is the failure mode a per-key test exists for: the
+     * shop reworded this one, the preview agreed, and the customer went on
+     * being told the old thing.
+     */
+    public function test_the_amount_due_template_is_wired_too(): void
+    {
+        $this->template('payment_due', '({shop_name}) {order_number}: ডেলিভারিতে Tk {amount_due} লাগবে।');
+
+        $message = SmsTemplates::paymentDue($this->order(), 84500, 'Robins Computer');
+
+        $this->assertSame('(Robins Computer) ORD-24081: ডেলিভারিতে Tk 84,500 লাগবে।', $message);
+    }
+
+    /** Every key the seeder ships is one a message actually reads. */
+    public function test_no_seeded_template_is_left_unread(): void
+    {
+        $this->seed(MessageTemplateSeeder::class);
+
+        foreach (SmsTemplate::pluck('key') as $key) {
+            /* A wording nothing could mistake for the default. */
+            SmsTemplate::where('key', $key)->update([
+                'body' => '({shop_name}) সংখ্যা {order_number} — পরিবর্তিত পাঠ।',
+            ]);
+        }
+
+        $order = $this->order(['status' => 'cancelled']);
+        $shop = 'Robins Computer';
+
+        $messages = [
+            'order_placed' => SmsTemplates::orderPlaced($order, $shop),
+            'payment_due' => SmsTemplates::paymentDue($order, 100, $shop),
+            'refund' => SmsTemplates::refundIssued($order, 100, $shop),
+            'cancelled' => SmsTemplates::statusChanged($order, $shop),
+        ];
+
+        foreach (['delivered', 'returned', 'shipped'] as $status) {
+            $order->status = $status;
+            $messages[$status] = SmsTemplates::statusChanged($order, $shop);
+        }
+
+        foreach ($messages as $key => $message) {
+            $this->assertStringContainsString('পরিবর্তিত পাঠ', (string) $message, $key);
+        }
     }
 
     /** A refund names a sum, and the sum has to arrive formatted. */

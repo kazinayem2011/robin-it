@@ -183,8 +183,14 @@ class SmsTemplates
     /** What the shop is owed, when a delivery is going out unpaid. */
     public static function paymentDue(Order $order, float $due, string $shop): string
     {
-        return "({$shop}) অর্ডার {$order->order_number}, ডেলিভারিতে Tk "
-            .number_format($due, 0).' দিতে হবে। টাকা প্রস্তুত রাখুন।';
+        $sum = number_format($due, 0);
+
+        return self::stored('payment_due', [
+            'shop_name' => $shop,
+            'order_number' => $order->order_number,
+            'amount_due' => $sum,
+        ], "({$shop}) অর্ডার {$order->order_number}, ডেলিভারিতে Tk {$sum} দিতে হবে। "
+            .'টাকা প্রস্তুত রাখুন।');
     }
 
     /**

@@ -2,12 +2,23 @@
 
 namespace Tests\Feature\Mail;
 
+use App\Mail\BackInStockMail;
+use App\Mail\ContactReplyMail;
 use App\Mail\OrderConfirmationMail;
+use App\Mail\OrderStatusUpdatedMail;
 use App\Mail\WelcomeCustomerMail;
+use App\Models\Category;
+use App\Models\ContactMessage;
+use App\Models\ContactReply;
 use App\Models\EmailTemplate;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\User;
+use Database\Seeders\MessageTemplateSeeder;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -38,8 +49,8 @@ class StoredWordingTest extends TestCase
     private function order(): Order
     {
         $order = Order::create([
-            'order_number' => 'ORD-24081',
-            'session_id' => str_repeat('a', 40),
+            'order_number' => 'ORD-'.Str::random(6),
+            'session_id' => Str::random(40),
             'status' => 'pending',
             'subtotal' => 84500, 'shipping_fee' => 0, 'discount' => 0, 'total' => 84500,
             'payment_method' => 'COD', 'payment_status' => 'unpaid',
@@ -52,6 +63,43 @@ class StoredWordingTest extends TestCase
         ]);
 
         return $order->fresh()->load('items');
+    }
+
+    private function product(): Product
+    {
+        $category = Category::create([
+            'name' => 'Laptop',
+            'slug' => 'laptop-'.Str::random(6),
+            'is_active' => true,
+        ]);
+
+        return Product::create([
+            'name' => 'ASUS TUF Gaming A15',
+            'slug' => 'asus-tuf-'.Str::random(6),
+            'category_id' => $category->id,
+            'price' => 84500,
+            'stock_quantity' => 3,
+            'is_active' => true,
+        ]);
+    }
+
+    /** @return array{0: ContactMessage, 1: ContactReply} */
+    private function enquiry(): array
+    {
+        $message = ContactMessage::create([
+            'name' => 'Rahim Uddin',
+            'email' => 'rahim@example.com',
+            'subject' => 'Is the RTX 4060 model in stock?',
+            'message' => 'Asking about stock.',
+        ]);
+
+        $reply = ContactReply::create([
+            'contact_message_id' => $message->id,
+            'author_name' => 'Nazmul',
+            'body' => 'Yes, three in Uttara.',
+        ]);
+
+        return [$message, $reply];
     }
 
     /** The rendered HTML of a mailable, as it would be sent. */
@@ -110,6 +158,47 @@ class StoredWordingTest extends TestCase
         $this->assertStringNotContainsString('{order_items}', $html);
     }
 
+    /**
+     * Every key the seeder ships is one an email actually reads.
+     *
+     * Wiring six of seven is exactly the failure this catches, and it is the
+     * failure that happened on the texts: the shop rewords the one that was
+     * missed, the preview agrees with it, and the customer keeps being sent
+     * the old thing with nothing anywhere to say so.
+     */
+    public function test_no_seeded_template_is_left_unread(): void
+    {
+        $this->seed(MessageTemplateSeeder::class);
+
+        EmailTemplate::query()->update([
+            'subject' => 'পরিবর্তিত বিষয়',
+            'body' => '<p>পরিবর্তিত পাঠ।</p>',
+        ]);
+
+        $user = User::factory()->create(['name' => 'Rahim Uddin']);
+        $product = $this->product();
+
+        $built = [
+            'welcome' => (new WelcomeCustomerMail($user))->build(),
+            'order_placed' => (new OrderConfirmationMail($this->order()))->build(),
+            'order_status' => (new OrderStatusUpdatedMail($this->order()))->build(),
+            'back_in_stock' => (new BackInStockMail($product, null, 3))->build(),
+            'contact_reply' => (new ContactReplyMail(...$this->enquiry()))->build(),
+
+            /*
+             * The two the framework sends. Reached through the notification
+             * rather than a mailable, because that is how they are customised
+             * — a callback registered in AppServiceProvider.
+             */
+            'verify_email' => (new VerifyEmail)->toMail($user),
+            'password_reset' => (new ResetPassword('a-token'))->toMail($user),
+        ];
+
+        foreach ($built as $key => $message) {
+            $this->assertSame('পরিবর্তিত বিষয়', $message->subject, $key);
+        }
+    }
+
     /** Emptying a template is not a decision anybody makes on purpose. */
     public function test_an_emptied_template_falls_back_to_the_blade_view(): void
     {
@@ -148,9 +237,10 @@ class StoredWordingTest extends TestCase
             '<p>Hi {customer_name}, total {order_total}. {order_items} {order_url}</p>',
         );
 
-        $subject = (new OrderConfirmationMail($this->order()))->build()->subject;
+        $order = $this->order();
+        $subject = (new OrderConfirmationMail($order))->build()->subject;
 
-        $this->assertStringContainsString('ORD-24081', $subject);
+        $this->assertStringContainsString($order->order_number, $subject);
         $this->assertStringNotContainsString('{', $subject);
     }
 
