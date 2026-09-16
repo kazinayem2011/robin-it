@@ -82,25 +82,6 @@ class MessageTemplateController extends Controller
             );
         }
 
-        /*
-         * And refused when a text message has no Bengali left in it.
-         *
-         * The gateway's rule, not ours: every SMS must be sent in Bengali,
-         * Banglish is not allowed, and Bengali mixed with English is fine —
-         * English alone is not. What is at stake is the sending account
-         * itself, and this screen is precisely where somebody rewording a
-         * sentence would break it without ever seeing the notice.
-         */
-        if ($type === 'sms' && ! SmsService::hasBengali($data['body'])) {
-            return $this->errorResponse(
-                'The SMS gateway only accepts messages with Bengali in them — '
-                    .'mixing Bengali and English is fine, English on its own is not, '
-                    .'and Banglish (Amar / Ami / Tumi) is refused outright.',
-                422,
-                ApiCode::VALIDATION_ERROR,
-            );
-        }
-
         $template->fill($data)->save();
 
         return $this->successResponse(

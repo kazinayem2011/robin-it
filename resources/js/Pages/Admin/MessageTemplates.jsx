@@ -304,14 +304,15 @@ export default function MessageTemplates({
                                         }))
                                     }
                                 />
-                                {/* The gateway's rule, and the one that puts
-                                    the sending account at risk rather than
-                                    just the message. */}
+                                {/* The gateway's rules, said here rather than
+                                    enforced on save: whoever is rewording this
+                                    is the one who needs to know them. */}
                                 <p className="admin-field-hint">
-                                    Must contain Bengali. Mixing Bengali and
-                                    English is fine — English on its own is
-                                    refused, and so is Banglish (Amar / Ami /
-                                    Tumi).
+                                    The gateway only carries messages that open
+                                    with the shop name in brackets and have
+                                    Bengali in them. Mixing Bengali and English
+                                    is fine; English alone is refused, and so is
+                                    Banglish (Amar / Ami / Tumi).
                                 </p>
 
                                 {cost && (

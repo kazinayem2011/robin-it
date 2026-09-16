@@ -148,7 +148,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'The confirmation, with a tracking link. Nobody else sends this.',
                 'variables' => ['shop_name', 'order_number', 'order_total', 'track_url'],
-                'body' => '{shop_name}: অর্ডার {order_number} পেয়েছি, Tk {order_total}। ট্র্যাক: {track_url}',
+                'body' => '({shop_name}) অর্ডার {order_number} পেয়েছি, Tk {order_total}। ট্র্যাক: {track_url}',
             ],
             [
                 'key' => 'payment_due',
@@ -156,7 +156,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'Sent with the dispatch note when money is still owed, so the cash is ready when the rider knocks.',
                 'variables' => ['shop_name', 'order_number', 'amount_due'],
-                'body' => '{shop_name}: অর্ডার {order_number} ডেলিভারিতে Tk {amount_due} দিতে হবে। টাকা প্রস্তুত রাখুন।',
+                'body' => '({shop_name}) অর্ডার {order_number} ডেলিভারিতে Tk {amount_due} দিতে হবে। টাকা প্রস্তুত রাখুন।',
             ],
             [
                 'key' => 'shipped',
@@ -164,7 +164,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'Your courier already texts this, with their own tracking link.',
                 'variables' => ['shop_name', 'order_number', 'courier_name', 'track_url'],
-                'body' => '{shop_name}: অর্ডার {order_number} পাঠানো হয়েছে ({courier_name})। ট্র্যাক: {track_url}',
+                'body' => '({shop_name}) অর্ডার {order_number} পাঠানো হয়েছে ({courier_name})। ট্র্যাক: {track_url}',
             ],
             [
                 'key' => 'delivered',
@@ -172,7 +172,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'Your courier already texts this too.',
                 'variables' => ['shop_name', 'order_number'],
-                'body' => '{shop_name}: অর্ডার {order_number} ডেলিভারি হয়েছে। ধন্যবাদ। ওয়ারেন্টির জন্য মেসেজটি রাখুন।',
+                'body' => '({shop_name}) অর্ডার {order_number} ডেলিভারি হয়েছে। ধন্যবাদ। ওয়ারেন্টির জন্য মেসেজটি রাখুন।',
             ],
             [
                 'key' => 'cancelled',
@@ -180,7 +180,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'The courier never knows about a cancellation.',
                 'variables' => ['shop_name', 'order_number'],
-                'body' => '{shop_name}: অর্ডার {order_number} বাতিল হয়েছে। প্রশ্ন থাকলে আমাদের কল করুন।',
+                'body' => '({shop_name}) অর্ডার {order_number} বাতিল হয়েছে। প্রশ্ন থাকলে আমাদের কল করুন।',
             ],
             [
                 'key' => 'returned',
@@ -188,7 +188,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Orders',
                 'hint' => 'Rarely worth the cost; the refund message covers what the customer cares about.',
                 'variables' => ['shop_name', 'order_number'],
-                'body' => '{shop_name}: অর্ডার {order_number}-এর রিটার্ন পেয়েছি। রিফান্ড কয়েক কর্মদিবসের মধ্যে।',
+                'body' => '({shop_name}) অর্ডার {order_number}-এর রিটার্ন পেয়েছি। রিফান্ড কয়েক কর্মদিবসের মধ্যে।',
             ],
             [
                 'key' => 'refund',
@@ -196,7 +196,7 @@ class MessageTemplateSeeder extends Seeder
                 'group' => 'Money',
                 'hint' => 'A bank transfer takes days to appear; without this the customer chases it.',
                 'variables' => ['shop_name', 'order_number', 'amount'],
-                'body' => '{shop_name}: অর্ডার {order_number}-এর Tk {amount} রিফান্ড হয়েছে। ব্যাংকে আসতে কয়েক দিন লাগতে পারে।',
+                'body' => '({shop_name}) অর্ডার {order_number}-এর Tk {amount} রিফান্ড হয়েছে। ব্যাংকে আসতে কয়েক দিন লাগতে পারে।',
             ],
         ];
     }

@@ -491,20 +491,18 @@ function PreviewPane({ form, preview }) {
                 </p>
             )}
 
-            {/* The gateway refuses a text with no Bengali in it, so a
-                campaign written in English is not a badly worded message —
-                it is the sending account stopped part-way down the list. */}
-            {showsSms &&
-                preview.text &&
-                !/\p{Script=Bengali}/u.test(preview.text) && (
-                    <p className="cmp-warning">
-                        <AlertTriangle size={14} />
-                        The gateway only carries text messages with Bengali in
-                        them. Mixing Bengali and English is fine; English on its
-                        own is refused, and so is Banglish (Amar / Ami / Tumi).
-                        This will not send as written.
-                    </p>
-                )}
+            {/* Said, not enforced: the gateway refuses a text with no
+                Bengali in it, and whoever is writing this is the one who
+                should know that before they press send. */}
+            {showsSms && preview.bengali === false && (
+                <p className="cmp-warning">
+                    <AlertTriangle size={14} />
+                    The gateway only carries text messages with Bengali in them.
+                    Mixing Bengali and English is fine; English on its own is
+                    refused, and so is Banglish (Amar / Ami / Tumi). Sending
+                    this as written is likely to be rejected.
+                </p>
+            )}
 
             {/* Bengali is required here, so this is the price of sending at
                 all rather than a stray character to hunt down — which is what

@@ -109,7 +109,7 @@ class CampaignService
     /**
      * What this campaign would reach and cost, without sending anything.
      *
-     * @return array{emails: int, texts: int, sms_parts: int, people: int, unicode: bool}
+     * @return array{emails: int, texts: int, sms_parts: int, people: int, unicode: bool, bengali: bool}
      */
     public function estimate(Campaign $campaign): array
     {
@@ -136,6 +136,14 @@ class CampaignService
             // The single most expensive detail, and the easiest to introduce
             // by accident with one curly quote.
             'unicode' => $texts > 0 && ! SmsService::isGsm7($body),
+
+            /*
+             * Told, not enforced. The gateway requires Bengali in every text
+             * message and will not carry one without it, so the composer says
+             * so while there is still time to change the wording — but whether
+             * to send is the shop's call, not this method's.
+             */
+            'bengali' => SmsService::hasBengali($body),
         ];
     }
 
@@ -162,27 +170,6 @@ class CampaignService
             throw new StorefrontException(
                 'This campaign points at something that is no longer available: '
                     .implode(', ', $missing).'. Edit it before sending.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
-
-        /*
-         * The gateway will not carry a text with no Bengali in it, and the way
-         * they enforce that is by refusing traffic. So a campaign written in
-         * English does not arrive as a badly worded message — it arrives as
-         * the sending account being stopped, part-way down a list of several
-         * thousand people, with the order confirmations that share the account
-         * stopping too.
-         *
-         * Checked on the composed body, since the shop's name on the front is
-         * Latin and satisfies nothing by itself.
-         */
-        if ($campaign->sendsSms() && ! SmsService::hasBengali($this->smsBody($campaign))) {
-            throw new StorefrontException(
-                'The SMS gateway only accepts messages with Bengali in them — '
-                    .'mixing Bengali and English is fine, English on its own is not, '
-                    .'and Banglish (Amar / Ami / Tumi) is refused outright.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );

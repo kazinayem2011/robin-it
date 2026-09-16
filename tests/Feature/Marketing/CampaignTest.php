@@ -235,9 +235,6 @@ class CampaignTest extends TestCase
 
         $campaign = $this->campaigns->send($this->campaign([
             'channel' => Campaign::BOTH, 'audience' => 'customers',
-            // A text campaign has to carry Bengali; the gateway refuses one
-            // that does not, and refusing traffic is how they enforce it.
-            'body' => 'ঈদ সেল বৃহস্পতিবার শুরু।',
         ]));
 
         // Two people, two channels.
@@ -382,13 +379,13 @@ class CampaignTest extends TestCase
 
         $created = $this->actingAs($owner)->postJson('/api/admin/campaigns', [
             'title' => 'Eid sale', 'subject' => '15% off',
-            'body' => 'ঈদ সেল বৃহস্পতিবার শুরু।',
+            'body' => 'Our Eid sale starts Thursday.',
             'channel' => 'both', 'audience' => 'customers',
         ])->assertOk()->json('data');
 
         $this->actingAs($owner)->postJson('/api/admin/campaigns/preview', [
             'title' => 'Eid sale', 'subject' => '15% off',
-            'body' => 'ঈদ সেল বৃহস্পতিবার শুরু।',
+            'body' => 'Our Eid sale starts Thursday.',
             'channel' => 'both', 'audience' => 'customers',
         ])->assertOk()
             ->assertJsonPath('data.emails', 1)

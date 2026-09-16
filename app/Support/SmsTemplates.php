@@ -17,6 +17,12 @@ use App\Services\OtpService;
  * tracking code is meant to be read back to a person or typed into a box, and
  * in Bengali digits it is neither.
  *
+ * Every one of them opens with the shop's name in brackets, which is the shape
+ * the gateway's notice asks for — `(কোম্পানিনেম) আপনার ওটিপি 12XXX`. They
+ * require it of a one-time code; the rest are written the same way so that
+ * what a customer sees from this shop is one thing rather than two, and
+ * because it costs a single character.
+ *
  * Kept short on purpose, and shorter than before. A gateway charges per 160
  * characters of plain text but only 70 once there is a single Bengali letter
  * in the message, so the alphabet alone more than doubled what these cost.
@@ -34,7 +40,7 @@ class SmsTemplates
     {
         $total = number_format((float) $order->total, 0);
 
-        return "{$shop}: অর্ডার {$order->order_number} পেয়েছি, Tk {$total}। "
+        return "({$shop}) অর্ডার {$order->order_number} পেয়েছি, Tk {$total}। "
             .'ট্র্যাক: '.self::trackUrl($order);
     }
 
@@ -49,11 +55,11 @@ class SmsTemplates
     {
         return match ($order->status) {
             'shipped' => self::shipped($order, $shop),
-            'delivered' => "{$shop}: অর্ডার {$order->order_number} ডেলিভারি হয়েছে। "
+            'delivered' => "({$shop}) অর্ডার {$order->order_number} ডেলিভারি হয়েছে। "
                 .'ধন্যবাদ। ওয়ারেন্টির জন্য মেসেজটি রাখুন।',
-            'cancelled' => "{$shop}: অর্ডার {$order->order_number} বাতিল হয়েছে। "
+            'cancelled' => "({$shop}) অর্ডার {$order->order_number} বাতিল হয়েছে। "
                 .'প্রশ্ন থাকলে আমাদের কল করুন।',
-            'returned' => "{$shop}: অর্ডার {$order->order_number}-এর রিটার্ন পেয়েছি। "
+            'returned' => "({$shop}) অর্ডার {$order->order_number}-এর রিটার্ন পেয়েছি। "
                 .'রিফান্ড কয়েক কর্মদিবসের মধ্যে।',
             default => null,
         };
@@ -89,12 +95,12 @@ class SmsTemplates
             default => 'ট্র্যাক: '.self::trackUrl($order),
         };
 
-        return "{$shop}: অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}";
+        return "({$shop}) অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}";
     }
 
     public static function refundIssued(Order $order, float $amount, string $shop): string
     {
-        return "{$shop}: অর্ডার {$order->order_number}-এ Tk ".number_format($amount, 0)
+        return "({$shop}) অর্ডার {$order->order_number}-এ Tk ".number_format($amount, 0)
             .' রিফান্ড হয়েছে। অ্যাকাউন্টে আসতে কয়েক দিন লাগতে পারে।';
     }
 
@@ -146,7 +152,7 @@ class SmsTemplates
     /** What the shop is owed, when a delivery is going out unpaid. */
     public static function paymentDue(Order $order, float $due, string $shop): string
     {
-        return "{$shop}: অর্ডার {$order->order_number}, ডেলিভারিতে Tk "
+        return "({$shop}) অর্ডার {$order->order_number}, ডেলিভারিতে Tk "
             .number_format($due, 0).' দিতে হবে। টাকা প্রস্তুত রাখুন।';
     }
 
