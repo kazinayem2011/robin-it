@@ -130,7 +130,17 @@ class SmsTemplates
         // promise five minutes while the code is good for two.
         $minutes = (int) round(OtpService::TTL_SECONDS / 60);
 
-        return "{$code} {$shop} {$what} কোড। {$minutes} মিনিট বৈধ। কাউকে দেবেন না।";
+        /*
+         * The shop's name first and in brackets, because the gateway requires
+         * it of a one-time code specifically: "ওটিপি এসএমএস প্রেরণ করতে হলে
+         * এসএমএস এর শুরুতে ব্রাকেট দিয়ে প্রতিষ্ঠান/ব্রান্ডের নাম লেখা
+         * বাধ্যতামূলক", their example being `(কোম্পানিনেম) আপনার ওটিপি 12XXX`.
+         *
+         * Two characters and no extra part: this was 66, and 70 is where a
+         * Bengali message stops being one message. There is no room left for
+         * another word — a test holds it to the one part.
+         */
+        return "({$shop}) {$code} {$what} কোড। {$minutes} মিনিট বৈধ। কাউকে দেবেন না।";
     }
 
     /** What the shop is owed, when a delivery is going out unpaid. */

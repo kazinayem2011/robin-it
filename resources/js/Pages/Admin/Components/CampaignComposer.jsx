@@ -491,13 +491,31 @@ function PreviewPane({ form, preview }) {
                 </p>
             )}
 
+            {/* The gateway refuses a text with no Bengali in it, so a
+                campaign written in English is not a badly worded message —
+                it is the sending account stopped part-way down the list. */}
+            {showsSms &&
+                preview.text &&
+                !/\p{Script=Bengali}/u.test(preview.text) && (
+                    <p className="cmp-warning">
+                        <AlertTriangle size={14} />
+                        The gateway only carries text messages with Bengali in
+                        them. Mixing Bengali and English is fine; English on its
+                        own is refused, and so is Banglish (Amar / Ami / Tumi).
+                        This will not send as written.
+                    </p>
+                )}
+
+            {/* Bengali is required here, so this is the price of sending at
+                all rather than a stray character to hunt down — which is what
+                this warning used to tell whoever read it. */}
             {preview.unicode && (
                 <p className="cmp-warning">
                     <AlertTriangle size={14} />
-                    This text is not plain English, so only 70 characters fit
-                    per part instead of 160 — it costs about twice as much.
-                    Usually a dash, a curly quote or an emoji pasted in from
-                    somewhere else.
+                    Only 70 characters fit per part instead of 160. That is what
+                    Bengali costs, and the gateway requires Bengali — so it is
+                    expected, and it is why a few extra words here can double
+                    what the whole send costs.
                 </p>
             )}
 

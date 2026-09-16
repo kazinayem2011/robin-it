@@ -214,6 +214,25 @@ class SmsService
         return (int) ceil($length / $perPart);
     }
 
+    /**
+     * Whether there is any Bengali in it, which the gateway requires there to be.
+     *
+     * Their notice: "সকল এসএমএস বাংলাতে প্রেরণ করা বাধ্যতামূলক, এসএমএস বাংলিশে
+     * ( Amar/Ami/Tumi এধরনের) লেখা যাবে না। চাইলে বাংলা এবং ইংরেজি শব্দ একসাথে
+     * প্রেরণ করা যাবে, কিন্তু শুধু ইংরেজিতে প্রেরণ করা যাবে না।" So mixed is
+     * allowed and English alone is not — which is what this asks, because the
+     * shop's own messages deliberately keep order numbers, amounts and links
+     * in ASCII where a Bengali digit would be unreadable back to a person.
+     *
+     * Banglish — Bengali words spelled in Latin letters — is barred by the same
+     * notice and cannot be detected by looking at characters. A message written
+     * that way has no Bengali in it at all, so it fails here anyway.
+     */
+    public static function hasBengali(string $message): bool
+    {
+        return (bool) preg_match('/\p{Bengali}/u', $message);
+    }
+
     /** Whether every character survives the cheap 7-bit alphabet. */
     public static function isGsm7(string $message): bool
     {

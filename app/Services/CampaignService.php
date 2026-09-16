@@ -167,6 +167,27 @@ class CampaignService
             );
         }
 
+        /*
+         * The gateway will not carry a text with no Bengali in it, and the way
+         * they enforce that is by refusing traffic. So a campaign written in
+         * English does not arrive as a badly worded message — it arrives as
+         * the sending account being stopped, part-way down a list of several
+         * thousand people, with the order confirmations that share the account
+         * stopping too.
+         *
+         * Checked on the composed body, since the shop's name on the front is
+         * Latin and satisfies nothing by itself.
+         */
+        if ($campaign->sendsSms() && ! SmsService::hasBengali($this->smsBody($campaign))) {
+            throw new StorefrontException(
+                'The SMS gateway only accepts messages with Bengali in them — '
+                    .'mixing Bengali and English is fine, English on its own is not, '
+                    .'and Banglish (Amar / Ami / Tumi) is refused outright.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
         $rows = $this->recipientRows($campaign);
 
         if ($rows === []) {
