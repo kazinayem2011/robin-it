@@ -440,11 +440,16 @@ class SmsService
      */
     private function ipv4Options(): array
     {
-        if (! defined('CURLOPT_IPRESOLVE') || ! defined('CURL_IPRESOLVE_V4')) {
-            return [];
-        }
-
-        return ['curl' => [CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4]];
+        /*
+         * Guzzle's own option rather than the raw curl one.
+         *
+         * `['curl' => [CURLOPT_IPRESOLVE => ...]]` still works and prints a
+         * deprecation on every single send — Guzzle 8 will reject it outright,
+         * which would turn every text message the shop sends into an
+         * exception. `force_ip_resolve` is what it asks for instead, and needs
+         * no guard: it is Guzzle's, not the curl extension's.
+         */
+        return ['force_ip_resolve' => 'v4'];
     }
 
     private function readReply(string $gateway, string $phone, $response): bool
