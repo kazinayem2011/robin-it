@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\EmailTemplate;
 use App\Models\Order;
+use Illuminate\Support\Facades\Log;
 
 /**
  * The wording a shop has written for one of its emails.
@@ -47,7 +48,15 @@ class MailTemplate
         $subject = MessageTemplate::fill((string) $template->subject, $values);
         $body = MessageTemplate::fill((string) $template->body, $values);
 
-        if (self::unfilled($subject) || self::unfilled($body)) {
+        if ($leftover = self::unfilled($subject.' '.$body)) {
+            /*
+             * Said out loud, because the shop cannot see it happen. Falling
+             * back is correct, and it also means the words somebody wrote are
+             * being ignored from now on while the preview goes on showing
+             * them — without this there is nothing at all to find.
+             */
+            Log::warning('Email template ignored: '.$key.' still contains '.$leftover.' after filling.');
+
             return null;
         }
 
@@ -90,21 +99,15 @@ class MailTemplate
         return $html.'</table>';
     }
 
-    /** The same table, for a real order. */
-    public static function orderItems(Order $order): string
+    /**
+     * The first placeholder left standing, if any.
+     *
+     * Every value an email can fill is supplied in one go, so one surviving
+     * means the template names something this email does not have — and a
+     * name is what makes the warning worth reading.
+     */
+    private static function unfilled(string $text): ?string
     {
-        return self::itemsTable($order->items->map(fn ($item) => [
-            $item->variant_name
-                ? "{$item->product_name} ({$item->variant_name})"
-                : $item->product_name,
-            $item->quantity,
-            'Tk '.number_format((float) $item->total, 0),
-        ]));
-    }
-
-    /** Every shop-facing value is supplied together, so one left over is a mistake. */
-    private static function unfilled(string $text): bool
-    {
-        return (bool) preg_match('/\{[a-z_]+\}/', $text);
+        return preg_match('/\{[a-z_]+\}/', $text, $found) ? $found[0] : null;
     }
 }

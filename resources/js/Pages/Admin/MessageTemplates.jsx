@@ -206,6 +206,12 @@ export default function MessageTemplates({
                                             {template.hint}
                                         </span>
                                     )}
+                                    {template.written === false && (
+                                        <span className="tpl-fixed">
+                                            Sent from a designed layout —
+                                            wording is fixed
+                                        </span>
+                                    )}
                                     {kind === 'sms' && (
                                         <span className="tpl-cost">
                                             {template.parts} part
@@ -252,6 +258,16 @@ export default function MessageTemplates({
                                     }))
                                 }
                             />
+                        )}
+
+                        {editing.written === false && (
+                            <p className="admin-alert-banner">
+                                This one is sent from a designed layout, not
+                                from these words — it carries a receipt, an
+                                address, or a link that a text box cannot hold.
+                                You can read it and send yourself a test, but
+                                the wording is fixed.
+                            </p>
                         )}
 
                         {variables.length > 0 && (
@@ -373,14 +389,16 @@ export default function MessageTemplates({
                             >
                                 Preview
                             </Button>
-                            <Button
-                                variant="primary"
-                                icon={Save}
-                                loading={saving}
-                                onClick={save}
-                            >
-                                Save
-                            </Button>
+                            {editing.written !== false && (
+                                <Button
+                                    variant="primary"
+                                    icon={Save}
+                                    loading={saving}
+                                    onClick={save}
+                                >
+                                    Save
+                                </Button>
+                            )}
                         </div>
 
                         {preview && (

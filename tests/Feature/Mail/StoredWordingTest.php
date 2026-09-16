@@ -2,10 +2,7 @@
 
 namespace Tests\Feature\Mail;
 
-use App\Mail\BackInStockMail;
-use App\Mail\ContactReplyMail;
 use App\Mail\OrderConfirmationMail;
-use App\Mail\OrderStatusUpdatedMail;
 use App\Mail\WelcomeCustomerMail;
 use App\Models\Category;
 use App\Models\ContactMessage;
@@ -14,9 +11,6 @@ use App\Models\EmailTemplate;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
-use Database\Seeders\MessageTemplateSeeder;
-use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -137,68 +131,6 @@ class StoredWordingTest extends TestCase
         );
     }
 
-    /**
-     * `{order_items}` is markup, not words — the shop chooses where the table
-     * goes and this draws it, because a rich text editor handed the real
-     * markup would take it apart.
-     */
-    public function test_the_order_items_placeholder_draws_the_real_line_items(): void
-    {
-        $this->template(
-            'order_placed',
-            'Order {order_number} received',
-            '<p>Hi {customer_name},</p>{order_items}<p>Total: {order_total}</p>',
-        );
-
-        $html = $this->render(new OrderConfirmationMail($this->order()));
-
-        $this->assertStringContainsString('ASUS TUF Gaming A15', $html);
-        $this->assertStringContainsString('Tk 84,500', $html);
-        $this->assertStringContainsString('<table', $html);
-        $this->assertStringNotContainsString('{order_items}', $html);
-    }
-
-    /**
-     * Every key the seeder ships is one an email actually reads.
-     *
-     * Wiring six of seven is exactly the failure this catches, and it is the
-     * failure that happened on the texts: the shop rewords the one that was
-     * missed, the preview agrees with it, and the customer keeps being sent
-     * the old thing with nothing anywhere to say so.
-     */
-    public function test_no_seeded_template_is_left_unread(): void
-    {
-        $this->seed(MessageTemplateSeeder::class);
-
-        EmailTemplate::query()->update([
-            'subject' => 'পরিবর্তিত বিষয়',
-            'body' => '<p>পরিবর্তিত পাঠ।</p>',
-        ]);
-
-        $user = User::factory()->create(['name' => 'Rahim Uddin']);
-        $product = $this->product();
-
-        $built = [
-            'welcome' => (new WelcomeCustomerMail($user))->build(),
-            'order_placed' => (new OrderConfirmationMail($this->order()))->build(),
-            'order_status' => (new OrderStatusUpdatedMail($this->order()))->build(),
-            'back_in_stock' => (new BackInStockMail($product, null, 3))->build(),
-            'contact_reply' => (new ContactReplyMail(...$this->enquiry()))->build(),
-
-            /*
-             * The two the framework sends. Reached through the notification
-             * rather than a mailable, because that is how they are customised
-             * — a callback registered in AppServiceProvider.
-             */
-            'verify_email' => (new VerifyEmail)->toMail($user),
-            'password_reset' => (new ResetPassword('a-token'))->toMail($user),
-        ];
-
-        foreach ($built as $key => $message) {
-            $this->assertSame('পরিবর্তিত বিষয়', $message->subject, $key);
-        }
-    }
-
     /** Emptying a template is not a decision anybody makes on purpose. */
     public function test_an_emptied_template_falls_back_to_the_blade_view(): void
     {
@@ -253,5 +185,33 @@ class StoredWordingTest extends TestCase
         $built = (new WelcomeCustomerMail($user))->build();
 
         $this->assertNotNull($built->textView);
+    }
+
+    /**
+     * And the address is written out in it, not only linked.
+     *
+     * This is the fault that reached production. `strip_tags` turns
+     * `<a href="https://…/reset">Reset your password</a>` into three words and
+     * throws the URL away — an email that cannot be acted on, delivered to
+     * precisely the reader with no HTML to fall back on. Nothing caught it,
+     * because nothing read the text part.
+     */
+    public function test_the_text_part_writes_out_the_address_of_every_link(): void
+    {
+        $this->template(
+            'welcome',
+            'Welcome',
+            '<p>Hi {customer_name},</p><p><a href="{shop_url}">Start shopping</a></p>',
+        );
+
+        $user = User::factory()->create(['name' => 'Rahim Uddin']);
+        $built = (new WelcomeCustomerMail($user))->build();
+
+        $text = view($built->textView, $built->buildViewData())->render();
+
+        $this->assertStringContainsString('Start shopping', $text);
+        $this->assertStringContainsString(url('/'), $text, 'the text part carries no address');
+        /* And no markup came through with it. */
+        $this->assertStringNotContainsString('<a ', $text);
     }
 }

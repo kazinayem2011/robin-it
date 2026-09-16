@@ -9,7 +9,6 @@ use App\Models\Product;
 use App\Services\CategoryService;
 use App\Support\BrandDetails;
 use App\Support\MailSettings;
-use App\Support\MailTemplate;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -64,19 +63,13 @@ class AppServiceProvider extends ServiceProvider
         VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
             $minutes = config('auth.verification.expire', 60);
 
-            $written = MailTemplate::for('verify_email', [
-                'shop_name' => BrandDetails::name(),
-                'customer_name' => $notifiable->name ?? 'there',
-                'verify_url' => $url,
-            ]);
-
-            if ($written) {
-                return (new MailMessage)
-                    ->subject($written['subject'])
-                    ->view('emails.templated', $written['data'])
-                    ->text('emails.templated-text', $written['data']);
-            }
-
+            /*
+             * Not from a template. This is the message a customer is most
+             * entitled to be suspicious of, and the one where a shop editing
+             * the wording could remove the link, the expiry or the warning
+             * without meaning to — so it stays in a view, branded, with the
+             * framework's own URL and signature untouched.
+             */
             $data = ['user' => $notifiable, 'url' => $url, 'expiresInMinutes' => $minutes];
 
             return (new MailMessage)
@@ -98,20 +91,7 @@ class AppServiceProvider extends ServiceProvider
                 'email' => $notifiable->getEmailForPasswordReset(),
             ], false));
 
-            $written = MailTemplate::for('password_reset', [
-                'shop_name' => BrandDetails::name(),
-                'customer_name' => $notifiable->name ?? 'there',
-                'reset_url' => $url,
-                'expires_minutes' => (string) $minutes,
-            ]);
-
-            if ($written) {
-                return (new MailMessage)
-                    ->subject($written['subject'])
-                    ->view('emails.templated', $written['data'])
-                    ->text('emails.templated-text', $written['data']);
-            }
-
+            /* Not from a template, for the same reason. */
             $data = ['user' => $notifiable, 'url' => $url, 'expiresInMinutes' => $minutes];
 
             return (new MailMessage)

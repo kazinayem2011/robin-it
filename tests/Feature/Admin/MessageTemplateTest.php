@@ -186,6 +186,59 @@ class MessageTemplateTest extends TestCase
         $this->get('/admin/templates')->assertRedirect();
     }
 
+    /**
+     * The four that are sent from a designed layout refuse the edit.
+     *
+     * Not a restriction for its own sake. Wiring these up replaced a receipt
+     * carrying line items, an address and an Outlook-proof button with three
+     * sentences, and took the link out of a password reset's plain-text half.
+     * Saving a change that will not be sent is how that went unnoticed: the
+     * screen agreed, and the customer received the old thing.
+     */
+    public function test_an_email_sent_from_a_designed_layout_cannot_be_reworded(): void
+    {
+        $this->admin();
+
+        $template = $this->emailTemplate([
+            'key' => 'order_placed',
+            'name' => 'Order confirmation',
+            'subject' => 'Order {order_number} received',
+            'body' => '<p>Hi {customer_name},</p>',
+            'variables' => ['customer_name', 'order_number'],
+        ]);
+
+        $response = $this->patchJson("/api/admin/templates/email/{$template->id}", [
+            'subject' => 'Order {order_number} received',
+            'body' => '<p>Something else entirely, {customer_name}.</p>',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('designed layout', $response->json('message'));
+        $this->assertSame('<p>Hi {customer_name},</p>', $template->fresh()->body);
+    }
+
+    /** And the screen is told which is which, so it can stop offering Save. */
+    public function test_the_screen_is_told_which_templates_it_can_change(): void
+    {
+        $this->admin();
+
+        $this->emailTemplate(['key' => 'welcome']);
+        $this->emailTemplate([
+            'key' => 'order_placed',
+            'name' => 'Order confirmation',
+            'subject' => 'Order {order_number}',
+            'body' => '<p>Hi {customer_name},</p>',
+            'variables' => ['customer_name', 'order_number'],
+        ]);
+
+        $written = collect($this->get('/admin/templates')
+            ->viewData('page')['props']['emailTemplates'])
+            ->pluck('written', 'key');
+
+        $this->assertTrue($written['welcome']);
+        $this->assertFalse($written['order_placed']);
+    }
+
     /** The substitution itself, without the HTTP layer around it. */
     public function test_an_unsupplied_placeholder_is_left_as_written(): void
     {

@@ -12,6 +12,7 @@ use App\Models\SiteSetting;
 use App\Models\SmsTemplate;
 use App\Services\SmsService;
 use App\Support\MailSettings;
+use App\Support\MessageKeys;
 use App\Support\MessageTemplate;
 use App\Support\TemplateSamples;
 use Illuminate\Http\JsonResponse;
@@ -37,9 +38,23 @@ class MessageTemplateController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/MessageTemplates', [
-            'emailTemplates' => EmailTemplate::orderBy('group')->orderBy('name')->get(),
+            /*
+             * `written` is whether editing one changes what a customer gets.
+             *
+             * Four of these are sent from a designed layout instead — a
+             * receipt's line items, an address, a button that has to survive
+             * Outlook, a reset link nobody should be able to delete by
+             * accident. Offering an edit that quietly does nothing is the
+             * fault this screen shipped with; saying so is the fix.
+             */
+            'emailTemplates' => EmailTemplate::orderBy('group')->orderBy('name')->get()
+                ->map(fn (EmailTemplate $t) => $t->setAttribute(
+                    'written',
+                    MessageKeys::emailIsWritten($t->key),
+                )),
+            /* Every text is written by a template; a text really is just words. */
             'smsTemplates' => SmsTemplate::orderBy('group')->orderBy('name')->get()
-                ->map(fn (SmsTemplate $t) => $t->append('parts')),
+                ->map(fn (SmsTemplate $t) => $t->append('parts')->setAttribute('written', true)),
 
             /*
              * What the preview fills in, sent along so the editor can show the
@@ -79,6 +94,16 @@ class MessageTemplateController extends Controller
                 422,
                 ApiCode::VALIDATION_ERROR,
                 ['missing' => $missing],
+            );
+        }
+
+        if ($type === 'email' && ! MessageKeys::emailIsWritten($template->key)) {
+            return $this->errorResponse(
+                'This email is sent from a designed layout rather than from these words — '
+                    .'it carries a receipt, an address or a link that a text box cannot hold. '
+                    .'Its wording is fixed.',
+                422,
+                ApiCode::VALIDATION_ERROR,
             );
         }
 

@@ -5243,3 +5243,17 @@ a.admin-card:hover,
     border-radius: var(--radius-md);
     max-width: 46ch;
 }
+
+/*
+ * A template whose words are not what gets sent.
+ *
+ * Four of the emails carry a receipt, an address or a reset link — structure a
+ * box meant for prose cannot hold — so they are sent from a designed layout and
+ * this row says so. Offering an edit that quietly does nothing is worse than
+ * offering no edit at all: the screen agreed with a change that never happened.
+ */
+.tpl-fixed {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    font-style: italic;
+}

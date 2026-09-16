@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Order;
 use App\Models\SmsTemplate;
 use App\Services\OtpService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * What the shop actually says in a text message.
@@ -231,7 +232,21 @@ class SmsTemplates
 
         $filled = MessageTemplate::fill($body, $values);
 
-        return preg_match('/\{[a-z_]+\}/', $filled) ? $default : $filled;
+        if (preg_match('/\{[a-z_]+\}/', $filled, $leftover)) {
+            /*
+             * Said out loud, because the shop cannot see it happen.
+             *
+             * Falling back here is correct — braces on a customer's phone are
+             * worse than wording nobody chose — but it means the words a shop
+             * wrote are being ignored from now on while the preview goes on
+             * showing them. Without this line there is nothing at all to find.
+             */
+            Log::warning('SMS template ignored: '.$key.' still contains '.$leftover[0].' after filling.');
+
+            return $default;
+        }
+
+        return $filled;
     }
 
     private static function trackUrl(Order $order): string
