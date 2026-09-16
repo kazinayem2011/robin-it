@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Order;
 use App\Support\BrandDetails;
+use App\Support\MailTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -42,6 +43,21 @@ class OrderStatusUpdatedMail extends Mailable implements ShouldQueue
         ];
         $label = $labels[$this->order->status] ?? ucfirst($this->order->status);
         $brand = BrandDetails::all()['name'];
+
+        $written = MailTemplate::for('order_status', [
+            'shop_name' => $brand,
+            'customer_name' => $this->order->shipping_address['name'] ?? 'there',
+            'order_number' => $this->order->order_number,
+            // The readable label, not the database's word for it.
+            'order_status' => $label,
+            'order_url' => url('/track/'.$this->order->order_number),
+        ]);
+
+        if ($written) {
+            return $this->subject($written['subject'])
+                ->view('emails.templated', $written['data'])
+                ->text('emails.templated-text', $written['data']);
+        }
 
         // Readable rather than shouted: "Out for delivery" beats "is now SHIPPED".
         return $this->subject("Order #{$this->order->order_number} — {$label} | {$brand}")

@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\CategoryService;
 use App\Support\BrandDetails;
 use App\Support\MailSettings;
+use App\Support\MailTemplate;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -60,39 +61,64 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function brandFrameworkEmails(): void
     {
-        VerifyEmail::toMailUsing(fn (object $notifiable, string $url) => (new MailMessage)
-            ->subject('Verify your email address — '.BrandDetails::name())
-            ->view('emails.auth.verify-email', [
-                'user' => $notifiable,
-                'url' => $url,
-                'expiresInMinutes' => config('auth.verification.expire', 60),
-            ])
-            ->text('emails.text.auth.verify-email', [
-                'user' => $notifiable,
-                'url' => $url,
-                'expiresInMinutes' => config('auth.verification.expire', 60),
-            ])
-        );
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            $minutes = config('auth.verification.expire', 60);
 
-        ResetPassword::toMailUsing(fn (object $notifiable, string $token) => (new MailMessage)
-            ->subject('Reset your password — '.BrandDetails::name())
-            ->view('emails.auth.reset-password', [
-                'user' => $notifiable,
-                'url' => url(route('password.reset', [
-                    'token' => $token,
-                    'email' => $notifiable->getEmailForPasswordReset(),
-                ], false)),
-                'expiresInMinutes' => config('auth.passwords.users.expire', 60),
-            ])
-            ->text('emails.text.auth.reset-password', [
-                'user' => $notifiable,
-                'url' => url(route('password.reset', [
-                    'token' => $token,
-                    'email' => $notifiable->getEmailForPasswordReset(),
-                ], false)),
-                'expiresInMinutes' => config('auth.passwords.users.expire', 60),
-            ])
-        );
+            $written = MailTemplate::for('verify_email', [
+                'shop_name' => BrandDetails::name(),
+                'customer_name' => $notifiable->name ?? 'there',
+                'verify_url' => $url,
+            ]);
+
+            if ($written) {
+                return (new MailMessage)
+                    ->subject($written['subject'])
+                    ->view('emails.templated', $written['data'])
+                    ->text('emails.templated-text', $written['data']);
+            }
+
+            $data = ['user' => $notifiable, 'url' => $url, 'expiresInMinutes' => $minutes];
+
+            return (new MailMessage)
+                ->subject('Verify your email address — '.BrandDetails::name())
+                ->view('emails.auth.verify-email', $data)
+                ->text('emails.text.auth.verify-email', $data);
+        });
+
+        ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            $minutes = config('auth.passwords.users.expire', 60);
+
+            /*
+             * Built here rather than taken from the notification, because the
+             * signature and the expiry on it are the framework's and this only
+             * ever changes how it is presented.
+             */
+            $url = url(route('password.reset', [
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ], false));
+
+            $written = MailTemplate::for('password_reset', [
+                'shop_name' => BrandDetails::name(),
+                'customer_name' => $notifiable->name ?? 'there',
+                'reset_url' => $url,
+                'expires_minutes' => (string) $minutes,
+            ]);
+
+            if ($written) {
+                return (new MailMessage)
+                    ->subject($written['subject'])
+                    ->view('emails.templated', $written['data'])
+                    ->text('emails.templated-text', $written['data']);
+            }
+
+            $data = ['user' => $notifiable, 'url' => $url, 'expiresInMinutes' => $minutes];
+
+            return (new MailMessage)
+                ->subject('Reset your password — '.BrandDetails::name())
+                ->view('emails.auth.reset-password', $data)
+                ->text('emails.text.auth.reset-password', $data);
+        });
     }
 
     /**

@@ -74,17 +74,10 @@ class TemplateSamples
             ['Logitech G304 Wireless Mouse', '2', 'Tk 7,000'],
         ];
 
-        $html = '<table role="presentation" cellpadding="8" cellspacing="0" border="0" width="100%"'
-            .' style="border-collapse:collapse; margin:0 0 18px; font-family:Arial,Helvetica,sans-serif; font-size:14px;">';
-
-        foreach ($rows as [$name, $qty, $line]) {
-            $html .= '<tr>'
-                .'<td style="border-bottom:1px solid #e2e8f0; color:#334155;">'.e($name).'</td>'
-                .'<td style="border-bottom:1px solid #e2e8f0; color:#64748b; text-align:center;">×'.e($qty).'</td>'
-                .'<td style="border-bottom:1px solid #e2e8f0; color:#0f172a; text-align:right; white-space:nowrap;">'.e($line).'</td>'
-                .'</tr>';
-        }
-
-        return $html.'</table>';
+        /*
+         * Drawn by the same method the real email uses, so what a staff member
+         * checks in the preview is the table a customer is actually sent.
+         */
+        return MailTemplate::itemsTable($rows);
     }
 }

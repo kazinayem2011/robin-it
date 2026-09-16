@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Order;
+use App\Models\SmsTemplate;
 use App\Services\OtpService;
 
 /**
@@ -23,6 +24,10 @@ use App\Services\OtpService;
  * what a customer sees from this shop is one thing rather than two, and
  * because it costs a single character.
  *
+ * The wording below is the default, not the last word. Where the shop has
+ * written its own in Message Templates, that row is used instead — see
+ * `stored()`, which is also where the rules for refusing to use one live.
+ *
  * Kept short on purpose, and shorter than before. A gateway charges per 160
  * characters of plain text but only 70 once there is a single Bengali letter
  * in the message, so the alphabet alone more than doubled what these cost.
@@ -39,9 +44,14 @@ class SmsTemplates
     public static function orderPlaced(Order $order, string $shop): string
     {
         $total = number_format((float) $order->total, 0);
+        $track = self::trackUrl($order);
 
-        return "({$shop}) অর্ডার {$order->order_number} পেয়েছি, Tk {$total}। "
-            .'ট্র্যাক: '.self::trackUrl($order);
+        return self::stored('order_placed', [
+            'shop_name' => $shop,
+            'order_number' => $order->order_number,
+            'order_total' => $total,
+            'track_url' => $track,
+        ], "({$shop}) অর্ডার {$order->order_number} পেয়েছি, Tk {$total}। ট্র্যাক: {$track}");
     }
 
     /**
@@ -53,14 +63,19 @@ class SmsTemplates
      */
     public static function statusChanged(Order $order, string $shop): ?string
     {
+        $plain = ['shop_name' => $shop, 'order_number' => $order->order_number];
+
         return match ($order->status) {
             'shipped' => self::shipped($order, $shop),
-            'delivered' => "({$shop}) অর্ডার {$order->order_number} ডেলিভারি হয়েছে। "
-                .'ধন্যবাদ। ওয়ারেন্টির জন্য মেসেজটি রাখুন।',
-            'cancelled' => "({$shop}) অর্ডার {$order->order_number} বাতিল হয়েছে। "
-                .'প্রশ্ন থাকলে আমাদের কল করুন।',
-            'returned' => "({$shop}) অর্ডার {$order->order_number}-এর রিটার্ন পেয়েছি। "
-                .'রিফান্ড কয়েক কর্মদিবসের মধ্যে।',
+            'delivered' => self::stored('delivered', $plain,
+                "({$shop}) অর্ডার {$order->order_number} ডেলিভারি হয়েছে। "
+                    .'ধন্যবাদ। ওয়ারেন্টির জন্য মেসেজটি রাখুন।'),
+            'cancelled' => self::stored('cancelled', $plain,
+                "({$shop}) অর্ডার {$order->order_number} বাতিল হয়েছে। "
+                    .'প্রশ্ন থাকলে আমাদের কল করুন।'),
+            'returned' => self::stored('returned', $plain,
+                "({$shop}) অর্ডার {$order->order_number}-এর রিটার্ন পেয়েছি। "
+                    .'রিফান্ড কয়েক কর্মদিবসের মধ্যে।'),
             default => null,
         };
     }
@@ -95,13 +110,29 @@ class SmsTemplates
             default => 'ট্র্যাক: '.self::trackUrl($order),
         };
 
-        return "({$shop}) অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}";
+        return self::stored('shipped', [
+            'shop_name' => $shop,
+            'order_number' => $order->order_number,
+            /*
+             * Left unsupplied when there is no courier on the order, which
+             * sends this back to the default below rather than texting
+             * somebody "পাঠানো হয়েছে ()।" — see the brace check in stored().
+             */
+            'courier_name' => $courier,
+            'track_url' => $order->tracking_url ?: self::trackUrl($order),
+        ], "({$shop}) অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}");
     }
 
     public static function refundIssued(Order $order, float $amount, string $shop): string
     {
-        return "({$shop}) অর্ডার {$order->order_number}-এ Tk ".number_format($amount, 0)
-            .' রিফান্ড হয়েছে। অ্যাকাউন্টে আসতে কয়েক দিন লাগতে পারে।';
+        $sum = number_format($amount, 0);
+
+        return self::stored('refund', [
+            'shop_name' => $shop,
+            'order_number' => $order->order_number,
+            'amount' => $sum,
+        ], "({$shop}) অর্ডার {$order->order_number}-এ Tk {$sum} রিফান্ড হয়েছে। "
+            .'অ্যাকাউন্টে আসতে কয়েক দিন লাগতে পারে।');
     }
 
     /**
@@ -154,6 +185,47 @@ class SmsTemplates
     {
         return "({$shop}) অর্ডার {$order->order_number}, ডেলিভারিতে Tk "
             .number_format($due, 0).' দিতে হবে। টাকা প্রস্তুত রাখুন।';
+    }
+
+    /**
+     * The wording the shop wrote for itself, or the default written above.
+     *
+     * Until now these rows were edited, previewed and test-sent in the admin
+     * and read by nothing else: a shop could reword its order confirmation,
+     * see the new words in the preview, and watch customers keep receiving the
+     * old ones. This is the join that was missing.
+     *
+     * The default wins in three cases, and each of them is a message going out
+     * rather than a message going wrong:
+     *
+     *   - no row, because the templates have never been seeded;
+     *   - a row emptied out, which is not a decision anybody makes on purpose;
+     *   - a row still holding braces after it has been filled in, which means
+     *     it names a placeholder this message does not supply. Braces reaching
+     *     a customer are worse than wording the shop did not choose, and this
+     *     is also what keeps `{courier_name}` from rendering as "()" on an
+     *     order that went out without a courier.
+     *
+     * Wrapped in rescue() because the words are a nicety and the message is
+     * not: a missing table mid-deploy should not stop an order confirmation.
+     *
+     * @param  array<string, string|int|float|null>  $values
+     */
+    private static function stored(string $key, array $values, string $default): string
+    {
+        $body = rescue(
+            fn () => (string) SmsTemplate::where('key', $key)->value('body'),
+            '',
+            report: false,
+        );
+
+        if (trim($body) === '') {
+            return $default;
+        }
+
+        $filled = MessageTemplate::fill($body, $values);
+
+        return preg_match('/\{[a-z_]+\}/', $filled) ? $default : $filled;
     }
 
     private static function trackUrl(Order $order): string

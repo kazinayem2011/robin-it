@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Support\BrandDetails;
+use App\Support\MailTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -31,6 +32,20 @@ class BackInStockMail extends Mailable
         $name = $this->variant
             ? "{$this->product->name} ({$this->variant->name})"
             : $this->product->name;
+
+        $url = rtrim(config('app.url'), '/').'/products/'.$this->product->slug;
+
+        $written = MailTemplate::for('back_in_stock', [
+            'shop_name' => BrandDetails::all()['name'],
+            'product_name' => $name,
+            'product_url' => $url,
+        ]);
+
+        if ($written) {
+            return $this->subject($written['subject'])
+                ->view('emails.templated', $written['data'])
+                ->text('emails.templated-text', $written['data']);
+        }
 
         return $this->subject("Back in stock: {$name} — ".BrandDetails::all()['name'])
             ->view('emails.stock.back-in-stock')

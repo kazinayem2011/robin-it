@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\User;
 use App\Support\BrandDetails;
+use App\Support\MailTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -34,6 +35,18 @@ class WelcomeCustomerMail extends Mailable implements ShouldQueue
     public function build()
     {
         $brand = BrandDetails::all();
+
+        $written = MailTemplate::for('welcome', [
+            'shop_name' => $brand['name'],
+            'customer_name' => $this->user->name,
+            'shop_url' => url('/'),
+        ]);
+
+        if ($written) {
+            return $this->subject($written['subject'])
+                ->view('emails.templated', $written['data'])
+                ->text('emails.templated-text', $written['data']);
+        }
 
         return $this->subject("Welcome to {$brand['name']} — {$brand['tagline']}")
             ->view('emails.auth.welcome')
