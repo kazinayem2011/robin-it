@@ -35,6 +35,7 @@ class SmsService
         'sms_api_key',
         'sms_sender_id',
         'sms_on_order_placed',
+        'sms_on_order_updated',
         'sms_on_shipped',
         'sms_on_delivered',
         'sms_on_cancelled',
@@ -87,6 +88,8 @@ class SmsService
     public const EVENTS = [
         'order_placed' => ['label' => 'Order received', 'default' => true,
             'hint' => 'The confirmation, with a tracking link. Nobody else sends this.'],
+        'order_updated' => ['label' => 'Order changed', 'default' => true,
+            'hint' => 'When the shop changes the items after the order is placed, the bill moves with them.'],
         'payment_due' => ['label' => 'Amount due on delivery', 'default' => true,
             'hint' => 'Sent with the dispatch note when money is still owed, so the cash is ready when the rider knocks.'],
         'refund' => ['label' => 'Refund issued', 'default' => true,

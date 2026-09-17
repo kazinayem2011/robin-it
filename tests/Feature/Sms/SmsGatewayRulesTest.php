@@ -112,6 +112,7 @@ class SmsGatewayRulesTest extends TestCase
 
         $messages = [
             'order placed' => SmsTemplates::orderPlaced($order, $shop),
+            'order changed' => SmsTemplates::orderUpdated($order, $shop),
             'payment due' => SmsTemplates::paymentDue($order, 84500, $shop),
             'verification' => SmsTemplates::verificationCode('123456', 'verify', $shop),
             'password reset' => SmsTemplates::verificationCode('123456', 'password_reset', $shop),

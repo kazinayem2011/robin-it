@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
+use App\Mail\OrderUpdatedMail;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderEdit;
@@ -11,9 +12,13 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Support\BrandDetails;
 use App\Support\ShippingRates;
+use App\Support\SmsTemplates;
 use App\Support\VatRules;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Changing an order after it has been placed.
@@ -50,7 +55,10 @@ class OrderEditService
      */
     public const EDITABLE = ['pending', 'processing'];
 
-    public function __construct(private readonly StockService $stock) {}
+    public function __construct(
+        private readonly StockService $stock,
+        private readonly ShopNotifier $notifier,
+    ) {}
 
     public function canEdit(Order $order): bool
     {
@@ -69,7 +77,7 @@ class OrderEditService
      */
     public function apply(Order $order, User $staff, array $lines, ?string $reason = null): Order
     {
-        return DB::transaction(function () use ($order, $staff, $lines, $reason) {
+        $edited = DB::transaction(function () use ($order, $staff, $lines, $reason) {
             // Locked and re-read: two people editing the same order would
             // otherwise each settle their own difference against a stale
             // picture and move stock twice.
@@ -209,6 +217,53 @@ class OrderEditService
 
             return $order->fresh(['items.product', 'items.variant', 'edits']);
         });
+
+        // After the commit, so the customer is only ever told about a change
+        // that was actually saved.
+        $this->tellCustomer($edited, (float) $edited->edits->first()->total_before);
+
+        return $edited;
+    }
+
+    /**
+     * The customer agreed to one bill and the shop has changed it.
+     *
+     * Nothing said so. The edit was recorded for the shop and the customer
+     * found out when the rider asked for a different amount. Now they are
+     * told the three ways they are told anything else: the bell if they have
+     * an account, an email with what the order holds now, and a text.
+     *
+     * Each is best-effort and on its own: a mail server or a gateway that is
+     * down must not undo an edit that has already moved stock, nor stop the
+     * other two going out.
+     */
+    private function tellCustomer(Order $order, float $totalBefore): void
+    {
+        try {
+            $this->notifier->orderUpdated($order);
+        } catch (\Throwable $e) {
+            Log::warning("Could not notify the customer of the edit to {$order->order_number}: {$e->getMessage()}");
+        }
+
+        try {
+            if ($email = $order->notifiableEmail()) {
+                Mail::to($email)->send(new OrderUpdatedMail($order, $totalBefore));
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Could not dispatch OrderUpdatedMail for {$order->order_number}: {$e->getMessage()}");
+        }
+
+        if ($phone = $order->notifiablePhone()) {
+            try {
+                app(SmsService::class)->sendEvent(
+                    'order_updated',
+                    $phone,
+                    SmsTemplates::orderUpdated($order, BrandDetails::name())
+                );
+            } catch (\Throwable $e) {
+                Log::warning("Could not send the order-changed SMS for {$order->order_number}: {$e->getMessage()}");
+            }
+        }
     }
 
     /**

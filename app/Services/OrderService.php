@@ -672,6 +672,10 @@ class OrderService
             app(SerialService::class)->assignToOrder($order->load('items.product'));
         });
 
+        // The bell as well as the email and the text. Dispatch moves the order
+        // to shipped without going through updateOrderStatus(), which is where
+        // the bell is rung for every other move, so it was never rung here.
+        $this->notifier->orderStatusChanged($order, 'shipped');
         $this->notifyStatusChange($order);
 
         return $order;
@@ -684,8 +688,11 @@ class OrderService
      * Email and SMS both, and separately: a shop here can rely on the text
      * being read and the email not being, and a gateway that is down must not
      * stop the mail going out or the order from having moved.
+     *
+     * Public for the admin's status change, which moves the order through
+     * updateOrderStatus() — that rings the bell — and then calls this.
      */
-    protected function notifyStatusChange(Order $order): void
+    public function notifyStatusChange(Order $order): void
     {
         try {
             if ($email = $order->notifiableEmail()) {

@@ -56,6 +56,26 @@ class SmsTemplates
     }
 
     /**
+     * The shop changed what is on the order, and so what the rider collects.
+     *
+     * "বদলেছে" rather than "আপডেট হয়েছে", and no "ট্র্যাক:" before the link:
+     * either one took it to three parts at the live address with a seven-figure
+     * total. The link opens the order, which says what changed.
+     */
+    public static function orderUpdated(Order $order, string $shop): string
+    {
+        $total = number_format((float) $order->total, 0);
+        $track = self::trackUrl($order);
+
+        return self::stored('order_updated', [
+            'shop_name' => $shop,
+            'order_number' => $order->order_number,
+            'order_total' => $total,
+            'track_url' => $track,
+        ], "({$shop}) অর্ডার {$order->order_number} বদলেছে, নতুন মোট Tk {$total}। {$track}");
+    }
+
+    /**
      * The message for an order that has moved.
      *
      * Null where a status is not worth a text. "Processing" tells a customer

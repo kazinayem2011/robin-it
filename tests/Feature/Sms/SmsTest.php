@@ -300,7 +300,10 @@ class SmsTest extends TestCase
         $order = $this->order(['order_number' => 'ORD-LSFCIBTEIG']);
         $shop = 'Robins Computer';
 
-        $messages = ['placed' => SmsTemplates::orderPlaced($order, $shop)];
+        $messages = [
+            'placed' => SmsTemplates::orderPlaced($order, $shop),
+            'changed' => SmsTemplates::orderUpdated($order, $shop),
+        ];
 
         foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $order->status = $status;

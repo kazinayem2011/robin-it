@@ -150,6 +150,13 @@ class MessageTemplateSeeder extends Seeder
                 'body' => '({shop_name}) অর্ডার {order_number} পেয়েছি, Tk {order_total}। ট্র্যাক: {track_url}',
             ],
             [
+                'key' => 'order_updated',
+                'name' => 'Order changed',
+                'group' => 'Orders',
+                'hint' => 'When the shop changes the items after the order is placed, the bill moves with them.',
+                'body' => '({shop_name}) অর্ডার {order_number} বদলেছে, নতুন মোট Tk {order_total}। {track_url}',
+            ],
+            [
                 'key' => 'payment_due',
                 'name' => 'Amount due on delivery',
                 'group' => 'Orders',

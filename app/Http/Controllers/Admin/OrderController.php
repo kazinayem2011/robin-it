@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DispatchOrderRequest;
 use App\Http\Requests\Admin\OrderPaymentRequest;
 use App\Http\Requests\Admin\OrderStatusRequest;
-use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Coupon;
 use App\Models\Courier;
 use App\Models\Order;
@@ -22,7 +21,6 @@ use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -247,6 +245,7 @@ class OrderController extends Controller
     {
         $validated = $request->validated();
         $order = Order::findOrFail($id);
+        $statusBefore = $order->status;
 
         // Goes through the service so cancelling an order returns its stock to the shelf.
         $orderService->updateOrderStatus($order, $validated['status']);
@@ -256,7 +255,18 @@ class OrderController extends Controller
             $order->save();
         }
 
-        $this->notifyCustomer($order);
+        /*
+         * Email and text, when the status actually moved.
+         *
+         * This sent the email alone, so a cancellation — on by default in the
+         * SMS settings because no courier ever tells a customer about one —
+         * never sent its text. And it sent the email whatever happened, so
+         * saving a payment status told the customer their order was "being
+         * packed" all over again.
+         */
+        if ($order->status !== $statusBefore) {
+            $orderService->notifyStatusChange($order);
+        }
 
         return $this->successResponse(
             $order,
@@ -286,19 +296,5 @@ class OrderController extends Controller
             $order->load('courier:id,name,tracking_url_template'),
             "Order #{$order->order_number} is on its way with {$order->courier->name}."
         );
-    }
-
-    /**
-     * Best-effort: the status change stands even if mail cannot be queued.
-     */
-    private function notifyCustomer(Order $order): void
-    {
-        try {
-            if ($customerEmail = $order->notifiableEmail()) {
-                Mail::to($customerEmail)->send(new OrderStatusUpdatedMail($order));
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Could not dispatch OrderStatusUpdatedMail: {$e->getMessage()}");
-        }
     }
 }

@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\ContactMessageReceived;
 use App\Notifications\OrderPlaced;
 use App\Notifications\OrderStatusChanged;
+use App\Notifications\OrderUpdated;
 use App\Notifications\ProductQuestionAsked;
 use App\Notifications\StockRanLow;
 use App\Support\Roles;
@@ -81,10 +82,15 @@ class ShopNotifier
     /** The customer's own order. Nobody else is told. */
     public function orderStatusChanged(Order $order, string $status): void
     {
-        $customer = $order->user;
+        $order->user?->notify(new OrderStatusChanged($order, $status));
+    }
 
-        if ($customer) {
-            $customer->notify(new OrderStatusChanged($order, $status));
-        }
+    /**
+     * The lines on the customer's own order changed. A guest's order has no
+     * account to tell; the email and the text still reach them.
+     */
+    public function orderUpdated(Order $order): void
+    {
+        $order->user?->notify(new OrderUpdated($order));
     }
 }

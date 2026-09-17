@@ -55,6 +55,7 @@ class MessageKeys
      */
     public const SMS = [
         'order_placed' => ['shop_name', 'order_number', 'order_total', 'track_url'],
+        'order_updated' => ['shop_name', 'order_number', 'order_total', 'track_url'],
         'payment_due' => ['shop_name', 'order_number', 'amount_due'],
         'shipped' => ['shop_name', 'order_number', 'courier_name', 'track_url'],
         'delivered' => ['shop_name', 'order_number'],
