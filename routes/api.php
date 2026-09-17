@@ -141,7 +141,20 @@ Route::middleware('throttle:lookup')->group(function () {
 | Anonymous submissions
 |--------------------------------------------------------------------------
 */
-Route::middleware('throttle:submissions')->group(function () {
+/*
+ * Anonymous, but not blind to whoever is signed in.
+ *
+ * These are open to guests and read the session only to say who wrote in: a
+ * customer's enquiry becomes a thread they can follow in their dashboard, and
+ * a back-in-stock request is kept against their account. An /api route has no
+ * session unless it asks for one, so `$request->user()` was null for every
+ * signed-in customer and every message they sent was recorded as a guest's.
+ *
+ * Cookies and the session, not the whole web group: these must stay postable
+ * without a CSRF token, which is what makes them usable from anything but the
+ * shop's own pages.
+ */
+Route::middleware(['throttle:submissions', EncryptCookies::class, StartSession::class])->group(function () {
     Route::post(ApiEndpoints::WARRANTY_CLAIM, [WarrantyController::class, 'store']);
     // The Contact page, and the footer's newsletter box. Held to their own,
     // tighter limit: a person writes in once, a script does not.

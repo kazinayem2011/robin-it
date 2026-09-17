@@ -6,8 +6,13 @@ use App\Mail\ContactReplyMail;
 use App\Models\ContactMessage;
 use App\Models\ContactReply;
 use App\Models\User;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
@@ -71,6 +76,30 @@ class CustomerThreadTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->where('threads.0.subject', 'Is the RTX 4060 in stock?')
                 ->where('navCounts.messages', 1));
+    }
+
+    /**
+     * The route can see a session at all.
+     *
+     * /api routes have none unless they ask for one, and this one did not: the
+     * controller asked who was signed in, got null for everybody, and every
+     * message a signed-in customer sent was recorded as a guest's — their
+     * dashboard stayed empty however many they sent. Nothing here noticed,
+     * because actingAs() sets the user whatever the middleware does.
+     *
+     * Asserted against the route rather than through a request: the test
+     * client keeps one session store in memory for the whole test, so a
+     * request finds the session whether or not the route would load it.
+     */
+    public function test_the_contact_route_is_given_a_session_to_read(): void
+    {
+        $route = Route::getRoutes()->match(Request::create('/api/contact', 'POST'));
+
+        $this->assertContains(StartSession::class, $route->gatherMiddleware());
+        $this->assertContains(EncryptCookies::class, $route->gatherMiddleware());
+
+        // And no CSRF token: these stay postable from outside the shop's pages.
+        $this->assertNotContains(VerifyCsrfToken::class, $route->gatherMiddleware());
     }
 
     /** The form stays open to anyone, and a guest's enquiry has no thread. */
