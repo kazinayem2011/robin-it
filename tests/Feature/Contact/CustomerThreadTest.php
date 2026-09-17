@@ -172,6 +172,74 @@ class CustomerThreadTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * The address is where the answer goes, so it must be the sender's.
+     *
+     * Registered by mobile, with another customer's address typed into the
+     * box: the thread would be theirs — their dashboard, their bell — while
+     * the shop's answer about their order arrived in a stranger's inbox.
+     */
+    public function test_a_customer_cannot_be_answered_at_another_accounts_address(): void
+    {
+        $byPhone = User::factory()->create(['phone' => '01811111111', 'email' => null]);
+        User::factory()->create(['email' => 'rahim@example.com']);
+
+        $this->actingAs($byPhone)->postJson('/api/contact', [
+            'name' => 'Karim Uddin',
+            'email' => 'rahim@example.com',
+            'subject' => 'Where is my order?',
+            'message' => 'It has been a week since I ordered.',
+        ])->assertStatus(422)->assertJsonPath(
+            'data.errors.email.0',
+            'That email belongs to a different account. Use your own address, so our reply reaches you.'
+        );
+
+        $this->assertSame(0, ContactMessage::count());
+    }
+
+    public function test_an_address_of_their_own_is_fine_however_it_is_typed(): void
+    {
+        $this->actingAs($this->customer)->postJson('/api/contact', [
+            'name' => 'Karim Uddin',
+            'email' => 'KARIM@Example.com',
+            'subject' => 'A question',
+            'message' => 'About the warranty on my build.',
+        ])->assertSuccessful();
+
+        $this->assertSame($this->customer->id, ContactMessage::latest('id')->first()->user_id);
+    }
+
+    /** An address nobody has an account with is theirs to give — a work one, say. */
+    public function test_an_unregistered_address_is_allowed(): void
+    {
+        $byPhone = User::factory()->create(['phone' => '01811111111', 'email' => null]);
+
+        $this->actingAs($byPhone)->postJson('/api/contact', [
+            'name' => 'Karim Uddin',
+            'email' => 'karim.work@example.com',
+            'subject' => 'A question',
+            'message' => 'Can you deliver to my office?',
+        ])->assertSuccessful();
+
+        $this->assertSame($byPhone->id, ContactMessage::latest('id')->first()->user_id);
+    }
+
+    /**
+     * A guest is left alone: somebody writing in with an address that has an
+     * account is usually that customer, not signed in.
+     */
+    public function test_a_guest_may_use_an_address_that_has_an_account(): void
+    {
+        $this->postJson('/api/contact', [
+            'name' => 'Karim Uddin',
+            'email' => 'karim@example.com',
+            'subject' => 'A question',
+            'message' => 'About the warranty on my build.',
+        ])->assertSuccessful();
+
+        $this->assertNull(ContactMessage::latest('id')->first()->user_id);
+    }
+
     public function test_an_empty_reply_is_refused(): void
     {
         $message = $this->write($this->customer);

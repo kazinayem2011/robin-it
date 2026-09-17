@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The contact inbox: what came in, and what was said back.
@@ -25,6 +26,8 @@ class ContactService
      */
     public function record(array $data, ?string $ip = null, ?User $customer = null): ContactMessage
     {
+        $this->assertTheAddressIsTheirs($data['email'], $customer);
+
         $message = ContactMessage::create([
             'user_id' => $customer?->id,
             'name' => $data['name'],
@@ -39,6 +42,38 @@ class ContactService
         $this->notifier->contactMessage($message->id, $message->name, $message->subject);
 
         return $message;
+    }
+
+    /**
+     * A signed-in customer may not be answered at somebody else's address.
+     *
+     * The reply goes to the address on the message, and the thread belongs to
+     * whoever was signed in when it was sent. Put another customer's address
+     * in that box and the two come apart: the thread appears in your dashboard
+     * and your bell rings, while the shop's answer — about your order — lands
+     * in their inbox.
+     *
+     * Only for a signed-in sender, because only then is there anything to
+     * compare. A guest typing an address that happens to have an account is
+     * usually that customer, not signed in; their enquiry belongs to nobody
+     * and is answered by email, as it always was.
+     *
+     * @throws ValidationException
+     */
+    private function assertTheAddressIsTheirs(string $email, ?User $customer): void
+    {
+        if (! $customer) {
+            return;
+        }
+
+        $owner = User::whereRaw('LOWER(email) = ?', [mb_strtolower(trim($email))])->first(['id']);
+
+        // Their own address is the same account, so only somebody else's is refused.
+        if ($owner && $owner->id !== $customer->id) {
+            throw ValidationException::withMessages([
+                'email' => 'That email belongs to a different account. Use your own address, so our reply reaches you.',
+            ]);
+        }
     }
 
     /**

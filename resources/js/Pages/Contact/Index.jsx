@@ -35,7 +35,10 @@ export default function Contact({
             message: '',
         },
         validationSchema: contactSchema,
-        onSubmit: async (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (
+            values,
+            { setSubmitting, resetForm, setFieldError, setFieldTouched },
+        ) => {
             try {
                 const data = await contactService.sendMessage(values);
                 setSent(values.email);
@@ -53,6 +56,15 @@ export default function Contact({
                     'Thanks for writing in',
                 );
             } catch (error) {
+                // Against the box it is about — the shop's answer goes to this
+                // address, so one that is somebody else's is refused.
+                const address = error?.fieldError?.('email');
+
+                if (address) {
+                    setFieldTouched('email', true, false);
+                    setFieldError('email', address);
+                }
+
                 toast.error(
                     error?.message ||
                         'We could not send that just now. Please try the hotline.',
