@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Customer;
 use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
+use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Wishlist;
+use App\Services\ContactService;
 use App\Services\OrderService;
 use App\Support\ShippingRates;
 use Illuminate\Http\Request;
@@ -39,6 +41,10 @@ class DashboardController extends Controller
             'navCounts' => [
                 'orders' => Order::where('user_id', $user->id)->count(),
                 'wishlist' => Wishlist::where('user_id', $user->id)->count(),
+                // Threads still going: answered and closed ones are history.
+                'messages' => ContactMessage::where('user_id', $user->id)
+                    ->where('status', '!=', ContactMessage::STATUS_CLOSED)
+                    ->count(),
             ],
             'techPoints' => (int) floor($this->lifetimeSpend($user->id) / 100),
         ];
@@ -149,6 +155,47 @@ class DashboardController extends Controller
                 ->with(['product.brand', 'product.images'])
                 ->get(),
         ]));
+    }
+
+    /**
+     * The customer's own side of the contact inbox.
+     *
+     * Their enquiries were the shop's records alone: answered by email, with
+     * nothing on the site to say what was asked, whether it had been answered,
+     * or where to write back.
+     */
+    public function messages(Request $request): Response
+    {
+        $user = Auth::user();
+
+        return Inertia::render('Dashboard/Messages', array_merge($this->shell($user), [
+            'threads' => ContactMessage::where('user_id', $user->id)
+                ->with(['replies:id,contact_message_id,author_name,from_customer,body,created_at'])
+                ->latest()
+                ->get([
+                    'id', 'subject', 'message', 'status', 'created_at', 'closed_at',
+                ]),
+        ]));
+    }
+
+    /**
+     * Writing back on their own thread, which reopens it if it was closed.
+     */
+    public function replyToMessage(Request $request, ContactService $contact, int $id)
+    {
+        $message = ContactMessage::findOrFail($id);
+
+        Gate::authorize('reply', $message);
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'min:2', 'max:4000'],
+        ], [
+            'body.required' => 'Write your message first.',
+        ]);
+
+        $contact->replyFromCustomer($message, $request->user(), $validated['body']);
+
+        return back()->with('success', 'Sent. We will reply here and by email.');
     }
 
     public function addresses(Request $request): Response

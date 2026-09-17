@@ -286,6 +286,8 @@ export const ROUTES = {
     DASHBOARD_ORDERS: '/dashboard/orders',
     DASHBOARD_WISHLIST: '/dashboard/wishlist',
     DASHBOARD_ADDRESSES: '/dashboard/addresses',
+    DASHBOARD_MESSAGES: '/dashboard/messages',
+    ACCOUNT_MESSAGE_REPLY: (id) => `/account/messages/${id}/replies`,
     NOTIFICATIONS: '/notifications',
     DASHBOARD_PROFILE: '/dashboard/profile',
     ACCOUNT: '/account',

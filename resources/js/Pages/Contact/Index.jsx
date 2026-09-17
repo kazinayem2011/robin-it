@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import { mainLayout } from '../../Layouts/MainLayout';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { toast } from '../../Components/Toast';
 import { contactService } from '../../services';
 import { contactSchema } from '../../validations';
 import siteConfig from '../../constants/siteConfig';
+import { ROUTES } from '../../constants/endpoints';
 import './Contact.css';
 
 /**
@@ -21,6 +22,8 @@ export default function Contact({
     showrooms = [],
     contact = null,
 }) {
+    const signedIn = Boolean(usePage().props?.auth?.user);
+
     const [sent, setSent] = useState(null);
 
     const formik = useFormik({
@@ -96,7 +99,22 @@ export default function Contact({
                                 <span>
                                     Sent. We will reply to{' '}
                                     <strong>{sent}</strong>, usually within one
-                                    working day.
+                                    working day.{' '}
+                                    {/* Signed in, the answer also lands in
+                                        their own messages, where they can
+                                        write back. A guest's cannot: their
+                                        message belongs to no account. */}
+                                    {signedIn && (
+                                        <>
+                                            You can also read it and reply in{' '}
+                                            <Link
+                                                href={ROUTES.DASHBOARD_MESSAGES}
+                                            >
+                                                your messages
+                                            </Link>
+                                            .
+                                        </>
+                                    )}
                                 </span>
                             </div>
                         )}

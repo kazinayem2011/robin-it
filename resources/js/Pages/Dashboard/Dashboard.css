@@ -1020,3 +1020,138 @@
         min-height: 320px;
     }
 }
+
+/* ---------------------------------------------------------------------------
+ * Messages: the customer's side of the contact inbox.
+ * ------------------------------------------------------------------------- */
+.dash-msg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dash-msg-thread {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+.dash-msg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dash-msg-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.dash-msg-head-text strong {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.dash-msg-when {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* New, in progress, closed — the inbox's own states. */
+.dash-msg-state {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: var(--bg-muted-strong);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.dash-msg-state-new {
+    background: var(--primary-light);
+    color: var(--primary-ink);
+}
+
+.dash-msg-state-open {
+    background: var(--warning-light);
+    color: var(--warning-hover);
+}
+
+.dash-msg-state-closed {
+    background: var(--success-light);
+    color: var(--success-ink);
+}
+
+.dash-msg-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+.dash-msg-note {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
+}
+
+/* Theirs sits to the left, the shop's to the right of it, so a thread reads
+   as a conversation rather than a list. */
+.dash-msg-note-mine {
+    margin-right: 28px;
+    border-left: 2px solid var(--border-strong);
+}
+
+.dash-msg-note-shop {
+    margin-left: 28px;
+    border-left: 2px solid var(--primary);
+    background: var(--bg-surface);
+}
+
+.dash-msg-author {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.dash-msg-note p {
+    white-space: pre-wrap;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text-body);
+}
+
+.dash-msg-reply {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.dash-msg-reply textarea {
+    width: 100%;
+}
+
+@media (max-width: 560px) {
+    .dash-msg-note-mine,
+    .dash-msg-note-shop {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}

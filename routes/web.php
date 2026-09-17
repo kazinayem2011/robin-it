@@ -136,6 +136,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get(ApiEndpoints::DASHBOARD_ORDERS, [DashboardController::class, 'orders'])->name('dashboard.orders');
     Route::get(ApiEndpoints::DASHBOARD_WISHLIST, [DashboardController::class, 'wishlist'])->name('dashboard.wishlist');
     Route::get(ApiEndpoints::DASHBOARD_ADDRESSES, [DashboardController::class, 'addresses'])->name('dashboard.addresses');
+    Route::get(ApiEndpoints::DASHBOARD_MESSAGES, [DashboardController::class, 'messages'])->name('dashboard.messages');
 
     /*
      * Every notification, which the bell is not: it holds the last twenty
@@ -154,6 +155,14 @@ Route::middleware(['auth'])->group(function () {
     Route::delete(ApiEndpoints::ACCOUNT_ADDRESS_ITEM, [DashboardController::class, 'deleteAddress'])->name('account.address.delete');
     Route::put(ApiEndpoints::ACCOUNT_PASSWORD, [DashboardController::class, 'updatePassword'])->name('account.password');
     Route::post(ApiEndpoints::ACCOUNT_ORDER_CANCEL, [DashboardController::class, 'cancelOrder'])->name('account.orders.cancel');
+
+    /*
+     * Writing back on their own enquiry. Throttled: it is a box anybody signed
+     * in can type into, and the shop reads every line of it.
+     */
+    Route::post(ApiEndpoints::ACCOUNT_MESSAGE_REPLY, [DashboardController::class, 'replyToMessage'])
+        ->middleware('throttle:20,10')
+        ->name('account.messages.reply');
 
     Route::get(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'update'])->name('profile.update');

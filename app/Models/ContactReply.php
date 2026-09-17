@@ -14,12 +14,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ContactReply extends Model
 {
-    protected $fillable = ['contact_message_id', 'user_id', 'author_name', 'body', 'emailed'];
+    protected $fillable = ['contact_message_id', 'user_id', 'author_name', 'from_customer', 'body', 'emailed'];
 
     protected function casts(): array
     {
         return [
             'emailed' => 'boolean',
+            'from_customer' => 'boolean',
         ];
     }
 

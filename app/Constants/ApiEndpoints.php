@@ -262,6 +262,9 @@ class ApiEndpoints
 
     public const DASHBOARD_WISHLIST = '/dashboard/wishlist';
 
+    /** The customer's own side of the contact inbox: their threads. */
+    public const DASHBOARD_MESSAGES = '/dashboard/messages';
+
     public const DASHBOARD_ADDRESSES = '/dashboard/addresses';
 
     public const DASHBOARD_PROFILE = '/dashboard/profile';
@@ -279,6 +282,8 @@ class ApiEndpoints
     public const ACCOUNT_AVATAR = '/account/avatar';
 
     public const ACCOUNT_ORDER_CANCEL = '/account/orders/{id}/cancel';
+
+    public const ACCOUNT_MESSAGE_REPLY = '/account/messages/{id}/replies';
 
     /** Printable invoice, for the customer and the admin alike. */
     public const ORDER_INVOICE = '/orders/{id}/invoice';

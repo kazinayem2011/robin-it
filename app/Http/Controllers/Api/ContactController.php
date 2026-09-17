@@ -36,7 +36,7 @@ class ContactController extends Controller
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number, or leave it blank.',
         ]);
 
-        $message = $this->contact->record($validated, $request->ip());
+        $message = $this->contact->record($validated, $request->ip(), $request->user());
 
         return $this->successResponse(
             ['reference' => $message->id],

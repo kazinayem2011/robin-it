@@ -238,17 +238,30 @@ export default function AdminMessages({
                                     <p className="msg-text">{m.message}</p>
 
                                     {m.replies?.map((r) => (
-                                        <div key={r.id} className="msg-reply">
+                                        <div
+                                            key={r.id}
+                                            className={`msg-reply ${r.from_customer ? 'msg-reply-customer' : ''}`}
+                                        >
                                             <div className="msg-reply-head">
                                                 <strong>{r.author_name}</strong>
-                                                {!r.emailed && (
-                                                    <span className="msg-not-emailed">
-                                                        <AlertTriangle
-                                                            size={12}
-                                                        />{' '}
-                                                        not emailed
+                                                {/* Which side wrote it. The
+                                                    customer can answer in
+                                                    their own dashboard now, so
+                                                    a thread has two voices. */}
+                                                {r.from_customer && (
+                                                    <span className="msg-from-customer">
+                                                        customer
                                                     </span>
                                                 )}
+                                                {!r.from_customer &&
+                                                    !r.emailed && (
+                                                        <span className="msg-not-emailed">
+                                                            <AlertTriangle
+                                                                size={12}
+                                                            />{' '}
+                                                            not emailed
+                                                        </span>
+                                                    )}
                                             </div>
                                             <p>{r.body}</p>
                                         </div>

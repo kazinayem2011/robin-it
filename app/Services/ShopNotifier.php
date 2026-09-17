@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductQuestion;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Notifications\ContactAnswered;
 use App\Notifications\ContactMessageReceived;
+use App\Notifications\ContactMessageReplied;
 use App\Notifications\OrderPlaced;
 use App\Notifications\OrderStatusChanged;
 use App\Notifications\OrderUpdated;
@@ -80,6 +83,21 @@ class ShopNotifier
             $this->staffWith('support'),
             new ContactMessageReceived($messageId, $fromName, $subject)
         ));
+    }
+
+    /** The customer wrote back on a thread the shop had already answered. */
+    public function contactReplied(ContactMessage $message): void
+    {
+        $this->deliver('contact replied', fn () => Notification::send(
+            $this->staffWith('support'),
+            new ContactMessageReplied($message->id, $message->name, $message->subject)
+        ));
+    }
+
+    /** And the other way: the shop answered, so the customer's bell rings. */
+    public function contactAnswered(ContactMessage $message): void
+    {
+        $this->deliver('contact answered', fn () => $message->customer?->notify(new ContactAnswered($message)));
     }
 
     public function stockRanLow(Product $product, ?ProductVariant $variant, int $remaining): void

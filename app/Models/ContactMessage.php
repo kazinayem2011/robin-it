@@ -20,7 +20,7 @@ class ContactMessage extends Model
     public const STATUSES = [self::STATUS_NEW, self::STATUS_OPEN, self::STATUS_CLOSED];
 
     protected $fillable = [
-        'name', 'email', 'phone', 'subject', 'message',
+        'user_id', 'name', 'email', 'phone', 'subject', 'message',
         'status', 'assigned_to', 'closed_at', 'closed_by', 'ip_address',
     ];
 
@@ -36,6 +36,12 @@ class ContactMessage extends Model
     public function replies(): HasMany
     {
         return $this->hasMany(ContactReply::class)->oldest();
+    }
+
+    /** Whose enquiry it is, when they were signed in to send it. */
+    public function customer()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function assignee()

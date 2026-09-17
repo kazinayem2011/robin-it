@@ -17,9 +17,16 @@ class ContactService
 {
     public function __construct(protected ShopNotifier $notifier) {}
 
-    public function record(array $data, ?string $ip = null): ContactMessage
+    /**
+     * @param  User|null  $customer  whoever was signed in, so the enquiry shows
+     *                               in their own messages and they can write
+     *                               back there. The form stays open to guests,
+     *                               whose enquiry belongs to nobody.
+     */
+    public function record(array $data, ?string $ip = null, ?User $customer = null): ContactMessage
     {
         $message = ContactMessage::create([
+            'user_id' => $customer?->id,
             'name' => $data['name'],
             'email' => mb_strtolower(trim($data['email'])),
             'phone' => $data['phone'] ?? null,
@@ -49,6 +56,7 @@ class ContactService
                 'contact_message_id' => $message->id,
                 'user_id' => $staff->id,
                 'author_name' => $staff->name,
+                'from_customer' => false,
                 'body' => $body,
                 'emailed' => false,
             ]);
@@ -77,6 +85,47 @@ class ContactService
                 'error' => $e->getMessage(),
             ]);
         }
+
+        // The bell as well, for a customer with an account: the thread is
+        // theirs to read and to answer, and an inbox is not always read.
+        $this->notifier->contactAnswered($message);
+
+        return $reply->fresh();
+    }
+
+    /**
+     * The customer writing back on their own thread.
+     *
+     * An answer that did not settle it used to have nowhere to go: the reply
+     * arrived by email, and email replies land in a mailbox rather than in the
+     * inbox screen, so the shop could not see them beside what it had said.
+     *
+     * A closed thread reopens. Somebody writing again is the plainest possible
+     * statement that it was not finished.
+     */
+    public function replyFromCustomer(ContactMessage $message, User $customer, string $body): ContactReply
+    {
+        $reply = DB::transaction(function () use ($message, $customer, $body) {
+            $reply = ContactReply::create([
+                'contact_message_id' => $message->id,
+                'user_id' => $customer->id,
+                'author_name' => $customer->name,
+                'from_customer' => true,
+                'body' => $body,
+                // Nothing is emailed to the shop: it reads the thread.
+                'emailed' => false,
+            ]);
+
+            $message->forceFill([
+                'status' => ContactMessage::STATUS_OPEN,
+                'closed_at' => null,
+                'closed_by' => null,
+            ])->save();
+
+            return $reply;
+        });
+
+        $this->notifier->contactReplied($message);
 
         return $reply->fresh();
     }

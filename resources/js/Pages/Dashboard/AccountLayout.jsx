@@ -1,18 +1,19 @@
 import React from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    User,
-    Package,
-    Heart,
-    MapPin,
-    LogOut,
-    ShieldCheck,
-    ShieldAlert,
-    Sparkles,
     Award,
-    Phone,
-    Mail,
     ChevronRight,
+    Heart,
+    LogOut,
+    Mail,
+    MapPin,
+    MessageSquare,
+    Package,
+    Phone,
+    ShieldAlert,
+    ShieldCheck,
+    Sparkles,
+    User,
 } from 'lucide-react';
 import { formatBdPhone } from '@/utils/formatters';
 import AvatarUploader from './AvatarUploader';
@@ -93,6 +94,13 @@ export default function AccountLayout({
             icon: Heart,
             href: ROUTES.DASHBOARD_WISHLIST,
             count: navCounts.wishlist,
+        },
+        {
+            key: 'messages',
+            label: 'Messages',
+            icon: MessageSquare,
+            href: ROUTES.DASHBOARD_MESSAGES,
+            count: navCounts.messages,
         },
         {
             key: 'addresses',
