@@ -4477,10 +4477,32 @@ a.admin-card:hover,
 .admin-order-status-move {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
-.admin-order-status-move .admin-status-dropdown {
+/*
+ * "Move to" stays on one line, level with the control.
+ *
+ * It borrows .admin-field-hint for its colour and size, and that class is a
+ * block with a top margin — written for a hint under a field, not beside one.
+ * In this row the margin pushed it below the control's centre, and nothing
+ * stopped it shrinking, so it broke into "Move" over "to".
+ */
+.admin-order-status-move > .admin-field-hint {
+    margin-top: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/*
+ * As wide as its option, not as wide as the row.
+ *
+ * The dropdown's wrapper is display: contents, so the trigger is the flex
+ * item itself, and a trigger fills its box by default — width: 100% of this
+ * row, which left the label beside it no room at all.
+ */
+.admin-order-status-move .ui-select-trigger.admin-status-dropdown {
+    width: auto;
     /* Wide enough for "Out for delivery" without the label clipping. */
     min-width: 150px;
 }
