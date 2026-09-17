@@ -107,7 +107,10 @@ class ReachableWithoutAnEmailTest extends TestCase
     /** A guest is asked for one or the other, so there is always a way to answer. */
     public function test_a_guest_may_leave_a_number_instead_of_an_address(): void
     {
-        $this->send(['phone' => '01341789939'])->assertSuccessful();
+        $this->send(['phone' => '01341789939'])
+            ->assertSuccessful()
+            // No gateway here, so the shop promises the call it would make.
+            ->assertJsonPath('message', 'Thanks Karim Uddin — we have your message and will call you on 01341789939.');
 
         $message = ContactMessage::latest('id')->firstOrFail();
         $this->assertNull($message->email);
@@ -129,7 +132,10 @@ class ReachableWithoutAnEmailTest extends TestCase
     public function test_a_guest_who_left_a_number_is_texted_the_answer(): void
     {
         $this->withTexts();
-        $this->send(['phone' => '01341789939'])->assertSuccessful();
+        $this->send(['phone' => '01341789939'])
+            ->assertSuccessful()
+            // And says so, rather than promising a phone call.
+            ->assertJsonPath('message', 'Thanks Karim Uddin — we have your message and will text you on 01341789939.');
         $message = ContactMessage::latest('id')->firstOrFail();
 
         $this->actingAs($this->staff)

@@ -6,6 +6,7 @@ use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
 use App\Services\ContactService;
+use App\Services\SmsService;
 use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,6 +77,9 @@ class ContactController extends Controller
         $where = match (true) {
             filled($message->email) => "will reply to {$message->email}",
             $signedIn => 'will reply in your messages',
+            // Texted, where the shop can: promising a phone call and then
+            // sending a text is a small lie, and the other way round is worse.
+            app(SmsService::class)->sends('contact_reply') => "will text you on {$message->phone}",
             default => "will call you on {$message->phone}",
         };
 
