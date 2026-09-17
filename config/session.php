@@ -3,7 +3,7 @@
 use Illuminate\Support\Str;
 
 /*
-| Two windows, one guard. A shopper stays signed in for two months, so the cart
+| Two windows, one guard. A shopper stays signed in for six months, so the cart
 | and the order history are still waiting on their next visit; staff are cut
 | back to a week, because an admin cookie is worth incomparably more than a
 | shopper's. EnforceSessionWindow picks between the two on every request.
@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 | database handler expires every row by, so a longer staff window could not be
 | honoured anyway.
 */
-$customerLifetime = (int) env('SESSION_LIFETIME', 86400);   // 60 days
+$customerLifetime = (int) env('SESSION_LIFETIME', 259200);  // 180 days
 $adminLifetime = (int) env('SESSION_ADMIN_LIFETIME', 10080); // 7 days
 
 return [

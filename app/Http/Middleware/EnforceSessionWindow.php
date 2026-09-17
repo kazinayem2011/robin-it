@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Holds each session to the window its owner is entitled to: two months for a
+ * Holds each session to the window its owner is entitled to: six months for a
  * shopper, a week for staff.
  */
 class EnforceSessionWindow
@@ -48,7 +48,7 @@ class EnforceSessionWindow
         /*
          * The other half of the same week. The database handler was built with
          * session.lifetime as it stood when the session started — the shopper's
-         * two months — and expires rows by that, so an admin session left idle
+         * six months — and expires rows by that, so an admin session left idle
          * past its own window has to be cut here. Without this the week would
          * be nothing but a cookie the browser is trusted to throw away.
          */

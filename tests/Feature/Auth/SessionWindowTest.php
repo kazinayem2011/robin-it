@@ -18,7 +18,7 @@ class SessionWindowTest extends TestCase
     use RefreshDatabase;
 
     /** Minutes, as config/session.php counts them. */
-    private const CUSTOMER_WINDOW = 86400;   // 60 days
+    private const CUSTOMER_WINDOW = 259200;  // 180 days
 
     private const ADMIN_WINDOW = 10080;      // 7 days
 
@@ -41,7 +41,7 @@ class SessionWindowTest extends TestCase
         $this->assertCookieExpiresIn($response, config('session.cookie'), self::CUSTOMER_WINDOW);
     }
 
-    public function test_a_signed_in_customer_gets_sixty_days(): void
+    public function test_a_signed_in_customer_gets_six_months(): void
     {
         $customer = User::factory()->create(['role' => User::ROLE_CUSTOMER]);
 
