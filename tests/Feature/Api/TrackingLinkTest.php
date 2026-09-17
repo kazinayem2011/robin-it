@@ -153,6 +153,7 @@ class TrackingLinkTest extends TestCase
         $messages = [
             'placed' => SmsTemplates::orderPlaced($order, $shop),
             'changed' => SmsTemplates::orderUpdated($order->forceFill(['total' => 1250000]), $shop),
+            'confirmed' => SmsTemplates::statusChanged((clone $order)->forceFill(['status' => 'processing']), $shop),
             'shipped, our link' => SmsTemplates::statusChanged($order, $shop),
         ];
 

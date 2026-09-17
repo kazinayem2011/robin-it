@@ -144,6 +144,7 @@ class SiteSetting extends Model
             // Which messages the shop pays to send; see SmsService::EVENTS.
             'sms_on_order_placed',
             'sms_on_order_updated',
+            'sms_on_processing',
             'sms_on_shipped',
             'sms_on_delivered',
             'sms_on_cancelled',

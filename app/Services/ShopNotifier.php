@@ -15,6 +15,8 @@ use App\Notifications\ProductQuestionAsked;
 use App\Notifications\StockRanLow;
 use App\Support\Roles;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 
@@ -58,31 +60,40 @@ class ShopNotifier
 
     public function orderPlaced(Order $order): void
     {
-        Notification::send($this->staffWith('orders'), new OrderPlaced($order));
+        $this->deliver('order placed', fn () => Notification::send(
+            $this->staffWith('orders'),
+            new OrderPlaced($order)
+        ));
     }
 
     public function questionAsked(ProductQuestion $question): void
     {
-        Notification::send($this->staffWith('support'), new ProductQuestionAsked($question));
+        $this->deliver('question asked', fn () => Notification::send(
+            $this->staffWith('support'),
+            new ProductQuestionAsked($question)
+        ));
     }
 
     public function contactMessage(int $messageId, string $fromName, string $subject): void
     {
-        Notification::send(
+        $this->deliver('contact message', fn () => Notification::send(
             $this->staffWith('support'),
             new ContactMessageReceived($messageId, $fromName, $subject)
-        );
+        ));
     }
 
     public function stockRanLow(Product $product, ?ProductVariant $variant, int $remaining): void
     {
-        Notification::send($this->staffWith('stock'), new StockRanLow($product, $variant, $remaining));
+        $this->deliver('stock ran low', fn () => Notification::send(
+            $this->staffWith('stock'),
+            new StockRanLow($product, $variant, $remaining)
+        ));
     }
 
     /** The customer's own order. Nobody else is told. */
     public function orderStatusChanged(Order $order, string $status): void
     {
-        $order->user?->notify(new OrderStatusChanged($order, $status));
+        $this->deliver('order status', fn () => $order->user?->notify(new OrderStatusChanged($order, $status)));
     }
 
     /**
@@ -91,6 +102,29 @@ class ShopNotifier
      */
     public function orderUpdated(Order $order): void
     {
-        $order->user?->notify(new OrderUpdated($order));
+        $this->deliver('order updated', fn () => $order->user?->notify(new OrderUpdated($order)));
+    }
+
+    /**
+     * Send once the change being announced is saved, and never let the
+     * sending break the thing that was announced.
+     *
+     * The bell's push now goes out inside the request (see ShopNotification),
+     * so two things that were the queue's problem are this one's. A push from
+     * inside a transaction that then rolls back announces something that never
+     * happened — afterCommit waits, and runs at once when there is no
+     * transaction. And Pusher being down must not turn a placed order into an
+     * error page: the database row is written before the push is attempted,
+     * so the bell still shows it on the next load.
+     */
+    private function deliver(string $what, callable $send): void
+    {
+        DB::afterCommit(function () use ($what, $send) {
+            try {
+                $send();
+            } catch (\Throwable $e) {
+                Log::warning("Could not deliver the {$what} notification: {$e->getMessage()}");
+            }
+        });
     }
 }

@@ -305,7 +305,7 @@ class SmsTest extends TestCase
             'changed' => SmsTemplates::orderUpdated($order, $shop),
         ];
 
-        foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
+        foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $order->status = $status;
 
             if ($message = SmsTemplates::statusChanged($order, $shop)) {
@@ -397,10 +397,23 @@ class SmsTest extends TestCase
     {
         $order = $this->order();
 
-        foreach (['pending', 'processing'] as $status) {
-            $order->status = $status;
-            $this->assertNull(SmsTemplates::statusChanged($order, 'Robins Computer'));
-        }
+        $order->status = 'pending';
+        $this->assertNull(SmsTemplates::statusChanged($order, 'Robins Computer'));
+    }
+
+    /**
+     * Processing is news: the shop has accepted the order. A customer who
+     * ordered and then heard nothing did not know that.
+     */
+    public function test_processing_tells_the_customer_the_order_is_confirmed(): void
+    {
+        $order = $this->order();
+        $order->status = 'processing';
+
+        $message = SmsTemplates::statusChanged($order, 'Robins Computer');
+
+        $this->assertStringContainsString('কনফার্ম', $message);
+        $this->assertStringContainsString($order->trackPath(), $message);
     }
 
     /**
@@ -569,7 +582,7 @@ class SmsTest extends TestCase
      */
     public function test_every_event_name_used_in_the_app_is_a_real_switch(): void
     {
-        foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
+        foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $this->assertArrayHasKey(
                 $status,
                 SmsService::EVENTS,

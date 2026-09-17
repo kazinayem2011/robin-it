@@ -61,6 +61,10 @@ return [
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Pushes are sent inside the request now (ShopNotification), so a
+                // slow Pusher must give up quickly rather than hold a checkout.
+                'timeout' => 3,
+                'connect_timeout' => 2,
             ],
         ],
 

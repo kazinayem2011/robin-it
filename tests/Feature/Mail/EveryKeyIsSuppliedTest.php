@@ -216,7 +216,7 @@ class EveryKeyIsSuppliedTest extends TestCase
         $courier = Courier::firstOrCreate(['slug' => 'pathao'], ['name' => 'Pathao', 'is_active' => true]);
         $order->courier()->associate($courier)->save();
 
-        foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
+        foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $order->status = $status;
             $built[$status] = SmsTemplates::statusChanged($order, $shop);
         }

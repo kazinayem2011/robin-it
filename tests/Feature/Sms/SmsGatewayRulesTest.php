@@ -118,7 +118,7 @@ class SmsGatewayRulesTest extends TestCase
             'password reset' => SmsTemplates::verificationCode('123456', 'password_reset', $shop),
         ];
 
-        foreach (['shipped', 'delivered', 'cancelled', 'returned'] as $status) {
+        foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {
             $order->status = $status;
             $message = SmsTemplates::statusChanged($order, $shop);
 

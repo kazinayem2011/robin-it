@@ -78,15 +78,21 @@ class SmsTemplates
     /**
      * The message for an order that has moved.
      *
-     * Null where a status is not worth a text. "Processing" tells a customer
-     * nothing they can act on, and a message that says nothing still costs
-     * money and still interrupts somebody's evening.
+     * Null where a status is not worth a text: pending is where every order
+     * starts, and the confirmation has already said so.
+     *
+     * Processing used to be one of those, on the view that it gave the
+     * customer nothing to act on. A customer who ordered and heard nothing
+     * more saw it differently — the shop had accepted the order and they did
+     * not know — so it is a message now, with its own switch.
      */
     public static function statusChanged(Order $order, string $shop): ?string
     {
         $plain = ['shop_name' => $shop, 'order_number' => $order->order_number];
 
         return match ($order->status) {
+            'processing' => self::stored('processing', $plain + ['track_url' => self::trackUrl($order)],
+                "({$shop}) অর্ডার {$order->order_number} কনফার্ম হয়েছে। ট্র্যাক: ".self::trackUrl($order)),
             'shipped' => self::shipped($order, $shop),
             'delivered' => self::stored('delivered', $plain,
                 "({$shop}) অর্ডার {$order->order_number} ডেলিভারি হয়েছে। "

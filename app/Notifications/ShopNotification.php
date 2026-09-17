@@ -48,9 +48,22 @@ abstract class ShopNotification extends Notification
         return $this->payload($notifiable);
     }
 
+    /**
+     * Sent now, not queued.
+     *
+     * Laravel queues a notification's broadcast by default, and this shop's
+     * queue is worked by the scheduler, which cron wakes every five minutes.
+     * So "real time" arrived up to five minutes late — long after somebody
+     * watching for a new order had given up and reloaded. The sync connection
+     * pushes it to Pusher inside the request that caused it.
+     *
+     * ShopNotifier holds the whole send until the surrounding transaction has
+     * committed, and catches a Pusher failure, so pushing inline can neither
+     * announce a change that rolled back nor fail the checkout that caused it.
+     */
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
-        return new BroadcastMessage($this->payload($notifiable));
+        return (new BroadcastMessage($this->payload($notifiable)))->onConnection('sync');
     }
 
     /*
