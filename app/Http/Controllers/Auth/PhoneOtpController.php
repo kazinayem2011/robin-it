@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\CheckoutAccount;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,14 +70,14 @@ class PhoneOtpController extends Controller
      * its cart: nobody checking out has an empty one, and it is one more thing
      * a script walking through numbers has to set up for each of them.
      */
-    public function forCheckout(Request $request, CartService $carts): JsonResponse
+    public function forCheckout(Request $request, CartService $carts, CheckoutAccount $accounts): JsonResponse
     {
         PhoneHelper::canonicalise($request, 'phone');
 
-        $request->validate(
-            ['phone' => ['required', 'string', PhoneHelper::RULE]],
-            ['phone.regex' => PhoneHelper::MESSAGE]
-        );
+        $request->validate([
+            'phone' => ['required', 'string', PhoneHelper::RULE],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
+        ], ['phone.regex' => PhoneHelper::MESSAGE]);
 
         $cart = $carts->findCart(null, $request->session()->getId());
 
@@ -85,6 +86,9 @@ class PhoneOtpController extends Controller
                 'phone' => 'Your cart is empty. Add a product before checking out.',
             ]);
         }
+
+        // Before the code goes, so one is not spent on an order that would be refused.
+        $accounts->assertEmailFits($request->string('phone'), $request->input('email'));
 
         $this->ensureCodesCanBeSent();
 

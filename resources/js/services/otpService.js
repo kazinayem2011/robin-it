@@ -34,11 +34,14 @@ export const otpService = {
      * The number decides which account the order joins and signs the guest
      * into it, so the server wants it proved. Sent to any number, new customer
      * or returning, and answered the same for both.
+     *
+     * The email goes too, so one that belongs to another account is refused
+     * before a code is spent on it.
      */
-    async forCheckout(phone) {
+    async forCheckout(phone, email = null) {
         const response = await axiosInstance.post(
             ROUTES.OTP_CHECKOUT,
-            { phone },
+            { phone, email: email?.trim() || null },
             asWebRoute,
         );
         return response?.data || response;

@@ -623,6 +623,13 @@
     color: var(--text-muted);
 }
 
+.checkout-signin-link {
+    color: var(--primary-ink);
+    font-weight: 700;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------------------
  * Changing a quantity in the order summary.
  *

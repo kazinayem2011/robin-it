@@ -202,16 +202,98 @@ class GuestCheckoutAccountTest extends TestCase
         $this->assertSame('first@example.com', $customer->fresh()->email);
     }
 
-    /** Somebody else's address is not claimed, and the order still goes through. */
-    public function test_an_email_that_belongs_to_another_account_is_not_taken(): void
+    /**
+     * Somebody who signed up with only an email, checking out by phone.
+     *
+     * Accepting it made a second account holding the phone, which their real
+     * account could then never add, and sent the confirmation to an inbox
+     * whose account did not have the order. So it is refused before a code is
+     * spent, with the way forward: sign in.
+     */
+    public function test_an_email_with_an_account_of_its_own_is_refused_before_a_code_is_sent(): void
     {
-        User::factory()->create(['phone' => '01811111111', 'email' => 'taken@example.com']);
+        User::factory()->create(['phone' => null, 'email' => 'karim@example.com']);
+
+        $this->guestCart();
+
+        $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'Karim@Example.com'])
+            ->assertStatus(422)
+            ->assertJsonPath(
+                'data.errors.email.0',
+                'This email already has an account. Sign in to order with it, or leave the email blank.'
+            );
+
+        Http::assertNothingSent();
+        $this->assertSame(1, User::count());
+    }
+
+    public function test_an_email_from_a_different_account_than_the_phone_is_refused(): void
+    {
+        User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com']);
+        User::factory()->create(['phone' => '01811111111', 'email' => 'rahim@example.com']);
+
+        $this->guestCart();
+
+        $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'rahim@example.com'])
+            ->assertStatus(422)
+            ->assertJsonPath(
+                'data.errors.email.0',
+                'This email belongs to a different account. Use the email on your account, or leave it blank.'
+            );
+
+        Http::assertNothingSent();
+    }
+
+    /**
+     * Changed after the code arrived, it is still refused — and the code is
+     * not spent on the refusal, so the customer clears the box and carries on.
+     */
+    public function test_an_email_changed_after_the_code_is_refused_without_spending_it(): void
+    {
+        User::factory()->create(['phone' => null, 'email' => 'someone@example.com']);
 
         $this->guestCart();
         $this->askForCode()->assertSuccessful();
-        $this->checkout(['code' => $this->codeFromTheText(), 'email' => 'taken@example.com'])->assertCreated();
+        $code = $this->codeFromTheText();
 
-        $this->assertNull(User::where('phone', self::PHONE)->firstOrFail()->email);
+        $this->checkout(['code' => $code, 'email' => 'someone@example.com'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email', 'data.errors');
+
+        $this->assertSame(0, Order::count());
+        $this->assertGuest();
+
+        $this->checkout(['code' => $code, 'email' => ''])->assertCreated();
+    }
+
+    public function test_the_accounts_own_email_is_fine_in_any_case(): void
+    {
+        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com']);
+
+        $this->guestCart();
+        $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'KARIM@example.com'])->assertSuccessful();
+
+        $this->checkout(['code' => $this->codeFromTheText(), 'email' => 'KARIM@example.com'])->assertCreated();
+
+        $this->assertAuthenticatedAs($customer);
+    }
+
+    /** Signed in, the account is settled, and another account's email is still not its to use. */
+    public function test_a_signed_in_customer_cannot_use_another_accounts_email(): void
+    {
+        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com']);
+        User::factory()->create(['email' => 'rahim@example.com']);
+
+        $this->actingAs($customer)
+            ->postJson('/api/cart', ['product_id' => $this->product()->id, 'quantity' => 1])
+            ->assertSuccessful();
+
+        $this->actingAs($customer)
+            ->checkout(['email' => 'rahim@example.com'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('email', 'data.errors');
+
+        $this->assertSame(0, Order::count());
     }
 
     public function test_a_wrong_code_places_nothing_and_signs_in_nobody(): void

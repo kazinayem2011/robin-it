@@ -118,6 +118,12 @@ class CheckoutController extends Controller
         }
 
         /*
+         * An email that belongs to another account is refused, for a signed-in
+         * customer as much as a guest. Before the code, so it is not spent.
+         */
+        $this->accounts->assertEmailFits($validated['phone'], $validated['email'] ?? null, $request->user());
+
+        /*
          * Whose order this is. Checked after the form and the cart, so a
          * mistake in either is reported before the code is spent.
          */

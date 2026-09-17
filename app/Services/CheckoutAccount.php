@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The account a guest's order belongs to, once they have proved their number.
@@ -25,6 +26,55 @@ use Illuminate\Support\Str;
  */
 class CheckoutAccount
 {
+    /**
+     * Refuse an email that belongs to an account other than the one the order
+     * is joining.
+     *
+     * Only the phone is proved at checkout, so an email can never sign anyone
+     * in or link anything — and quietly accepting one that is somebody else's
+     * went wrong both ways. A customer who signed up with only an email, then
+     * checked out by phone, got a second account holding that phone, which
+     * their real account could then never add. And whoever owned the address
+     * was sent an order that was not in their account.
+     *
+     * Checked before the code is sent, so nobody spends one on an order this
+     * would refuse, and again when the order is placed, in case the email
+     * changed in between. It does tell the person typing that the address has
+     * an account; the sign-up form has always told them the same.
+     *
+     * @param  User|null  $signedIn  the customer, when the order is theirs
+     *                               already; otherwise the phone decides
+     *
+     * @throws ValidationException
+     */
+    public function assertEmailFits(string $phone, ?string $email, ?User $signedIn = null): void
+    {
+        $email = filled($email) ? strtolower(trim($email)) : null;
+
+        if (! $email) {
+            return;
+        }
+
+        $emailOwner = User::whereRaw('LOWER(email) = ?', [$email])->first(['id']);
+
+        if (! $emailOwner) {
+            return;
+        }
+
+        $orderOwner = $signedIn
+            ?? User::where('phone', PhoneHelper::normalizeBdPhone($phone) ?? $phone)->first(['id']);
+
+        if ($orderOwner && $orderOwner->id === $emailOwner->id) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'email' => $orderOwner
+                ? 'This email belongs to a different account. Use the email on your account, or leave it blank.'
+                : 'This email already has an account. Sign in to order with it, or leave the email blank.',
+        ]);
+    }
+
     /**
      * @throws StorefrontException when the number belongs to an account that
      *                             cannot be signed into this way
@@ -57,9 +107,8 @@ class CheckoutAccount
         $user = new User;
         $user->fill([
             'name' => $name,
-            // Somebody else's address is left off rather than refused: the
-            // order still goes through, and the email for it still goes to
-            // what they typed.
+            // assertEmailFits() has already refused another account's
+            // address; this only covers one registered in the meantime.
             'email' => $email && ! $this->emailTaken($email) ? $email : null,
             'phone' => $phone,
             /*

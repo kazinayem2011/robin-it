@@ -93,6 +93,7 @@ describe('Checkout, for a guest', () => {
         await waitFor(() =>
             expect(services.otpService.forCheckout).toHaveBeenCalledWith(
                 '01712345678',
+                '',
             ),
         );
         expect(services.checkoutService.processCheckout).not.toHaveBeenCalled();
@@ -141,6 +142,70 @@ describe('Checkout, for a guest', () => {
             await screen.findByText('Enter the six-digit code we sent you.'),
         ).toBeInTheDocument();
         expect(services.checkoutService.processCheckout).not.toHaveBeenCalled();
+    });
+});
+
+describe('Checkout, when the email has an account of its own', () => {
+    const taken =
+        'This email already has an account. Sign in to order with it, or leave the email blank.';
+
+    const refusal = () =>
+        Object.assign(new Error(taken), {
+            code: 'VALIDATION_ERROR',
+            fieldError: (field) => (field === 'email' ? taken : null),
+        });
+
+    it('says so under the email, offers a way to sign in, and sends no code', async () => {
+        services.otpService.forCheckout.mockRejectedValue(refusal());
+
+        render(<Checkout verifyPhone deliveryRates={rates} />);
+        await fillInDelivery();
+        await userEvent.type(
+            screen.getByPlaceholderText('you@example.com'),
+            'karim@example.com',
+        );
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Send Code & Continue' }),
+        );
+
+        expect(await screen.findByText(taken)).toBeInTheDocument();
+        expect(services.otpService.forCheckout).toHaveBeenCalledWith(
+            '01712345678',
+            'karim@example.com',
+        );
+        expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+            'href',
+            '/login?redirect=%2Fcheckout',
+        );
+        // Still the first step: nothing was texted.
+        expect(screen.queryByLabelText(/Verification code/)).toBeNull();
+    });
+
+    /*
+     * The objection is about that address. Typing elsewhere leaves it up —
+     * Formik's own errors are rewritten on every keystroke, which is why it is
+     * not kept there — and changing the address takes it down.
+     */
+    it('keeps the message until the email itself changes', async () => {
+        services.otpService.forCheckout.mockRejectedValue(refusal());
+
+        render(<Checkout verifyPhone deliveryRates={rates} />);
+        await fillInDelivery();
+        const email = screen.getByPlaceholderText('you@example.com');
+        await userEvent.type(email, 'karim@example.com');
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Send Code & Continue' }),
+        );
+        await screen.findByText(taken);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('e.g. Rahim Chowdhury'),
+            'x',
+        );
+        expect(screen.getByText(taken)).toBeInTheDocument();
+
+        await userEvent.clear(email);
+        expect(screen.queryByText(taken)).toBeNull();
     });
 });
 

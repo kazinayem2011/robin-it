@@ -19,8 +19,24 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        /*
+         * Where to go back to afterwards, from ?redirect=. Sent by the
+         * storefront when a session runs out mid-action, and by checkout's
+         * "sign in to order with it" — and read by nothing until now, so both
+         * landed on the dashboard instead.
+         *
+         * A path on this site only. Anything that could leave it — a full
+         * address, `//host`, a backslash a browser would read as a slash,
+         * whitespace — is ignored rather than trusted.
+         */
+        $next = $request->query('redirect');
+
+        if (is_string($next) && preg_match('#^/(?![/\\\\])[^\\\\\s]*$#D', $next)) {
+            $request->session()->put('url.intended', url($next));
+        }
+
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),

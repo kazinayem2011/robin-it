@@ -79,6 +79,21 @@ export default function Checkout({
     // code texted to the number in them.
     const [awaitingCode, setAwaitingCode] = useState(false);
 
+    /*
+     * The server's objection to the email — it belongs to another account.
+     * Kept apart from Formik's errors, which the schema rewrites on the next
+     * keystroke anywhere in the form; this one stands until the email changes.
+     */
+    const [emailProblem, setEmailProblem] = useState(null);
+
+    const takeEmailProblem = (error) => {
+        const problem = error?.fieldError?.('email');
+
+        if (problem) setEmailProblem(problem);
+
+        return Boolean(problem);
+    };
+
     // The default address if one is marked, else the most recent — the list
     // arrives in that order. `null` means "typing a new one".
     const [chosenAddressId, setChosenAddressId] = useState(
@@ -163,9 +178,11 @@ export default function Checkout({
              */
             if (verifyPhone && !awaitingCode) {
                 try {
-                    await otpService.forCheckout(values.phone);
+                    await otpService.forCheckout(values.phone, values.email);
                     setAwaitingCode(true);
                 } catch (error) {
+                    if (takeEmailProblem(error)) return;
+
                     setFieldTouched('phone', true, false);
                     setFieldError(
                         'phone',
@@ -209,6 +226,8 @@ export default function Checkout({
                 }
             } catch (error) {
                 console.error('Checkout failed', error);
+
+                takeEmailProblem(error);
 
                 const codeProblem = error?.fieldError?.('code');
 
@@ -554,6 +573,7 @@ export default function Checkout({
                                             onResend={() =>
                                                 otpService.forCheckout(
                                                     formik.values.phone,
+                                                    formik.values.email,
                                                 )
                                             }
                                             onEditNumber={() => {
@@ -581,9 +601,12 @@ export default function Checkout({
                                         id="checkout-email"
                                         type="email"
                                         name="email"
-                                        className={`form-control-input ${formik.touched.email && formik.errors.email ? 'has-error' : ''}`}
+                                        className={`form-control-input ${(formik.touched.email && formik.errors.email) || emailProblem ? 'has-error' : ''}`}
                                         placeholder="you@example.com"
-                                        onChange={formik.handleChange}
+                                        onChange={(event) => {
+                                            setEmailProblem(null);
+                                            formik.handleChange(event);
+                                        }}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.email}
                                         autoComplete="email"
@@ -592,6 +615,21 @@ export default function Checkout({
                                     formik.errors.email ? (
                                         <span className="form-control-error">
                                             {formik.errors.email}
+                                        </span>
+                                    ) : emailProblem ? (
+                                        <span className="form-control-error">
+                                            {emailProblem}{' '}
+                                            {/* The way forward the message
+                                                names, one tap away, and back
+                                                here afterwards. */}
+                                            {verifyPhone && (
+                                                <Link
+                                                    href={`${ROUTES.LOGIN}?redirect=${encodeURIComponent(ROUTES.CHECKOUT)}`}
+                                                    className="checkout-signin-link"
+                                                >
+                                                    Sign in
+                                                </Link>
+                                            )}
                                         </span>
                                     ) : (
                                         <span className="checkout-field-hint">
