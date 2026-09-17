@@ -42,6 +42,7 @@ class CatalogueAttributeSeederTest extends TestCase
             'Router' => 'networking-router',
             'Monitor' => 'monitor',
             'Laptop' => 'laptop',
+            'Desktop' => 'desktop',
             'Phone' => 'phone',
             'Tablet' => 'tablet',
             'Keyboard' => 'accessories-keyboard',
@@ -137,6 +138,28 @@ class CatalogueAttributeSeederTest extends TestCase
         $this->assertNotSame($phone->id, $tablet->id);
         $this->assertContains('RAM', $this->questionsFor('phone'));
         $this->assertContains('RAM', $this->questionsFor('tablet'));
+    }
+
+    /**
+     * Desktop asks what StarTech's desktop aisle asks, in its own brackets.
+     *
+     * Laptop has an "SSD" and a "Graphics" too. Sharing them would offer a
+     * laptop 2GB graphics and a desktop 24GB, neither of which either shelf
+     * sells.
+     */
+    public function test_desktop_asks_its_own_four_questions(): void
+    {
+        $this->seedCatalogue();
+
+        $this->assertSame(['Processor', 'RAM', 'SSD', 'Graphics'], $this->questionsFor('desktop'));
+
+        $desktopGraphics = Attribute::where('slug', 'desktop-graphics')->firstOrFail();
+        $laptopGraphics = Attribute::where('slug', 'graphics')->firstOrFail();
+
+        $this->assertNotSame($desktopGraphics->id, $laptopGraphics->id);
+        $this->assertContains('Dedicated 32GB', $desktopGraphics->values->pluck('label'));
+        $this->assertNotContains('Dedicated 32GB', $laptopGraphics->values->pluck('label'));
+        $this->assertSame('128 GB', Attribute::where('slug', 'desktop-ram')->firstOrFail()->load('values')->bandFor(128)->label);
     }
 
     /** Keyboard and Mouse both ask "Type" and both mean their own. */

@@ -46,7 +46,7 @@ class CatalogueFiltersCommandTest extends TestCase
         Category::create(['name' => 'Monitor', 'slug' => 'monitor', 'is_active' => true]);
 
         $this->artisan('db:seed', ['--class' => CatalogueAttributeSeeder::class])
-            ->expectsOutputToContain('1 of 13 shelves now ask questions.')
+            ->expectsOutputToContain('1 of 14 shelves now ask questions.')
             ->expectsOutputToContain('No category matched these slugs')
             ->assertSuccessful();
     }
@@ -54,7 +54,7 @@ class CatalogueFiltersCommandTest extends TestCase
     public function test_seeding_a_full_catalogue_reports_every_shelf(): void
     {
         foreach ([
-            'networking-router', 'monitor', 'laptop', 'power-ups', 'phone', 'tablet',
+            'networking-router', 'monitor', 'laptop', 'desktop', 'power-ups', 'phone', 'tablet',
             'office-equipment-printer', 'component-ssd', 'accessories-pen-drive',
             'accessories-memory-card', 'accessories-keyboard', 'accessories-mouse',
             'accessories-headphone',
@@ -63,7 +63,7 @@ class CatalogueFiltersCommandTest extends TestCase
         }
 
         $this->artisan('db:seed', ['--class' => CatalogueAttributeSeeder::class])
-            ->expectsOutputToContain('13 of 13 shelves now ask questions.')
+            ->expectsOutputToContain('14 of 14 shelves now ask questions.')
             ->assertSuccessful();
     }
 }

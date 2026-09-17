@@ -152,6 +152,28 @@ class CatalogueAttributeSeeder extends Seeder
             ]],
         ],
 
+        /*
+         * StarTech's desktop aisle asks four things, and asks them of every PC
+         * below it. Laptop asks the same questions in different brackets — no
+         * 128 GB of RAM, no 2GB graphics — so these are Desktop's own, the way
+         * a phone's RAM is not a tablet's.
+         */
+        'desktop' => [
+            ['Processor', 'enum', null, ['Intel', 'AMD', 'Apple'], 'desktop-processor'],
+            ['RAM', 'number', 'GB', [
+                ['8 GB', 8, 8], ['16 GB', 16, 16], ['32 GB', 32, 32],
+                ['64 GB', 64, 64], ['128 GB', 128, 128],
+            ], 'desktop-ram'],
+            ['SSD', 'number', 'GB', [
+                ['256 GB', 256, 256], ['512 GB', 512, 512],
+                ['1 TB', 1024, 1024], ['2 TB', 2048, 2048],
+            ], 'desktop-ssd'],
+            ['Graphics', 'enum', null, [
+                'Shared / Integrated', 'Dedicated 2GB', 'Dedicated 4GB', 'Dedicated 6GB',
+                'Dedicated 8GB', 'Dedicated 12GB', 'Dedicated 16GB', 'Dedicated 32GB',
+            ], 'desktop-graphics'],
+        ],
+
         'power-ups' => [
             ['Volt Ampere', 'number', 'VA', [
                 ['Up to 800 VA', null, 800],
