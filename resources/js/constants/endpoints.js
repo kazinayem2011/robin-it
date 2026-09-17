@@ -299,6 +299,8 @@ export const ROUTES = {
     OTP_PASSWORD: '/otp/password',
     // A guest confirming the number on the order they are placing.
     OTP_CHECKOUT: '/otp/checkout',
+    // Signing in from checkout's "which account?" step, without leaving it.
+    CHECKOUT_SIGN_IN: '/checkout/sign-in',
     PASSWORD_RESET: '/reset-password',
     PASSWORD_UPDATE: '/password',
     PASSWORD_CONFIRM: '/confirm-password',

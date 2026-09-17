@@ -30,4 +30,7 @@ class ApiCode
     public const CART_EMPTY = 'CART_EMPTY';
 
     public const COUPON_INVALID = 'COUPON_INVALID';
+
+    // A guest's email and mobile point at different accounts; they pick one.
+    public const ACCOUNT_CHOICE = 'ACCOUNT_CHOICE';
 }

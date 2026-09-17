@@ -9,7 +9,7 @@ import {
     otpService,
 } from '../../services';
 import Button from '../../Components/Button';
-import OtpCodeField from '../../Components/OtpCodeField';
+import CheckoutVerifyModal from './Components/CheckoutVerifyModal';
 import ProductImage from '../../Components/ProductImage';
 import { lineImageSrc } from '../../utils/lineImage';
 import Select from '../../Components/Select';
@@ -53,6 +53,20 @@ export const addressLabel = (addr) => {
 };
 
 /**
+ * What a cart holds, as one comparable string: signing in merges the account's
+ * saved cart, and an order is only placed without another look if that
+ * changed nothing.
+ */
+export const cartSignature = (cart) =>
+    (cart?.items ?? [])
+        .map(
+            (item) =>
+                `${item.product?.id}:${item.variant?.id ?? ''}:${item.quantity}`,
+        )
+        .sort()
+        .join('|');
+
+/**
  * @param addresses Where this customer has had orders delivered before. Empty
  *                  for a guest, who has nowhere to keep them.
  * @param contact   Their account's name and number, so even a first order does
@@ -75,9 +89,14 @@ export default function Checkout({
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // A step within this form, as on the sign-up page: the details, then the
-    // code texted to the number in them.
-    const [awaitingCode, setAwaitingCode] = useState(false);
+    /*
+     * The step that proves who is ordering, drawn in a window over the form:
+     * null, or { step: 'choose' | 'code' | 'password', ... }. See
+     * CheckoutVerifyModal.
+     */
+    const [verify, setVerify] = useState(null);
+    const [verifyBusy, setVerifyBusy] = useState(false);
+    const [verifyError, setVerifyError] = useState(null);
 
     /*
      * The server's objection to the email — it belongs to another account.
@@ -154,6 +173,96 @@ export default function Checkout({
         }
     };
 
+    const openStep = (next) => {
+        setVerifyError(null);
+        setVerify(next);
+    };
+
+    const closeVerify = () => {
+        if (verifyBusy) return;
+        setVerify(null);
+        setVerifyError(null);
+    };
+
+    /*
+     * Ask for a code. The server answers ACCOUNT_CHOICE instead of sending one
+     * when the email belongs to an account the mobile does not, and the window
+     * opens on that question instead.
+     */
+    const requestCode = async (phone, email) => {
+        try {
+            await otpService.forCheckout(phone, email);
+            openStep({ step: 'code' });
+        } catch (error) {
+            if (error?.code !== 'ACCOUNT_CHOICE') throw error;
+
+            openStep({
+                step: 'choose',
+                phoneAccount: Boolean(error.data?.choice?.phone_account),
+            });
+        }
+    };
+
+    const placeOrder = async (values, { code = null } = {}) => {
+        const { email, ...details } = values;
+        const payload = {
+            ...details,
+            email: email.trim() || null,
+            ...(code ? { code } : {}),
+            // The discount itself is recalculated server-side; only the
+            // code travels, so a tampered amount can't reach the order.
+            coupon_code: appliedCoupon ? appliedCoupon.code : null,
+        };
+        const data = await checkoutService.processCheckout(payload);
+
+        if (data && data.order_number) {
+            useAppStore.getState().fetchCartCount();
+            toast.success('Order placed successfully!', 'Checkout Complete');
+            router.visit(ROUTES.ORDER_SUCCESS(data.order_number));
+        }
+    };
+
+    /*
+     * What the page learns from a refused order.
+     *
+     * `signedIn`: the server signed the customer in on the way — a code was
+     * spent, or a password was given — so the page is reloaded to become a
+     * signed-in customer's, with the cart as the account now holds it.
+     */
+    const reportOrderError = (error, { signedIn = false } = {}) => {
+        console.error('Checkout failed', error);
+
+        takeEmailProblem(error);
+
+        if (signedIn) {
+            router.reload({
+                onSuccess: async () => {
+                    setCart(await cartService.getCart());
+                    useAppStore.getState().fetchCartCount();
+                },
+            });
+        }
+
+        // Show what actually went wrong — out of stock, expired promo,
+        // an invalid phone number — instead of one catch-all sentence.
+        toast.error(
+            error?.message ||
+                'We could not place your order. Please try again.',
+            'Order Error',
+        );
+
+        if (
+            error?.code === 'OUT_OF_STOCK' ||
+            error?.code === 'PRODUCT_UNAVAILABLE'
+        ) {
+            setCheckoutBlocker(error.message);
+        }
+
+        if (error?.code === 'COUPON_INVALID') {
+            setAppliedCoupon(null);
+        }
+    };
+
     const formik = useFormik({
         initialValues: {
             name: addresses[0]?.name || contact?.name || '',
@@ -164,7 +273,6 @@ export default function Checkout({
             delivery_zone: addresses[0]?.delivery_zone || '',
             email: contact?.email || '',
             payment: 'cod',
-            code: '',
         },
         validationSchema: checkoutSchema,
         onSubmit: async (
@@ -172,14 +280,13 @@ export default function Checkout({
             { setSubmitting, setFieldError, setFieldTouched },
         ) => {
             /*
-             * First press, for a guest: the form is valid, so text the code
-             * rather than placing anything. Everything else was checked first
-             * so the code is not spent on an order the form would refuse.
+             * A guest: the form is valid, so prove who is ordering before
+             * anything is placed. Everything else was checked first so a code
+             * is not spent on an order the form would refuse.
              */
-            if (verifyPhone && !awaitingCode) {
+            if (verifyPhone) {
                 try {
-                    await otpService.forCheckout(values.phone, values.email);
-                    setAwaitingCode(true);
+                    await requestCode(values.phone, values.email);
                 } catch (error) {
                     if (takeEmailProblem(error)) return;
 
@@ -196,86 +303,147 @@ export default function Checkout({
                 return;
             }
 
-            // Checked here rather than in the schema, which cannot know
-            // whether a code was sent.
-            if (verifyPhone && !/^\d{6}$/.test(values.code)) {
-                setFieldTouched('code', true, false);
-                setFieldError('code', 'Enter the six-digit code we sent you.');
-                setSubmitting(false);
-                return;
-            }
-
             try {
-                const { code, email, ...details } = values;
-                const payload = {
-                    ...details,
-                    email: email.trim() || null,
-                    ...(verifyPhone ? { code } : {}),
-                    // The discount itself is recalculated server-side; only the
-                    // code travels, so a tampered amount can't reach the order.
-                    coupon_code: appliedCoupon ? appliedCoupon.code : null,
-                };
-                const data = await checkoutService.processCheckout(payload);
-                if (data && data.order_number) {
-                    useAppStore.getState().fetchCartCount();
-                    toast.success(
-                        'Order placed successfully!',
-                        'Checkout Complete',
-                    );
-                    router.visit(ROUTES.ORDER_SUCCESS(data.order_number));
-                }
+                await placeOrder(values);
             } catch (error) {
-                console.error('Checkout failed', error);
-
-                takeEmailProblem(error);
-
-                const codeProblem = error?.fieldError?.('code');
-
-                if (codeProblem) {
-                    setFieldTouched('code', true, false);
-                    setFieldError('code', codeProblem);
-                }
-
-                /*
-                 * Past the code, the server signs the guest in even when the
-                 * order itself fails — the code is spent, and the next try
-                 * should not need another. Reloading picks that up: the page
-                 * comes back as a signed-in customer's, with no code step, and
-                 * the cart as the account now holds it.
-                 */
-                if (verifyPhone && error?.code !== 'VALIDATION_ERROR') {
-                    setAwaitingCode(false);
-                    router.reload({
-                        onSuccess: async () => {
-                            setCart(await cartService.getCart());
-                            useAppStore.getState().fetchCartCount();
-                        },
-                    });
-                }
-
-                // Show what actually went wrong — out of stock, expired promo,
-                // an invalid phone number — instead of one catch-all sentence.
-                toast.error(
-                    error?.message ||
-                        'We could not place your order. Please try again.',
-                    'Order Error',
-                );
-
-                if (
-                    error?.code === 'OUT_OF_STOCK' ||
-                    error?.code === 'PRODUCT_UNAVAILABLE'
-                ) {
-                    setCheckoutBlocker(error.message);
-                }
-
-                if (error?.code === 'COUPON_INVALID') {
-                    setAppliedCoupon(null);
-                }
+                reportOrderError(error);
             } finally {
                 setSubmitting(false);
             }
         },
     });
+
+    /** The window's choose step: whose account the order goes to. */
+    const chooseAccount = async (via) => {
+        if (via === 'email') {
+            openStep({
+                step: 'password',
+                login: formik.values.email.trim(),
+                back: verify,
+            });
+            return;
+        }
+
+        /*
+         * The mobile's account. The email belongs to somebody else's, so it
+         * comes off this order rather than being refused again at the end.
+         */
+        formik.setFieldValue('email', '');
+        setVerifyBusy(true);
+
+        try {
+            await requestCode(formik.values.phone, null);
+            toast.info(
+                'The email was left off this order, as it belongs to another account.',
+                'Email removed',
+            );
+        } catch (error) {
+            setVerifyError(
+                error?.fieldError?.('phone') ||
+                    error?.message ||
+                    'Could not send a code to that number.',
+            );
+        } finally {
+            setVerifyBusy(false);
+        }
+    };
+
+    const submitCode = async (code) => {
+        if (!/^\d{6}$/.test(code)) {
+            setVerifyError('Enter the six-digit code we sent you.');
+            return;
+        }
+
+        setVerifyBusy(true);
+        setVerifyError(null);
+
+        try {
+            await placeOrder(formik.values, { code });
+        } catch (error) {
+            const codeProblem = error?.fieldError?.('code');
+
+            if (codeProblem) {
+                setVerifyError(codeProblem);
+                return;
+            }
+
+            /*
+             * Past the code, the server signs the guest in even when the
+             * order itself fails — the code is spent, and the next try should
+             * not need another. A refusal about the form or the account comes
+             * before that, and signs nobody in.
+             */
+            setVerify(null);
+            reportOrderError(error, {
+                signedIn: error?.code !== 'VALIDATION_ERROR',
+            });
+        } finally {
+            setVerifyBusy(false);
+        }
+    };
+
+    const submitPassword = async (password) => {
+        if (!password) {
+            setVerifyError('Enter your password.');
+            return;
+        }
+
+        setVerifyBusy(true);
+        setVerifyError(null);
+
+        const before = cartSignature(cart);
+
+        try {
+            await checkoutService.signIn(verify.login, password);
+        } catch (error) {
+            setVerifyError(
+                error?.fieldError?.('login') ||
+                    error?.fieldError?.('password') ||
+                    error?.message ||
+                    'We could not sign you in.',
+            );
+            setVerifyBusy(false);
+            return;
+        }
+
+        // Signed in: the page becomes a customer's, with no code step.
+        router.reload();
+
+        let after = null;
+
+        try {
+            after = await cartService.getCart();
+            setCart(after);
+            useAppStore.getState().fetchCartCount();
+        } catch {
+            // Unknown is treated as changed, below.
+        }
+
+        /*
+         * Carry on with the order only if signing in left the cart as it was.
+         * The account may have had things saved in its own cart, and those
+         * are now in this one — placing the order without another look would
+         * sell the customer something they never saw on this page.
+         */
+        if (after && cartSignature(after) === before) {
+            try {
+                await placeOrder(formik.values);
+            } catch (error) {
+                setVerify(null);
+                reportOrderError(error);
+            } finally {
+                setVerifyBusy(false);
+            }
+            return;
+        }
+
+        setVerifyBusy(false);
+        setVerify(null);
+        toast.info(
+            'You are signed in. Items saved in your account were added to your cart — check them, then confirm your order.',
+            'Review your order',
+        );
+    };
 
     const applyAddress = (addr) => {
         setChosenAddressId(addr.id);
@@ -525,18 +693,7 @@ export default function Checkout({
                                         name="phone"
                                         className={`form-control-input ${formik.touched.phone && formik.errors.phone ? 'has-error' : ''}`}
                                         placeholder="01711223344"
-                                        onChange={(event) => {
-                                            // A code sent to the old number
-                                            // proves nothing about the new one.
-                                            if (awaitingCode) {
-                                                setAwaitingCode(false);
-                                                formik.setFieldValue(
-                                                    'code',
-                                                    '',
-                                                );
-                                            }
-                                            formik.handleChange(event);
-                                        }}
+                                        onChange={formik.handleChange}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.phone}
                                         inputMode="tel"
@@ -548,7 +705,7 @@ export default function Checkout({
                                                 {formik.errors.phone}
                                             </span>
                                         )}
-                                    {verifyPhone && !awaitingCode && (
+                                    {verifyPhone && (
                                         <span className="checkout-field-hint">
                                             We will text a code to this number
                                             to confirm it. Already shopped with
@@ -557,35 +714,6 @@ export default function Checkout({
                                         </span>
                                     )}
                                 </div>
-
-                                {verifyPhone && awaitingCode && (
-                                    <div className="form-group">
-                                        <OtpCodeField
-                                            phone={formik.values.phone}
-                                            value={formik.values.code}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            error={
-                                                formik.touched.code &&
-                                                formik.errors.code
-                                            }
-                                            resendSeconds={resendSeconds}
-                                            onResend={() =>
-                                                otpService.forCheckout(
-                                                    formik.values.phone,
-                                                    formik.values.email,
-                                                )
-                                            }
-                                            onEditNumber={() => {
-                                                setAwaitingCode(false);
-                                                formik.setFieldValue(
-                                                    'code',
-                                                    '',
-                                                );
-                                            }}
-                                        />
-                                    </div>
-                                )}
 
                                 <div className="form-group">
                                     <label
@@ -978,16 +1106,46 @@ export default function Checkout({
                                 fullWidth
                                 loading={formik.isSubmitting}
                             >
-                                {/* One button, and it says what pressing it
-                                    does next. */}
-                                {verifyPhone && !awaitingCode
-                                    ? 'Send Code & Continue'
-                                    : 'Confirm Order'}
+                                Confirm Order
                             </Button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <CheckoutVerifyModal
+                step={verify?.step ?? null}
+                phone={formik.values.phone}
+                email={formik.values.email}
+                phoneAccount={Boolean(verify?.phoneAccount)}
+                login={verify?.login ?? ''}
+                canGoBack={Boolean(verify?.back)}
+                busy={verifyBusy}
+                error={verifyError}
+                resendSeconds={resendSeconds}
+                onChoose={chooseAccount}
+                onSubmitCode={submitCode}
+                onSubmitPassword={submitPassword}
+                onResend={() =>
+                    otpService.forCheckout(
+                        formik.values.phone,
+                        formik.values.email,
+                    )
+                }
+                onUsePassword={() =>
+                    openStep({
+                        step: 'password',
+                        login: formik.values.phone,
+                        back: verify,
+                    })
+                }
+                onBack={() => openStep(verify?.back ?? null)}
+                onEditNumber={() => {
+                    closeVerify();
+                    document.querySelector('input[name="phone"]')?.focus();
+                }}
+                onClose={closeVerify}
+            />
         </>
     );
 }

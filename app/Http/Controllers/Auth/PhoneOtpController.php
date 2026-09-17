@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\ApiCode;
 use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\OtpCode;
@@ -87,8 +88,22 @@ class PhoneOtpController extends Controller
             ]);
         }
 
-        // Before the code goes, so one is not spent on an order that would be refused.
-        $accounts->assertEmailFits($request->string('phone'), $request->input('email'));
+        /*
+         * Before the code goes, so one is not spent on an order that would be
+         * refused. Not a refusal, though: the page asks which account the
+         * order is for, and a guest who picks the email's signs in with its
+         * password instead of a code.
+         */
+        if ($clash = $accounts->clash($request->string('phone'), $request->input('email'))) {
+            return $this->errorResponse(
+                $clash['phone_account']
+                    ? 'This email and this mobile number belong to different accounts.'
+                    : 'This email already has an account.',
+                409,
+                ApiCode::ACCOUNT_CHOICE,
+                ['choice' => $clash]
+            );
+        }
 
         $this->ensureCodesCanBeSent();
 

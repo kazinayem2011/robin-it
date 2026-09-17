@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\PhoneVerificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\CheckoutSignInController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -64,6 +65,11 @@ Route::middleware('guest')->group(function () {
     Route::post('otp/checkout', [PhoneOtpController::class, 'forCheckout'])
         ->middleware('throttle:8,10')
         ->name('otp.checkout');
+
+    // Signing in from checkout's "which account?" step, answered in JSON.
+    Route::post('checkout/sign-in', [CheckoutSignInController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('checkout.sign-in');
 
     Route::get('forgot-password/mobile', [PhonePasswordResetController::class, 'create'])
         ->name('password.phone');

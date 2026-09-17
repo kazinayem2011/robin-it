@@ -37,6 +37,9 @@ export const Modal = ({
         <div className="modal-backdrop-overlay" onClick={onClose}>
             <div
                 className="modal-dialog-container"
+                role="dialog"
+                aria-modal="true"
+                aria-label={typeof title === 'string' ? title : undefined}
                 onClick={(e) => e.stopPropagation()}
                 style={{ maxWidth: maxWidth }}
             >

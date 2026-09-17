@@ -679,3 +679,113 @@
     color: var(--text-tertiary);
     font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------------------
+ * Proving who is ordering: the window over the delivery form.
+ * ------------------------------------------------------------------------- */
+.checkout-verify {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.checkout-verify-intro {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+}
+
+.checkout-verify-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkout-verify-choice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.checkout-verify-choice:hover:not(:disabled),
+.checkout-verify-choice:focus-visible {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.checkout-verify-choice:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.checkout-verify-choice > svg {
+    flex-shrink: 0;
+    color: var(--primary-ink);
+}
+
+.checkout-verify-choice-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.checkout-verify-choice-text strong {
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+}
+
+.checkout-verify-choice-text span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.checkout-verify-note {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+.checkout-verify-error {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--danger-ink);
+}
+
+/* A second way through the same step, quieter than the step's own button. */
+.checkout-verify-switch {
+    align-self: flex-start;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary-ink);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.checkout-verify-switch:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.checkout-verify-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    width: 100%;
+}

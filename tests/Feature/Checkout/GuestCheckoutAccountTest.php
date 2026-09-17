@@ -207,27 +207,25 @@ class GuestCheckoutAccountTest extends TestCase
      *
      * Accepting it made a second account holding the phone, which their real
      * account could then never add, and sent the confirmation to an inbox
-     * whose account did not have the order. So it is refused before a code is
-     * spent, with the way forward: sign in.
+     * whose account did not have the order. So no code is sent: the page is
+     * told to ask which account the order is for.
      */
-    public function test_an_email_with_an_account_of_its_own_is_refused_before_a_code_is_sent(): void
+    public function test_an_email_with_an_account_of_its_own_asks_which_account_before_a_code_is_sent(): void
     {
         User::factory()->create(['phone' => null, 'email' => 'karim@example.com']);
 
         $this->guestCart();
 
         $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'Karim@Example.com'])
-            ->assertStatus(422)
-            ->assertJsonPath(
-                'data.errors.email.0',
-                'This email already has an account. Sign in to order with it, or leave the email blank.'
-            );
+            ->assertStatus(409)
+            ->assertJsonPath('code', 'ACCOUNT_CHOICE')
+            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => false]);
 
         Http::assertNothingSent();
         $this->assertSame(1, User::count());
     }
 
-    public function test_an_email_from_a_different_account_than_the_phone_is_refused(): void
+    public function test_an_email_and_a_phone_from_different_accounts_ask_which_one(): void
     {
         User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com']);
         User::factory()->create(['phone' => '01811111111', 'email' => 'rahim@example.com']);
@@ -235,11 +233,9 @@ class GuestCheckoutAccountTest extends TestCase
         $this->guestCart();
 
         $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'rahim@example.com'])
-            ->assertStatus(422)
-            ->assertJsonPath(
-                'data.errors.email.0',
-                'This email belongs to a different account. Use the email on your account, or leave it blank.'
-            );
+            ->assertStatus(409)
+            ->assertJsonPath('code', 'ACCOUNT_CHOICE')
+            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => true]);
 
         Http::assertNothingSent();
     }

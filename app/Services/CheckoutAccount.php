@@ -49,30 +49,51 @@ class CheckoutAccount
      */
     public function assertEmailFits(string $phone, ?string $email, ?User $signedIn = null): void
     {
+        $clash = $this->clash($phone, $email, $signedIn);
+
+        if (! $clash) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'email' => $clash['phone_account']
+                ? 'This email belongs to a different account. Use the email on your account, or leave it blank.'
+                : 'This email already has an account. Sign in to order with it, or leave the email blank.',
+        ]);
+    }
+
+    /**
+     * Whether the email belongs to an account other than the one the order
+     * would join — and, if so, whether the phone has an account of its own.
+     *
+     * The checkout uses the answer to offer the guest a choice rather than a
+     * dead end: sign in to the email's account with its password, or carry on
+     * with the phone's (proved by a code), leaving the email off the order.
+     *
+     * @return array{email_account: true, phone_account: bool}|null
+     */
+    public function clash(string $phone, ?string $email, ?User $signedIn = null): ?array
+    {
         $email = filled($email) ? strtolower(trim($email)) : null;
 
         if (! $email) {
-            return;
+            return null;
         }
 
         $emailOwner = User::whereRaw('LOWER(email) = ?', [$email])->first(['id']);
 
         if (! $emailOwner) {
-            return;
+            return null;
         }
 
         $orderOwner = $signedIn
             ?? User::where('phone', PhoneHelper::normalizeBdPhone($phone) ?? $phone)->first(['id']);
 
         if ($orderOwner && $orderOwner->id === $emailOwner->id) {
-            return;
+            return null;
         }
 
-        throw ValidationException::withMessages([
-            'email' => $orderOwner
-                ? 'This email belongs to a different account. Use the email on your account, or leave it blank.'
-                : 'This email already has an account. Sign in to order with it, or leave the email blank.',
-        ]);
+        return ['email_account' => true, 'phone_account' => $orderOwner !== null];
     }
 
     /**
