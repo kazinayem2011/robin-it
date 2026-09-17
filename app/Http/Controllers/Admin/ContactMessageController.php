@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ContactReplyRequest;
 use App\Http\Requests\Admin\ContactStatusRequest;
 use App\Models\ContactMessage;
+use App\Models\User;
 use App\Services\ContactService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,8 +44,11 @@ class ContactMessageController extends Controller
                     ->orWhere('message', 'like', $term);
             }))
             ->with([
-                'replies:id,contact_message_id,author_name,body,emailed,created_at',
+                // from_customer: a thread has two voices now, and the screen
+                // marks which is which.
+                'replies:id,contact_message_id,author_name,from_customer,body,emailed,created_at',
                 'assignee:id,name',
+                'customer:id,name',
             ])
             // Asked for an order, honour it; otherwise the one waiting longest.
             ->when($sortBy, fn ($q) => $q->orderBy($sortBy, $dir), fn ($q) => $q->inbox())
@@ -50,7 +56,7 @@ class ContactMessageController extends Controller
             ->withQueryString();
 
         return Inertia::render('Admin/Messages', [
-            'messages' => $messages,
+            'messages' => $this->withSenders($messages),
             'filters' => [
                 'status' => $status,
                 'q' => $request->query('q', ''),
@@ -63,6 +69,54 @@ class ContactMessageController extends Controller
                 'closed' => ContactMessage::where('status', ContactMessage::STATUS_CLOSED)->count(),
             ],
         ]);
+    }
+
+    /**
+     * Who the shop is actually talking to.
+     *
+     * The form is open to anyone, and the address on a message is simply what
+     * was typed: somebody not signed in can put a customer's address in the
+     * box, and the screen showed nothing to say so. Staff would read the
+     * address, take it for that customer, and answer with what is on their
+     * account — to an inbox that is theirs, but at the word of somebody who
+     * never proved they are them.
+     *
+     * Three things this can be, and the screen now says which:
+     *   signed in     the account is known, and the thread is theirs
+     *   guest         nobody the shop knows; answer the address, nothing more
+     *   guest, but the address belongs to an account — the one to be careful
+     *                 with, because it looks exactly like the first
+     *
+     * One query for the page, not one per row.
+     *
+     * @param  LengthAwarePaginator<int, ContactMessage>  $messages
+     */
+    private function withSenders(LengthAwarePaginator $messages): LengthAwarePaginator
+    {
+        $unclaimed = collect($messages->items())
+            ->filter(fn (ContactMessage $message) => $message->user_id === null)
+            ->pluck('email')
+            ->map(fn ($email) => mb_strtolower((string) $email))
+            ->unique()
+            ->all();
+
+        $withAccounts = $unclaimed === []
+            ? collect()
+            : User::whereIn(DB::raw('LOWER(email)'), $unclaimed)
+                ->pluck('email')
+                ->map(fn ($email) => mb_strtolower((string) $email))
+                ->flip();
+
+        $messages->getCollection()->each(function (ContactMessage $message) use ($withAccounts) {
+            $message->setAttribute('sender', [
+                'signed_in' => $message->user_id !== null,
+                'account_name' => $message->customer?->name,
+                'address_has_account' => $message->user_id === null
+                    && $withAccounts->has(mb_strtolower((string) $message->email)),
+            ]);
+        });
+
+        return $messages;
     }
 
     public function reply(ContactReplyRequest $request, int $id): JsonResponse

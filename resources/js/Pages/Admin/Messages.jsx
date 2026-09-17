@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
+    AlertTriangle,
+    Check,
     ChevronDown,
     ChevronUp,
+    CornerDownRight,
     Inbox,
     Mail,
     Phone,
-    CornerDownRight,
-    Check,
     RotateCcw,
     Send,
-    AlertTriangle,
+    ShieldCheck,
+    UserRound,
 } from 'lucide-react';
 import Button from '@/Components/Button';
 import Tabs from '@/Components/Tabs';
@@ -34,6 +36,44 @@ const TABS = [
 /**
  * The contact inbox: what customers wrote in, and what was said back.
  */
+/**
+ * Who the shop is talking to, which the screen used to leave to guesswork.
+ *
+ * The form is open to anyone and the address is simply what was typed, so a
+ * message from a customer's address is not proof it came from that customer.
+ * The third case is the one to be careful with: it looks exactly like the
+ * first until it is said out loud.
+ */
+function SenderNote({ sender }) {
+    if (!sender) return null;
+
+    if (sender.signed_in) {
+        return (
+            <span className="msg-sender msg-sender-known">
+                <ShieldCheck size={12} />
+                Signed in
+                {sender.account_name ? ` as ${sender.account_name}` : ''}
+            </span>
+        );
+    }
+
+    if (sender.address_has_account) {
+        return (
+            <span className="msg-sender msg-sender-unproven">
+                <AlertTriangle size={12} />
+                Not signed in — this address belongs to an account
+            </span>
+        );
+    }
+
+    return (
+        <span className="msg-sender msg-sender-guest">
+            <UserRound size={12} />
+            Not signed in
+        </span>
+    );
+}
+
 export default function AdminMessages({
     messages = { data: [] },
     filters = {},
@@ -201,6 +241,7 @@ export default function AdminMessages({
                                     <span className="msg-from">
                                         {m.name} · {m.email}
                                     </span>
+                                    <SenderNote sender={m.sender} />
                                 </span>
                                 <span className="msg-summary-meta">
                                     {/* A row that opens should look like one. */}
@@ -228,6 +269,7 @@ export default function AdminMessages({
                                         <span>
                                             <Mail size={13} /> {m.email}
                                         </span>
+                                        <SenderNote sender={m.sender} />
                                         {m.phone && (
                                             <span>
                                                 <Phone size={13} /> {m.phone}

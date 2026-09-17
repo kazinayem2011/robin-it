@@ -266,3 +266,32 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
+
+/* Who wrote in: signed in, a guest, or a guest using an account's address. */
+.msg-sender {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.msg-sender-known {
+    background: var(--success-light);
+    color: var(--success-ink);
+}
+
+.msg-sender-guest {
+    background: var(--bg-muted-strong);
+    color: var(--text-muted);
+}
+
+/* The one that looks like a customer and has not proved it. */
+.msg-sender-unproven {
+    background: var(--warning-light);
+    color: var(--warning-hover);
+}
