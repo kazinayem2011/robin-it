@@ -47,6 +47,7 @@ class AddressBook
             'contact' => [
                 'name' => $user->name,
                 'phone' => $user->phone,
+                'email' => $user->email,
             ],
             'deliveryRates' => self::deliveryRates(),
         ];

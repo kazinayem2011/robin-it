@@ -609,6 +609,20 @@
     color: var(--success-ink);
 }
 
+/* What a field is for, under it — quieter than an error, which takes its place. */
+.checkout-field-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+.checkout-optional {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
 /* ---------------------------------------------------------------------------
  * Changing a quantity in the order summary.
  *

@@ -22,7 +22,7 @@ Delivering to: {{ $order->formatted_shipping_address }}
 Contact:      {{ $order->recipient_phone }}
 @if ($order->status !== 'cancelled')
 
-Track your order: {{ $brand['url'] }}/track
+Track your order: {{ $order->trackUrl() }}
 @endif
 
 Questions? Reply to this email or call {{ $brand['hotline'] }}.

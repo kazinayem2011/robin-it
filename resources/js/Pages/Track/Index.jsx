@@ -35,8 +35,13 @@ import './Track.css';
  * and the server hands back only their own orders without a number. Someone
  * signed in following a link to an order that is not theirs gets the form,
  * same as a guest.
+ *
+ * @param accessKey From the link in the order's own text and email (?k=). It
+ *                  opens that order for anyone holding the link — which is the
+ *                  customer it was sent to — so tapping it shows the order
+ *                  instead of asking for the number the message went to.
  */
-export default function TrackOrder({ orderNumber = null }) {
+export default function TrackOrder({ orderNumber = null, accessKey = null }) {
     const [trackingResult, setTrackingResult] = useState(null);
 
     // Signed in, the mobile number is a courtesy rather than a requirement:
@@ -55,17 +60,34 @@ export default function TrackOrder({ orderNumber = null }) {
         window.history.replaceState({ ...window.history.state }, '', path);
     };
 
+    /*
+     * Whether the link's key still stands in for the phone number. It stops
+     * once it has failed — an old link, say — or the customer moves on to
+     * another order, and from then on the number is asked for as usual.
+     */
+    const [keyInPlay, setKeyInPlay] = useState(Boolean(accessKey));
+
     const formik = useFormik({
         initialValues: {
             order_number: orderNumber || '',
             phone: authUser?.phone || '',
         },
-        validationSchema: trackingSchema(Boolean(authUser)),
+        validationSchema: trackingSchema(Boolean(authUser) || keyInPlay),
         onSubmit: async (values, { setSubmitting }) => {
+            // The key belongs to the order in the link, and to nothing typed
+            // into the box afterwards.
+            const key =
+                keyInPlay &&
+                values.order_number.trim().toUpperCase() ===
+                    String(orderNumber).toUpperCase()
+                    ? accessKey
+                    : null;
+
             try {
                 const data = await orderTrackingService.trackOrder(
                     values.order_number,
                     values.phone,
+                    key,
                 );
                 if (data) {
                     setTrackingResult(data);
@@ -77,10 +99,19 @@ export default function TrackOrder({ orderNumber = null }) {
             } catch (error) {
                 console.error('Failed to track order', error);
                 setTrackingResult(null);
-                toast.error(
-                    'No order found matching the provided Order Number and Mobile Number.',
-                    'Order Not Found',
-                );
+
+                if (key && !values.phone) {
+                    setKeyInPlay(false);
+                    toast.info(
+                        'Enter the mobile number used for this order to see it.',
+                        'Confirm Your Number',
+                    );
+                } else {
+                    toast.error(
+                        'No order found matching the provided Order Number and Mobile Number.',
+                        'Order Not Found',
+                    );
+                }
             } finally {
                 setSubmitting(false);
             }
@@ -92,6 +123,7 @@ export default function TrackOrder({ orderNumber = null }) {
     // asked for.
     const trackAnother = () => {
         setTrackingResult(null);
+        setKeyInPlay(false);
         formik.resetForm({
             values: { order_number: '', phone: authUser?.phone || '' },
         });
@@ -122,25 +154,26 @@ export default function TrackOrder({ orderNumber = null }) {
      * in, opens the order instead of showing a form with one box already filled
      * and a Submit button that is the only thing left to do.
      *
-     * Only when signed in, and safe because the server decides: trackOrder()
-     * opens an order without a phone number only for the customer it belongs
-     * to, and returns nothing for anyone else's. Following a link to a stranger
-     * s order number therefore lands on the form, exactly as before. A guest is
-     * never auto-submitted — the mobile on the order is what proves it is
-     * theirs, and they have not given it yet.
+     * Signed in, or holding the order's key, and safe because the server
+     * decides: trackOrder() opens an order without a phone number only for the
+     * customer it belongs to or for the key made from it, and returns nothing
+     * otherwise. Following a link to a stranger's order number therefore lands
+     * on the form, exactly as before. A guest with neither is never
+     * auto-submitted — the mobile on the order is what proves it is theirs,
+     * and they have not given it yet.
      */
     const autoOpened = useRef(false);
 
     useEffect(() => {
         if (autoOpened.current) return;
-        if (!orderNumber || !authUser) return;
+        if (!orderNumber || !(authUser || accessKey)) return;
 
         autoOpened.current = true;
         formik.submitForm();
         // Once, on arrival. Re-running as the form changes would re-submit
         // under whoever is typing.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [orderNumber, authUser]);
+    }, [orderNumber, authUser, accessKey]);
 
     const STEPS = [
         { id: 1, label: 'Order Placed', icon: Clock },
@@ -205,6 +238,11 @@ export default function TrackOrder({ orderNumber = null }) {
                                     )}
                                     The mobile number is only needed for orders
                                     placed without signing in.
+                                </>
+                            ) : orderNumber && keyInPlay ? (
+                                <>
+                                    Opening order <strong>{orderNumber}</strong>
+                                    …
                                 </>
                             ) : orderNumber ? (
                                 <>

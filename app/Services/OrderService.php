@@ -118,6 +118,9 @@ class OrderService
                 'shipping_address' => [
                     'name' => $addressData['name'],
                     'phone' => PhoneHelper::normalizeBdPhone($addressData['phone']) ?? $addressData['phone'],
+                    // Optional at checkout, and the only address a guest's
+                    // confirmation and status emails can go to.
+                    'email' => filled($addressData['email'] ?? null) ? strtolower(trim($addressData['email'])) : null,
                     'street_address' => $addressData['street_address'],
                     'city' => $addressData['city'],
                     'zone' => $addressData['zone'] ?? null,
@@ -352,11 +355,15 @@ class OrderService
      * Signing in is not a skeleton key. It opens the orders on that account
      * and nothing else; anyone else's still wants the number on the order.
      *
+     * The key in the link the order's messages carry is the third way: it was
+     * only ever sent to the order's own phone and email.
+     *
      * @param  string|null  $phone  required of a guest; ignored when the order
      *                              belongs to the signed-in customer
      * @param  User|null  $viewer  whoever is asking, if they are signed in
+     * @param  string|null  $key  Order::trackingKey(), from a tracking link
      */
-    public function trackOrder(string $orderNumber, ?string $phone = null, ?User $viewer = null): ?array
+    public function trackOrder(string $orderNumber, ?string $phone = null, ?User $viewer = null, ?string $key = null): ?array
     {
         $orderNumber = Order::normalizeNumber($orderNumber);
 
@@ -372,7 +379,7 @@ class OrderService
             return null;
         }
 
-        if (! $this->mayTrack($order, $phone, $viewer)) {
+        if (! $this->mayTrack($order, $phone, $viewer, $key)) {
             return null;
         }
 
@@ -461,9 +468,14 @@ class OrderService
      * an order that does not exist — the endpoint must not become a way to
      * find out which order numbers are real.
      */
-    private function mayTrack(Order $order, ?string $phone, ?User $viewer): bool
+    private function mayTrack(Order $order, ?string $phone, ?User $viewer, ?string $key = null): bool
     {
         if ($viewer && $order->user_id && $order->user_id === $viewer->id) {
+            return true;
+        }
+
+        // The key from the order's own messages, which only its customer was sent.
+        if ($order->opensWithTrackingKey($key)) {
             return true;
         }
 
@@ -676,9 +688,7 @@ class OrderService
     protected function notifyStatusChange(Order $order): void
     {
         try {
-            $email = $order->user?->email ?? ($order->shipping_address['email'] ?? null);
-
-            if ($email) {
+            if ($email = $order->notifiableEmail()) {
                 Mail::to($email)->send(new OrderStatusUpdatedMail($order));
             }
         } catch (\Throwable $e) {
@@ -965,9 +975,7 @@ class OrderService
     protected function sendConfirmationEmail(Order $order, array $addressData): void
     {
         try {
-            $recipientEmail = $order->user?->email ?? ($addressData['email'] ?? null);
-
-            if ($recipientEmail) {
+            if ($recipientEmail = $order->notifiableEmail()) {
                 Mail::to($recipientEmail)->send(new OrderConfirmationMail($order));
             }
         } catch (\Throwable $e) {

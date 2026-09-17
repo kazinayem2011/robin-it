@@ -13,11 +13,13 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\AddressBook;
+use App\Services\OtpService;
 use App\Services\ProductService;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -215,17 +217,25 @@ class StorefrontPageController extends Controller
         return Inertia::render('Checkout/Cart', ['seo' => Seo::for(['title' => 'Your Cart', 'noindex' => true])]);
     }
 
-    public function checkout(): Response
+    public function checkout(OtpService $otp): Response
     {
         // A signed-in customer has told us where they live, sometimes several
         // times over. Handing them five empty boxes asks them to say it again.
         return Inertia::render('Checkout/Index', AddressBook::forCheckout(Auth::user())
-            + ['seo' => Seo::for(['title' => 'Checkout', 'noindex' => true])]);
+            + [
+                // A guest proves their number with a code before ordering,
+                // when the shop can send one. See CheckoutController::process.
+                'verifyPhone' => ! Auth::check() && $otp->available(),
+                'resendSeconds' => OtpService::RESEND_SECONDS,
+                'seo' => Seo::for(['title' => 'Checkout', 'noindex' => true]),
+            ]);
     }
 
     public function orderSuccess(Request $request): Response
     {
         $number = $request->query('order');
+
+        $order = $number ? Order::where('order_number', $number)->first() : null;
 
         /*
          * What else they might want, worked out from what they just bought.
@@ -235,9 +245,7 @@ class StorefrontPageController extends Controller
          * nobody saw. Falls back to what is popular when the order cannot be
          * found, which is the case for anyone who lands here with a stale link.
          */
-        $bought = $number
-            ? Order::where('order_number', $number)->first()?->items->pluck('product_id')->all()
-            : [];
+        $bought = $order?->items->pluck('product_id')->all() ?? [];
 
         $suggestions = $this->products->similarToCart($bought ?? []);
 
@@ -247,6 +255,12 @@ class StorefrontPageController extends Controller
 
         return Inertia::render('Checkout/Success', [
             'orderNumber' => $number,
+            /*
+             * The unlocked link, only for whoever placed the order — the same
+             * test that lets them print its invoice. Anyone else with this
+             * address gets the plain page, which still asks for the phone.
+             */
+            'trackUrl' => $order && Gate::allows('print', [$order, $request]) ? $order->trackPath() : null,
             'suggestions' => $suggestions->values(),
             'seo' => Seo::for(['title' => 'Order Placed', 'noindex' => true]),
         ]);
@@ -274,12 +288,21 @@ class StorefrontPageController extends Controller
      * @param  string|null  $orderNumber  from /track/{orderNumber}, which fills
      *                                    in the first box and nothing more —
      *                                    the phone number is still what proves
-     *                                    the order is yours
+     *                                    the order is yours, unless the link
+     *                                    carries the order's key (?k=)
      */
-    public function track(?string $orderNumber = null): Response
+    public function track(Request $request, ?string $orderNumber = null): Response
     {
+        $key = $request->query('k');
+
         return Inertia::render('Track/Index', [
             'orderNumber' => $orderNumber ? (Order::normalizeNumber($orderNumber) ?: null) : null,
+            /*
+             * The key from the link in the order's own messages, passed through
+             * untouched: the API decides whether it opens anything, and a key
+             * that does not simply leaves the form showing.
+             */
+            'accessKey' => is_string($key) && preg_match('/^[a-f0-9]{1,64}$/i', $key) ? $key : null,
             'seo' => Seo::for(['title' => 'Track Your Order', 'noindex' => true]),
         ]);
     }

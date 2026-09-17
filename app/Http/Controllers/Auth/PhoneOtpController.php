@@ -6,6 +6,7 @@ use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Services\CartService;
 use App\Services\OtpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,8 +15,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * Sending the codes that prove somebody holds a number.
  *
- * Two flows come through here and they leak different things, so they are kept
- * apart rather than sharing one endpoint with a purpose parameter:
+ * Three flows come through here and they leak different things, so they are
+ * kept apart rather than sharing one endpoint with a purpose parameter:
  *
  *   Sign-up needs the number to be free. Saying "already registered" is fine —
  *   the registration form has to say it anyway, or people cannot be told why
@@ -24,6 +25,8 @@ use Illuminate\Validation\ValidationException;
  *   Reset needs the number to have an account, and must not say so. Answering
  *   differently for a number that exists turns this into a way to ask "does
  *   this person shop here", which is a list worth stealing.
+ *
+ *   Checkout takes any number, and so says nothing about it either way.
  */
 class PhoneOtpController extends Controller
 {
@@ -48,6 +51,46 @@ class PhoneOtpController extends Controller
         $result = $this->otp->issue(
             $request->string('phone'),
             OtpCode::PURPOSE_REGISTER,
+            $request->ip()
+        );
+
+        return $this->successResponse(
+            ['resend_in' => $result['resend_in']],
+            'We have sent a code to '.$request->string('phone').'.'
+        );
+    }
+
+    /**
+     * A code to confirm the number on a guest's order.
+     *
+     * Any number may be sent one — new and existing customers both check out
+     * this way — and the answer is the same for both, so this cannot be used to
+     * ask whether a number has an account. Only for a session with something in
+     * its cart: nobody checking out has an empty one, and it is one more thing
+     * a script walking through numbers has to set up for each of them.
+     */
+    public function forCheckout(Request $request, CartService $carts): JsonResponse
+    {
+        PhoneHelper::canonicalise($request, 'phone');
+
+        $request->validate(
+            ['phone' => ['required', 'string', PhoneHelper::RULE]],
+            ['phone.regex' => PhoneHelper::MESSAGE]
+        );
+
+        $cart = $carts->findCart(null, $request->session()->getId());
+
+        if (! $cart || $cart->items()->doesntExist()) {
+            throw ValidationException::withMessages([
+                'phone' => 'Your cart is empty. Add a product before checking out.',
+            ]);
+        }
+
+        $this->ensureCodesCanBeSent();
+
+        $result = $this->otp->issue(
+            $request->string('phone'),
+            OtpCode::PURPOSE_CHECKOUT,
             $request->ip()
         );
 

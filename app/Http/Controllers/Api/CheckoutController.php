@@ -8,9 +8,14 @@ use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Order;
+use App\Models\OtpCode;
+use App\Models\User;
 use App\Services\AddressBook;
 use App\Services\CartService;
+use App\Services\CheckoutAccount;
+use App\Services\ComparisonService;
 use App\Services\OrderService;
+use App\Services\OtpService;
 use App\Support\ShippingRates;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,13 +25,26 @@ class CheckoutController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-        protected OrderService $orderService
+        protected OrderService $orderService,
+        protected OtpService $otp,
+        protected CheckoutAccount $accounts,
+        protected ComparisonService $comparisons,
     ) {}
 
     public function process(Request $request): JsonResponse
     {
         // The rules judge the number, not its punctuation.
         PhoneHelper::canonicalise($request, 'phone');
+
+        /*
+         * A guest proves the number before the order is placed, whenever the
+         * shop can send a text. The number decides whose account the order
+         * joins and signs the guest into it, so it cannot be taken on trust.
+         *
+         * With no gateway there is no code to send, and checkout stays what it
+         * was: a guest order, tied to the session, with no account behind it.
+         */
+        $verifying = ! $request->user() && $this->otp->available();
 
         /*
          * The delivery address is one line and a zone.
@@ -54,12 +72,17 @@ class CheckoutController extends Controller
             'payment_method' => 'nullable|string|in:'.implode(',', Order::PAYMENT_METHODS),
             'payment' => 'nullable|string|in:cod,COD',
             'coupon_code' => 'nullable|string|max:50',
+            // Optional: most customers here are reached by text. Given, it is
+            // where the confirmation goes and, for a new account, its address.
+            'email' => 'nullable|string|email|max:255',
+            'code' => [$verifying ? 'required' : 'nullable', 'string', 'max:10'],
         ], [
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number so we can reach you about delivery.',
             'address.required_without' => 'We need an address to deliver your order to.',
             'delivery_zone.in' => 'Choose whether the delivery is inside or outside Dhaka.',
             'payment_method.in' => 'We currently accept Cash on Delivery only.',
             'payment.in' => 'We currently accept Cash on Delivery only.',
+            'code.required' => 'Enter the code we sent to your mobile.',
         ]);
 
         /*
@@ -94,33 +117,57 @@ class CheckoutController extends Controller
             );
         }
 
+        /*
+         * Whose order this is. Checked after the form and the cart, so a
+         * mistake in either is reported before the code is spent.
+         */
+        $customer = $request->user();
+
+        if ($verifying) {
+            $this->otp->verify($validated['phone'], OtpCode::PURPOSE_CHECKOUT, $validated['code']);
+
+            try {
+                $customer = $this->accounts->resolve(
+                    $validated['phone'],
+                    $validated['name'],
+                    $validated['email'] ?? null
+                );
+            } catch (StorefrontException $e) {
+                return $this->storefrontErrorResponse($e);
+            }
+        }
+
         // Re-validate the coupon server-side; the posted discount amount is ignored.
         $coupon = null;
         if (! empty($validated['coupon_code'])) {
             $coupon = Coupon::findByCode($validated['coupon_code']);
 
-            if (! $coupon) {
-                return $this->errorResponse(
-                    'That promo code is not valid. Remove it to continue.',
-                    422,
-                    ApiCode::COUPON_INVALID
-                );
-            }
-
             // Judged against the lines the coupon actually covers, so a
-            // category promo cannot discount the rest of the basket.
-            $check = $coupon->isValidForCart($cart, Auth::id());
+            // category promo cannot discount the rest of the basket. Against
+            // the account the order will join, so a guest proving their number
+            // is held to the same per-customer limit as a signed-in customer.
+            $check = $coupon
+                ? $coupon->isValidForCart($cart, $customer?->id)
+                : ['valid' => false, 'message' => 'That promo code is not valid. Remove it to continue.'];
 
             if (! $check['valid']) {
+                // The code is spent, so the next try should not need another.
+                $this->signInAfterCheckout($request, $customer);
+
                 return $this->errorResponse($check['message'], 422, ApiCode::COUPON_INVALID);
             }
         }
 
         try {
+            /*
+             * From the cart the guest was looking at. Signing in first would
+             * merge in whatever the account had saved in its own cart, and the
+             * order would carry lines the customer never saw on this page.
+             */
             $order = $this->orderService->placeOrder(
                 $cart,
                 $validated,
-                Auth::id(),
+                $customer?->id,
                 $request->session()->getId(),
                 $coupon
             );
@@ -128,7 +175,9 @@ class CheckoutController extends Controller
             // After the order, not before: a checkout that fails on stock or
             // a bad coupon should not leave an address behind for an order
             // that never happened.
-            AddressBook::remember($request->user(), $validated);
+            AddressBook::remember($customer, $validated);
+
+            $this->signInAfterCheckout($request, $customer);
 
             return $this->successResponse([
                 'order_id' => $order->id,
@@ -138,10 +187,40 @@ class CheckoutController extends Controller
                 'discount' => $order->discount,
                 'coupon_code' => $order->coupon_code,
                 'total' => $order->total,
+                'signed_in' => $verifying,
             ], 'Order placed successfully. A confirmation has been sent to you.', 201);
         } catch (StorefrontException $e) {
+            /*
+             * The code is spent either way, so the verified guest is signed in
+             * even when the order is not — out of stock, say. Their next try
+             * then needs no second code, and the cart they built comes with them.
+             */
+            $this->signInAfterCheckout($request, $customer);
+
             return $this->storefrontErrorResponse($e);
         }
+    }
+
+    /**
+     * Sign in a guest who has just proved their number, as the sign-in form
+     * would: a fresh session id, and the guest's cart and comparison carried
+     * onto the account.
+     *
+     * Kept for the shopper window like any other customer sign-in.
+     */
+    private function signInAfterCheckout(Request $request, ?User $customer): void
+    {
+        if (! $customer || $request->user()) {
+            return;
+        }
+
+        $guestSessionId = $request->session()->getId();
+
+        Auth::login($customer);
+        $request->session()->regenerate();
+
+        $this->cartService->mergeGuestCart($customer->id, $guestSessionId);
+        $this->comparisons->mergeGuestList($customer->id, $guestSessionId);
     }
 
     /**
@@ -162,9 +241,15 @@ class CheckoutController extends Controller
              * is allowed. The service still refuses anyone else's order.
              */
             'phone' => [
-                $request->user() ? 'nullable' : 'required',
+                $request->user() || $request->filled('key') ? 'nullable' : 'required',
                 'string', 'max:20', PhoneHelper::RULE,
             ],
+            /*
+             * Or the key from the link in the order's own messages, so tapping
+             * that link opens the order rather than asking for the number the
+             * message was just sent to. A wrong key is simply a failed lookup.
+             */
+            'key' => 'nullable|string|max:64',
         ], [
             'phone.regex' => 'Please enter the full 11-digit mobile number used when placing the order.',
         ]);
@@ -172,7 +257,8 @@ class CheckoutController extends Controller
         $trackingData = $this->orderService->trackOrder(
             $validated['order_number'],
             $validated['phone'] ?? null,
-            $request->user()
+            $request->user(),
+            $validated['key'] ?? null
         );
 
         if (! $trackingData) {

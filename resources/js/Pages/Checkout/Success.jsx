@@ -4,7 +4,15 @@ import { ROUTES } from '../../constants/endpoints';
 import './Checkout.css';
 import ProductSuggestions from '../../Components/ProductSuggestions';
 
-export default function Success({ orderNumber, suggestions = [] }) {
+/**
+ * @param trackUrl The order's unlocked tracking link, given only to whoever
+ *                 placed it, so "Track Order" opens the order for a guest too.
+ */
+export default function Success({
+    orderNumber,
+    trackUrl = null,
+    suggestions = [],
+}) {
     return (
         <>
             <Head title="Order Successful - StarTech Clone" />
@@ -43,14 +51,16 @@ export default function Success({ orderNumber, suggestions = [] }) {
                     </Link>
                     {/* Carrying the number means the page opens on this order
                         rather than on an empty form asking for something the
-                        customer was just shown. Signed in, it opens the order
-                        outright; a guest is still asked for the mobile on it,
-                        which is what proves the order is theirs. */}
+                        customer was just shown. The server hands over the
+                        order's own key only to whoever placed it, so that link
+                        opens the order outright; anyone else arriving here is
+                        asked for the mobile on it, which proves it is theirs. */}
                     <Link
                         href={
-                            orderNumber
+                            trackUrl ||
+                            (orderNumber
                                 ? `${ROUTES.TRACK}/${encodeURIComponent(orderNumber)}`
-                                : ROUTES.TRACK
+                                : ROUTES.TRACK)
                         }
                         className="btn btn-primary"
                     >

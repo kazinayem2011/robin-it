@@ -104,12 +104,22 @@ class SmsTemplates
          * that, the consignment number itself, which is what a customer reads
          * out to a courier's hotline. Only with neither do we fall back to our
          * own page — the order confirmation already carried that link.
+         *
+         * That fallback drops the courier's name. Our link carries the order's
+         * key, which is ten characters more, and with the name as well the
+         * message is three parts again. Nothing is lost: the link opens the
+         * order, and the order page names the courier and its phone number.
          */
         $follow = match (true) {
             filled($order->tracking_url) => "ট্র্যাক: {$order->tracking_url}",
             filled($order->tracking_number) => "কনসাইনমেন্ট {$order->tracking_number}।",
-            default => 'ট্র্যাক: '.self::trackUrl($order),
+            default => null,
         };
+
+        if ($follow === null) {
+            $carrier = '';
+            $follow = 'ট্র্যাক: '.self::trackUrl($order);
+        }
 
         return self::stored('shipped', [
             'shop_name' => $shop,
@@ -249,8 +259,9 @@ class SmsTemplates
         return $filled;
     }
 
+    /** Unlocked, so tapping it opens the order rather than asking for this number. */
     private static function trackUrl(Order $order): string
     {
-        return url('/track/'.$order->order_number);
+        return $order->trackUrl();
     }
 }

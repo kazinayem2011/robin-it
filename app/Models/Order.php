@@ -282,6 +282,61 @@ class Order extends Model
     }
 
     /**
+     * Where the order's emails go: the address given at checkout, else the
+     * account's.
+     *
+     * The checkout one first because it is the one the customer typed for this
+     * order — for a signed-in customer the form starts from the account's, so
+     * the two only differ when somebody changed it on purpose.
+     */
+    public function notifiableEmail(): ?string
+    {
+        $email = $this->shipping_address['email'] ?? null;
+
+        return filled($email) ? (string) $email : ($this->user?->email ?: null);
+    }
+
+    /**
+     * The key that opens this order on the tracking page without its phone.
+     *
+     * Sent inside the order's own messages, so the link a customer taps opens
+     * their order instead of a form asking for the number the message was sent
+     * to. A key rather than the number itself: a phone number in an address
+     * ends up in analytics, server logs and browser history, and this says
+     * nothing about the customer.
+     *
+     * Derived rather than stored, so every order has one, including those
+     * placed before it existed. Ten hex characters is forty bits — far past
+     * guessing against a throttled endpoint, and it only works alongside the
+     * order number — and short because it rides in a Bengali text, where
+     * each part is 67 characters and the order message already uses two.
+     *
+     * Made with APP_KEY, so a new key turns every link sent before it back into
+     * a form asking for the phone. Nothing worse.
+     */
+    public function trackingKey(): string
+    {
+        return substr(hash_hmac('sha256', 'track|'.$this->order_number, (string) config('app.key')), 0, 10);
+    }
+
+    public function opensWithTrackingKey(?string $key): bool
+    {
+        return filled($key) && hash_equals($this->trackingKey(), strtolower(trim((string) $key)));
+    }
+
+    /** The tracking page for this order, already unlocked. */
+    public function trackUrl(): string
+    {
+        return url($this->trackPath());
+    }
+
+    /** The same, without the host, for links inside the storefront itself. */
+    public function trackPath(): string
+    {
+        return '/track/'.$this->order_number.'?k='.$this->trackingKey();
+    }
+
+    /**
      * What the goods on this order cost the shop.
      *
      * Null when any line has no known cost — a partial figure presented as a

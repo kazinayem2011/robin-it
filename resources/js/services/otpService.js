@@ -29,6 +29,22 @@ export const otpService = {
     },
 
     /**
+     * A code to confirm the number on a guest's order.
+     *
+     * The number decides which account the order joins and signs the guest
+     * into it, so the server wants it proved. Sent to any number, new customer
+     * or returning, and answered the same for both.
+     */
+    async forCheckout(phone) {
+        const response = await axiosInstance.post(
+            ROUTES.OTP_CHECKOUT,
+            { phone },
+            asWebRoute,
+        );
+        return response?.data || response;
+    },
+
+    /**
      * A code to reset a forgotten password.
      *
      * Answers the same whether or not the number has an account — the shop

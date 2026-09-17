@@ -2,8 +2,14 @@ import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import { mainLayout } from '../../Layouts/MainLayout';
-import { cartService, checkoutService, couponService } from '../../services';
+import {
+    cartService,
+    checkoutService,
+    couponService,
+    otpService,
+} from '../../services';
 import Button from '../../Components/Button';
+import OtpCodeField from '../../Components/OtpCodeField';
 import ProductImage from '../../Components/ProductImage';
 import { lineImageSrc } from '../../utils/lineImage';
 import Select from '../../Components/Select';
@@ -54,14 +60,24 @@ export const addressLabel = (addr) => {
  * @param deliveryRates What each zone costs and the spend above which delivery
  *                  is free, so the choice can be priced as it is made rather
  *                  than after the server has been asked.
+ * @param verifyPhone A guest, in a shop that can send texts. They prove the
+ *                  mobile number with a code before the order is placed; the
+ *                  number decides which account the order joins, and they are
+ *                  signed into it.
  */
 export default function Checkout({
     addresses = [],
     contact = null,
     deliveryRates = null,
+    verifyPhone = false,
+    resendSeconds = 60,
 }) {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // A step within this form, as on the sign-up page: the details, then the
+    // code texted to the number in them.
+    const [awaitingCode, setAwaitingCode] = useState(false);
 
     // The default address if one is marked, else the most recent — the list
     // arrives in that order. `null` means "typing a new one".
@@ -131,13 +147,53 @@ export default function Checkout({
             // A saved address remembers which zone it is in, so picking it does
             // not ask the customer to say so again.
             delivery_zone: addresses[0]?.delivery_zone || '',
+            email: contact?.email || '',
             payment: 'cod',
+            code: '',
         },
         validationSchema: checkoutSchema,
-        onSubmit: async (values, { setSubmitting }) => {
+        onSubmit: async (
+            values,
+            { setSubmitting, setFieldError, setFieldTouched },
+        ) => {
+            /*
+             * First press, for a guest: the form is valid, so text the code
+             * rather than placing anything. Everything else was checked first
+             * so the code is not spent on an order the form would refuse.
+             */
+            if (verifyPhone && !awaitingCode) {
+                try {
+                    await otpService.forCheckout(values.phone);
+                    setAwaitingCode(true);
+                } catch (error) {
+                    setFieldTouched('phone', true, false);
+                    setFieldError(
+                        'phone',
+                        error?.fieldError?.('phone') ||
+                            error?.message ||
+                            'Could not send a code to that number.',
+                    );
+                } finally {
+                    setSubmitting(false);
+                }
+                return;
+            }
+
+            // Checked here rather than in the schema, which cannot know
+            // whether a code was sent.
+            if (verifyPhone && !/^\d{6}$/.test(values.code)) {
+                setFieldTouched('code', true, false);
+                setFieldError('code', 'Enter the six-digit code we sent you.');
+                setSubmitting(false);
+                return;
+            }
+
             try {
+                const { code, email, ...details } = values;
                 const payload = {
-                    ...values,
+                    ...details,
+                    email: email.trim() || null,
+                    ...(verifyPhone ? { code } : {}),
                     // The discount itself is recalculated server-side; only the
                     // code travels, so a tampered amount can't reach the order.
                     coupon_code: appliedCoupon ? appliedCoupon.code : null,
@@ -153,6 +209,30 @@ export default function Checkout({
                 }
             } catch (error) {
                 console.error('Checkout failed', error);
+
+                const codeProblem = error?.fieldError?.('code');
+
+                if (codeProblem) {
+                    setFieldTouched('code', true, false);
+                    setFieldError('code', codeProblem);
+                }
+
+                /*
+                 * Past the code, the server signs the guest in even when the
+                 * order itself fails — the code is spent, and the next try
+                 * should not need another. Reloading picks that up: the page
+                 * comes back as a signed-in customer's, with no code step, and
+                 * the cart as the account now holds it.
+                 */
+                if (verifyPhone && error?.code !== 'VALIDATION_ERROR') {
+                    setAwaitingCode(false);
+                    router.reload({
+                        onSuccess: async () => {
+                            setCart(await cartService.getCart());
+                            useAppStore.getState().fetchCartCount();
+                        },
+                    });
+                }
 
                 // Show what actually went wrong — out of stock, expired promo,
                 // an invalid phone number — instead of one catch-all sentence.
@@ -426,9 +506,22 @@ export default function Checkout({
                                         name="phone"
                                         className={`form-control-input ${formik.touched.phone && formik.errors.phone ? 'has-error' : ''}`}
                                         placeholder="01711223344"
-                                        onChange={formik.handleChange}
+                                        onChange={(event) => {
+                                            // A code sent to the old number
+                                            // proves nothing about the new one.
+                                            if (awaitingCode) {
+                                                setAwaitingCode(false);
+                                                formik.setFieldValue(
+                                                    'code',
+                                                    '',
+                                                );
+                                            }
+                                            formik.handleChange(event);
+                                        }}
                                         onBlur={formik.handleBlur}
                                         value={formik.values.phone}
+                                        inputMode="tel"
+                                        autoComplete="tel"
                                     />
                                     {formik.touched.phone &&
                                         formik.errors.phone && (
@@ -436,6 +529,76 @@ export default function Checkout({
                                                 {formik.errors.phone}
                                             </span>
                                         )}
+                                    {verifyPhone && !awaitingCode && (
+                                        <span className="checkout-field-hint">
+                                            We will text a code to this number
+                                            to confirm it. Already shopped with
+                                            us? The order joins your account and
+                                            you are signed in.
+                                        </span>
+                                    )}
+                                </div>
+
+                                {verifyPhone && awaitingCode && (
+                                    <div className="form-group">
+                                        <OtpCodeField
+                                            phone={formik.values.phone}
+                                            value={formik.values.code}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={
+                                                formik.touched.code &&
+                                                formik.errors.code
+                                            }
+                                            resendSeconds={resendSeconds}
+                                            onResend={() =>
+                                                otpService.forCheckout(
+                                                    formik.values.phone,
+                                                )
+                                            }
+                                            onEditNumber={() => {
+                                                setAwaitingCode(false);
+                                                formik.setFieldValue(
+                                                    'code',
+                                                    '',
+                                                );
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="form-group">
+                                    <label
+                                        className="form-control-label"
+                                        htmlFor="checkout-email"
+                                    >
+                                        Email{' '}
+                                        <span className="checkout-optional">
+                                            (optional)
+                                        </span>
+                                    </label>
+                                    <input
+                                        id="checkout-email"
+                                        type="email"
+                                        name="email"
+                                        className={`form-control-input ${formik.touched.email && formik.errors.email ? 'has-error' : ''}`}
+                                        placeholder="you@example.com"
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        value={formik.values.email}
+                                        autoComplete="email"
+                                    />
+                                    {formik.touched.email &&
+                                    formik.errors.email ? (
+                                        <span className="form-control-error">
+                                            {formik.errors.email}
+                                        </span>
+                                    ) : (
+                                        <span className="checkout-field-hint">
+                                            For the order confirmation and
+                                            delivery updates by email.
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="form-group">
@@ -777,7 +940,11 @@ export default function Checkout({
                                 fullWidth
                                 loading={formik.isSubmitting}
                             >
-                                Confirm Order
+                                {/* One button, and it says what pressing it
+                                    does next. */}
+                                {verifyPhone && !awaitingCode
+                                    ? 'Send Code & Continue'
+                                    : 'Confirm Order'}
                             </Button>
                         </div>
                     </div>

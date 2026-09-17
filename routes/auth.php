@@ -61,6 +61,10 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:8,10')
         ->name('otp.password');
 
+    Route::post('otp/checkout', [PhoneOtpController::class, 'forCheckout'])
+        ->middleware('throttle:8,10')
+        ->name('otp.checkout');
+
     Route::get('forgot-password/mobile', [PhonePasswordResetController::class, 'create'])
         ->name('password.phone');
 

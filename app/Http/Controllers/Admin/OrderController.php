@@ -294,9 +294,7 @@ class OrderController extends Controller
     private function notifyCustomer(Order $order): void
     {
         try {
-            $customerEmail = $order->user?->email ?? ($order->shipping_address['email'] ?? null);
-
-            if ($customerEmail) {
+            if ($customerEmail = $order->notifiableEmail()) {
                 Mail::to($customerEmail)->send(new OrderStatusUpdatedMail($order));
             }
         } catch (\Throwable $e) {

@@ -42,5 +42,10 @@ export const checkoutSchema = Yup.object().shape({
             ['inside_dhaka', 'outside_dhaka'],
             'Choose whether delivery is inside or outside Dhaka',
         ),
+    // Optional. Given, the confirmation and status emails go to it.
+    email: Yup.string()
+        .trim()
+        .email('That does not look like an email address')
+        .max(255, 'Email is too long'),
     payment: Yup.string().default('cod'),
 });

@@ -31,10 +31,20 @@ class OtpCode extends Model
      */
     public const PURPOSE_VERIFY_PHONE = 'verify_phone';
 
+    /**
+     * A guest proving the number on the order they are placing.
+     *
+     * The number decides whose account the order joins, and the guest is
+     * signed into that account, so it is proved rather than believed —
+     * otherwise typing somebody's mobile at checkout would open their account.
+     */
+    public const PURPOSE_CHECKOUT = 'checkout';
+
     public const PURPOSES = [
         self::PURPOSE_REGISTER,
         self::PURPOSE_PASSWORD_RESET,
         self::PURPOSE_VERIFY_PHONE,
+        self::PURPOSE_CHECKOUT,
     ];
 
     protected $fillable = [

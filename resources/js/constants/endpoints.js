@@ -297,6 +297,8 @@ export const ROUTES = {
     FORGOT_PASSWORD_PHONE: '/forgot-password/mobile',
     OTP_REGISTER: '/otp/register',
     OTP_PASSWORD: '/otp/password',
+    // A guest confirming the number on the order they are placing.
+    OTP_CHECKOUT: '/otp/checkout',
     PASSWORD_RESET: '/reset-password',
     PASSWORD_UPDATE: '/password',
     PASSWORD_CONFIRM: '/confirm-password',

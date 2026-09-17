@@ -36,7 +36,7 @@ DELIVERING TO
 {{ $order->formatted_shipping_address }}
 {{ $order->recipient_phone }}
 
-Track your order: {{ $brand['url'] }}/track
+Track your order: {{ $order->trackUrl() }}
 
 Questions? Reply to this email or call {{ $brand['hotline'] }}.
 
