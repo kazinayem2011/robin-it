@@ -146,6 +146,7 @@ class SiteSetting extends Model
             'sms_on_order_updated',
             'sms_on_processing',
             'sms_on_account_created',
+            'sms_on_contact_reply',
             'sms_on_shipped',
             'sms_on_delivered',
             'sms_on_cancelled',

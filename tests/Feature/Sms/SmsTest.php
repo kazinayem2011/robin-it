@@ -303,6 +303,8 @@ class SmsTest extends TestCase
         $messages = [
             'placed' => SmsTemplates::orderPlaced($order, $shop),
             'changed' => SmsTemplates::orderUpdated($order, $shop),
+            'contact reply' => SmsTemplates::contactReply('Yes, three in Uttara.', $shop, '01720000000'),
+            'contact reply, too long' => SmsTemplates::contactReply(str_repeat('a long answer, ', 30), $shop, '01720000000'),
         ];
 
         foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {

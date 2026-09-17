@@ -58,6 +58,8 @@ class MessageKeys
         'order_updated' => ['shop_name', 'order_number', 'order_total', 'track_url'],
         'processing' => ['shop_name', 'order_number', 'track_url'],
         'account_created' => ['shop_name'],
+        'contact_reply' => ['shop_name', 'reply'],
+        'contact_reply_call' => ['shop_name', 'hotline'],
         'payment_due' => ['shop_name', 'order_number', 'amount_due'],
         'shipped' => ['shop_name', 'order_number', 'courier_name', 'track_url'],
         'delivered' => ['shop_name', 'order_number'],

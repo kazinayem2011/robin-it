@@ -113,6 +113,8 @@ class SmsGatewayRulesTest extends TestCase
         $messages = [
             'order placed' => SmsTemplates::orderPlaced($order, $shop),
             'order changed' => SmsTemplates::orderUpdated($order, $shop),
+            'contact reply' => SmsTemplates::contactReply('Yes, three in Uttara.', $shop, '01720000000'),
+            'contact reply, too long' => SmsTemplates::contactReply(str_repeat('a long answer, ', 30), $shop, '01720000000'),
             'payment due' => SmsTemplates::paymentDue($order, 84500, $shop),
             'verification' => SmsTemplates::verificationCode('123456', 'verify', $shop),
             'password reset' => SmsTemplates::verificationCode('123456', 'password_reset', $shop),

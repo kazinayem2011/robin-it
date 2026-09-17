@@ -5,8 +5,12 @@ namespace Tests\Feature\Contact;
 use App\Mail\ContactReplyMail;
 use App\Models\ContactMessage;
 use App\Models\ContactReply;
+use App\Models\SiteSetting;
 use App\Models\User;
+use App\Services\SmsService;
+use App\Support\BrandDetails;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -29,7 +33,29 @@ class ReachableWithoutAnEmailTest extends TestCase
         parent::setUp();
 
         Mail::fake();
+        Http::preventStrayRequests();
+        Http::fake(['*' => Http::response('SMS SUBMITTED SUCCESSFULLY')]);
+
         $this->staff = User::factory()->admin()->create(['name' => 'Nazmul']);
+    }
+
+    private function withTexts(): void
+    {
+        config([
+            'services.sms.enabled' => true,
+            'services.sms.token' => 'test-token',
+            'services.sms.log_fallback' => false,
+        ]);
+    }
+
+    /** @return list<string> */
+    private function textsSent(): array
+    {
+        return collect(Http::recorded())
+            ->map(fn ($pair) => $pair[0]->data()['message'] ?? null)
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function send(array $fields, ?User $as = null)
@@ -91,6 +117,86 @@ class ReachableWithoutAnEmailTest extends TestCase
             ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'Ringing you now.'])
             ->assertSuccessful()
             ->assertJsonPath('message', 'Saved. This enquiry left no email address — call 01341789939.');
+    }
+
+    /**
+     * The answer itself, to somebody the shop can reach no other way.
+     *
+     * A guest who leaves a number has no thread to read and no inbox to mail,
+     * so an answer saved in the inbox reached them nowhere at all: staff were
+     * left ringing people to say "yes, in stock".
+     */
+    public function test_a_guest_who_left_a_number_is_texted_the_answer(): void
+    {
+        $this->withTexts();
+        $this->send(['phone' => '01341789939'])->assertSuccessful();
+        $message = ContactMessage::latest('id')->firstOrFail();
+
+        $this->actingAs($this->staff)
+            ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'Yes, three in Uttara.'])
+            ->assertSuccessful()
+            ->assertJsonPath('message', 'Replied by text to 01341789939.')
+            ->assertJsonPath('data.texted', true);
+
+        $texts = $this->textsSent();
+        $this->assertCount(1, $texts);
+        $this->assertStringContainsString('Yes, three in Uttara.', $texts[0]);
+        // The gateway refuses a message with no Bengali in it.
+        $this->assertMatchesRegularExpression('/\p{Bengali}/u', $texts[0]);
+    }
+
+    /** Too long to text is a note saying an answer is waiting, not four parts. */
+    public function test_a_long_answer_becomes_a_note_with_the_hotline(): void
+    {
+        $this->withTexts();
+        $this->send(['phone' => '01341789939'])->assertSuccessful();
+        $message = ContactMessage::latest('id')->firstOrFail();
+
+        $long = str_repeat('It is in stock and we can deliver tomorrow morning. ', 6);
+
+        $this->actingAs($this->staff)
+            ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => $long])
+            ->assertSuccessful();
+
+        $text = $this->textsSent()[0];
+        $this->assertStringNotContainsString('deliver tomorrow morning', $text);
+        $this->assertLessThanOrEqual(2, SmsService::parts($text));
+        $this->assertStringContainsString(BrandDetails::all()['hotline'], $text);
+    }
+
+    /** A customer has the answer in their messages already; a text would repeat it. */
+    public function test_a_signed_in_customer_is_not_texted_as_well(): void
+    {
+        $this->withTexts();
+        $byPhone = User::factory()->create(['phone' => '01341789939', 'email' => null]);
+
+        // With their number on the message, so nothing but the rule stops it.
+        $this->send(['phone' => '01341789939'], $byPhone)->assertSuccessful();
+        $message = ContactMessage::latest('id')->firstOrFail();
+        $this->assertSame('01341789939', $message->phone);
+
+        $this->actingAs($this->staff)
+            ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'It ships tomorrow.'])
+            ->assertSuccessful()
+            ->assertJsonPath('message', 'Replied. They will see it in their messages.');
+
+        $this->assertSame([], $this->textsSent());
+    }
+
+    public function test_with_the_switch_off_the_inbox_says_to_call(): void
+    {
+        $this->withTexts();
+        SiteSetting::set('sms_on_contact_reply', '0', 'sms');
+
+        $this->send(['phone' => '01341789939'])->assertSuccessful();
+        $message = ContactMessage::latest('id')->firstOrFail();
+
+        $this->actingAs($this->staff)
+            ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'Yes, three in Uttara.'])
+            ->assertSuccessful()
+            ->assertJsonPath('message', 'Saved. This enquiry left no email address — call 01341789939.');
+
+        $this->assertSame([], $this->textsSent());
     }
 
     public function test_a_guest_with_neither_is_asked_for_one(): void

@@ -157,6 +157,20 @@ class MessageTemplateSeeder extends Seeder
                 'body' => '({shop_name}) অর্ডার {order_number} বদলেছে, নতুন মোট Tk {order_total}। {track_url}',
             ],
             [
+                'key' => 'contact_reply',
+                'name' => 'Answer to a message',
+                'group' => 'Support',
+                'hint' => 'Sent when somebody writes in leaving only a mobile number. {reply} is what was typed in the inbox.',
+                'body' => '({shop_name}) উত্তর: {reply}',
+            ],
+            [
+                'key' => 'contact_reply_call',
+                'name' => 'Answer too long to text',
+                'group' => 'Support',
+                'hint' => 'Used in place of the answer when it would run past two text messages.',
+                'body' => '({shop_name}) আপনার মেসেজের উত্তর দেওয়া হয়েছে। জানতে কল করুন {hotline}।',
+            ],
+            [
                 'key' => 'account_created',
                 'name' => 'Account created',
                 'group' => 'Account',

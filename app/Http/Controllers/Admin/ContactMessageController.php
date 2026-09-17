@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\ContactStatusRequest;
 use App\Models\ContactMessage;
 use App\Models\User;
 use App\Services\ContactService;
+use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -132,16 +133,23 @@ class ContactMessageController extends Controller
         // whoever sent it needs to know if the customer did not get the email.
         $note = match (true) {
             $reply->emailed => "Replied to {$message->email}.",
-            // Nothing to email is not a failure: the customer reads it in
-            // their own messages, and a guest who left only a number is
-            // answered by ringing it.
+            // Nothing to email is not a failure: a customer reads it in their
+            // own messages, and a guest who left only a number is texted.
+            (bool) $reply->texted => "Replied by text to {$message->phone}.",
             blank($message->email) && $message->user_id !== null => 'Replied. They will see it in their messages.',
-            blank($message->email) => "Saved. This enquiry left no email address — call {$message->phone}.",
+            blank($message->email) && filled($message->phone) => app(SmsService::class)->sends('contact_reply')
+                ? "Saved, but the text could not be sent — call {$message->phone}."
+                : "Saved. This enquiry left no email address — call {$message->phone}.",
+            blank($message->email) => 'Saved. This enquiry left no way to answer it.',
             default => "Reply saved, but the email could not be sent to {$message->email}. Check the mail settings.",
         };
 
         return $this->successResponse(
-            ['reply' => $reply->only(['id', 'body', 'author_name', 'emailed']), 'emailed' => $reply->emailed],
+            [
+                'reply' => $reply->only(['id', 'body', 'author_name', 'emailed']),
+                'emailed' => $reply->emailed,
+                'texted' => (bool) $reply->texted,
+            ],
             $note
         );
     }

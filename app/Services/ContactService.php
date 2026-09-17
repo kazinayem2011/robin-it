@@ -6,6 +6,8 @@ use App\Mail\ContactReplyMail;
 use App\Models\ContactMessage;
 use App\Models\ContactReply;
 use App\Models\User;
+use App\Support\BrandDetails;
+use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -132,7 +134,43 @@ class ContactService
         // theirs to read and to answer, and an inbox is not always read.
         $this->notifier->contactAnswered($message);
 
-        return $reply->fresh();
+        $texted = $this->textTheAnswer($message, $reply);
+
+        return $reply->fresh()->setAttribute('texted', $texted);
+    }
+
+    /**
+     * Text the answer to somebody the shop has no other way of reaching.
+     *
+     * A guest may leave a mobile number and no address, and then an answer
+     * saved in the inbox reaches them nowhere at all: there is no thread for
+     * them to read and no inbox to mail. Staff were left to ring them, which
+     * is a phone call for every "yes, in stock".
+     *
+     * Only when there is nothing better. A customer with an account already
+     * has the answer in their messages and the bell that says so, and a text
+     * as well would be the shop paying to repeat itself.
+     */
+    private function textTheAnswer(ContactMessage $message, ContactReply $reply): bool
+    {
+        if (filled($message->email) || $message->user_id !== null || blank($message->phone)) {
+            return false;
+        }
+
+        try {
+            return app(SmsService::class)->sendEvent(
+                'contact_reply',
+                $message->phone,
+                SmsTemplates::contactReply($reply->body, BrandDetails::name(), BrandDetails::all()['hotline'] ?? '')
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Contact reply saved but not texted', [
+                'contact_message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     /**

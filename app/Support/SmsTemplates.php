@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Order;
 use App\Models\SmsTemplate;
 use App\Services\OtpService;
+use App\Services\SmsService;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -53,6 +54,38 @@ class SmsTemplates
             'order_total' => $total,
             'track_url' => $track,
         ], "({$shop}) অর্ডার {$order->order_number} পেয়েছি, Tk {$total}। ট্র্যাক: {$track}");
+    }
+
+    /**
+     * The shop's answer to somebody who left only a mobile number.
+     *
+     * Short answers go as they were written — most are a line, and a line is
+     * the whole answer. A long one would run to a handful of parts and cost
+     * the shop more than the question was worth, so it becomes a note saying
+     * an answer is waiting and the number to ring.
+     *
+     * "উত্তর:" in front, and not only as a label: the gateway refuses a
+     * message with no Bengali in it at all, and staff answer in English as
+     * often as not.
+     *
+     * Two parts is the ceiling either way, the same one every other message
+     * here is held to.
+     */
+    public static function contactReply(string $reply, string $shop, string $hotline): string
+    {
+        $written = self::stored('contact_reply', [
+            'shop_name' => $shop,
+            'reply' => trim($reply),
+        ], "({$shop}) উত্তর: ".trim($reply));
+
+        if (SmsService::parts($written) <= 2) {
+            return $written;
+        }
+
+        return self::stored('contact_reply_call', [
+            'shop_name' => $shop,
+            'hotline' => $hotline,
+        ], "({$shop}) আপনার মেসেজের উত্তর দেওয়া হয়েছে। জানতে কল করুন {$hotline}।");
     }
 
     /**
