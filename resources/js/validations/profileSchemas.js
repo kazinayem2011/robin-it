@@ -65,12 +65,22 @@ export const deliveryAddressSchema = Yup.object().shape({
         ),
 });
 
-export const updatePasswordSchema = Yup.object().shape({
-    current_password: Yup.string().required('Current password is required'),
+const newPassword = {
     password: Yup.string()
         .required('New password is required')
         .min(8, 'New password must be at least 8 characters'),
     password_confirmation: Yup.string()
         .required('Please confirm your new password')
         .oneOf([Yup.ref('password'), null], 'Passwords must match exactly'),
+};
+
+export const updatePasswordSchema = Yup.object().shape({
+    current_password: Yup.string().required('Current password is required'),
+    ...newPassword,
 });
+
+/**
+ * The first password on an account made at checkout. There is no current one
+ * to confirm — its owner proved the mobile number with a code instead.
+ */
+export const setPasswordSchema = Yup.object().shape(newPassword);

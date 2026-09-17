@@ -214,9 +214,20 @@ describe('Checkout, for a guest', () => {
         expect(router.reload).not.toHaveBeenCalled();
     });
 
-    /* A number with a password need not wait for a text. */
-    it('can sign in with the mobile and its password instead of a code', async () => {
-        services.otpService.forCheckout.mockResolvedValue({ resend_in: 60 });
+    /*
+     * A number that already has an account with a password signs in with it.
+     * The server sends no code for it, and the window opens on the password.
+     */
+    it('asks a registered number for its password instead of texting a code', async () => {
+        services.otpService.forCheckout.mockRejectedValue(
+            apiError(
+                'This number already has an account. Sign in with its password.',
+                {
+                    code: 'SIGN_IN_WITH_PASSWORD',
+                    data: { sign_in: { login: '01712345678' } },
+                },
+            ),
+        );
         services.checkoutService.signIn.mockResolvedValue({ name: 'Karim' });
         services.checkoutService.processCheckout.mockResolvedValue({
             order_number: 'ORD-NEW0000003',
@@ -227,11 +238,11 @@ describe('Checkout, for a guest', () => {
         await confirmOnPage();
 
         const modal = await dialog();
-        await userEvent.click(
-            within(modal).getByRole('button', {
-                name: /Sign in with it instead/,
-            }),
-        );
+        expect(
+            within(modal).getByText('Sign in to continue'),
+        ).toBeInTheDocument();
+        expect(within(modal).queryByLabelText(/Verification code/)).toBeNull();
+
         await userEvent.type(
             within(modal).getByLabelText(/Password/),
             'secret-pass-1',
@@ -252,6 +263,21 @@ describe('Checkout, for a guest', () => {
         expect(
             services.checkoutService.processCheckout.mock.calls[0][0],
         ).not.toHaveProperty('code');
+        expect(services.otpService.forCheckout).toHaveBeenCalledTimes(1);
+    });
+
+    it('offers no password shortcut on the code step, which is only for new numbers', async () => {
+        services.otpService.forCheckout.mockResolvedValue({ resend_in: 60 });
+
+        render(<Checkout verifyPhone deliveryRates={rates} />);
+        await fillInDelivery();
+        await confirmOnPage();
+
+        const modal = await dialog();
+        expect(
+            within(modal).getByLabelText(/Verification code/),
+        ).toBeInTheDocument();
+        expect(within(modal).queryByText(/password/i)).toBeNull();
     });
 });
 
@@ -390,6 +416,60 @@ describe('Checkout, when the email and the mobile point at different accounts', 
         expect(services.checkoutService.processCheckout).not.toHaveBeenCalled();
         expect(screen.queryByRole('dialog')).toBeNull();
         expect(await screen.findByText('Part 12')).toBeInTheDocument();
+    });
+
+    /*
+     * The report this was written for: both registered, the mobile picked,
+     * and a code texted anyway. A mobile with a password is asked for it.
+     */
+    it('picking a mobile that has a password asks for it, and texts nothing', async () => {
+        services.otpService.forCheckout.mockRejectedValueOnce(
+            apiError(
+                'This email and this mobile number belong to different accounts.',
+                {
+                    code: 'ACCOUNT_CHOICE',
+                    data: {
+                        choice: {
+                            email_account: true,
+                            phone_account: true,
+                            phone_has_password: true,
+                        },
+                    },
+                },
+            ),
+        );
+
+        render(<Checkout verifyPhone deliveryRates={rates} />);
+        await fillInDelivery({ email: 'rahim@example.com' });
+        await confirmOnPage();
+
+        const modal = await dialog();
+        expect(
+            within(modal).getByRole('button', { name: /01712345678/ }),
+        ).toHaveTextContent("Sign in with this account's password");
+
+        await userEvent.click(
+            within(modal).getByRole('button', { name: /01712345678/ }),
+        );
+
+        expect(
+            within(modal).getByText('Sign in to continue'),
+        ).toBeInTheDocument();
+        expect(within(modal).getByText('01712345678')).toBeInTheDocument();
+        expect(services.otpService.forCheckout).toHaveBeenCalledTimes(1);
+        expect(screen.getByPlaceholderText('you@example.com')).toHaveValue('');
+
+        // Back to the choice puts the email back, and offers it again.
+        await userEvent.click(
+            within(modal).getByRole('button', { name: 'Back' }),
+        );
+
+        expect(
+            within(modal).getByRole('button', { name: /rahim@example\.com/ }),
+        ).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('you@example.com')).toHaveValue(
+            'rahim@example.com',
+        );
     });
 
     it('picking the mobile leaves the email off and texts a code', async () => {

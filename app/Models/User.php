@@ -63,6 +63,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Whether the customer has a password to sign in with.
+     *
+     * An account made at checkout has none until they set one — its owner
+     * proved the mobile number with a code, and was never asked for one.
+     */
+    public function hasPassword(): bool
+    {
+        return filled($this->password);
+    }
+
+    /**
      * Whether this account may reach the admin at all.
      *
      * Kept as isAdmin() because that is the question the middleware and every

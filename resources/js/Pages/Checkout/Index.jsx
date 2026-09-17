@@ -185,20 +185,35 @@ export default function Checkout({
     };
 
     /*
-     * Ask for a code. The server answers ACCOUNT_CHOICE instead of sending one
-     * when the email belongs to an account the mobile does not, and the window
-     * opens on that question instead.
+     * Ask for a code — which the server sends only for a number with no
+     * account, or an account with no password yet. Otherwise it answers
+     * instead of sending one, and the window opens on that:
+     *
+     *   SIGN_IN_WITH_PASSWORD  the number has an account with a password
+     *   ACCOUNT_CHOICE         the email belongs to an account the mobile
+     *                          does not, so the customer picks one
      */
-    const requestCode = async (phone, email) => {
+    const requestCode = async (phone, email, { back = null } = {}) => {
         try {
             await otpService.forCheckout(phone, email);
             openStep({ step: 'code' });
         } catch (error) {
+            if (error?.code === 'SIGN_IN_WITH_PASSWORD') {
+                openStep({ step: 'password', login: phone, back });
+                return;
+            }
+
             if (error?.code !== 'ACCOUNT_CHOICE') throw error;
 
             openStep({
                 step: 'choose',
+                // Kept here: choosing the mobile clears it from the form, and
+                // Back has to be able to offer it again.
+                email,
                 phoneAccount: Boolean(error.data?.choice?.phone_account),
+                phoneHasPassword: Boolean(
+                    error.data?.choice?.phone_has_password,
+                ),
             });
         }
     };
@@ -318,7 +333,7 @@ export default function Checkout({
         if (via === 'email') {
             openStep({
                 step: 'password',
-                login: formik.values.email.trim(),
+                login: verify.email.trim(),
                 back: verify,
             });
             return;
@@ -329,14 +344,25 @@ export default function Checkout({
          * comes off this order rather than being refused again at the end.
          */
         formik.setFieldValue('email', '');
+        toast.info(
+            'The email was left off this order, as it belongs to another account.',
+            'Email removed',
+        );
+
+        // An account with a password signs in with it; no text is sent.
+        if (verify?.phoneHasPassword) {
+            openStep({
+                step: 'password',
+                login: formik.values.phone,
+                back: verify,
+            });
+            return;
+        }
+
         setVerifyBusy(true);
 
         try {
-            await requestCode(formik.values.phone, null);
-            toast.info(
-                'The email was left off this order, as it belongs to another account.',
-                'Email removed',
-            );
+            await requestCode(formik.values.phone, null, { back: verify });
         } catch (error) {
             setVerifyError(
                 error?.fieldError?.('phone') ||
@@ -1116,8 +1142,9 @@ export default function Checkout({
             <CheckoutVerifyModal
                 step={verify?.step ?? null}
                 phone={formik.values.phone}
-                email={formik.values.email}
+                email={verify?.email ?? formik.values.email}
                 phoneAccount={Boolean(verify?.phoneAccount)}
+                phoneHasPassword={Boolean(verify?.phoneHasPassword)}
                 login={verify?.login ?? ''}
                 canGoBack={Boolean(verify?.back)}
                 busy={verifyBusy}
@@ -1132,14 +1159,14 @@ export default function Checkout({
                         formik.values.email,
                     )
                 }
-                onUsePassword={() =>
-                    openStep({
-                        step: 'password',
-                        login: formik.values.phone,
-                        back: verify,
-                    })
-                }
-                onBack={() => openStep(verify?.back ?? null)}
+                onBack={() => {
+                    const back = verify?.back ?? null;
+
+                    // Back to the choice: the email it offers goes back in.
+                    if (back?.email) formik.setFieldValue('email', back.email);
+
+                    openStep(back);
+                }}
                 onEditNumber={() => {
                     closeVerify();
                     document.querySelector('input[name="phone"]')?.focus();

@@ -105,6 +105,23 @@ class PhoneOtpController extends Controller
             );
         }
 
+        /*
+         * A number with an account and a password signs in with the password.
+         *
+         * A code is for proving a number nobody has claimed yet, or one whose
+         * account has no password — made at checkout, say. Texting one to a
+         * customer who has a password costs the shop a message and makes them
+         * wait for something they did not need.
+         */
+        if ($accounts->accountFor($request->string('phone'))?->hasPassword()) {
+            return $this->errorResponse(
+                'This number already has an account. Sign in with its password.',
+                409,
+                ApiCode::SIGN_IN_WITH_PASSWORD,
+                ['sign_in' => ['login' => (string) $request->string('phone')]]
+            );
+        }
+
         $this->ensureCodesCanBeSent();
 
         $result = $this->otp->issue(

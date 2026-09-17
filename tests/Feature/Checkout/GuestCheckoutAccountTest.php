@@ -137,6 +137,9 @@ class GuestCheckoutAccountTest extends TestCase
         $this->assertSame('karim@example.com', $customer->email);
         $this->assertSame(User::ROLE_CUSTOMER, $customer->role);
         $this->assertNotNull($customer->phone_verified_at);
+        // None yet, rather than one nobody knows — so checkout sends this
+        // number a code next time, instead of asking for a password.
+        $this->assertFalse($customer->hasPassword());
 
         $order = Order::where('order_number', $response->json('data.order_number'))->firstOrFail();
         $this->assertSame($customer->id, $order->user_id);
@@ -154,10 +157,12 @@ class GuestCheckoutAccountTest extends TestCase
      */
     public function test_a_returning_number_joins_its_account_without_its_saved_cart(): void
     {
+        // Made at an earlier checkout: no password, so a code proves the number.
         $customer = User::factory()->create([
             'phone' => self::PHONE,
             'email' => null,
             'name' => 'Karim From Before',
+            'password' => null,
         ]);
 
         $saved = $this->product('saved-for-later');
@@ -193,7 +198,7 @@ class GuestCheckoutAccountTest extends TestCase
 
     public function test_an_account_keeps_its_own_email(): void
     {
-        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'first@example.com']);
+        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'first@example.com', 'password' => null]);
 
         $this->guestCart();
         $this->askForCode()->assertSuccessful();
@@ -219,7 +224,7 @@ class GuestCheckoutAccountTest extends TestCase
         $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'Karim@Example.com'])
             ->assertStatus(409)
             ->assertJsonPath('code', 'ACCOUNT_CHOICE')
-            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => false]);
+            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => false, 'phone_has_password' => false]);
 
         Http::assertNothingSent();
         $this->assertSame(1, User::count());
@@ -235,7 +240,7 @@ class GuestCheckoutAccountTest extends TestCase
         $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'rahim@example.com'])
             ->assertStatus(409)
             ->assertJsonPath('code', 'ACCOUNT_CHOICE')
-            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => true]);
+            ->assertJsonPath('data.choice', ['email_account' => true, 'phone_account' => true, 'phone_has_password' => true]);
 
         Http::assertNothingSent();
     }
@@ -264,7 +269,7 @@ class GuestCheckoutAccountTest extends TestCase
 
     public function test_the_accounts_own_email_is_fine_in_any_case(): void
     {
-        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com']);
+        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => 'karim@example.com', 'password' => null]);
 
         $this->guestCart();
         $this->postJson('/otp/checkout', ['phone' => self::PHONE, 'email' => 'KARIM@example.com'])->assertSuccessful();
@@ -308,10 +313,15 @@ class GuestCheckoutAccountTest extends TestCase
         $this->assertGuest();
     }
 
-    /** A text message must not open the admin panel. */
+    /**
+     * A text message must not open the admin panel.
+     *
+     * Staff always have a password, so checkout asks for it and sends no
+     * code; this holds the line even for one that somehow had none.
+     */
     public function test_a_staff_number_is_not_signed_in_by_a_code(): void
     {
-        User::factory()->admin()->create(['phone' => self::PHONE]);
+        User::factory()->admin()->create(['phone' => self::PHONE, 'password' => null]);
 
         $this->guestCart();
         $this->askForCode()->assertSuccessful();
@@ -326,7 +336,7 @@ class GuestCheckoutAccountTest extends TestCase
 
     public function test_a_suspended_account_is_not_signed_in_by_a_code(): void
     {
-        User::factory()->create(['phone' => self::PHONE, 'is_active' => false]);
+        User::factory()->create(['phone' => self::PHONE, 'is_active' => false, 'password' => null]);
 
         $this->guestCart();
         $this->askForCode()->assertSuccessful();
@@ -353,6 +363,49 @@ class GuestCheckoutAccountTest extends TestCase
 
         $this->assertSame(0, Order::count());
         $this->assertAuthenticatedAs(User::where('phone', self::PHONE)->firstOrFail());
+    }
+
+    /**
+     * A number with an account and a password signs in with the password.
+     *
+     * A code went to every number, so a customer who had a password waited
+     * for a text they did not need, and the shop paid for it.
+     */
+    public function test_a_number_with_a_password_is_asked_for_it_and_sent_no_code(): void
+    {
+        User::factory()->create(['phone' => self::PHONE]);
+
+        $this->guestCart();
+
+        $this->askForCode()
+            ->assertStatus(409)
+            ->assertJsonPath('code', 'SIGN_IN_WITH_PASSWORD')
+            ->assertJsonPath('data.sign_in.login', self::PHONE);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_a_staff_number_is_asked_for_its_password_not_sent_a_code(): void
+    {
+        User::factory()->admin()->create(['phone' => self::PHONE]);
+
+        $this->guestCart();
+
+        $this->askForCode()->assertStatus(409)->assertJsonPath('code', 'SIGN_IN_WITH_PASSWORD');
+
+        Http::assertNothingSent();
+    }
+
+    /** Made at checkout, no password yet: a code is still the way in. */
+    public function test_a_number_whose_account_has_no_password_is_sent_a_code(): void
+    {
+        User::factory()->create(['phone' => self::PHONE, 'password' => null]);
+
+        $this->guestCart();
+
+        $this->askForCode()->assertSuccessful();
+
+        $this->assertMatchesRegularExpression('/\b\d{6}\b/', $this->codeFromTheText());
     }
 
     public function test_a_code_is_only_sent_for_a_cart_with_something_in_it(): void

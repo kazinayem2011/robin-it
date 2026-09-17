@@ -4,7 +4,11 @@ import { router } from '@inertiajs/react';
 import AccountLayout from './AccountLayout';
 import ContactVerification from './ContactVerification';
 import { toast } from '@/Components/Toast';
-import { updateProfileSchema, updatePasswordSchema } from '@/validations';
+import {
+    updateProfileSchema,
+    updatePasswordSchema,
+    setPasswordSchema,
+} from '@/validations';
 import { API_ENDPOINTS } from '@/constants/endpoints';
 import { mainLayout } from '../../Layouts/MainLayout';
 
@@ -18,8 +22,17 @@ import { mainLayout } from '../../Layouts/MainLayout';
  *
  * Formik only calls onSubmit once the schema passes, so a request is never sent
  * on invalid input.
+ *
+ * @param hasPassword False for an account made at checkout, whose owner proved
+ *                    their number with a code and never chose a password. The
+ *                    form then sets the first one, with no current one to ask.
  */
-export default function Profile({ user, navCounts, techPoints }) {
+export default function Profile({
+    user,
+    navCounts,
+    techPoints,
+    hasPassword = true,
+}) {
     const profileForm = useFormik({
         initialValues: {
             name: user?.name || '',
@@ -44,7 +57,9 @@ export default function Profile({ user, navCounts, techPoints }) {
             password: '',
             password_confirmation: '',
         },
-        validationSchema: updatePasswordSchema,
+        validationSchema: hasPassword
+            ? updatePasswordSchema
+            : setPasswordSchema,
         onSubmit: (values, { setSubmitting, setErrors, resetForm }) => {
             router.put(API_ENDPOINTS.ACCOUNT.PASSWORD, values, {
                 preserveScroll: true,
@@ -178,27 +193,41 @@ export default function Profile({ user, navCounts, techPoints }) {
                     noValidate
                 >
                     <h3 className="dash-profile-form-title">
-                        Change Account Password
+                        {hasPassword
+                            ? 'Change Account Password'
+                            : 'Set a Password'}
                     </h3>
 
-                    <div className="auth-form-group">
-                        <label className="auth-label">Current Password</label>
-                        <input
-                            type="password"
-                            value={passwordForm.values.current_password}
-                            name="current_password"
-                            onBlur={passwordForm.handleBlur}
-                            onChange={passwordForm.handleChange}
-                            className={`auth-text-input ${passwordForm.touched.current_password && passwordForm.errors.current_password ? 'input-error' : ''}`}
-                            placeholder="Your current password"
-                        />
-                        {passwordForm.touched.current_password &&
-                            passwordForm.errors.current_password && (
-                                <span className="auth-field-error">
-                                    {passwordForm.errors.current_password}
-                                </span>
-                            )}
-                    </div>
+                    {!hasPassword && (
+                        <p className="dash-password-note">
+                            Your account was made when you checked out, so it
+                            has no password yet. Set one to sign in on another
+                            device with your mobile number or email.
+                        </p>
+                    )}
+
+                    {hasPassword && (
+                        <div className="auth-form-group">
+                            <label className="auth-label">
+                                Current Password
+                            </label>
+                            <input
+                                type="password"
+                                value={passwordForm.values.current_password}
+                                name="current_password"
+                                onBlur={passwordForm.handleBlur}
+                                onChange={passwordForm.handleChange}
+                                className={`auth-text-input ${passwordForm.touched.current_password && passwordForm.errors.current_password ? 'input-error' : ''}`}
+                                placeholder="Your current password"
+                            />
+                            {passwordForm.touched.current_password &&
+                                passwordForm.errors.current_password && (
+                                    <span className="auth-field-error">
+                                        {passwordForm.errors.current_password}
+                                    </span>
+                                )}
+                        </div>
+                    )}
 
                     <div className="auth-form-group">
                         <label className="auth-label">New Password</label>
@@ -246,8 +275,10 @@ export default function Profile({ user, navCounts, techPoints }) {
                         disabled={passwordForm.isSubmitting}
                     >
                         {passwordForm.isSubmitting
-                            ? 'Updating...'
-                            : 'Update Password'}
+                            ? 'Saving...'
+                            : hasPassword
+                              ? 'Update Password'
+                              : 'Set Password'}
                     </button>
                 </form>
             </div>

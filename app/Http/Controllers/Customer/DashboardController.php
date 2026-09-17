@@ -162,7 +162,10 @@ class DashboardController extends Controller
 
     public function profile(Request $request): Response
     {
-        return Inertia::render('Dashboard/Profile', $this->shell(Auth::user()));
+        return Inertia::render('Dashboard/Profile', $this->shell(Auth::user()) + [
+            // Whether the password form asks for the current one, or sets the first.
+            'hasPassword' => Auth::user()->hasPassword(),
+        ]);
     }
 
     /**
@@ -350,7 +353,11 @@ class DashboardController extends Controller
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
+            // Only when there is one: an account made at checkout has none,
+            // and this is where its owner sets the first.
+            'current_password' => $request->user()->hasPassword()
+                ? ['required', 'current_password']
+                : ['nullable'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
@@ -358,6 +365,6 @@ class DashboardController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return back()->with('success', 'Password changed successfully.');
+        return back()->with('success', 'Password saved. You can now sign in with it anywhere.');
     }
 }

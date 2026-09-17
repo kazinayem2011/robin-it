@@ -33,4 +33,7 @@ class ApiCode
 
     // A guest's email and mobile point at different accounts; they pick one.
     public const ACCOUNT_CHOICE = 'ACCOUNT_CHOICE';
+
+    // The guest's mobile has an account with a password: that, not a code.
+    public const SIGN_IN_WITH_PASSWORD = 'SIGN_IN_WITH_PASSWORD';
 }

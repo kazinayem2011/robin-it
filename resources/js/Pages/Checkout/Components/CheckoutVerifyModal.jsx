@@ -28,15 +28,17 @@ const FORM_ID = 'checkout-verify-form';
  *   choose    the email and the mobile belong to different accounts — or the
  *             email has one and the mobile does not — so the customer says
  *             which the order is for
- *   code      the six digits texted to the mobile
- *   password  the chosen account's password, for an email account, or for a
- *             mobile account whose owner would rather not wait for a text
+ *   code      the six digits texted to the mobile — only for a number with no
+ *             account yet, or an account that has no password
+ *   password  the chosen account's password, whether it was picked by its
+ *             email or its mobile
  *
  * The page owns the flow; this only draws the step it is given and reports
  * what was entered.
  *
  * @param step         'choose' | 'code' | 'password', or null when closed
  * @param phoneAccount on the choose step: whether the mobile has an account
+ * @param phoneHasPassword  and whether that account signs in with a password
  * @param login        on the password step: the email or mobile signing in
  * @param error        the server's objection to what was entered, if any
  */
@@ -45,6 +47,7 @@ export default function CheckoutVerifyModal({
     phone = '',
     email = '',
     phoneAccount = false,
+    phoneHasPassword = false,
     login = '',
     canGoBack = false,
     busy = false,
@@ -54,7 +57,6 @@ export default function CheckoutVerifyModal({
     onSubmitCode,
     onSubmitPassword,
     onResend,
-    onUsePassword,
     onBack,
     onEditNumber,
     onClose,
@@ -156,9 +158,11 @@ export default function CheckoutVerifyModal({
                             <span className="checkout-verify-choice-text">
                                 <strong>{phone}</strong>
                                 <span>
-                                    {phoneAccount
-                                        ? 'We will text a code to this number'
-                                        : 'A new account for this number, confirmed by a code'}
+                                    {phoneHasPassword
+                                        ? "Sign in with this account's password"
+                                        : phoneAccount
+                                          ? 'We will text a code to confirm this number'
+                                          : 'A new account for this number, confirmed by a code'}
                                 </span>
                             </span>
                         </button>
@@ -198,18 +202,6 @@ export default function CheckoutVerifyModal({
                                 onEditNumber={onEditNumber}
                                 disabled={busy}
                             />
-
-                            {/* For a number that already has an account and
-                                a password, a text is not the only way in. */}
-                            <button
-                                type="button"
-                                className="checkout-verify-switch"
-                                onClick={onUsePassword}
-                                disabled={busy}
-                            >
-                                Have a password for this number? Sign in with it
-                                instead
-                            </button>
                         </>
                     )}
 

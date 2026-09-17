@@ -16,7 +16,11 @@ class PasswordController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
+            // Only when there is one: an account made at checkout has none,
+            // and this is where its owner sets the first.
+            'current_password' => $request->user()->hasPassword()
+                ? ['required', 'current_password']
+                : ['nullable'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 

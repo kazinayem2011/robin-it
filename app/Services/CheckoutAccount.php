@@ -7,8 +7,6 @@ use App\Exceptions\StorefrontException;
 use App\Helpers\PhoneHelper;
 use App\Models\User;
 use App\Support\Roles;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -70,7 +68,7 @@ class CheckoutAccount
      * dead end: sign in to the email's account with its password, or carry on
      * with the phone's (proved by a code), leaving the email off the order.
      *
-     * @return array{email_account: true, phone_account: bool}|null
+     * @return array{email_account: true, phone_account: bool, phone_has_password: bool}|null
      */
     public function clash(string $phone, ?string $email, ?User $signedIn = null): ?array
     {
@@ -86,14 +84,24 @@ class CheckoutAccount
             return null;
         }
 
-        $orderOwner = $signedIn
-            ?? User::where('phone', PhoneHelper::normalizeBdPhone($phone) ?? $phone)->first(['id']);
+        $orderOwner = $signedIn ?? $this->accountFor($phone);
 
         if ($orderOwner && $orderOwner->id === $emailOwner->id) {
             return null;
         }
 
-        return ['email_account' => true, 'phone_account' => $orderOwner !== null];
+        return [
+            'email_account' => true,
+            'phone_account' => $orderOwner !== null,
+            // Decides what choosing the mobile asks for: its password, or a code.
+            'phone_has_password' => (bool) $orderOwner?->hasPassword(),
+        ];
+    }
+
+    /** The account holding this mobile number, if there is one. */
+    public function accountFor(string $phone): ?User
+    {
+        return User::where('phone', PhoneHelper::normalizeBdPhone($phone) ?? $phone)->first();
     }
 
     /**
@@ -133,12 +141,14 @@ class CheckoutAccount
             'email' => $email && ! $this->emailTaken($email) ? $email : null,
             'phone' => $phone,
             /*
-             * Nobody knows it, on purpose. The customer is signed in by the
-             * code, stays signed in for the shopper window, and sets a password
-             * of their own through "Forgot password" — which goes by this same
-             * number — when they want to sign in somewhere else.
+             * None yet. The customer is signed in by the code and stays signed
+             * in for the shopper window; they set a password from their
+             * profile, or through "Forgot password" by this same number, when
+             * they want to sign in somewhere else. Null rather than a random
+             * one nobody knows, so checkout can tell this account from one
+             * that has a password to ask for.
              */
-            'password' => Hash::make(Str::random(40)),
+            'password' => null,
         ]);
         $user->phone_verified_at = now();
         $user->assignRole(User::ROLE_CUSTOMER)->save();
