@@ -34,7 +34,7 @@ export default function Contact({
             subject: '',
             message: '',
         },
-        validationSchema: contactSchema,
+        validationSchema: contactSchema(signedIn),
         onSubmit: async (
             values,
             { setSubmitting, resetForm, setFieldError, setFieldTouched },
@@ -150,9 +150,18 @@ export default function Contact({
                                 <FormInput
                                     id="email"
                                     name="email"
-                                    required
+                                    /* Only a guest with no number to ring
+                                       must leave an address. */
+                                    required={!signedIn && !formik.values.phone}
                                     type="email"
-                                    label="Email"
+                                    label={
+                                        signedIn ? 'Email (optional)' : 'Email'
+                                    }
+                                    helperText={
+                                        signedIn
+                                            ? 'We will reply in your messages, and by email if you leave one.'
+                                            : 'An email address or a mobile number — either will do.'
+                                    }
                                     placeholder="you@example.com"
                                     value={formik.values.email}
                                     onChange={formik.handleChange}

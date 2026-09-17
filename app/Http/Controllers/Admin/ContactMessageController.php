@@ -130,9 +130,15 @@ class ContactMessageController extends Controller
 
         // Said plainly rather than hidden: the answer is saved either way, and
         // whoever sent it needs to know if the customer did not get the email.
-        $note = $reply->emailed
-            ? "Replied to {$message->email}."
-            : "Reply saved, but the email could not be sent to {$message->email}. Check the mail settings.";
+        $note = match (true) {
+            $reply->emailed => "Replied to {$message->email}.",
+            // Nothing to email is not a failure: the customer reads it in
+            // their own messages, and a guest who left only a number is
+            // answered by ringing it.
+            blank($message->email) && $message->user_id !== null => 'Replied. They will see it in their messages.',
+            blank($message->email) => "Saved. This enquiry left no email address — call {$message->phone}.",
+            default => "Reply saved, but the email could not be sent to {$message->email}. Check the mail settings.",
+        };
 
         return $this->successResponse(
             ['reply' => $reply->only(['id', 'body', 'author_name', 'emailed']), 'emailed' => $reply->emailed],

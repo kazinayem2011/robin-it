@@ -26,12 +26,12 @@ class ContactService
      */
     public function record(array $data, ?string $ip = null, ?User $customer = null): ContactMessage
     {
-        $this->assertTheAddressIsTheirs($data['email'], $customer);
+        $this->assertTheAddressIsTheirs($data['email'] ?? null, $customer);
 
         $message = ContactMessage::create([
             'user_id' => $customer?->id,
             'name' => $data['name'],
-            'email' => mb_strtolower(trim($data['email'])),
+            'email' => filled($data['email'] ?? null) ? mb_strtolower(trim($data['email'])) : null,
             'phone' => $data['phone'] ?? null,
             'subject' => $data['subject'],
             'message' => $data['message'],
@@ -60,9 +60,9 @@ class ContactService
      *
      * @throws ValidationException
      */
-    private function assertTheAddressIsTheirs(string $email, ?User $customer): void
+    private function assertTheAddressIsTheirs(?string $email, ?User $customer): void
     {
-        if (! $customer) {
+        if (! $customer || blank($email)) {
             return;
         }
 
@@ -109,8 +109,15 @@ class ContactService
         });
 
         try {
-            Mail::to($message->email)->send(new ContactReplyMail($message, $reply));
-            $reply->forceFill(['emailed' => true])->save();
+            /*
+             * Nothing to email is not a failure. An enquiry may carry only a
+             * mobile number now, and for a customer the answer is already
+             * waiting in their own messages.
+             */
+            if (filled($message->email)) {
+                Mail::to($message->email)->send(new ContactReplyMail($message, $reply));
+                $reply->forceFill(['emailed' => true])->save();
+            }
         } catch (\Throwable $e) {
             // Kept, not thrown: the answer is recorded either way, and the
             // person answering should be told rather than shown a 500.

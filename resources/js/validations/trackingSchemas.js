@@ -38,34 +38,52 @@ export const trackingSchema = (signedIn = false) =>
 /**
  * The Contact page.
  *
- * The phone is optional — someone writing in with a question may not want to
- * be called — but if given it has to be a number the shop could actually ring.
+ * @param signedIn Neither an address nor a number is demanded of a customer
+ *                 who is signed in: the answer appears in their own messages
+ *                 and rings their bell. Asking an address of everybody left
+ *                 the ones who registered by mobile inventing one, or typing
+ *                 somebody else's — which is how an answer reaches a stranger.
+ *
+ *                 A guest is asked for one or the other, so there is always
+ *                 some way to answer. A number given is one the shop could
+ *                 actually ring.
  */
-export const contactSchema = Yup.object().shape({
-    name: Yup.string().trim().required('Please tell us your name').max(120),
-    email: Yup.string()
-        .trim()
-        .email('That does not look like an email address')
-        .required('We need an email address to reply to')
-        .max(180),
-    phone: Yup.string()
-        .nullable()
-        .test(
-            'bd-phone',
-            'Enter a valid 11-digit BD mobile number, or leave it blank',
-            (value) =>
-                !value || bdPhoneRegex.test(value.trim().replace(/[\s-]/g, '')),
-        ),
-    subject: Yup.string()
-        .trim()
-        .required('What is it about?')
-        .max(160, 'Keep the subject under 160 characters'),
-    message: Yup.string()
-        .trim()
-        .required('Please write your message')
-        .min(10, 'Please say a little more so we can help')
-        .max(4000, 'That is longer than we can accept — 4000 characters max'),
-});
+export const contactSchema = (signedIn = false) =>
+    Yup.object().shape({
+        name: Yup.string().trim().required('Please tell us your name').max(120),
+        email: Yup.string()
+            .trim()
+            .email('That does not look like an email address')
+            .max(180)
+            .when('phone', {
+                is: (phone) => !signedIn && !phone,
+                then: (schema) =>
+                    schema.required(
+                        'Leave us an email address or a mobile number, so we can reply.',
+                    ),
+            }),
+        phone: Yup.string()
+            .nullable()
+            .test(
+                'bd-phone',
+                'Enter a valid 11-digit BD mobile number, or leave it blank',
+                (value) =>
+                    !value ||
+                    bdPhoneRegex.test(value.trim().replace(/[\s-]/g, '')),
+            ),
+        subject: Yup.string()
+            .trim()
+            .required('What is it about?')
+            .max(160, 'Keep the subject under 160 characters'),
+        message: Yup.string()
+            .trim()
+            .required('Please write your message')
+            .min(10, 'Please say a little more so we can help')
+            .max(
+                4000,
+                'That is longer than we can accept — 4000 characters max',
+            ),
+    });
 
 export const subscribeSchema = Yup.object().shape({
     email: Yup.string()
