@@ -157,6 +157,13 @@ class MessageTemplateSeeder extends Seeder
                 'body' => '({shop_name}) অর্ডার {order_number} বদলেছে, নতুন মোট Tk {order_total}। {track_url}',
             ],
             [
+                'key' => 'account_created',
+                'name' => 'Account created',
+                'group' => 'Account',
+                'hint' => 'Checkout makes an account for a guest who confirms their number. Never send a password here.',
+                'body' => '({shop_name}) অ্যাকাউন্ট তৈরি হয়েছে। প্রোফাইলে পাসওয়ার্ড দিন।',
+            ],
+            [
                 'key' => 'processing',
                 'name' => 'Order confirmed',
                 'group' => 'Orders',

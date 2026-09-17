@@ -207,6 +207,7 @@ class EveryKeyIsSuppliedTest extends TestCase
 
         $built = [
             'order_placed' => SmsTemplates::orderPlaced($order, $shop),
+            'account_created' => SmsTemplates::accountCreated($shop),
             'order_updated' => SmsTemplates::orderUpdated($order, $shop),
             'payment_due' => SmsTemplates::paymentDue($order, 84500, $shop),
             'refund' => SmsTemplates::refundIssued($order, 12000, $shop),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
+use App\Mail\WelcomeCustomerMail;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Services\OtpService;
@@ -12,6 +13,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -118,6 +121,20 @@ class RegisteredUserController extends Controller
         $user->assignRole(User::ROLE_CUSTOMER)->save();
 
         event(new Registered($user));
+
+        /*
+         * The shop's own welcome, which until now was a template that reached
+         * nobody: it was written, editable on the templates screen, and sent
+         * from nowhere in the app. The verification link Registered sends is a
+         * different thing — this is the one the shop words itself.
+         */
+        if ($user->email) {
+            try {
+                Mail::to($user->email)->send(new WelcomeCustomerMail($user));
+            } catch (\Throwable $e) {
+                Log::warning("Could not send the welcome email to {$user->email}: {$e->getMessage()}");
+            }
+        }
 
         Auth::login($user);
 

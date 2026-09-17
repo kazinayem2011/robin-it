@@ -5,8 +5,13 @@ namespace App\Services;
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Helpers\PhoneHelper;
+use App\Mail\WelcomeCustomerMail;
 use App\Models\User;
+use App\Support\BrandDetails;
 use App\Support\Roles;
+use App\Support\SmsTemplates;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -153,7 +158,43 @@ class CheckoutAccount
         $user->phone_verified_at = now();
         $user->assignRole(User::ROLE_CUSTOMER)->save();
 
+        $this->welcome($user);
+
         return $user;
+    }
+
+    /**
+     * Tell somebody the shop has just made them an account.
+     *
+     * They came to buy something, not to register, and nothing said an account
+     * now exists — so they would only find out by coming back to the site.
+     *
+     * No password is sent, here or anywhere: there is none to send, and one
+     * sent by text or email is a password left lying in an inbox and a
+     * gateway's logs. Both messages say where to set one instead.
+     *
+     * Best-effort, both of them: an order must not fail because a gateway or a
+     * mail server is down.
+     */
+    private function welcome(User $user): void
+    {
+        try {
+            if ($user->email) {
+                Mail::to($user->email)->send(new WelcomeCustomerMail($user));
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Could not send the welcome email to {$user->email}: {$e->getMessage()}");
+        }
+
+        try {
+            app(SmsService::class)->sendEvent(
+                'account_created',
+                $user->phone,
+                SmsTemplates::accountCreated(BrandDetails::name())
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Could not send the account-created SMS to {$user->phone}: {$e->getMessage()}");
+        }
     }
 
     /**

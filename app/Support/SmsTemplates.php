@@ -56,6 +56,24 @@ class SmsTemplates
     }
 
     /**
+     * Checkout made this customer an account.
+     *
+     * No password in it, and none anywhere else either: the account has none
+     * until they choose one, and a password sent by text is a password sitting
+     * on a handset, in an inbox and in a gateway's logs. This says the account
+     * exists and where to set one, which is all a text needs to do.
+     *
+     * One part, so telling somebody costs the shop the least it can. The link
+     * is in the welcome email and on the confirmation page, where there is
+     * room for it.
+     */
+    public static function accountCreated(string $shop): string
+    {
+        return self::stored('account_created', ['shop_name' => $shop],
+            "({$shop}) অ্যাকাউন্ট তৈরি হয়েছে। প্রোফাইলে পাসওয়ার্ড দিন।");
+    }
+
+    /**
      * The shop changed what is on the order, and so what the rider collects.
      *
      * "বদলেছে" rather than "আপডেট হয়েছে", and no "ট্র্যাক:" before the link:

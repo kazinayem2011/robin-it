@@ -261,6 +261,16 @@ class StorefrontPageController extends Controller
              * address gets the plain page, which still asks for the phone.
              */
             'trackUrl' => $order && Gate::allows('print', [$order, $request]) ? $order->trackPath() : null,
+            /*
+             * Checkout made this customer an account and signed them in, and
+             * nothing said so — they would have found out by coming back to
+             * the shop one day. True for their own order while the account has
+             * no password, which is exactly the account checkout makes.
+             */
+            'accountIsNew' => (bool) $order
+                && $request->user()
+                && $order->user_id === $request->user()->id
+                && ! $request->user()->hasPassword(),
             'suggestions' => $suggestions->values(),
             'seo' => Seo::for(['title' => 'Order Placed', 'noindex' => true]),
         ]);

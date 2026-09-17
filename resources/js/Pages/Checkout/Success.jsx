@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
 import { ROUTES } from '../../constants/endpoints';
 import './Checkout.css';
@@ -7,12 +7,19 @@ import ProductSuggestions from '../../Components/ProductSuggestions';
 /**
  * @param trackUrl The order's unlocked tracking link, given only to whoever
  *                 placed it, so "Track Order" opens the order for a guest too.
+ * @param accountIsNew Checkout made them an account and signed them in. Saying
+ *                 so here is the one moment they are certain to be looking;
+ *                 the welcome email and the text say it again, and none of
+ *                 them carries a password, because the account has none.
  */
 export default function Success({
     orderNumber,
     trackUrl = null,
+    accountIsNew = false,
     suggestions = [],
 }) {
+    const customer = usePage().props?.auth?.user ?? null;
+
     return (
         <>
             <Head title="Order Successful - StarTech Clone" />
@@ -44,6 +51,21 @@ export default function Success({
                     </strong>{' '}
                     has been received.
                 </p>
+
+                {accountIsNew && (
+                    <div className="order-success-account">
+                        <strong>
+                            We have created an account for{' '}
+                            {customer?.phone || 'you'}.
+                        </strong>{' '}
+                        You are signed in on this device. Set a password to sign
+                        in on another one — we never send passwords by text or
+                        email.{' '}
+                        <Link href={ROUTES.DASHBOARD_PROFILE}>
+                            Set a password
+                        </Link>
+                    </div>
+                )}
 
                 <div className="order-success-cta-row">
                     <Link href={ROUTES.HOME} className="btn btn-secondary">
