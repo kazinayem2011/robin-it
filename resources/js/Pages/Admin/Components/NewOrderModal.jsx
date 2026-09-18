@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { unitLabel } from '@/utils/unitLabel';
 import { Search, Trash2, UserCheck, UserPlus } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
@@ -124,9 +125,7 @@ export default function NewOrderModal({ open, onClose, onCreated }) {
                 key,
                 product_id: product.id,
                 product_variant_id: variant?.id ?? null,
-                name: variant
-                    ? `${product.name} (${variant.name})`
-                    : product.name,
+                name: unitLabel(product, variant),
                 price: Number(
                     variant
                         ? variant.discount_price || variant.price

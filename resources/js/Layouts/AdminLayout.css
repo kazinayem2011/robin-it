@@ -2637,9 +2637,18 @@ a.admin-card:hover,
     margin-bottom: 20px;
 }
 
+/*
+ * Five cells, five columns: product, quantity, cost, serials and the bin.
+ *
+ * It declared four, so the bin wrapped onto a row of its own under every line
+ * — a delete button floating beneath the thing it deletes, on a line of its
+ * own for each row of the form.
+ */
 .admin-receive-line {
     display: grid;
-    grid-template-columns: minmax(0, 2.4fr) minmax(0, 0.8fr) minmax(0, 1fr) auto;
+    grid-template-columns:
+        minmax(0, 2.4fr) minmax(0, 0.8fr) minmax(0, 1fr)
+        auto auto;
     gap: 10px;
     align-items: start;
 }
@@ -2757,6 +2766,12 @@ a.admin-card:hover,
         margin-top: 0;
         justify-self: end;
         grid-column: 2;
+    }
+
+    /* Beside the bin on the narrow layout, not above it. */
+    .admin-receive-line-serials {
+        justify-self: start;
+        grid-column: 1;
     }
 }
 
@@ -3850,6 +3865,9 @@ a.admin-card:hover,
 
 /* Serial numbers on a delivery line: optional, and out of the way until asked for. */
 .admin-receive-line-serials {
+    /* Level with the inputs, like the bin beside it — not with the labels. */
+    align-self: end;
+    margin-bottom: 4px;
     display: inline-flex;
     align-items: center;
     gap: 4px;

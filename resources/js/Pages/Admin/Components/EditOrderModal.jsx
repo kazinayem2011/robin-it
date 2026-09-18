@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { unitLabel } from '@/utils/unitLabel';
 import { Trash2, Plus } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
@@ -73,9 +74,7 @@ export default function EditOrderModal({ order, onClose, onDone }) {
                 key,
                 product_id: product.id,
                 product_variant_id: variant?.id ?? null,
-                name: variant
-                    ? `${product.name} (${variant.name})`
-                    : product.name,
+                name: unitLabel(product, variant),
                 // The server prices it at today's price; this is only so the
                 // running total on screen is not silently wrong.
                 price: Number(

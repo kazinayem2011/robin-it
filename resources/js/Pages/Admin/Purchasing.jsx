@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
@@ -352,9 +353,8 @@ function WriteOrderModal({
                 key,
                 product_id: product.id,
                 product_variant_id: variant?.id ?? null,
-                name: variant
-                    ? `${product.name} (${variant.name})`
-                    : product.name,
+                // With the shelf: four products can share a name.
+                name: unitLabel(product, variant),
                 quantity: 1,
                 unit_cost: '',
             },

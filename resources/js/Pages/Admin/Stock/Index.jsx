@@ -449,6 +449,7 @@ export default function AdminStock({
 
             <ReceiveStockModal
                 suppliers={suppliers}
+                stores={stores}
                 isOpen={receiveOpen}
                 onClose={() => setReceiveOpen(false)}
                 onSaved={() => {

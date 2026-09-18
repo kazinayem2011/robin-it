@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { unitLabel } from '@/utils/unitLabel';
 import { useFormik } from 'formik';
 import Button from '../../../Components/Button';
 import FormInput from '../../../Components/FormInput';
@@ -20,8 +21,20 @@ const blankLine = () => ({
     serials: '',
 });
 
-const emptyReceipt = () => ({
+/**
+ * Which branch the stock lands in.
+ *
+ * The one that ships online orders, where the shop has said which that is:
+ * that is where a delivery is wanted unless somebody says otherwise, and it is
+ * what the server falls back to. Said out loud on the form either way — stock
+ * used to land in a branch nobody had chosen and nothing named.
+ */
+const defaultBranch = (stores = []) =>
+    String(stores.find((s) => s.fulfils_online)?.id ?? stores[0]?.id ?? '');
+
+const emptyReceipt = (stores = []) => ({
     supplier_id: '',
+    store_id: defaultBranch(stores),
     invoice_number: '',
     received_on: new Date().toISOString().slice(0, 10),
     note: '',
@@ -42,6 +55,7 @@ const countSerials = (text) =>
         .filter(Boolean).length;
 
 export default function ReceiveStockModal({
+    stores = [],
     isOpen,
     onClose,
     onSaved,
@@ -54,7 +68,7 @@ export default function ReceiveStockModal({
     const [units, setUnits] = useState([]);
 
     const formik = useFormik({
-        initialValues: emptyReceipt(),
+        initialValues: emptyReceipt(stores),
         validationSchema: adminStockReceiptSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             const lines = values.lines
@@ -77,6 +91,7 @@ export default function ReceiveStockModal({
             try {
                 const receipt = await adminService.receiveStock({
                     supplier_id: values.supplier_id || null,
+                    store_id: values.store_id || null,
                     invoice_number: values.invoice_number || null,
                     received_on: values.received_on,
                     note: values.note || null,
@@ -87,7 +102,7 @@ export default function ReceiveStockModal({
                         receipt?.reference ? ` as ${receipt.reference}` : ''
                     }.`,
                 );
-                resetForm({ values: emptyReceipt() });
+                resetForm({ values: emptyReceipt(stores) });
                 onSaved?.();
             } catch (err) {
                 toast.error(err?.message || 'Could not record this delivery.');
@@ -124,6 +139,20 @@ export default function ReceiveStockModal({
         if (isOpen) loadUnits();
     }, [isOpen, loadUnits]);
 
+    /*
+     * The branch, once, as the window opens.
+     *
+     * Not enableReinitialize: emptyReceipt() builds a fresh object — and a
+     * fresh line key — on every render, so Formik would take each render as
+     * new initial values and re-render for ever.
+     */
+    useEffect(() => {
+        if (isOpen && !formik.values.store_id && stores.length) {
+            formik.setFieldValue('store_id', defaultBranch(stores));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, stores]);
+
     // A variant product can only be received into one of its options, since
     // that is where its stock lives.
     const options = useMemo(
@@ -134,13 +163,13 @@ export default function ReceiveStockModal({
                           .filter((v) => v.is_active)
                           .map((v) => ({
                               value: `${product.id}:${v.id}`,
-                              label: `${product.name} — ${v.name}`,
+                              label: unitLabel(product, v),
                               hint: `${v.stock_quantity} on hand`,
                           }))
                     : [
                           {
                               value: `${product.id}:`,
-                              label: product.name,
+                              label: unitLabel(product),
                               hint: `${product.stock_quantity} on hand`,
                           },
                       ],
@@ -241,6 +270,27 @@ export default function ReceiveStockModal({
                                 ? 'Recorded as an opening balance, not a purchase.'
                                 : ''
                         }
+                    />
+
+                    {/*
+                     * Which branch it goes into, named rather than assumed.
+                     * Without this the stock landed wherever the server falls
+                     * back to — a branch the person receiving never chose and
+                     * the form never mentioned.
+                     */}
+                    <Select
+                        label="Into branch"
+                        name="store_id"
+                        formik={formik}
+                        placeholder={
+                            stores.length ? 'Choose a branch…' : 'No branches'
+                        }
+                        options={stores.map((s) => ({
+                            value: String(s.id),
+                            label: s.fulfils_online
+                                ? `${s.name} — ships online orders`
+                                : s.name,
+                        }))}
                     />
 
                     <FormInput

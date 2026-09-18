@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
@@ -293,12 +294,12 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
                   .filter((v) => v.is_active)
                   .map((v) => ({
                       value: `${p.id}:${v.id}`,
-                      label: `${p.name} (${v.name}) — ${v.stock_quantity} in stock`,
+                      label: `${unitLabel(p, v)} — ${v.stock_quantity} in stock`,
                   }))
             : [
                   {
                       value: `${p.id}:`,
-                      label: `${p.name} — ${p.stock_quantity} in stock`,
+                      label: `${unitLabel(p)} — ${p.stock_quantity} in stock`,
                   },
               ],
     );

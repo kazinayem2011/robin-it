@@ -480,8 +480,17 @@ class StockController extends Controller
              * order — and without it each showed a running total of zero while
              * the server quietly worked out the real one.
              */
-            ->select('id', 'name', 'stock_quantity', 'has_variants', 'price', 'discount_price')
-            ->with(['variants:id,product_id,name,stock_quantity,is_active,price,discount_price'])
+            ->select('id', 'name', 'category_id', 'stock_quantity', 'has_variants', 'price', 'discount_price')
+            /*
+             * And the shelf it sits on. A placeholder catalogue has four
+             * products called "Sample AJAZZ" — one per AJAZZ shelf — and a
+             * picker showing names alone offers four identical lines with no
+             * way to tell which is the mouse and which is the keyboard.
+             */
+            ->with([
+                'category:id,name',
+                'variants:id,product_id,name,stock_quantity,is_active,price,discount_price',
+            ])
             ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->where('is_active', true)
             ->orderBy('name')
