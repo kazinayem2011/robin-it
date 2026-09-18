@@ -283,8 +283,8 @@ export default function Dashboard({
                                 : 's'}{' '}
                             worth {formatBdt(profitAndLoss.excluded.revenue)}{' '}
                             are not counted above, because what those goods cost
-                            is not recorded. Receive stock with a unit cost and
-                            they will appear here.
+                            is not recorded. Book in a delivery with a unit cost
+                            and they will appear here.
                         </p>
                     )}
                 </section>

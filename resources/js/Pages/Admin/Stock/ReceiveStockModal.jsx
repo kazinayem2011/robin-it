@@ -214,7 +214,7 @@ export default function ReceiveStockModal({
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Receive stock"
+            title="Book in a delivery"
             maxWidth="820px"
             footer={
                 <div className="admin-receive-footer">
@@ -232,15 +232,28 @@ export default function ReceiveStockModal({
                             onClick={formik.handleSubmit}
                             disabled={formik.isSubmitting}
                         >
-                            {formik.isSubmitting
-                                ? 'Recording…'
-                                : 'Receive into stock'}
+                            {formik.isSubmitting ? 'Recording…' : 'Book it in'}
                         </Button>
                     </div>
                 </div>
             }
         >
             <form onSubmit={formik.handleSubmit} noValidate>
+                {/*
+                 * The same job as booking in a delivery against a purchase
+                 * order, and it read as a second, unrelated system: one screen
+                 * said "receive stock", the other "book in a delivery". They
+                 * share the wording now, and this says which one to be on —
+                 * booking a delivery here leaves its purchase order sitting on
+                 * "sent" for ever, waiting for goods that have already arrived.
+                 */}
+                <p className="admin-field-hint admin-receive-intro">
+                    For goods that arrived without a purchase order — a cash
+                    purchase, or stock you already held. If you raised an order
+                    for this, open it in Purchasing and book the delivery in
+                    there instead, so the order is marked received.
+                </p>
+
                 <div className="admin-grid-3col">
                     {/*
                      * Suppliers are maintained in their own section; this only

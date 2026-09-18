@@ -2624,6 +2624,12 @@ a.admin-card:hover,
 
 /* ── Receiving ─────────────────────────────────────────────────────────────── */
 
+/* Which of the two ways of booking in a delivery this one is. */
+.admin-receive-intro {
+    margin: 0 0 18px;
+    line-height: 1.5;
+}
+
 .admin-receive-lines {
     display: flex;
     flex-direction: column;
@@ -2657,16 +2663,40 @@ a.admin-card:hover,
     min-width: 0;
 }
 
+/*
+ * No gap: .auth-label already carries a 6px bottom margin, and the gap stacked
+ * on top of it, so the product select sat 4px lower than the Qty and Unit cost
+ * boxes it is supposed to line up with.
+ */
 .admin-receive-line-product {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+}
+
+/*
+ * A field's 18px bottom margin is meant for a stacked form. In a row it is
+ * invisible space below the inputs that still counts towards the row's height,
+ * so anything aligned to the bottom of the row — the two buttons — hung 14px
+ * below the boxes beside them.
+ */
+.admin-receive-line .auth-form-group {
+    margin-bottom: 0;
+}
+
+/*
+ * Both buttons are controls in the row, so they are the height of one: same
+ * top, same bottom, level with the inputs rather than floating under them.
+ */
+.admin-receive-line-serials,
+.admin-receive-line .admin-receive-line-remove {
+    align-self: end;
+    height: 46px;
 }
 
 .admin-receive-line-remove {
-    /* Sits level with the inputs, not with the labels above them. */
-    align-self: end;
-    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -3415,7 +3445,7 @@ a.admin-card:hover,
     }
 
     /* Groups of buttons in a card header stack instead of running off the
-       side; a cut-off "Receive stock" is a button nobody can press. */
+       side; a cut-off "Book in a delivery" is a button nobody can press. */
     .admin-card-header .admin-input-row-flex,
     .admin-header-actions {
         flex-wrap: wrap;
@@ -3865,11 +3895,9 @@ a.admin-card:hover,
 
 /* Serial numbers on a delivery line: optional, and out of the way until asked for. */
 .admin-receive-line-serials {
-    /* Level with the inputs, like the bin beside it — not with the labels. */
-    align-self: end;
-    margin-bottom: 4px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     padding: 6px 9px;
     border: 1px solid var(--border-color);

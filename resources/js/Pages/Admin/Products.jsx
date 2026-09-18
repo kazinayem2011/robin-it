@@ -1075,8 +1075,8 @@ export default function Products({
                     <Link
                         href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(p.name || '')}`}
                         className="admin-table-icon-btn"
-                        title="Record a delivery for this product"
-                        aria-label={`Receive stock for ${p.name}`}
+                        title="Book in a delivery for this product"
+                        aria-label={`Book in a delivery for ${p.name}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <PackagePlus size={14} />

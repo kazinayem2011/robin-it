@@ -210,7 +210,7 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                             what they earned is unknown. Counting the{' '}
                             {formatBdt(excluded.revenue)} they sold for without
                             its cost would report the whole sale as profit.
-                            Record a delivery with a unit cost and future orders
+                            Book in a delivery with a unit cost and future orders
                             will be included.
                         </span>
                     </div>

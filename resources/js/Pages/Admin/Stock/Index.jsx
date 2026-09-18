@@ -297,7 +297,7 @@ export default function AdminStock({
                                 icon={PackagePlus}
                                 onClick={() => setReceiveOpen(true)}
                             >
-                                Receive stock
+                                Book in a delivery
                             </Button>
                         </div>
                     </div>
