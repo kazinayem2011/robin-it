@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import { touchOnChange } from '../../utils/touchOnChange';
 import { Smartphone, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
@@ -71,6 +72,9 @@ export default function ForgotPasswordPhone({
         },
     });
 
+    // Touched as they type, never on blur — see touchOnChange.
+    const handleChange = touchOnChange(formik);
+
     const requestCode = async () => {
         const problems = await formik.validateForm();
 
@@ -129,8 +133,7 @@ export default function ForgotPasswordPhone({
                             label="Registered Mobile Number"
                             type="tel"
                             value={formik.values.phone}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="017xxxxxxxx"
                             icon={Smartphone}
                             error={
@@ -147,8 +150,7 @@ export default function ForgotPasswordPhone({
                                 <OtpCodeField
                                     phone={formik.values.phone}
                                     value={formik.values.code}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
+                                    onChange={handleChange}
                                     error={
                                         (formik.touched.code &&
                                             formik.errors.code) ||
@@ -173,8 +175,7 @@ export default function ForgotPasswordPhone({
                                     label="New Password (Min. 8 Characters)"
                                     type="password"
                                     value={formik.values.password}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
+                                    onChange={handleChange}
                                     placeholder="Choose a strong password"
                                     icon={Lock}
                                     error={
@@ -192,8 +193,7 @@ export default function ForgotPasswordPhone({
                                     label="Confirm New Password"
                                     type="password"
                                     value={formik.values.password_confirmation}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
+                                    onChange={handleChange}
                                     placeholder="Re-enter password"
                                     icon={Lock}
                                     error={

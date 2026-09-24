@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import { touchOnChange } from '../../utils/touchOnChange';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
@@ -36,6 +37,9 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
         },
     });
 
+    // Touched as they type, never on blur — see touchOnChange.
+    const handleChange = touchOnChange(formik);
+
     return (
         <div className="auth-page-wrapper">
             <Head title={`Set New Password — ${siteConfig.name}`} />
@@ -59,8 +63,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                             label="Email Address"
                             type="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="yourname@example.com"
                             icon={Mail}
                             error={
@@ -78,8 +81,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                             label="New Password (Min. 8 Characters)"
                             type="password"
                             value={formik.values.password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="Enter new password"
                             icon={Lock}
                             error={
@@ -99,8 +101,7 @@ export default function ResetPassword({ token, email, errors: serverErrors }) {
                             label="Confirm New Password"
                             type="password"
                             value={formik.values.password_confirmation}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="Re-enter new password"
                             icon={Lock}
                             error={

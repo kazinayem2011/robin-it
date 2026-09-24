@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import { touchOnChange } from '../../utils/touchOnChange';
 import { Mail, Lock, Phone, ArrowRight } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
@@ -31,6 +32,9 @@ export default function Login({
             });
         },
     });
+
+    // Touched as they type, never on blur — see touchOnChange.
+    const handleChange = touchOnChange(formik);
 
     const isPhoneNumber =
         formik.values.login.trim().length > 0 && isBDPhone(formik.values.login);
@@ -65,8 +69,7 @@ export default function Login({
                             label="Email Address or Mobile Number"
                             type="text"
                             value={formik.values.login}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="e.g. 01712345678 or name@example.com"
                             icon={isPhoneNumber ? Phone : Mail}
                             error={
@@ -86,8 +89,7 @@ export default function Login({
                             label="Password"
                             type="password"
                             value={formik.values.password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="Enter your account password"
                             icon={Lock}
                             error={
@@ -104,7 +106,7 @@ export default function Login({
                                 name="remember"
                                 label="Remember me"
                                 checked={formik.values.remember}
-                                onChange={formik.handleChange}
+                                onChange={handleChange}
                             />
 
                             {canResetPassword && (

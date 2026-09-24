@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import { touchOnChange } from '../../utils/touchOnChange';
 import { User, Mail, Lock, ArrowRight, Smartphone } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
@@ -87,6 +88,9 @@ export default function Register({
         },
     });
 
+    // Touched as they type, never on blur — see touchOnChange.
+    const handleChange = touchOnChange(formik);
+
     /**
      * Ask for a code, and only then show the field for it.
      *
@@ -158,8 +162,7 @@ export default function Register({
                             required
                             label="Full Name"
                             value={formik.values.name}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="e.g. Nayem Robin"
                             icon={User}
                             error={
@@ -185,8 +188,7 @@ export default function Register({
                             helperText="Either this or a mobile number."
                             type="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="name@example.com"
                             icon={Mail}
                             error={
@@ -203,8 +205,7 @@ export default function Register({
                             helperText="Where order updates and the rider call. Either this or an email address."
                             type="tel"
                             value={formik.values.phone}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="017xxxxxxxx"
                             icon={Smartphone}
                             error={
@@ -223,8 +224,7 @@ export default function Register({
                             label="Password (Min. 8 Characters)"
                             type="password"
                             value={formik.values.password}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="Create a strong password"
                             icon={Lock}
                             error={
@@ -243,8 +243,7 @@ export default function Register({
                             label="Confirm Password"
                             type="password"
                             value={formik.values.password_confirmation}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="Re-enter password"
                             icon={Lock}
                             error={
@@ -259,8 +258,7 @@ export default function Register({
                             <OtpCodeField
                                 phone={formik.values.phone}
                                 value={formik.values.code}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
+                                onChange={handleChange}
                                 error={
                                     (formik.touched.code &&
                                         formik.errors.code) ||

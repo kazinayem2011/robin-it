@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
+import { touchOnChange } from '../../utils/touchOnChange';
 import { Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import { BrandLogo } from '../../Components/BrandLogo';
 import Button from '../../Components/Button';
@@ -23,6 +24,9 @@ export default function ForgotPassword({ status, errors: serverErrors }) {
             });
         },
     });
+
+    // Touched as they type, never on blur — see touchOnChange.
+    const handleChange = touchOnChange(formik);
 
     return (
         <div className="auth-page-wrapper">
@@ -51,8 +55,7 @@ export default function ForgotPassword({ status, errors: serverErrors }) {
                             label="Registered Email Address"
                             type="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={handleChange}
                             placeholder="e.g. name@example.com"
                             icon={Mail}
                             error={
