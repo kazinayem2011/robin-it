@@ -3,9 +3,14 @@ name: Deploy
 # Deploys to Namecheap Stellar shared hosting (server178, cPanel account
 # robicxns) over SSH.
 #
-# Triggers deliberately exclude `dev`: this publishes to the live storefront,
-# and every work-in-progress commit should not reach customers. Merge to main
-# to release, or use "Run workflow" for a manual deploy from any branch.
+# Releases are manual: Actions → Deploy → "Run workflow" on `dev`, after the
+# Tests run for that commit has passed. Nothing here checks that it has.
+#
+# Pushing to `dev` deliberately does not deploy: this publishes to the live
+# storefront, and every work-in-progress commit should not reach customers.
+# The repository has no `main` branch, so the push trigger below never fires
+# today; it is kept so that creating `main` later makes merging to it a
+# release, without another change here.
 on:
   push:
     branches: [main]

@@ -238,6 +238,41 @@ export default function CategoryNav({ categories = [] }) {
         const panelBox = panel.getBoundingClientRect();
         const gutter = 12;
 
+        /*
+         * Tall lists take more columns before anything moves.
+         *
+         * Below 1200px the stylesheet lays brands out eighteen to a column, and
+         * a window 600px tall leaves about 400 under the dropdown: Keyboard's
+         * twenty-eight ran 70px off the bottom with its last brands out of
+         * reach, and the -6 floor below would not let it rise to make room.
+         * Fewer rows a column is tried first, and only while the result still
+         * fits across the window; what that cannot fix, the floor gives way to.
+         * The count is written straight to the element, which React leaves
+         * alone — its style prop names only top, left and right.
+         */
+        flyout.style.gridTemplateRows = '';
+
+        const room = window.innerHeight - gutter - (panelBox.top - 6);
+        const fromCss = getComputedStyle(flyout)
+            .gridTemplateRows.split(' ')
+            .filter(Boolean).length;
+
+        for (
+            let perColumn = fromCss;
+            perColumn > 1 && flyout.offsetHeight > room;
+            perColumn--
+        ) {
+            flyout.style.gridTemplateRows = `repeat(${perColumn - 1}, min-content)`;
+
+            if (flyout.offsetWidth > window.innerWidth - gutter * 2) {
+                flyout.style.gridTemplateRows =
+                    perColumn === fromCss
+                        ? ''
+                        : `repeat(${perColumn}, min-content)`;
+                break;
+            }
+        }
+
         const highestItMayStart =
             window.innerHeight - gutter - flyout.offsetHeight - panelBox.top;
 
@@ -275,9 +310,10 @@ export default function CategoryNav({ categories = [] }) {
                 ? {
                       ...current,
                       // -6 lines its top edge up with the dropdown's padding;
-                      // never higher, or it floats above the menu.
+                      // no higher unless that is the only way it fits, and
+                      // then never above the top of the window.
                       top: Math.max(
-                          -6,
+                          Math.min(-6, gutter - panelBox.top),
                           Math.min(current.top, highestItMayStart),
                       ),
                       // Only ever `left`: setting both over-constrains the
@@ -289,6 +325,74 @@ export default function CategoryNav({ categories = [] }) {
                 : current,
         );
     }, [flyoutOffset]);
+
+    /*
+     * A department opened from inside "More" fits the window by taking more
+     * columns.
+     *
+     * Its list opens beside the row that holds it, so the lower that row sits in
+     * "More", the lower the list starts; at fourteen rows a column, Gadget, the
+     * third entry, ran off the bottom of a laptop screen with Power Bank and
+     * everything after it out of reach. The brand flyouts are clamped by the
+     * effect above; this list, one level up, never was.
+     *
+     * Fewer rows a column first, so it stays level with the row the pointer is
+     * on, growing leftward into the room the page has on that side of "More".
+     * But only while it still fits that room: at 1000px seven departments fall
+     * into "More", the lowest open far down, and taking columns alone drew
+     * Accessories four rows tall and 640px past the left edge.
+     *
+     * Whatever overhang is left after that is taken by moving it up, and only
+     * by that much — so its span still contains the row that opened it, and
+     * moving straight across from the row lands inside it.
+     *
+     * Written straight to the element so a size is only ever read after the
+     * previous change has been laid out.
+     */
+    useLayoutEffect(() => {
+        const panel = navRef.current?.querySelector(
+            `[data-more-panel="${openCategory}"]`,
+        );
+
+        if (!panel) return;
+
+        panel.style.gridTemplateRows = '';
+        panel.style.top = '';
+
+        const gutter = 12;
+        const overhang = () =>
+            panel.getBoundingClientRect().bottom -
+            (window.innerHeight - gutter);
+
+        // The stylesheet's count, which differs by window width.
+        const fromCss = getComputedStyle(panel)
+            .gridTemplateRows.split(' ')
+            .filter(Boolean).length;
+        let perColumn = fromCss;
+
+        while (perColumn > 1 && overhang() > 0) {
+            panel.style.gridTemplateRows = `repeat(${perColumn - 1}, min-content)`;
+
+            if (panel.getBoundingClientRect().left < gutter) {
+                panel.style.gridTemplateRows =
+                    perColumn === fromCss
+                        ? ''
+                        : `repeat(${perColumn}, min-content)`;
+                break;
+            }
+
+            perColumn--;
+        }
+
+        const rise = Math.min(
+            overhang(),
+            panel.getBoundingClientRect().top - gutter,
+        );
+
+        if (rise > 0) {
+            panel.style.top = `${parseFloat(getComputedStyle(panel).top) - rise}px`;
+        }
+    }, [openCategory]);
 
     const renderCategory = (category, { inMore = false, index = 0 } = {}) => (
         <li
@@ -328,7 +432,10 @@ export default function CategoryNav({ categories = [] }) {
             </Link>
 
             {category.subcategories?.length > 0 && (
-                <ul className={inMore ? 'cat-nav-brands' : 'cat-nav-drop'}>
+                <ul
+                    className={inMore ? 'cat-nav-brands' : 'cat-nav-drop'}
+                    data-more-panel={inMore ? category.id : undefined}
+                >
                     {category.subcategories.map((sub) => (
                         <li
                             key={sub.id}
