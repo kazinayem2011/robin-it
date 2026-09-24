@@ -61,6 +61,18 @@ class AccountPagesTest extends TestCase
         ];
     }
 
+    /**
+     * The same sections, address only, for the tests that do not check the
+     * component. Handing them the component too is a PHPUnit warning, and a
+     * warning fails the run.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function urlProvider(): array
+    {
+        return array_map(fn (array $page) => [$page[0]], self::pageProvider());
+    }
+
     #[DataProvider('pageProvider')]
     public function test_each_section_has_its_own_page(string $url, string $component): void
     {
@@ -70,14 +82,14 @@ class AccountPagesTest extends TestCase
         $this->assertSame($component, $response->viewData('page')['component']);
     }
 
-    #[DataProvider('pageProvider')]
+    #[DataProvider('urlProvider')]
     public function test_every_section_is_behind_the_login(string $url): void
     {
         $this->get($url)->assertRedirect('/login');
     }
 
     /** The header and the sidebar counts appear on all of them. */
-    #[DataProvider('pageProvider')]
+    #[DataProvider('urlProvider')]
     public function test_every_section_carries_what_the_frame_needs(string $url): void
     {
         $props = $this->actingAs(User::factory()->create())

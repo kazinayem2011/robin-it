@@ -39,6 +39,18 @@ class AdminScreensTest extends TestCase
         ];
     }
 
+    /**
+     * The same screens, address only, for the tests that never render one.
+     * Handing them the component too is a PHPUnit warning, and a warning
+     * fails the run.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function uriProvider(): array
+    {
+        return array_map(fn (array $screen) => [$screen[0]], self::screenProvider());
+    }
+
     #[DataProvider('screenProvider')]
     public function test_an_admin_can_open_every_screen(string $uri, string $component): void
     {
@@ -50,7 +62,7 @@ class AdminScreensTest extends TestCase
         $this->assertSame($component, $response->viewData('page')['component']);
     }
 
-    #[DataProvider('screenProvider')]
+    #[DataProvider('uriProvider')]
     public function test_a_customer_is_turned_away_from_every_screen(string $uri): void
     {
         $customer = User::factory()->create(['role' => 'customer']);
@@ -58,7 +70,7 @@ class AdminScreensTest extends TestCase
         $this->actingAs($customer)->get($uri)->assertRedirect();
     }
 
-    #[DataProvider('screenProvider')]
+    #[DataProvider('uriProvider')]
     public function test_a_guest_is_sent_to_sign_in(string $uri): void
     {
         $this->get($uri)->assertRedirect('/login');
