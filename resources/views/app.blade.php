@@ -98,6 +98,10 @@
                 <meta inertia property="og:image:height" content="{{ $seo['image_height'] }}">
             @endif
         @endif
+        {{-- An article's date, section and author, which Facebook and LinkedIn show on its card. --}}
+        @foreach ($seo['article'] ?? [] as $property => $value)
+            <meta inertia property="article:{{ $property }}" content="{{ $value }}">
+        @endforeach
 
         {{--
             What puts a price, a stock state and a star rating in a search
@@ -105,8 +109,14 @@
             page, because only Google reads the page's copy, and only on a
             second pass.
         --}}
+        {{--
+            JSON_HEX_TAG: slashes are left unescaped, so without it a product
+            or article title containing "</script>" would close this tag early
+            and the rest of the title would be read as HTML. It writes < and >
+            as < and >, which is still the same JSON.
+        --}}
         @if ($seo['schema'])
-            <script type="application/ld+json">{!! json_encode($seo['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+            <script type="application/ld+json">{!! json_encode($seo['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
         @endif
 
         <meta inertia name="twitter:card" content="summary_large_image">

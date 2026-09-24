@@ -5,7 +5,6 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import SEOHead from '../../Components/SEOHead';
 import { blogService } from '../../services';
 import { ROUTES } from '../../constants/endpoints';
-import siteConfig from '../../constants/siteConfig';
 import { toast } from '../../Components/Toast';
 import {
     Clock,
@@ -98,11 +97,22 @@ export default function BlogShow({ slug }) {
         );
     }
 
+    const publishedAt = blog.published_at || blog.created_at;
+
     return (
         <>
+            {/*
+             * The same title, picture and type the server put in the HTML, so
+             * a reader that runs this (Google) and one that does not (every
+             * chat app) are told the same thing. The BlogPosting markup is
+             * the server's alone; sending it from here as well would publish
+             * the article twice.
+             */}
             <SEOHead
-                title={`${blog.title} — ${siteConfig.name} Tech Journal`}
+                title={blog.title}
                 description={blog.excerpt}
+                image={blog.image_path}
+                type="article"
             />
 
             <div className="article-reader-wrapper">
@@ -158,30 +168,24 @@ export default function BlogShow({ slug }) {
                         </div>
 
                         <div className="story-meta-row">
-                            <span>
-                                <Clock
-                                    size={14}
-                                    style={{
-                                        display: 'inline',
-                                        marginRight: 4,
-                                    }}
-                                />
+                            <span className="story-meta-item">
+                                <Clock size={14} aria-hidden="true" />
                                 {blog.read_time}
                             </span>
-                            <span>•</span>
-                            <span>
-                                <Calendar
-                                    size={14}
-                                    style={{
-                                        display: 'inline',
-                                        marginRight: 4,
-                                    }}
-                                />
-                                {blog.created_at
-                                    ? new Date(
-                                          blog.created_at,
-                                      ).toLocaleDateString()
-                                    : 'Recent'}
+                            <span aria-hidden="true">•</span>
+                            <span className="story-meta-item">
+                                <Calendar size={14} aria-hidden="true" />
+                                {/* When it went out, not when the row was
+                                    written: the two differed by days. */}
+                                {publishedAt ? (
+                                    <time dateTime={publishedAt}>
+                                        {new Date(
+                                            publishedAt,
+                                        ).toLocaleDateString()}
+                                    </time>
+                                ) : (
+                                    'Recent'
+                                )}
                             </span>
                         </div>
                     </div>

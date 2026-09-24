@@ -153,6 +153,19 @@
     font-weight: 600;
 }
 
+/* Icon and label centred on each other. The icons were inline SVGs sitting on
+   the text baseline, which put their centre visibly off the text's. */
+.story-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 1;
+}
+
+.story-meta-item svg {
+    flex: none;
+}
+
 /* Articles Grid */
 .journal-articles-grid {
     display: grid;

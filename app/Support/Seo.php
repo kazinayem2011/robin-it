@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\SiteSetting;
 use Illuminate\Support\Str;
@@ -203,6 +204,68 @@ class Seo
             'type' => 'product',
             'schema' => self::productSchema($product),
         ]);
+    }
+
+    /**
+     * An article's own page: its picture, its dates, and the markup Google
+     * reads for articles.
+     *
+     * The controller asked for `featured_image`, `meta_title` and
+     * `meta_description`, none of which the table has — the picture is
+     * `image_path`. So every article shared anywhere arrived with the shop's
+     * generic card rather than its own photograph.
+     *
+     * The date is `published_at`, falling back to `created_at` only for a post
+     * that never had one. The page showed `created_at`, which is when the row
+     * was written, not when the article went out.
+     *
+     * @return array<string, mixed>
+     */
+    public static function forBlogPost(BlogPost $post): array
+    {
+        $published = $post->published_at ?? $post->created_at;
+        $description = strip_tags((string) ($post->excerpt ?: $post->content));
+
+        $seo = self::for([
+            'title' => $post->title,
+            'description' => $description ?: null,
+            'image' => $post->image_path ?: null,
+            'type' => 'article',
+        ]);
+
+        /* og:article tags — Facebook and LinkedIn show the date from these. */
+        $seo['article'] = array_filter([
+            'published_time' => $published?->toIso8601String(),
+            'modified_time' => $post->updated_at?->toIso8601String(),
+            'section' => $post->category ?: null,
+            'author' => $post->author_name ?: null,
+        ]);
+
+        /*
+         * BlogPosting, which is what makes an article eligible for Google's
+         * article results. Headline is capped at the 110 characters Google
+         * reads; with no named author the shop itself is the author, which
+         * Google accepts, rather than the markup being left without one.
+         */
+        $brand = BrandDetails::name();
+
+        $seo['schema'] = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'BlogPosting',
+            'headline' => Str::limit($post->title, 110, ''),
+            'description' => $seo['description'],
+            'image' => $seo['image'],
+            'datePublished' => $published?->toIso8601String(),
+            'dateModified' => ($post->updated_at ?? $published)?->toIso8601String(),
+            'articleSection' => $post->category ?: null,
+            'author' => $post->author_name
+                ? ['@type' => 'Person', 'name' => $post->author_name]
+                : ['@type' => 'Organization', 'name' => $brand],
+            'publisher' => ['@type' => 'Organization', 'name' => $brand, 'url' => url('/')],
+            'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $seo['canonical']],
+        ], fn ($value) => $value !== null);
+
+        return $seo;
     }
 
     /**

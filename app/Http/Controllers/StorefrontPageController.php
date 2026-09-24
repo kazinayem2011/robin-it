@@ -490,15 +490,7 @@ class StorefrontPageController extends Controller
 
         return Inertia::render('Blogs/Show', [
             'slug' => $slug,
-            'seo' => $post
-                ? Seo::for([
-                    'title' => $post->meta_title ?: $post->title,
-                    'description' => $post->meta_description
-                        ?: strip_tags((string) ($post->excerpt ?: $post->content)),
-                    'image' => $post->featured_image ?: null,
-                    'type' => 'article',
-                ])
-                : Seo::for(),
+            'seo' => $post ? Seo::forBlogPost($post) : Seo::for(),
         ]);
     }
 }

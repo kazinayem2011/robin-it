@@ -35,7 +35,16 @@ export default function SEOHead({
         : settings.meta_title || `${brandName} | ${brandTagline}`;
     const pageDescription =
         description || settings.meta_description || siteConfig.description;
-    const pageImage = image || settings.og_image || '/images/og-default.jpg';
+    /*
+     * Absolute, as the server writes it. A share card is fetched by a machine
+     * with no idea which site a path belongs to, so a relative og:image is
+     * dropped — and this replaces the server's absolute one once it runs.
+     */
+    const imagePath = image || settings.og_image || '/images/og-default.jpg';
+    const pageImage =
+        imagePath.startsWith('/') && typeof window !== 'undefined'
+            ? window.location.origin + imagePath
+            : imagePath;
     const pageKeywords = keywords || settings.meta_keywords || '';
     const pageUrl =
         url || (typeof window !== 'undefined' ? window.location.href : '');
