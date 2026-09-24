@@ -31,9 +31,10 @@ is the one-time setup behind it, and the reference for when something breaks.
 
 ## PHP must be 8.4, not 8.3
 
-`composer.json` says `"php": "^8.3"`, but `composer.lock` pins Symfony 8.1,
-which requires `php >=8.4.1`. **The lock is stricter than the manifest.** On 8.3
+`composer.lock` pins Symfony 8.1, which requires `php >=8.4.1`. On 8.3
 `composer install` stops at `Verifying lock file contents` and installs nothing.
+`composer.json` said `^8.3` for a while, which is how this was found; it says
+`^8.4` now, so the manifest and the lock agree.
 
 Set it in *cPanel → Exclusive for Namecheap Customers → Select PHP Version*.
 

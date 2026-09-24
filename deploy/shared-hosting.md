@@ -13,8 +13,8 @@ supports directly.
 
 | Requirement | Why |
 |---|---|
-| **PHP 8.3 or newer** | `composer.json` requires `^8.3`. Selectable in hPanel. |
-| **MySQL** | Sessions, cache, queue and all application data. |
+| **PHP 8.4 or newer** | `composer.json` requires `^8.4` (Symfony 8.1 in the lock needs 8.4.1). Selectable in hPanel. |
+| **MySQL or MariaDB** | Sessions, cache, queue and all application data. The Namecheap server runs MariaDB 11.4, and CI tests against the same. |
 | **Cron** | Runs the scheduler, which drains the queue. |
 | **SSH** | For `composer install` and `artisan`. Hostinger includes it on Premium and Business, not on Single. |
 
@@ -107,7 +107,7 @@ cd /home/uXXXXXX/domains/yourdomain.com/robin-it && /usr/bin/php artisan schedul
 ```
 
 Check the PHP path with `which php` — on Hostinger it is often version-specific,
-such as `/usr/bin/php8.3`. Using the wrong binary is the most common reason
+such as `/usr/bin/php8.4`. Using the wrong binary is the most common reason
 this silently does nothing.
 
 That single entry runs everything: draining the queue, the worker health check,

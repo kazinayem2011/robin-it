@@ -17,7 +17,7 @@ jobs:
       # 8.4, not 8.3: composer.lock pins Symfony 8.1, which requires
       # php >=8.4.1. On 8.3 `composer install` stops at "Verifying lock file
       # contents" and every job fails before a single test runs. composer.json
-      # still says ^8.3 — the lock is the stricter of the two.
+      # says ^8.4 to match. Production is on 8.4 too.
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -36,23 +36,29 @@ jobs:
 
       - run: php vendor/bin/phpunit --no-coverage
 
-  # The suite that matters: production runs MySQL, and the two drivers return
-  # DECIMAL columns differently. A pricing bug once survived CI precisely because
-  # only SQLite was exercised.
+  # The suite that matters: it runs on the database production runs, and that
+  # and SQLite return DECIMAL columns differently. A pricing bug once survived
+  # CI precisely because only SQLite was exercised.
+  #
+  # MariaDB 11.4, not MySQL. This job ran mysql:8.0 on the belief that
+  # production did; a phpMyAdmin export of the live database says
+  # "11.4.x-MariaDB". The two share a wire protocol and Laravel's mysql
+  # driver, but not every function, JSON behaviour or default — testing on one
+  # and running on the other leaves exactly that gap unchecked.
   mysql:
-    name: PHPUnit (MySQL)
+    name: PHPUnit (MariaDB)
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      mariadb:
+        image: mariadb:11.4
         env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-          MYSQL_DATABASE: robin_it_testing
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+          MARIADB_DATABASE: robin_it_testing
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -76,7 +82,7 @@ jobs:
 
       - run: cp .env.example .env && php artisan key:generate
 
-      - name: Wait for MySQL
+      - name: Wait for MariaDB
         run: |
           for i in {1..30}; do
             mysqladmin ping -h 127.0.0.1 -uroot --silent && break

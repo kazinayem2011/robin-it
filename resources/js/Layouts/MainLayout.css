@@ -439,12 +439,23 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 5px;
+    /* Room for the tags' tap target to reach up into without covering the
+       search box — see .hot-tag. */
+    margin-top: 8px;
     font-size: 0.72rem;
     white-space: nowrap;
     /* The row no longer scrolls itself; the marquee inside it does, and an
        overflow here would clip that one's edge fade. */
     min-width: 0;
+}
+
+/* The marquee clips what overflows it, and a clipped area cannot be tapped:
+   it has to be as tall as the tags' 32px target for that target to work. The
+   padding makes it so, and the matching negative margin keeps it at the row's
+   height in the layout. */
+.search-hot-tags .header-marquee {
+    padding-block: 8px;
+    margin-block: -8px;
 }
 
 /* One copy of the keyword list. Two of these make up the marquee track. */
@@ -473,9 +484,14 @@
     font-size: 0.72rem;
     padding: 1px 6px;
     /* A finger needs somewhere to land. 1px of padding gave these a 16px
-       target; the extra height is padding, so nothing moves on a desktop
-       where the row is already comfortable to click. */
+       target, so it is 32px tall. */
     min-height: 32px;
+    /* But the 32px must not count toward the row's height. Counted, it left
+       about 10px of empty row under 12px of text, which added to the header's
+       bottom padding and made the space under the tags visibly deeper than the
+       space above the search box. The negative margin takes 16px back out of
+       the layout, and the tap target still covers it. */
+    margin-block: -8px;
     display: inline-flex;
     align-items: center;
     border-radius: var(--radius-xs);
