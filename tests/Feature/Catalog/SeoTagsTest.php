@@ -260,7 +260,7 @@ class SeoTagsTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertSee('<meta inertia name="description" content="', false);
+        $response->assertSee('<meta name="description" content="', false);
         $response->assertSee('property="og:site_name"', false);
         $response->assertSee('name="twitter:card" content="summary_large_image"', false);
     }

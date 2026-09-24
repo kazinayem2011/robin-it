@@ -106,6 +106,26 @@ class BlogShareCardTest extends TestCase
         );
     }
 
+    /*
+     * WhatsApp's preview parser expects name/property and content first; with
+     * Inertia's `inertia` attribute in front of them it read no meta tag at
+     * all, and a shared link showed only its <title>. The order is the fix.
+     */
+    public function test_every_share_tag_leads_with_what_it_is(): void
+    {
+        $this->article();
+
+        $html = $this->get('/blogs/pcie-gen5-guide')->getContent();
+        $head = substr($html, 0, strpos($html, '</head>'));
+
+        preg_match_all('#<meta\b[^>]*\b(?:property|name)="(?:og:|twitter:|article:|description)[^>]*>#', $head, $tags);
+
+        $this->assertNotEmpty($tags[0]);
+        foreach ($tags[0] as $tag) {
+            $this->assertMatchesRegularExpression('#^<meta (property|name)="[^"]+" content="#', $tag);
+        }
+    }
+
     public function test_a_missing_article_still_has_the_shops_card(): void
     {
         $this->get('/blogs/no-such-article')

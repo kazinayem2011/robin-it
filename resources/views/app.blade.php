@@ -65,42 +65,49 @@
             SEOHead replaces these on the client rather than adding a second
             copy beside them. The shop names itself in Site Settings; APP_NAME
             is only the fallback for an install where nobody has set one yet.
+
+            `inertia` goes last on every tag, after name/property and content.
+            WhatsApp builds its preview on the sender's phone with a parser
+            that expects those first: with `inertia` in front it read none of
+            these tags, only <title>, so every shared link showed a bare title
+            with no picture and no description. Inertia finds its tags by the
+            attribute being present, wherever it sits.
         --}}
         @php($seo = \App\Support\Seo::for($page['props']['seo'] ?? []))
 
         <title inertia>{{ $seo['title'] }}</title>
-        <meta inertia name="description" content="{{ $seo['description'] }}">
+        <meta name="description" content="{{ $seo['description'] }}" inertia>
         @if ($seo['keywords'])
-            <meta inertia name="keywords" content="{{ $seo['keywords'] }}">
+            <meta name="keywords" content="{{ $seo['keywords'] }}" inertia>
         @endif
         @if ($seo['noindex'])
-            <meta inertia name="robots" content="noindex, follow">
+            <meta name="robots" content="noindex, follow" inertia>
         @endif
         @if ($seo['verification'])
-            <meta inertia name="google-site-verification" content="{{ $seo['verification'] }}">
+            <meta name="google-site-verification" content="{{ $seo['verification'] }}" inertia>
         @endif
-        <link inertia rel="canonical" href="{{ $seo['canonical'] }}">
+        <link rel="canonical" href="{{ $seo['canonical'] }}" inertia>
 
         {{-- Open Graph: the share card on Facebook, WhatsApp and LinkedIn. --}}
-        <meta inertia property="og:type" content="{{ $seo['type'] }}">
-        <meta inertia property="og:title" content="{{ $seo['title'] }}">
-        <meta inertia property="og:description" content="{{ $seo['description'] }}">
-        <meta inertia property="og:url" content="{{ $seo['canonical'] }}">
-        <meta inertia property="og:site_name" content="{{ $seo['site_name'] }}">
+        <meta property="og:type" content="{{ $seo['type'] }}" inertia>
+        <meta property="og:title" content="{{ $seo['title'] }}" inertia>
+        <meta property="og:description" content="{{ $seo['description'] }}" inertia>
+        <meta property="og:url" content="{{ $seo['canonical'] }}" inertia>
+        <meta property="og:site_name" content="{{ $seo['site_name'] }}" inertia>
         @if ($seo['image'])
-            <meta inertia property="og:image" content="{{ $seo['image'] }}">
+            <meta property="og:image" content="{{ $seo['image'] }}" inertia>
             @if (str_starts_with($seo['image'], 'https://'))
-                <meta inertia property="og:image:secure_url" content="{{ $seo['image'] }}">
+                <meta property="og:image:secure_url" content="{{ $seo['image'] }}" inertia>
             @endif
-            <meta inertia property="og:image:alt" content="{{ $seo['title'] }}">
+            <meta property="og:image:alt" content="{{ $seo['title'] }}" inertia>
             @if ($seo['image_width'] && $seo['image_height'])
-                <meta inertia property="og:image:width" content="{{ $seo['image_width'] }}">
-                <meta inertia property="og:image:height" content="{{ $seo['image_height'] }}">
+                <meta property="og:image:width" content="{{ $seo['image_width'] }}" inertia>
+                <meta property="og:image:height" content="{{ $seo['image_height'] }}" inertia>
             @endif
         @endif
         {{-- An article's date, section and author, which Facebook and LinkedIn show on its card. --}}
         @foreach ($seo['article'] ?? [] as $property => $value)
-            <meta inertia property="article:{{ $property }}" content="{{ $value }}">
+            <meta property="article:{{ $property }}" content="{{ $value }}" inertia>
         @endforeach
 
         {{--
@@ -119,11 +126,11 @@
             <script type="application/ld+json">{!! json_encode($seo['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
         @endif
 
-        <meta inertia name="twitter:card" content="summary_large_image">
-        <meta inertia name="twitter:title" content="{{ $seo['title'] }}">
-        <meta inertia name="twitter:description" content="{{ $seo['description'] }}">
+        <meta name="twitter:card" content="summary_large_image" inertia>
+        <meta name="twitter:title" content="{{ $seo['title'] }}" inertia>
+        <meta name="twitter:description" content="{{ $seo['description'] }}" inertia>
         @if ($seo['image'])
-            <meta inertia name="twitter:image" content="{{ $seo['image'] }}">
+            <meta name="twitter:image" content="{{ $seo['image'] }}" inertia>
         @endif
 
         <!-- Favicon -->
