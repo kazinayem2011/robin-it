@@ -24,7 +24,8 @@
 .quick-dock-btn {
     position: relative;
     /* Wide enough that "COMPARE" is not touching both edges. The label is what
-       sets this, not the icon. */
+       sets this, not the icon. The page leaves room for exactly this beside
+       its content (.container in app.css) — change one, change the other. */
     width: 66px;
     height: 60px;
     display: flex;

@@ -1794,6 +1794,10 @@
     .mobile-menu-trigger-btn {
         padding: 0;
         width: 34px;
+        /* Without the padding it was only as tall as its glyph, 22px, for the
+           control every page on a phone is navigated from. Level with the
+           38px tool boxes on the same row instead; the glyph stays centred. */
+        height: 38px;
     }
     .main-search-wrapper {
         order: 3;

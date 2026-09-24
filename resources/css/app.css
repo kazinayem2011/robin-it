@@ -705,6 +705,29 @@ textarea.has-error:focus,
     padding: 0 16px;
 }
 
+/*
+ * Room beside the page for the Compare / Cart dock.
+ *
+ * The dock is pinned to the right edge at the vertical middle, 66px wide
+ * (QuickDock.css). Content only stays clear of it while the page's side margin
+ * is at least that, which at 1320px happens from about 1420px up — a 13" Mac,
+ * but not a 15" Windows laptop at 150% scaling, which gives the browser 1280.
+ * There the page ran to within 16px of each edge and the dock sat over the last
+ * product card's buttons.
+ *
+ * So below that the container narrows instead: never closer than the dock's
+ * width plus 8px to either edge, the same on both sides so the page stays
+ * centred. calc(100% - 116px) is that 74px margin less the 16px padding
+ * already inside, twice; it meets the 1320px cap at 1436px, so the page does
+ * not jump as the window crosses it. Phones are left alone: below 641px the dock
+ * moves to the bottom corner and every pixel of width is worth more there.
+ */
+@media (min-width: 641px) {
+    .container {
+        max-width: min(1320px, calc(100% - 116px));
+    }
+}
+
 /* ==========================================================================
    BUTTON DESIGN SYSTEM (SSOT VARIABLES)
    ========================================================================== */

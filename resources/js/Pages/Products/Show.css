@@ -517,8 +517,13 @@
 .pdp-share-btn {
     width: 22px;
     height: 22px;
+    /* The mark stays 22px; the target does not. 5px of padding makes it 32
+       to a finger, and the matching negative margin keeps the three marks
+       exactly where they were drawn. */
+    box-sizing: content-box;
+    margin: -5px;
+    padding: 5px;
     border: 0;
-    padding: 0;
     background: none;
     display: inline-flex;
     align-items: center;
