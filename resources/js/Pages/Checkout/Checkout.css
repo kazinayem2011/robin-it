@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .checkout-container {
-    padding: 40px 0;
+    padding-block: 40px;
 }
 
 .checkout-title {
@@ -29,7 +29,7 @@
 /* Empty Cart State */
 .checkout-empty-box {
     text-align: center;
-    padding: 80px 20px;
+    padding-block: 80px;
 }
 
 .checkout-empty-icon {
@@ -285,7 +285,7 @@
 /* Order Success */
 .order-success-container {
     text-align: center;
-    padding: 60px 20px;
+    padding-block: 60px;
 }
 
 .order-success-icon-box {

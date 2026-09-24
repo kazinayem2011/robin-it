@@ -1065,7 +1065,7 @@
 }
 
 .pdp-error-container {
-    padding: 120px 0;
+    padding-block: 120px;
     text-align: center;
 }
 
@@ -1090,7 +1090,7 @@
     }
 
     .pdp-page-wrapper {
-        padding: 16px 8px 40px;
+        padding-block: 16px 40px;
     }
     /* No height here either: a fixed one overrides the ratio above and brings
        the letterboxing back on a phone, where it is most of the screen. */

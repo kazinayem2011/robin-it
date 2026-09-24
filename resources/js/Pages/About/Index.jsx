@@ -92,20 +92,29 @@ export default function About({ page = null, stats = {}, showrooms = [] }) {
                     </section>
                 )}
 
-                <section className="container about-cta">
-                    <div>
-                        <h2>Something you want to ask?</h2>
-                        <p>
-                            Write to us and a person will answer, usually within
-                            a working day.
-                        </p>
-                    </div>
-                    <Link href={ROUTES.CONTACT}>
-                        <Button variant="primary" size="lg" icon={ArrowRight}>
-                            Contact us
-                        </Button>
-                    </Link>
-                </section>
+                {/* The box inside the container rather than being it: as the
+                    container itself its border sat on the container's outer
+                    edge, 16px outside the line every other page aligns to. */}
+                <div className="container">
+                    <section className="about-cta">
+                        <div>
+                            <h2>Something you want to ask?</h2>
+                            <p>
+                                Write to us and a person will answer, usually
+                                within a working day.
+                            </p>
+                        </div>
+                        <Link href={ROUTES.CONTACT}>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                icon={ArrowRight}
+                            >
+                                Contact us
+                            </Button>
+                        </Link>
+                    </section>
+                </div>
             </div>
         </>
     );

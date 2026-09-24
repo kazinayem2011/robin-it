@@ -6,7 +6,7 @@
  * word — announced, dated, with terms.
  * ------------------------------------------------------------------------- */
 .offers-page {
-    padding: 24px 0 64px;
+    padding-block: 24px 64px;
 }
 
 /*

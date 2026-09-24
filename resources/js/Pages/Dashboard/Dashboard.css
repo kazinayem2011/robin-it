@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .dashboard-layout-container {
-    padding: 32px 0 60px 0;
+    padding-block: 32px 60px;
     background-color: var(--bg-surface-subtle);
     min-height: 80vh;
 }
@@ -1003,7 +1003,7 @@
  */
 @media (max-width: 640px) {
     .dashboard-layout-container {
-        padding: 16px 0 40px;
+        padding-block: 16px 40px;
     }
 
     .dashboard-main-surface {

@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .compare-page-wrapper {
-    padding: 40px 0 60px 0;
+    padding-block: 40px 60px;
 }
 
 .compare-header-bar {
