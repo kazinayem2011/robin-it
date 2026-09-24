@@ -12,20 +12,21 @@ import useAppStore from '../store/useAppStore';
  * amount of CSS can recolour part of an image. Which one a variant gets is not
  * simply "whatever the theme is":
  *
- *   - footer and admin sit on furniture that is dark in *both* themes, so they
- *     always take the dark mark. That is a bug fix rather than a theme
- *     feature: the strapline has been invisible in the footer and down the side
- *     of the admin since before there was a theme to switch, because the
- *     surface was already near-black in the light one.
- *   - header and auth sit on a surface that follows the theme, so they follow
- *     it too.
+ *   - footer sits on furniture that is dark in *both* themes, so it always
+ *     takes the dark mark. That is a bug fix rather than a theme feature: the
+ *     strapline had been invisible in the footer since before there was a
+ *     theme to switch, because it was already near-black in the light one.
+ *   - header, auth and admin sit on a surface that follows the theme, so they
+ *     follow it too. The admin was on the always-dark side once, when its
+ *     sidebar was near-black in both themes; it is --bg-surface now, white in
+ *     the light theme, where the dark mark's white strapline disappeared.
  *
  * When no dark mark can be produced, siteConfig hands back the ordinary logo
  * and every variant renders exactly what it renders today.
  */
 
 /** Variants whose background is dark whatever the theme is doing. */
-const ALWAYS_DARK = new Set(['footer', 'admin']);
+const ALWAYS_DARK = new Set(['footer']);
 
 export const BrandLogo = ({
     variant = 'header',

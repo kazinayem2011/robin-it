@@ -19,11 +19,12 @@ const { setBrandLogoDark } = await import('../../constants/siteConfig');
  * CSS cannot recolour part of an image — so there are two files and something
  * has to choose between them.
  *
- * The choice is not simply "whatever the theme is". The footer and the admin
- * sidebar are dark in *both* themes, so the strapline has been invisible in
- * both of those since long before there was a theme to switch; they always
- * take the dark mark. The header and the auth card follow the surface they sit
- * on, which does follow the theme.
+ * The choice is not simply "whatever the theme is". The footer is dark in
+ * *both* themes, so its strapline was invisible long before there was a theme
+ * to switch; it always takes the dark mark. The header, the auth card and the
+ * admin sidebar follow the surface they sit on, which does follow the theme —
+ * the admin sidebar is white in the light theme, where the dark mark's white
+ * strapline vanished.
  */
 describe('BrandLogo', () => {
     const src = () => screen.getByRole('img').getAttribute('src');
@@ -34,18 +35,15 @@ describe('BrandLogo', () => {
     });
 
     describe('on furniture that is dark whatever the theme is', () => {
-        it.each(['footer', 'admin'])(
-            'gives %s the dark mark even in the light theme',
-            (variant) => {
-                render(<BrandLogo variant={variant} />);
+        it('gives the footer the dark mark even in the light theme', () => {
+            render(<BrandLogo variant="footer" />);
 
-                expect(src()).toBe('/images/logo-dark.png');
-            },
-        );
+            expect(src()).toBe('/images/logo-dark.png');
+        });
     });
 
     describe('on a surface that follows the theme', () => {
-        it.each(['header', 'auth'])(
+        it.each(['header', 'auth', 'admin'])(
             'gives %s the ordinary mark in light',
             (variant) => {
                 render(<BrandLogo variant={variant} />);
@@ -54,7 +52,7 @@ describe('BrandLogo', () => {
             },
         );
 
-        it.each(['header', 'auth'])(
+        it.each(['header', 'auth', 'admin'])(
             'gives %s the dark mark in dark',
             (variant) => {
                 useAppStore.setState({ theme: 'dark' });
