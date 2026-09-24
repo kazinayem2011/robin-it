@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, sep } from 'node:path';
 
 /*
  * Adding to the cart is one decision, made in one place.
@@ -48,13 +48,21 @@ const walk = (dir) =>
         return /\.(js|jsx)$/.test(full) ? [full] : [];
     });
 
+/* Relative to SRC, and with forward slashes on Windows too, so it compares
+   against ALLOWED as written. */
+const relative = (f) =>
+    f
+        .slice(SRC.length + 1)
+        .split(sep)
+        .join('/');
+
 describe('adding to the cart', () => {
     it('is not written out again anywhere new', () => {
         const offenders = walk(SRC)
             .filter((f) =>
                 /cartService\.addToCart\(/.test(readFileSync(f, 'utf8')),
             )
-            .map((f) => f.slice(SRC.length + 1))
+            .map(relative)
             .filter((f) => !ALLOWED.includes(f));
 
         expect(offenders).toEqual([]);
@@ -68,7 +76,7 @@ describe('adding to the cart', () => {
             .filter((f) =>
                 /cartService\.addToCart\(/.test(readFileSync(f, 'utf8')),
             )
-            .map((f) => f.slice(SRC.length + 1));
+            .map(relative);
 
         for (const allowed of ALLOWED) {
             expect(calling, `${allowed} no longer calls it`).toContain(allowed);

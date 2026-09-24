@@ -59,6 +59,9 @@ class RichText
         // Anything opened in a new tab must not keep a handle on this one.
         $config->set('HTML.TargetBlank', true);
         $config->set('Attr.AllowedRel', ['nofollow', 'noopener', 'noreferrer']);
+        // Defaults to PHP_EOL, so the same text was stored with \r\n when saved
+        // on Windows and \n on Linux.
+        $config->set('Output.Newline', "\n");
 
         $cache = storage_path('framework/cache/htmlpurifier');
 

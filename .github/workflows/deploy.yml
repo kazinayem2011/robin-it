@@ -154,6 +154,11 @@ jobs:
       # and holding every category's slug. A release that renames a shelf or
       # adds one therefore served the old menu for up to an hour afterwards,
       # which looks exactly like the deploy not having worked.
+      #
+      # Only queue:health may fail without failing the deploy — it reports,
+      # it does not change anything. The `|| true` once sat at the end of the
+      # whole && chain, where it also swallowed a failed migration: new code
+      # went live against the old schema and the run still showed green.
       - name: Migrate and refresh caches
         run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
@@ -166,4 +171,4 @@ jobs:
              php artisan route:cache && \
              php artisan view:cache && \
              php artisan queue:restart && \
-             php artisan queue:health || true"
+             { php artisan queue:health || true; }"
