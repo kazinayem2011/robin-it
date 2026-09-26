@@ -32,6 +32,40 @@ class SerialService
      * @param  array<int, string>  $serials
      * @return array{added: int, skipped: array<int, string>}
      */
+    /**
+     * A delivered line's serials, dealt out along its branch split.
+     *
+     * Six to Khulna and four to Dhaka: the first six serials typed are the
+     * units that went to Khulna, the next four Dhaka's — in the order the
+     * boxes were opened. Any left over go to the last branch.
+     *
+     * @param  list<array{0: ?int, 1: int}>  $split  [[store id, units], …]
+     * @return array{added: int, skipped: array<int, string>}
+     */
+    public function receiveSplit(Product $product, ?int $variantId, array $serials, array $split, ?StockReceipt $receipt = null): array
+    {
+        $serials = array_values(array_filter(array_map('trim', $serials), fn ($s) => $s !== ''));
+        $added = 0;
+        $skipped = [];
+        $offset = 0;
+        $last = count($split) - 1;
+
+        foreach ($split as $i => [$storeId, $units]) {
+            $share = $i === $last ? array_slice($serials, $offset) : array_slice($serials, $offset, $units);
+            $offset += $units;
+
+            if ($share === []) {
+                continue;
+            }
+
+            $result = $this->receive($product, $variantId, $share, $storeId, $receipt);
+            $added += $result['added'];
+            $skipped = array_merge($skipped, $result['skipped']);
+        }
+
+        return ['added' => $added, 'skipped' => $skipped];
+    }
+
     public function receive(
         Product $product,
         ?int $variantId,

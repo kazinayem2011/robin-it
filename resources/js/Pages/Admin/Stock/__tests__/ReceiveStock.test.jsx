@@ -1,8 +1,7 @@
 import React from 'react';
-import { readFileSync } from 'node:fs';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@inertiajs/react', () => ({ router: { reload: vi.fn() } }));
 vi.mock('@/Components/Toast', () => ({
@@ -12,195 +11,228 @@ vi.mock('@/Components/Toast', () => ({
 const adminService = vi.hoisted(() => ({
     getStockUnits: vi.fn(),
     receiveStock: vi.fn(),
+    receivePurchaseOrder: vi.fn(),
 }));
 vi.mock('@/services', () => ({ adminService }));
 
-import ReceiveStockModal from '../ReceiveStockModal';
+import ReceiveDeliveryModal from '../../Components/ReceiveDeliveryModal';
 
 const stores = [
     { id: 1, name: 'Khulna Branch', fulfils_online: true },
     { id: 2, name: 'Uttara Showroom', fulfils_online: false },
 ];
 
-const suppliers = [{ id: 5, name: 'AJAZZ Distribution', kind: 'trade' }];
-
-const units = [
-    {
-        id: 898,
-        name: 'Sample AJAZZ',
-        has_variants: false,
-        stock_quantity: 0,
-        category: { id: 3, name: 'AJAZZ Mice' },
-    },
-];
+const order = {
+    id: 12,
+    reference: 'PO-0012',
+    supplier_name: 'Star Supplier',
+    store_id: 1,
+    items: [
+        {
+            id: 41,
+            product_id: 7,
+            display_name: 'ASUS Vivobook',
+            quantity: 10,
+            quantity_received: 0,
+            unit_cost: 60000,
+        },
+    ],
+};
 
 beforeEach(() => {
-    adminService.getStockUnits.mockReset().mockResolvedValue({ data: units });
-    adminService.receiveStock
+    adminService.getStockUnits.mockReset().mockResolvedValue({ data: [] });
+    adminService.receiveStock.mockReset().mockResolvedValue({ message: 'ok' });
+    adminService.receivePurchaseOrder
         .mockReset()
-        .mockResolvedValue({ reference: 'GRN-1', total_quantity: 10 });
+        .mockResolvedValue({ message: 'ok' });
 });
 
-describe('Receive stock', () => {
-    /*
-     * Stock used to land in whichever branch the server fell back to — one the
-     * person receiving never chose and the form never named.
-     */
-    it('names the branch, starting with the one that ships online orders', async () => {
-        render(
-            <ReceiveStockModal
-                isOpen
-                suppliers={suppliers}
-                stores={stores}
-                onClose={vi.fn()}
-                onSaved={vi.fn()}
-            />,
-        );
+const open = (props = {}) =>
+    render(
+        <ReceiveDeliveryModal
+            isOpen
+            order={order}
+            stores={stores}
+            onClose={() => {}}
+            onSaved={() => {}}
+            {...props}
+        />,
+    );
 
-        // The shop's own dropdown: a combobox showing what is chosen.
-        const branch = await screen.findByRole('combobox', {
-            name: /Into branch/,
-        });
-        expect(branch).toHaveTextContent('Khulna Branch — ships online orders');
+/*
+ * One screen for receiving, from a purchase order or on its own. Everything
+ * goes to one branch unless a product is split, and the split must add up.
+ */
+describe('Receive delivery', () => {
+    it('starts with what is still to come, all going to the primary branch', async () => {
+        open();
+
+        expect(screen.getByText('ASUS Vivobook')).toBeInTheDocument();
+        expect(screen.getByText('Ordered 10')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('10')).toBeInTheDocument();
+        expect(
+            screen.getByText('All 10 go to Khulna Branch'),
+        ).toBeInTheDocument();
     });
 
-    it('sends the branch with the delivery', async () => {
-        render(
-            <ReceiveStockModal
-                isOpen
-                suppliers={suppliers}
-                stores={stores}
-                onClose={vi.fn()}
-                onSaved={vi.fn()}
-            />,
-        );
+    it('saves a normal delivery in one press', async () => {
+        const person = userEvent.setup();
+        open();
 
-        await userEvent.click(
-            await screen.findByRole('combobox', { name: /Into branch/ }),
-        );
-        await userEvent.click(await screen.findByText('Uttara Showroom'));
-        await userEvent.click(await screen.findByText('Choose a product…'));
-        await userEvent.click(await screen.findByText(/Sample AJAZZ/));
-        // Quantity first, then the cost beside it: neither input carries an
-        // id the label points at, so they are found by what they are.
-        const numbers = screen.getAllByRole('spinbutton');
-        await userEvent.type(numbers[0], '10');
-        await userEvent.type(screen.getByPlaceholderText('Optional'), '900');
-        await userEvent.click(
-            screen.getByRole('button', { name: /Book it in/ }),
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
         );
 
         await waitFor(() =>
-            expect(adminService.receiveStock).toHaveBeenCalledTimes(1),
-        );
-        expect(adminService.receiveStock.mock.calls[0][0]).toEqual(
-            expect.objectContaining({ store_id: '2' }),
+            expect(adminService.receivePurchaseOrder).toHaveBeenCalledWith(12, {
+                store_id: 1,
+                invoice_number: null,
+                // Today, unless it is changed.
+                received_on: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+                note: null,
+                lines: [
+                    {
+                        purchase_order_item_id: 41,
+                        quantity: 10,
+                        unit_cost: 60000,
+                        branches: null,
+                        serials: null,
+                    },
+                ],
+            }),
         );
     });
 
-    /** Four products share the name "Sample AJAZZ"; the shelf tells them apart. */
-    it('names the shelf beside each product', async () => {
-        render(
-            <ReceiveStockModal
-                isOpen
-                suppliers={suppliers}
-                stores={stores}
-                onClose={vi.fn()}
-                onSaved={vi.fn()}
-            />,
+    /* Entered late, with a note: both are kept. */
+    it('sends the day it came in and a note', async () => {
+        const person = userEvent.setup();
+        open();
+
+        const date = screen.getByLabelText(/received on/i);
+        await person.clear(date);
+        await person.type(date, '2026-09-20');
+        await person.type(
+            screen.getByLabelText(/note \(optional\)/i),
+            'One box dented',
+        );
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
         );
 
-        await userEvent.click(await screen.findByText('Choose a product…'));
+        await waitFor(() =>
+            expect(
+                adminService.receivePurchaseOrder.mock.calls[0][1],
+            ).toMatchObject({
+                received_on: '2026-09-20',
+                note: 'One box dented',
+            }),
+        );
+    });
+
+    it('splits a product between branches once it adds up', async () => {
+        const person = userEvent.setup();
+        open();
+
+        await person.click(screen.getByRole('button', { name: /split/i }));
+        const khulna = screen.getByLabelText('ASUS Vivobook to Khulna Branch');
+        const uttara = screen.getByLabelText(
+            'ASUS Vivobook to Uttara Showroom',
+        );
+
+        // Starts with all 10 in the branch chosen above.
+        expect(khulna).toHaveValue(10);
+        expect(screen.getByText('✓ All 10 placed')).toBeInTheDocument();
+
+        await person.clear(khulna);
+        await person.type(khulna, '6');
+        expect(screen.getByText('6 of 10 placed')).toBeInTheDocument();
+
+        await person.type(uttara, '4');
+        expect(screen.getByText('✓ All 10 placed')).toBeInTheDocument();
+
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
+        );
+
+        await waitFor(() =>
+            expect(
+                adminService.receivePurchaseOrder.mock.calls[0][1].lines[0]
+                    .branches,
+            ).toEqual({ 1: 6, 2: 4 }),
+        );
+    });
+
+    it('will not save a split that does not add up, and says why', async () => {
+        const person = userEvent.setup();
+        open();
+
+        await person.click(screen.getByRole('button', { name: /split/i }));
+        const khulna = screen.getByLabelText('ASUS Vivobook to Khulna Branch');
+        await person.clear(khulna);
+        await person.type(khulna, '6');
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
+        );
 
         expect(
-            await screen.findByText('Sample AJAZZ — AJAZZ Mice'),
+            await screen.findByText(
+                'ASUS Vivobook: 10 arrived but 6 placed in branches.',
+            ),
+        ).toBeInTheDocument();
+        expect(adminService.receivePurchaseOrder).not.toHaveBeenCalled();
+    });
+
+    it('will not take more than is still to come on the order', async () => {
+        const person = userEvent.setup();
+        open();
+
+        const arrived = screen.getByDisplayValue('10');
+        await person.clear(arrived);
+        await person.type(arrived, '12');
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
+        );
+
+        expect(
+            await screen.findByText(
+                'ASUS Vivobook: only 10 still to come on this order.',
+            ),
         ).toBeInTheDocument();
     });
-});
 
-/**
- * A receipt line is one row of controls, and they line up.
- *
- * Three things had it crooked. The grid declared four columns for five cells,
- * so the bin wrapped onto a row of its own beneath the line it deletes. The
- * product cell added a flex gap on top of the label's own bottom margin, so the
- * product box sat 4px below the Qty and Unit cost boxes. And a field carries an
- * 18px bottom margin meant for a stacked form, which in a row is invisible
- * space that still counts towards the row's height — so the two buttons, which
- * align to the bottom of the row, hung 14px below the boxes beside them.
- *
- * jsdom lays nothing out, but it does resolve the cascade, so these read the
- * settled values off the elements rather than matching text in the file.
- */
-describe('the receive line', () => {
-    let style;
+    it('sends serial numbers typed for a product', async () => {
+        const person = userEvent.setup();
+        open();
 
-    /*
-     * Once for the file, not once per test: jsdom parses the two stylesheets
-     * to answer these, and doing that four times slowed the whole parallel
-     * suite enough to time out a heavy test in another file.
-     */
-    beforeAll(() => {
-        document.head.innerHTML = `<style>${readFileSync('resources/css/app.css', 'utf8')}</style>
-            <style>${readFileSync('resources/js/Layouts/AdminLayout.css', 'utf8')}</style>`;
-        document.body.innerHTML = `
-            <div class="admin-receive-line">
-                <div class="admin-receive-line-product">
-                    <label class="auth-label">Product</label>
-                    <button class="ui-select-trigger auth-text-input">Choose a product…</button>
-                </div>
-                <div class="auth-form-group">
-                    <label class="auth-label">Qty</label>
-                    <div class="auth-input-wrapper"><input class="auth-text-input"></div>
-                </div>
-                <button class="admin-receive-line-serials">#</button>
-                <button class="admin-receive-line-remove">bin</button>
-            </div>`;
+        await person.click(screen.getByRole('button', { name: /serials/i }));
+        await person.type(
+            screen.getByLabelText(/serial numbers — one per line/i),
+            'SN1{enter}SN2',
+        );
+        await person.click(
+            screen.getByRole('button', { name: /save delivery/i }),
+        );
 
-        const of = (selector) =>
-            getComputedStyle(document.querySelector(selector));
-
-        style = {
-            line: of('.admin-receive-line'),
-            product: of('.admin-receive-line-product'),
-            field: of('.auth-form-group'),
-            input: of('.auth-form-group .auth-text-input'),
-            serials: of('.admin-receive-line-serials'),
-            bin: of('.admin-receive-line-remove'),
-        };
+        await waitFor(() =>
+            expect(
+                adminService.receivePurchaseOrder.mock.calls[0][1].lines[0]
+                    .serials,
+            ).toBe('SN1\nSN2'),
+        );
     });
 
-    it('has a column for every cell in it', () => {
-        const columns = style.line.gridTemplateColumns;
+    it('without an order, asks for the supplier and the products', async () => {
+        open({ order: null, suppliers: [{ id: 5, name: 'AJAZZ' }] });
 
-        // minmax(...) counts as one column, whatever commas it holds inside.
-        const cells = columns
-            .replace(/minmax\([^)]*\)/g, 'x')
-            .trim()
-            .split(/\s+/);
-        expect(cells).toHaveLength(5);
-    });
-
-    /** Both buttons end where the boxes end, and are the height of one. */
-    it('gives the buttons the height of the inputs beside them', () => {
-        const { input, serials, bin } = style;
-
-        expect(input.height).toBe('46px');
-        expect(serials.height).toBe(input.height);
-        expect(bin.height).toBe(input.height);
-        expect(serials.alignSelf).toBe('end');
-        expect(bin.alignSelf).toBe('end');
-    });
-
-    /** The row ends at the inputs: no stacked-form margin hanging below them. */
-    it('leaves no dead space under the fields', () => {
-        expect(style.field.marginBottom).toBe('0px');
-    });
-
-    /** The label's own margin does the spacing; a gap on top of it double-spaced. */
-    it('spaces the product label like every other label', () => {
-        const { product } = style;
-
-        expect(product.gap === '' || product.gap === 'normal').toBe(true);
+        await waitFor(() =>
+            expect(adminService.getStockUnits).toHaveBeenCalled(),
+        );
+        expect(screen.getByText('Supplier')).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /add another product/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/receive them from that order/i),
+        ).toBeInTheDocument();
     });
 });

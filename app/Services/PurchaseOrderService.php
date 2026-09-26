@@ -224,6 +224,9 @@ class PurchaseOrderService
                     'product_variant_id' => $item->product_variant_id,
                     'quantity' => $quantity,
                     'unit_cost' => (float) $unitCost,
+                    // Where it goes, when split between branches.
+                    'branches' => $line['branches'] ?? null,
+                    'serials' => $line['serials'] ?? null,
                 ];
 
                 $item->increment('quantity_received', $quantity);
@@ -252,6 +255,29 @@ class PurchaseOrderService
             );
 
             $receipt->update(['purchase_order_id' => $order->id]);
+
+            /*
+             * Serials, when typed: the same as a delivery booked without an
+             * order. This screen had no box for them, so a laptop bought on
+             * an order arrived with no serial on the books.
+             */
+            $deliveryStore = $header['store_id'] ?? $order->store_id;
+
+            foreach ($receiptLines as $line) {
+                if (blank($line['serials'] ?? null)) {
+                    continue;
+                }
+
+                [$product, $variant] = $this->stock->resolveUnit($line['product_id'], $line['product_variant_id']);
+
+                app(SerialService::class)->receiveSplit(
+                    $product,
+                    $variant?->id,
+                    preg_split('/[\r\n,]+/', (string) $line['serials']) ?: [],
+                    $this->stock->receivingSplit($line, $line['quantity'], $deliveryStore, $product, $variant),
+                    $receipt,
+                );
+            }
 
             $this->syncStatus($order->fresh('items'));
 

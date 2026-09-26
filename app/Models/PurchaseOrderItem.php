@@ -18,7 +18,12 @@ class PurchaseOrderItem extends Model
         'unit_cost' => 'float',
     ];
 
-    protected $appends = ['outstanding'];
+    /*
+     * The name travels with the line: the order and receiving screens fell
+     * back to "#1308" without it. Load `product` (and `variant`) with the
+     * lines where many are listed, so this is not a query per line.
+     */
+    protected $appends = ['outstanding', 'display_name'];
 
     public function purchaseOrder(): BelongsTo
     {

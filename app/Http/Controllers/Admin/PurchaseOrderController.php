@@ -29,7 +29,9 @@ class PurchaseOrderController extends Controller
         $branch = BranchScope::for($request->user());
 
         $orders = PurchaseOrder::query()
-            ->with(['supplier:id,name', 'store:id,name', 'items'])
+            // The products' names with the lines, in the same query: the
+            // screens showed "#1308" where the product belonged.
+            ->with(['supplier:id,name', 'store:id,name', 'items.product:id,name', 'items.variant:id,name'])
             ->when($branch, fn ($q) => $q->where('store_id', $branch))
             ->when(
                 array_key_exists((string) $status, PurchaseOrder::STATUSES),
@@ -130,12 +132,18 @@ class PurchaseOrderController extends Controller
         $data = $request->validate([
             'store_id' => 'nullable|integer|exists:stores,id',
             'invoice_number' => 'nullable|string|max:80',
-            'received_on' => 'nullable|date',
+            'received_on' => 'nullable|date|before_or_equal:today',
             'note' => 'nullable|string|max:500',
             'lines' => 'required|array|min:1',
             'lines.*.purchase_order_item_id' => 'required|integer',
             'lines.*.quantity' => 'required|integer|min:0|max:100000',
             'lines.*.unit_cost' => 'nullable|numeric|min:0',
+            // Split between branches: store id => units, adding up to the line.
+            'lines.*.branches' => 'nullable|array',
+            'lines.*.branches.*' => 'integer|min:0|max:100000',
+            'lines.*.serials' => 'nullable|string|max:20000',
+        ], [
+            'received_on.before_or_equal' => 'A delivery cannot be dated in the future.',
         ]);
 
         // Where the units actually land. Narrowed as well as checked, because
@@ -146,11 +154,19 @@ class PurchaseOrderController extends Controller
             return $refusal;
         }
 
+        foreach ($data['lines'] as $line) {
+            foreach (array_keys(array_filter((array) ($line['branches'] ?? []))) as $storeId) {
+                if ($refusal = $this->refuseOtherBranch($request, (int) $storeId)) {
+                    return $refusal;
+                }
+            }
+        }
+
         $receipt = $this->orders->receive($order, $request->user(), $data['lines'], $data);
         $order->refresh();
 
         return $this->successResponse(
-            ['receipt' => $receipt, 'order' => $order->fresh('items')],
+            ['receipt' => $receipt, 'order' => $order->fresh(['items.product:id,name', 'items.variant:id,name'])],
             $order->outstanding > 0
                 ? "Received. {$order->outstanding} still outstanding on {$order->reference}."
                 : "{$order->reference} is complete."

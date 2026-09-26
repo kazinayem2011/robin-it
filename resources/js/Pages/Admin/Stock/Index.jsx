@@ -13,7 +13,7 @@ import {
     ClipboardList,
     ArrowLeftRight,
 } from 'lucide-react';
-import ReceiveStockModal from './ReceiveStockModal';
+import ReceiveDeliveryModal from '../Components/ReceiveDeliveryModal';
 import ReceiptHistoryModal from './ReceiptHistoryModal';
 import AdjustStockModal from './AdjustStockModal';
 import StockLedgerModal from './StockLedgerModal';
@@ -297,7 +297,7 @@ export default function AdminStock({
                                 icon={PackagePlus}
                                 onClick={() => setReceiveOpen(true)}
                             >
-                                Book in a delivery
+                                Receive delivery
                             </Button>
                         </div>
                     </div>
@@ -447,7 +447,7 @@ export default function AdminStock({
                 </div>
             </div>
 
-            <ReceiveStockModal
+            <ReceiveDeliveryModal
                 suppliers={suppliers}
                 stores={stores}
                 isOpen={receiveOpen}

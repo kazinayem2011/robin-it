@@ -617,13 +617,17 @@ class StockService
                     'unit_cost' => $unitCost,
                 ]);
 
-                $this->record($product, $variant, $quantity, $movementType, [
-                    'reference' => $receipt,
-                    'store_id' => $header['store_id'] ?? null,
-                    'unit_cost' => $unitCost,
-                    'user_id' => $userId ?? Auth::id(),
-                    'note' => $receipt->supplier_name,
-                ]);
+                // Into each branch it was split between, or all of it into the
+                // one branch named for the delivery.
+                foreach ($this->receivingSplit($line, $quantity, $header['store_id'] ?? null, $product, $variant) as [$storeId, $units]) {
+                    $this->record($product, $variant, $units, $movementType, [
+                        'reference' => $receipt,
+                        'store_id' => $storeId,
+                        'unit_cost' => $unitCost,
+                        'user_id' => $userId ?? Auth::id(),
+                        'note' => $receipt->supplier_name,
+                    ]);
+                }
 
                 $totalQty += $quantity;
                 $totalCost += $unitCost !== null ? $unitCost * $quantity : 0.0;
@@ -636,6 +640,54 @@ class StockService
 
             return $receipt->load('items.product', 'items.variant', 'supplier');
         });
+    }
+
+    /**
+     * Where a delivered line goes: [[store id, units], …].
+     *
+     * The client's flow — ten arrive, six to Khulna and four to Dhaka — so a
+     * line may name its own split (`branches`: store id => units). It has to
+     * add up to what arrived; anything else is a typing slip that would put
+     * units nowhere, or out of thin air. Without a split, all of it goes to
+     * the branch named for the whole delivery.
+     *
+     * @return list<array{0: ?int, 1: int}>
+     */
+    public function receivingSplit(array $line, int $quantity, ?int $deliveryStoreId, Product $product, ?ProductVariant $variant): array
+    {
+        $split = array_filter(
+            array_map('intval', (array) ($line['branches'] ?? [])),
+            fn ($units) => $units > 0,
+        );
+
+        if ($split === []) {
+            return [[$deliveryStoreId, $quantity]];
+        }
+
+        $placed = array_sum($split);
+
+        if ($placed !== $quantity) {
+            throw new StorefrontException(
+                "{$this->unitName($product, $variant)}: {$quantity} arrived, but the branches add up to {$placed}. "
+                    .'Make them add up to what arrived.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        // In the branch list's own order — the order the receiving screen
+        // shows them — so serials typed in that order land where they went.
+        $known = Store::holdsStock()->whereIn('id', array_keys($split))
+            ->orderBy('sort_order')->orderBy('name')
+            ->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        foreach (array_keys($split) as $storeId) {
+            if (! in_array((int) $storeId, $known, true)) {
+                throw new StorefrontException('One of those branches does not hold stock.', 422, ApiCode::VALIDATION_ERROR);
+            }
+        }
+
+        return array_map(fn ($storeId) => [$storeId, $split[$storeId]], $known);
     }
 
     /**

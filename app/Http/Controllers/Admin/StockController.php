@@ -220,7 +220,7 @@ class StockController extends Controller
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_name' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:100',
-            'received_on' => 'nullable|date',
+            'received_on' => 'nullable|date|before_or_equal:today',
             'note' => 'nullable|string|max:1000',
             'lines' => 'required|array|min:1',
             'lines.*.product_id' => 'required|exists:products,id',
@@ -231,13 +231,26 @@ class StockController extends Controller
             // cables, paste, a bag of screws — has no serial worth keeping,
             // and demanding one would make receiving a chore nobody finishes.
             'lines.*.serials' => 'nullable|string|max:20000',
+            // Split between branches: store id => units, adding up to the line.
+            'lines.*.branches' => 'nullable|array',
+            'lines.*.branches.*' => 'integer|min:0|max:100000',
             'store_id' => 'nullable|exists:stores,id',
         ], [
             'lines.required' => 'Add at least one product to this delivery.',
+            'received_on.before_or_equal' => 'A delivery cannot be dated in the future.',
         ]);
 
         if ($refusal = $this->refuseOtherBranch($request, $validated['store_id'] ?? null)) {
             return $refusal;
+        }
+
+        // Someone who works at one branch receives into that branch only.
+        foreach ($validated['lines'] as $line) {
+            foreach (array_keys(array_filter((array) ($line['branches'] ?? []))) as $storeId) {
+                if ($refusal = $this->refuseOtherBranch($request, (int) $storeId)) {
+                    return $refusal;
+                }
+            }
         }
 
         $receipt = $this->stock->receive(
@@ -294,12 +307,13 @@ class StockController extends Controller
                 $line['product_variant_id'] ?? null
             );
 
-            // One per line, however the person pasted them in.
-            $result = $this->serials->receive(
+            // One per line, however the person pasted them in — dealt out
+            // to the branches the line was split between.
+            $result = $this->serials->receiveSplit(
                 $product,
                 $variant?->id,
                 preg_split('/[\r\n,]+/', $line['serials']) ?: [],
-                $storeId,
+                $this->stock->receivingSplit($line, (int) $line['quantity'], $storeId, $product, $variant),
                 $receipt
             );
 

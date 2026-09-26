@@ -2795,13 +2795,138 @@ a.admin-card:hover,
  * — a delete button floating beneath the thing it deletes, on a line of its
  * own for each row of the form.
  */
+/*
+ * Product, how many arrived, cost each, and the line's buttons on one row;
+ * where they go (the split, or "all go to …") and the serials underneath,
+ * across the whole row.
+ */
 .admin-receive-line {
     display: grid;
     grid-template-columns:
         minmax(0, 2.4fr) minmax(0, 0.8fr) minmax(0, 1fr)
-        auto auto;
+        auto;
     gap: 10px;
     align-items: start;
+    padding: 12px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+}
+
+.admin-receive-line > .admin-receive-split,
+.admin-receive-line > .admin-receive-going,
+.admin-receive-line > .admin-receive-serials {
+    grid-column: 1 / -1;
+}
+
+.admin-receive-line-actions {
+    display: flex;
+    gap: 6px;
+    align-self: end;
+    height: 46px;
+    align-items: center;
+}
+
+/* Split and Serials: small, labelled, and lit when in use. */
+.admin-receive-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--text-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-receive-chip.is-on {
+    border-color: var(--primary);
+    color: var(--primary-ink);
+    background: var(--primary-light);
+}
+
+/* How many go to each branch. */
+.admin-receive-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+
+.admin-receive-split-title {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.admin-receive-split label {
+    display: grid;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-body);
+}
+
+.admin-receive-split-ok,
+.admin-receive-split-off {
+    grid-column: 1 / -1;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.admin-receive-split-ok {
+    color: var(--success-text);
+}
+
+.admin-receive-split-off {
+    color: var(--danger-text);
+}
+
+.admin-receive-going {
+    margin: 0;
+}
+
+.admin-receive-serials {
+    display: grid;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.admin-receive-serials textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+}
+
+/* What is stopping the save, in words, under the lines. */
+.admin-receive-problems {
+    margin: 12px 0 0;
+    padding: 10px 14px 10px 30px;
+    border-radius: var(--radius-sm);
+    background: var(--danger-light);
+    color: var(--danger-text);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+    .admin-receive-line {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-receive-line-product,
+    .admin-receive-line-actions {
+        grid-column: 1 / -1;
+    }
 }
 
 .admin-receive-line > * {

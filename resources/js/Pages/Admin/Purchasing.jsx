@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReceiveDeliveryModal from './Components/ReceiveDeliveryModal';
 import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -260,8 +261,10 @@ export default function Purchasing({
                 }}
             />
 
-            <ReceiveModal
+            <ReceiveDeliveryModal
+                isOpen={Boolean(receiving)}
                 order={receiving}
+                stores={stores}
                 onClose={() => setReceiving(null)}
                 onSaved={() => {
                     setReceiving(null);
@@ -589,181 +592,6 @@ function WriteOrderModal({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Anything the supplier or your storekeeper should know"
             />
-        </Modal>
-    );
-}
-
-/**
- * Booking in what actually turned up.
- *
- * Pre-filled with what is still outstanding, because most deliveries are
- * complete — but every line is editable, because the ones that are not are
- * exactly what this record exists to catch.
- */
-function ReceiveModal({ order, onClose, onSaved }) {
-    const [got, setGot] = useState({});
-    /* What each unit cost on the invoice, per line. Pre-filled from the order
-       so a purchase raised with prices is still one press, and editable
-       because the invoice is what was actually paid — which is not always
-       what was quoted. */
-    const [cost, setCost] = useState({});
-    const [invoice, setInvoice] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    React.useEffect(() => {
-        if (!order) return;
-
-        setGot(
-            Object.fromEntries(
-                (order.items ?? []).map((i) => [
-                    i.id,
-                    String(Math.max(0, i.quantity - i.quantity_received)),
-                ]),
-            ),
-        );
-        setCost(
-            Object.fromEntries(
-                (order.items ?? []).map((i) => [
-                    i.id,
-                    i.unit_cost === null || i.unit_cost === undefined
-                        ? ''
-                        : String(i.unit_cost),
-                ]),
-            ),
-        );
-        setInvoice('');
-    }, [order]);
-
-    const save = async () => {
-        setSaving(true);
-
-        try {
-            const lines = (order.items ?? [])
-                .map((i) => ({
-                    purchase_order_item_id: i.id,
-                    quantity: Number(got[i.id] ?? 0),
-                    unit_cost: cost[i.id] === '' ? null : Number(cost[i.id]),
-                }))
-                .filter((l) => l.quantity > 0);
-
-            /*
-             * Caught here rather than by the server, so the message names the
-             * line rather than arriving as "lines.2.unit_cost is required".
-             * Stock received without a price is skipped by every costed query
-             * — it would sit on the shelf contributing nothing to valuation
-             * or to the margin on anything sold from it.
-             */
-            const unpriced = lines.filter(
-                (l) => l.unit_cost === null || Number.isNaN(l.unit_cost),
-            );
-
-            if (unpriced.length) {
-                toast.error(
-                    'Every line being received needs a unit cost — stock without a price cannot be valued.',
-                );
-                setSaving(false);
-
-                return;
-            }
-
-            const res = await adminService.receivePurchaseOrder(order.id, {
-                invoice_number: invoice || null,
-                lines,
-            });
-            toast.success(res?.message || 'Received.');
-            onSaved();
-        } catch (err) {
-            toast.error(err?.message || 'Could not book that delivery in.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <Modal
-            isOpen={Boolean(order)}
-            onClose={onClose}
-            title={`Receive against ${order?.reference ?? ''}`}
-            maxWidth="600px"
-            footer={
-                <>
-                    <Button variant="secondary" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button variant="primary" onClick={save} loading={saving}>
-                        Book it in
-                    </Button>
-                </>
-            }
-        >
-            <p className="admin-field-hint" style={{ marginBottom: 16 }}>
-                Enter what actually arrived. Anything short stays outstanding on
-                the order, so you can see what {order?.supplier_name} still
-                owes.
-            </p>
-
-            <FormInput
-                label="Their invoice number"
-                name="po_invoice"
-                value={invoice}
-                onChange={(e) => setInvoice(e.target.value)}
-                placeholder="Optional, but worth having"
-            />
-
-            <table className="po-lines">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th className="po-num">Outstanding</th>
-                        <th className="po-num">Arrived</th>
-                        <th className="po-num">Unit cost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {(order?.items ?? []).map((i) => {
-                        const left = Math.max(
-                            0,
-                            i.quantity - i.quantity_received,
-                        );
-
-                        return (
-                            <tr key={i.id}>
-                                <td>{i.display_name ?? `#${i.product_id}`}</td>
-                                <td className="po-num">{left}</td>
-                                <td className="po-num">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max={left}
-                                        value={got[i.id] ?? ''}
-                                        onChange={(e) =>
-                                            setGot((prev) => ({
-                                                ...prev,
-                                                [i.id]: e.target.value,
-                                            }))
-                                        }
-                                    />
-                                </td>
-                                <td className="po-num">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="0.00"
-                                        value={cost[i.id] ?? ''}
-                                        onChange={(e) =>
-                                            setCost((prev) => ({
-                                                ...prev,
-                                                [i.id]: e.target.value,
-                                            }))
-                                        }
-                                    />
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
         </Modal>
     );
 }
