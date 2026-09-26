@@ -100,7 +100,7 @@ export default function BackInStockForm({
             <div className="pdp-notify-head">
                 <Bell size={17} />
                 <div>
-                    <strong>Out of stock</strong>
+                    <strong>Sold Out</strong>
                     <span>
                         {locked
                             ? 'We\u2019ll email you the moment it returns.'

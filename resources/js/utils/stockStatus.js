@@ -18,7 +18,8 @@
  * @param {{selectedVariant?: object|null, availableStock?: number}} [state]
  * @returns {{label: string, tone: 'in'|'out'|'waiting'|'unknown'}}
  */
-const PLAINLY_OUT = ['out of stock', 'unavailable'];
+// 'out of stock' too: a shop may still type the old wording itself.
+const PLAINLY_OUT = ['sold out', 'out of stock', 'unavailable'];
 
 export const stockStatusFor = (product, state = {}) => {
     const { selectedVariant = null, availableStock = 0 } = state;
@@ -49,8 +50,8 @@ export const stockStatusFor = (product, state = {}) => {
     }
 
     const label = hasVariants
-        ? 'Out of Stock'
-        : product.stock_status_label || 'Out of Stock';
+        ? 'Sold Out'
+        : product.stock_status_label || 'Sold Out';
 
     return {
         label,

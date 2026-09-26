@@ -314,7 +314,8 @@ class Product extends Model
 
     private function allows_preorder_label(): string
     {
-        return $this->allow_preorder ? 'Pre-Order' : 'Out of Stock';
+        // StarTech's wording, and the card's: "Sold Out".
+        return $this->allow_preorder ? 'Pre-Order' : 'Sold Out';
     }
 
     /**

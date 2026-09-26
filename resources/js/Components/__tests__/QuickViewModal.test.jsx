@@ -123,7 +123,7 @@ describe('QuickViewModal', () => {
         open({ ...plain, stock_quantity: 0 });
 
         expect(
-            screen.getByRole('button', { name: /out of stock/i }),
+            screen.getByRole('button', { name: /sold out/i }),
         ).toBeDisabled();
     });
 

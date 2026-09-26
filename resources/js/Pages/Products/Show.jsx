@@ -868,17 +868,23 @@ export default function ProductDetails(props) {
                             below already carry it at size. Two places, not
                             three. */}
                         <div className="pdp-meta">
-                            <div className="meta-item">
-                                <span className="meta-label">Price:</span>
-                                <span className="meta-value">
-                                    {formatBdt(cashPrice)}
-                                </span>
-                            </div>
+                            {/* No price chip for something that cannot be
+                                bought, as on this shop's own card; Status says
+                                why. A pre-order keeps its price: it can still
+                                be ordered. */}
+                            {!soldOut && (
+                                <div className="meta-item">
+                                    <span className="meta-label">Price:</span>
+                                    <span className="meta-value">
+                                        {formatBdt(cashPrice)}
+                                    </span>
+                                </div>
+                            )}
 
                             {/* Only when it is genuinely a different
                                 number. "Regular Price" repeating the price
                                 beside it reads as a mistake. */}
-                            {regularPrice > cashPrice && (
+                            {!soldOut && regularPrice > cashPrice && (
                                 <div className="meta-item">
                                     <span className="meta-label">
                                         Regular Price:
@@ -923,16 +929,17 @@ export default function ProductDetails(props) {
                         {/* The clock stays with the deal it is counting
                             down, now that the price it belonged to has
                             moved up into the row above. */}
-                        {(selectedVariant ?? product).has_discount && (
-                            <div className="pdp-deal-clock">
-                                <CountdownTimer
-                                    label="LIMITED DEAL:"
-                                    variant="pill"
-                                    showIcon={true}
-                                    iconType="flame"
-                                />
-                            </div>
-                        )}
+                        {!soldOut &&
+                            (selectedVariant ?? product).has_discount && (
+                                <div className="pdp-deal-clock">
+                                    <CountdownTimer
+                                        label="LIMITED DEAL:"
+                                        variant="pill"
+                                        showIcon={true}
+                                        iconType="flame"
+                                    />
+                                </div>
+                            )}
 
                         {/* Option picker. Each option carries its own stock,
                             so one being sold out says nothing about another. */}
@@ -972,7 +979,7 @@ export default function ProductDetails(props) {
                                                 }}
                                                 title={
                                                     out
-                                                        ? 'Out of stock'
+                                                        ? 'Sold Out'
                                                         : `${variant.stock_quantity} available`
                                                 }
                                             >
@@ -1049,7 +1056,7 @@ export default function ProductDetails(props) {
                             buried in the description. A trade buyer who
                             cannot see the tier phones instead of ordering,
                             which is the problem this solves. */}
-                        {product.quantity_discounts?.length > 0 && (
+                        {!soldOut && product.quantity_discounts?.length > 0 && (
                             <div className="pdp-tier-table">
                                 <h4>Bulk pricing</h4>
                                 <table>
@@ -1077,69 +1084,84 @@ export default function ProductDetails(props) {
                             prices, so they are shown as the choice they
                             are. The discount rewards paying now and the
                             instalment is on the regular price — presenting
-                            one figure would misprice one of the two. */}
-                        <h2 className="pdp-section-heading">Payment Options</h2>
+                            one figure would misprice one of the two.
+                            Not drawn when sold out: there is no price to pay
+                            either way, and the section is the price at size. */}
+                        {!soldOut && (
+                            <>
+                                <h2 className="pdp-section-heading">
+                                    Payment Options
+                                </h2>
 
-                        <div
-                            className="pdp-payment-options"
-                            role="radiogroup"
-                            aria-label="Payment Options"
-                        >
-                            {/* Always drawn, even with nothing to compare
+                                <div
+                                    className="pdp-payment-options"
+                                    role="radiogroup"
+                                    aria-label="Payment Options"
+                                >
+                                    {/* Always drawn, even with nothing to compare
                                 it against: this is where the price is
                                 shown at size, so a product with no
                                 instalment plan would otherwise have none. */}
-                            <label
-                                className={`pdp-pay-option ${payMethod === 'cash' ? 'active' : ''}`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="pdp-pay"
-                                    value="cash"
-                                    checked={payMethod === 'cash'}
-                                    onChange={() => setPayMethod('cash')}
-                                />
-                                <span className="pdp-pay-body">
-                                    <span className="pdp-pay-price">
-                                        {formatBdt(cashPrice)}
-                                    </span>
-                                    <span className="pdp-pay-tag">
-                                        Cash Discount Price
-                                    </span>
-                                    <span className="pdp-pay-note">
-                                        Online / Cash Payment
-                                    </span>
-                                </span>
-                            </label>
+                                    <label
+                                        className={`pdp-pay-option ${payMethod === 'cash' ? 'active' : ''}`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="pdp-pay"
+                                            value="cash"
+                                            checked={payMethod === 'cash'}
+                                            onChange={() =>
+                                                setPayMethod('cash')
+                                            }
+                                        />
+                                        <span className="pdp-pay-body">
+                                            <span className="pdp-pay-price">
+                                                {formatBdt(cashPrice)}
+                                            </span>
+                                            <span className="pdp-pay-tag">
+                                                Cash Discount Price
+                                            </span>
+                                            <span className="pdp-pay-note">
+                                                Online / Cash Payment
+                                            </span>
+                                        </span>
+                                    </label>
 
-                            {product.emi_monthly && (
-                                <label
-                                    className={`pdp-pay-option ${payMethod === 'emi' ? 'active' : ''}`}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="pdp-pay"
-                                        value="emi"
-                                        checked={payMethod === 'emi'}
-                                        onChange={() => setPayMethod('emi')}
-                                    />
-                                    <span className="pdp-pay-body">
-                                        <span className="pdp-pay-price">
-                                            {formatBdt(product.emi_monthly)}
-                                            /month
-                                        </span>
-                                        <span className="pdp-pay-tag">
-                                            Regular Price:{' '}
-                                            {formatBdt(product.price)}
-                                        </span>
-                                        <span className="pdp-pay-note">
-                                            0% EMI for up to{' '}
-                                            {product.emi_max_months} Months ***
-                                        </span>
-                                    </span>
-                                </label>
-                            )}
-                        </div>
+                                    {product.emi_monthly && (
+                                        <label
+                                            className={`pdp-pay-option ${payMethod === 'emi' ? 'active' : ''}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="pdp-pay"
+                                                value="emi"
+                                                checked={payMethod === 'emi'}
+                                                onChange={() =>
+                                                    setPayMethod('emi')
+                                                }
+                                            />
+                                            <span className="pdp-pay-body">
+                                                <span className="pdp-pay-price">
+                                                    {formatBdt(
+                                                        product.emi_monthly,
+                                                    )}
+                                                    /month
+                                                </span>
+                                                <span className="pdp-pay-tag">
+                                                    Regular Price:{' '}
+                                                    {formatBdt(product.price)}
+                                                </span>
+                                                <span className="pdp-pay-note">
+                                                    0% EMI for up to{' '}
+                                                    {product.emi_max_months}{' '}
+                                                    Months ***
+                                                </span>
+                                            </span>
+                                        </label>
+                                    )}
+                                </div>
+                            </>
+                        )}
 
                         {/*
                             Said, not just enforced. The cart raises whatever
@@ -1164,10 +1186,20 @@ export default function ProductDetails(props) {
                              * nothing to have. What a shopper can
                              * actually do next is the waiting list below.
                              */}
+                            {/*
+                             * A status, not a disabled button, as StarTech has
+                             * it. As a button it was drawn at the 50% every
+                             * disabled button gets, grey on grey, and could
+                             * barely be read. The words are the product's own
+                             * ("When Out of Stock, say") when it has them.
+                             */}
                             {soldOut ? (
-                                <Button variant="secondary" size="lg" disabled>
-                                    Out of Stock
-                                </Button>
+                                <span
+                                    className="pdp-stock-status"
+                                    role="status"
+                                >
+                                    {product.out_of_stock_status || 'Sold Out'}
+                                </span>
                             ) : (
                                 <>
                                     <div className="quantity-selector">

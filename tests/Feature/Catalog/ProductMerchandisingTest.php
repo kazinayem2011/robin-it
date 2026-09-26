@@ -63,7 +63,7 @@ class ProductMerchandisingTest extends TestCase
     public function test_an_empty_shelf_without_wording_falls_back(): void
     {
         $this->assertSame(
-            'Out of Stock',
+            'Sold Out',
             $this->product(['stock_quantity' => 0])->stock_status_label
         );
     }

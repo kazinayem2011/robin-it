@@ -1746,7 +1746,7 @@ export default function Products({
                                             formik.errors.out_of_stock_status
                                         }
                                         placeholder="2-3 Days"
-                                        helperText="Blank reads 'Out of Stock'."
+                                        helperText="Shown on the product's card and page when it cannot be bought, e.g. 'Up Coming'. Blank reads 'Sold Out'."
                                     />
                                 </div>
 

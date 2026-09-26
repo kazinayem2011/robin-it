@@ -211,7 +211,8 @@ export default function QuickViewModal({ show, onClose, product }) {
                                 {hasOptions
                                     ? 'Choose options'
                                     : !canBuy
-                                      ? 'Out of stock'
+                                      ? product.out_of_stock_status ||
+                                        'Sold Out'
                                       : isPreorder
                                         ? 'Pre-order'
                                         : 'Add to Cart'}

@@ -37,7 +37,7 @@ describe('stockStatusFor', () => {
                 selectedVariant: { id: 1, stock_quantity: 0 },
                 availableStock: 0,
             }),
-        ).toEqual({ label: 'Out of Stock', tone: 'out' });
+        ).toEqual({ label: 'Sold Out', tone: 'out' });
     });
 
     it('reports the chosen option as in stock on its own figure', () => {

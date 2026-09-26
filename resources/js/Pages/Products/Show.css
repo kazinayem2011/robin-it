@@ -404,6 +404,25 @@
     margin-bottom: 20px;
 }
 
+/*
+ * Sold out, said plainly where the buy buttons would be.
+ *
+ * StarTech's figure: bold mid-grey on a pale ground, 42px tall, at full
+ * strength. It was a disabled button, and every disabled button is drawn at
+ * half opacity, so grey text on a grey ground on a grey page all but vanished.
+ * Theme tokens rather than StarTech's hex, so it reads in the dark theme too.
+ */
+.pdp-stock-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 32px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-muted-strong);
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
 .quantity-selector {
     display: flex;
     align-items: center;
