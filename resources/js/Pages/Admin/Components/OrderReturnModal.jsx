@@ -216,6 +216,15 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
                 </div>
             )}
 
+            {/* Said, not swallowed: a form that refuses and shows nothing
+                reads as a button that does not work. */}
+            {formik.submitCount > 0 &&
+                typeof formik.errors.lines === 'string' && (
+                    <div className="admin-ledger-drift">
+                        {formik.errors.lines}
+                    </div>
+                )}
+
             <FormInput
                 label="Note"
                 name="note"

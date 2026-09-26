@@ -161,9 +161,9 @@ class PreorderPaperworkTest extends TestCase
 
         $html = (new OrderConfirmationMail($order->fresh('items')))->render();
 
-        $this->assertSame(1, substr_count($html, 'Pre-order &mdash; ships when the delivery arrives'));
+        $this->assertSame(1, substr_count($html, 'Pre-order — ships when the delivery arrives'));
         $this->assertLessThan(
-            strpos($html, 'Pre-order &mdash;'),
+            strpos($html, 'Pre-order —'),
             strpos($html, 'Not yet landed'),
             'the mark sits under the line it belongs to',
         );

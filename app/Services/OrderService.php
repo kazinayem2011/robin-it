@@ -50,7 +50,10 @@ class OrderService
         array $addressData,
         ?int $userId = null,
         ?string $sessionId = null,
-        ?Coupon $coupon = null
+        ?Coupon $coupon = null,
+        // A counter sale ships from the branch it was made at; online, the
+        // default branch, then whichever has it.
+        ?int $storeId = null,
     ): Order {
         $cart->load('items.product', 'items.variant');
 
@@ -61,7 +64,7 @@ class OrderService
         // Fail fast with a clear message before opening a transaction.
         $this->assertCartIsPurchasable($cart);
 
-        $order = DB::transaction(function () use ($cart, $addressData, $userId, $sessionId, $coupon) {
+        $order = DB::transaction(function () use ($cart, $addressData, $userId, $sessionId, $coupon, $storeId) {
             $discount = 0.0;
 
             if ($coupon) {
@@ -162,8 +165,9 @@ class OrderService
                     'total' => round($effectivePrice * $item->quantity, 2),
                 ]);
 
-                // Takes the units off the shelf and leaves a ledger row saying why.
-                $this->stock->sell($product, $variant, $item->quantity, $order);
+                // Takes the units off the shelves that hold them and leaves a
+                // ledger row per branch saying why.
+                $this->stock->sellForOrder($product, $variant, $item->quantity, $order, $storeId);
             }
 
             // Clear Cart after successful order
@@ -207,6 +211,7 @@ class OrderService
         array $addressData,
         ?User $customer = null,
         ?Coupon $coupon = null,
+        ?int $storeId = null,
     ): Order {
         $lines = array_values(array_filter($lines, fn ($l) => (int) ($l['quantity'] ?? 0) > 0));
 
@@ -246,7 +251,8 @@ class OrderService
                 $addressData,
                 $customer?->id,
                 $cart->session_id,
-                $coupon
+                $coupon,
+                $storeId
             );
         } catch (\Throwable $e) {
             /*
@@ -293,16 +299,18 @@ class OrderService
                 throw StorefrontException::unavailable($item->displayName());
             }
 
-            // Measured at the branch orders actually ship from. The shop can
-            // hold plenty across the showrooms while the one that posts
-            // parcels has none, and promising those units would be a lie.
+            // Everything the branches hold between them: an order takes from
+            // whichever has it (StockService::sellForOrder), so a unit in a
+            // showroom is as sellable as one in the warehouse.
             $available = $this->onlineAvailability($product, $variant);
 
             // A pre-order product is allowed to ship from a branch that has
             // none: the balance goes negative and the units are owed until the
             // delivery lands.
             if ($available < $item->quantity
-                && ! $product->allowsBalance($available - $item->quantity)) {
+                && ! $product->allowsBalance($available - $item->quantity)
+                // Some in stock: the order is taken, the rest owed and flagged.
+                && ! $product->takesOrdersBeyondStock($available)) {
                 // Past a pre-order limit is not "out of stock": say the number.
                 $ceiling = $product->allowsPreorder() ? $product->sellableCeiling($available) : null;
 
@@ -314,22 +322,25 @@ class OrderService
     }
 
     /**
-     * How many of something the online branch can actually ship.
+     * How many of something the branches can ship between them.
      *
-     * Falls back to the overall balance when no branch is configured to fulfil
-     * online orders, so a shop that has not set one up still sells.
+     * It was the online branch alone, while the storefront's "In Stock" and
+     * the cart counted every branch — so something held only in a showroom
+     * was offered, carted, and then refused at checkout. An order now takes
+     * from any branch that holds stock, so this counts them all. Without any
+     * branch set up, the overall balance.
      */
     protected function onlineAvailability(Product $product, ?ProductVariant $variant): int
     {
-        $storeId = Store::onlineFulfilment()?->id;
+        $branches = Store::holdsStock()->pluck('id');
 
-        if (! $storeId) {
+        if ($branches->isEmpty()) {
             return (int) ($variant?->stock_quantity ?? $product->stock_quantity);
         }
 
         return (int) ProductStock::forUnit($product->id, $variant?->id)
-            ->where('store_id', $storeId)
-            ->value('quantity') ?? 0;
+            ->whereIn('store_id', $branches)
+            ->sum('quantity');
     }
 
     /**
@@ -786,7 +797,8 @@ class OrderService
                 continue;
             }
 
-            $this->stock->releaseToShelf($product, $variant, $item->quantity, $order, $note);
+            // Back to the branch each unit left, read from the ledger.
+            $this->stock->restoreForOrder($product, $variant, $item->quantity, $order, StockMovement::CANCELLATION, $note);
         }
 
         $order->forceFill(['stock_released_at' => now()])->save();
@@ -866,25 +878,29 @@ class OrderService
                     continue;
                 }
 
+                // Back to the branch each unit left, read from the ledger.
                 if ($resellable > 0) {
-                    $this->stock->record($product, $variant, $resellable, StockMovement::RETURN, [
-                        'reference' => $order,
-                        'note' => trim(($fallbackNote ? $fallbackNote.' ' : '').($note ?? '')) ?: null,
-                    ]);
+                    $this->stock->restoreForOrder(
+                        $product, $variant, $resellable, $order, StockMovement::RETURN,
+                        trim(($fallbackNote ? $fallbackNote.' ' : '').($note ?? '')) ?: null,
+                    );
                 }
 
-                // Damaged units are accounted for but never put back on the shelf.
+                // Damaged units are accounted for but never put back on the
+                // shelf: back to the branch, then written off from that one.
                 if ($damaged > 0) {
-                    $this->stock->record($product, $variant, $damaged, StockMovement::RETURN, [
-                        'reference' => $order,
-                        'note' => 'Returned damaged — written off below',
-                    ]);
+                    $landed = $this->stock->restoreForOrder(
+                        $product, $variant, $damaged, $order, StockMovement::RETURN,
+                        'Returned damaged — written off below',
+                    );
 
-                    $this->stock->record($product, $variant, -$damaged, StockMovement::WRITE_OFF, [
-                        'reference' => $order,
-                        'reason' => 'damaged',
-                        'note' => $note ?: 'Damaged on return',
-                    ]);
+                    foreach ($landed ?: [0 => $damaged] as $storeId => $units) {
+                        $this->stock->record($product, $variant, -$units, StockMovement::WRITE_OFF, [
+                            'reference' => $order,
+                            'reason' => 'damaged',
+                            'note' => $note ?: 'Damaged on return',
+                        ] + ($storeId ? ['store_id' => $storeId] : []));
+                    }
                 }
 
                 $item->increment('returned_quantity', $total);

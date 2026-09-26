@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class StockMovement extends Model
 {
+    /** A sale beyond stock, owed until the next delivery (see Product::takesOrdersBeyondStock). */
+    public const REASON_BACKORDER = 'backorder';
+
     /** Units arriving from a supplier. The only way stock enters the shelf. */
     public const PURCHASE = 'purchase';
 

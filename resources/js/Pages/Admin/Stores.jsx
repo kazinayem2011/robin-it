@@ -27,6 +27,7 @@ export default function AdminStores({ stores = [] }) {
             email: '',
             opening_hours: '10:00 AM - 8:00 PM (Closed on Friday)',
             is_active: true,
+            fulfils_online: false,
         },
         validationSchema: adminStoreSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -43,7 +44,7 @@ export default function AdminStores({ stores = [] }) {
                 resetForm();
                 router.reload({ only: ['stores'] });
             } catch (err) {
-                toast.error(err?.message || 'Failed to save store.');
+                toast.error(err?.message || 'Failed to save the branch.');
             } finally {
                 setSubmitting(false);
             }
@@ -62,6 +63,7 @@ export default function AdminStores({ stores = [] }) {
                 email: '',
                 opening_hours: '10:00 AM - 8:00 PM (Closed on Friday)',
                 is_active: true,
+                fulfils_online: false,
             },
         });
         setModalOpen(true);
@@ -81,6 +83,7 @@ export default function AdminStores({ stores = [] }) {
                     store.opening_hours ||
                     '10:00 AM - 8:00 PM (Closed on Friday)',
                 is_active: Boolean(store.is_active),
+                fulfils_online: Boolean(store.fulfils_online),
             },
         });
         setModalOpen(true);
@@ -93,7 +96,7 @@ export default function AdminStores({ stores = [] }) {
             toast.success('Branch removed.');
             router.reload({ only: ['stores'] });
         } catch (err) {
-            toast.error('Failed to delete store.');
+            toast.error(err?.message || 'Could not remove the branch.');
         }
     };
 
@@ -144,6 +147,16 @@ export default function AdminStores({ stores = [] }) {
                     <span className="text-sm">{row.opening_hours}</span>
                 </div>
             ),
+        },
+        {
+            key: 'online',
+            header: 'Online sales',
+            render: (row) =>
+                row.fulfils_online ? (
+                    <span className="status-pill active">Primary</span>
+                ) : (
+                    <span className="admin-table-desc-sub">—</span>
+                ),
         },
         {
             key: 'status',
@@ -318,6 +331,31 @@ export default function AdminStores({ stores = [] }) {
                                     checked={formik.values.is_active}
                                     onChange={formik.handleChange}
                                 />
+                            </div>
+
+                            {/*
+                             * The branch online orders take stock from
+                             * first. Every branch holds stock; this only
+                             * says which one sells online.
+                             */}
+                            <div className="admin-branch-stock-flags">
+                                <Checkbox
+                                    name="fulfils_online"
+                                    label="Primary branch for online sales — online orders take stock from here first"
+                                    checked={formik.values.fulfils_online}
+                                    onChange={(e) =>
+                                        formik.setFieldValue(
+                                            'fulfils_online',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />
+                                <small className="admin-field-hint">
+                                    One branch at a time; choosing this one
+                                    clears it from the others. If it runs out,
+                                    an order takes from the next branch in this
+                                    list that has it.
+                                </small>
                             </div>
 
                             <div className="admin-modal-action-row">

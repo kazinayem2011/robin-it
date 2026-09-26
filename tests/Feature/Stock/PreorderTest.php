@@ -61,17 +61,48 @@ class PreorderTest extends TestCase
         return (int) StockMovement::where('product_id', $product->id)->sum('quantity');
     }
 
-    public function test_an_ordinary_product_still_refuses_to_be_oversold(): void
+    /* Sold Out is still sold out: with none at all, an ordinary product refuses. */
+    public function test_an_ordinary_product_with_none_left_refuses(): void
+    {
+        $product = $this->product();
+
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/api/cart', [
+            'product_id' => $product->id, 'quantity' => 1,
+        ])->assertStatus(422);
+
+        $this->assertSame(0, $product->fresh()->stock_quantity);
+    }
+
+    /*
+     * The shop's rule: with some in stock, an order for more is taken, and the
+     * rest is owed and flagged "waiting for stock" — not "pre-order".
+     */
+    public function test_an_ordinary_product_with_some_left_takes_more_and_owes_it(): void
     {
         $product = $this->product();
         app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 2]]);
 
-        $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/api/cart', [
-            'product_id' => $product->id, 'quantity' => 3,
-        ])->assertStatus(422);
+        $this->buy($product->fresh(), 3)->assertStatus(201);
 
-        $this->assertSame(2, $product->fresh()->stock_quantity);
+        $this->assertSame(-1, $product->fresh()->stock_quantity, 'one unit should be owed');
+
+        $item = Order::latest('id')->first()->items()->first();
+        $this->assertTrue($item->was_preordered);
+        $this->assertTrue($item->waiting_for_stock);
+        $this->assertSame('Waiting for stock — ships when the next delivery arrives', $item->owedLabel());
+    }
+
+    /* A pre-order is still a pre-order, not "waiting for stock". */
+    public function test_a_pre_order_line_is_not_called_waiting_for_stock(): void
+    {
+        $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 10]);
+
+        $this->buy($product, 2)->assertStatus(201);
+
+        $item = Order::latest('id')->first()->items()->first();
+        $this->assertTrue($item->was_preordered);
+        $this->assertFalse($item->waiting_for_stock);
     }
 
     public function test_a_preorder_product_can_be_bought_with_an_empty_shelf(): void

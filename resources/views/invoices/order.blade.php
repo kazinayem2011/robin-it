@@ -181,7 +181,7 @@
                                  one shipment, and the paperwork has to say which
                                  line is waiting on a delivery. --}}
                             @if ($item->wasPreordered())
-                                <span class="option preorder">pre-order — ships when stock arrives</span>
+                                <span class="option preorder">{{ mb_strtolower($item->owedLabel()) }}</span>
                             @endif
                         </td>
                         <td class="num">৳{{ number_format($item->price, 2) }}</td>

@@ -93,6 +93,7 @@ class CartApiTest extends TestCase
     }
 
     /** The ceiling is real: the server refuses what the button now prevents. */
+    /* Sold out while in the cart: the server refuses more, whatever the page allowed. */
     public function test_the_server_refuses_more_than_is_in_stock(): void
     {
         $user = User::factory()->create();
@@ -112,6 +113,8 @@ class CartApiTest extends TestCase
         ]);
 
         $itemId = $added->json('data.id');
+
+        $product->update(['stock_quantity' => 0]);
 
         $this->actingAs($user)
             ->patchJson('/api/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM), ['quantity' => 3])

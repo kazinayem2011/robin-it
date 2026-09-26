@@ -38,7 +38,7 @@
                          is not one shipment, and this email has to say which
                          line is waiting on a delivery, as the invoice does. --}}
                     @if ($item->wasPreordered())
-                        <span style="display:block; margin-top:3px; font-size:12px; font-weight:bold; color:#92400e;">Pre-order &mdash; ships when the delivery arrives</span>
+                        <span style="display:block; margin-top:3px; font-size:12px; font-weight:bold; color:#92400e;">{{ $item->owedLabel() }}</span>
                     @endif
                     <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">৳{{ number_format($item->price, 2) }} each</span>
                 </td>

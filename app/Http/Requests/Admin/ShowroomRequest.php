@@ -19,6 +19,9 @@ class ShowroomRequest extends AdminRequest
             'opening_hours' => 'required|string|max:150',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
+            // The primary branch for online sales: orders take stock from it
+            // first. One at a time.
+            'fulfils_online' => 'boolean',
         ];
     }
 }

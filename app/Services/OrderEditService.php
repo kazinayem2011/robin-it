@@ -11,6 +11,7 @@ use App\Models\OrderEdit;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\BrandDetails;
 use App\Support\ShippingRates;
@@ -285,17 +286,20 @@ class OrderEditService
             return;
         }
 
+        // More of it comes from the branch the order ships from, where it can;
+        // less goes back to the branch it left.
         if ($delta > 0) {
-            $this->stock->sell($product, $variant, $delta, $order);
+            $this->stock->sellForOrder($product, $variant, $delta, $order, $this->stock->mainBranchOf($order));
 
             return;
         }
 
-        $this->stock->releaseToShelf(
+        $this->stock->restoreForOrder(
             $product,
             $variant,
             abs($delta),
             $order,
+            StockMovement::CANCELLATION,
             "Order {$order->order_number} edited."
         );
     }
@@ -322,7 +326,7 @@ class OrderEditService
             ? (float) ($variant->discount_price ?: $variant->price)
             : (float) ($product->discount_price ?: $product->price);
 
-        $this->stock->sell($product, $variant, $quantity, $order);
+        $this->stock->sellForOrder($product, $variant, $quantity, $order, $this->stock->mainBranchOf($order));
 
         return OrderItem::create([
             'order_id' => $order->id,

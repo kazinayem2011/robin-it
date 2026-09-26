@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { orderableCeiling, preordersBeyondShelf } from '../orderable';
+import {
+    orderableCeiling,
+    preordersBeyondShelf,
+    waitsForStock,
+} from '../orderable';
 import { boundsFor } from '../cartBounds';
 
 /**
@@ -9,8 +13,11 @@ import { boundsFor } from '../cartBounds';
  * pre-order product is nothing: a customer allowed three could take one.
  */
 describe('orderableCeiling', () => {
-    it('is the shelf for an ordinary product', () => {
-        expect(orderableCeiling({ allow_preorder: false }, 4)).toBe(4);
+    /* The shop's rule: some in stock, more is taken and owed; none, Sold Out. */
+    it('has no ceiling for an ordinary product with some in stock', () => {
+        expect(orderableCeiling({ allow_preorder: false }, 4)).toBe(
+            Number.POSITIVE_INFINITY,
+        );
         expect(orderableCeiling({ allow_preorder: false }, 0)).toBe(0);
     });
 
@@ -69,12 +76,24 @@ describe('the cart line bounds', () => {
         expect(max).toBe(20);
     });
 
-    it('still stops at the shelf for an ordinary product', () => {
+    it('lets an ordinary product with some in stock go to the per-item cap', () => {
         const { max } = boundsFor(line({ stock_quantity: 4 }), {
             max_quantity_per_item: 20,
         });
 
-        expect(max).toBe(4);
+        expect(max).toBe(20);
+    });
+});
+
+describe('waitsForStock', () => {
+    it('marks more than is in stock on an ordinary product', () => {
+        expect(waitsForStock({ allow_preorder: false }, 2, 3)).toBe(true);
+        expect(waitsForStock({ allow_preorder: false }, 2, 2)).toBe(false);
+    });
+
+    it('is not a pre-order, and not something sold out', () => {
+        expect(waitsForStock({ allow_preorder: true }, 2, 3)).toBe(false);
+        expect(waitsForStock({ allow_preorder: false }, 0, 1)).toBe(false);
     });
 });
 

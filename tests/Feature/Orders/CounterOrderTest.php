@@ -112,16 +112,41 @@ class CounterOrderTest extends TestCase
      * The rule that matters most: a counter sale cannot promise units the shop
      * does not hold, for the same reason a website order cannot.
      */
+    /* None anywhere: Sold Out at the counter too, and nothing moves. */
     public function test_it_cannot_sell_stock_the_shop_does_not_have(): void
     {
+        $soldOut = $this->soldOut();
+
         $this->actingAs($this->staff)
             ->postJson('/api/admin/orders', $this->payload([
-                'lines' => [['product_id' => $this->gpu->id, 'quantity' => 25]],
+                'lines' => [['product_id' => $soldOut->id, 'quantity' => 1]],
             ]))
             ->assertStatus(422);
 
         $this->assertSame(0, Order::count());
-        $this->assertSame(10, $this->gpu->fresh()->stock_quantity, 'A refused order must move nothing.');
+        $this->assertSame(0, $soldOut->fresh()->stock_quantity, 'A refused order must move nothing.');
+    }
+
+    /* Some in stock: the counter takes the order and owes the rest, as online. */
+    public function test_more_than_in_stock_is_taken_and_owed(): void
+    {
+        $this->actingAs($this->staff)
+            ->postJson('/api/admin/orders', $this->payload([
+                'lines' => [['product_id' => $this->gpu->id, 'quantity' => 12]],
+            ]))
+            ->assertOk();
+
+        $this->assertSame(-2, $this->gpu->fresh()->stock_quantity);
+        $this->assertTrue(Order::latest('id')->first()->items()->first()->waiting_for_stock);
+    }
+
+    private function soldOut(): Product
+    {
+        return Product::create([
+            'category_id' => $this->gpu->category_id,
+            'name' => 'RTX 5090', 'slug' => 'rtx-5090-counter',
+            'price' => 20000, 'stock_quantity' => 0, 'is_active' => true,
+        ]);
     }
 
     public function test_a_delisted_product_cannot_be_sold_at_the_counter_either(): void
@@ -210,7 +235,7 @@ class CounterOrderTest extends TestCase
 
         $this->actingAs($this->staff)
             ->postJson('/api/admin/orders', $this->payload([
-                'lines' => [['product_id' => $this->gpu->id, 'quantity' => 999]],
+                'lines' => [['product_id' => $this->soldOut()->id, 'quantity' => 1]],
             ]))
             ->assertStatus(422);
 

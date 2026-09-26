@@ -4,6 +4,7 @@ import { Search, Trash2, UserCheck, UserPlus } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
+import Select from '@/Components/Select';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
@@ -16,6 +17,9 @@ const BLANK = {
     city: '',
     zone: '',
     coupon_code: '',
+    // The counter's branch: it ships from there first. Empty lets the
+    // default branch, then whichever has it, supply it, as online.
+    store_id: '',
 };
 
 /**
@@ -30,7 +34,12 @@ const BLANK = {
  * same OrderService the storefront uses, so the stock check and the coupon
  * rules are the ones already known to work.
  */
-export default function NewOrderModal({ open, onClose, onCreated }) {
+export default function NewOrderModal({
+    open,
+    onClose,
+    onCreated,
+    branches = [],
+}) {
     const [form, setForm] = useState(BLANK);
     const [lines, setLines] = useState([]);
     const [saving, setSaving] = useState(false);
@@ -166,6 +175,7 @@ export default function NewOrderModal({ open, onClose, onCreated }) {
             const res = await adminService.createOrder({
                 ...form,
                 coupon_code: form.coupon_code || null,
+                store_id: form.store_id ? Number(form.store_id) : null,
                 lines: lines.map((l) => ({
                     product_id: l.product_id,
                     product_variant_id: l.product_variant_id,
@@ -283,6 +293,23 @@ export default function NewOrderModal({ open, onClose, onCreated }) {
                     helperText="Where the rider rings and the order texts go."
                 />
             </div>
+
+            {branches.length > 1 && (
+                <Select
+                    label="Sell from"
+                    name="store_id"
+                    value={form.store_id}
+                    onChange={set('store_id')}
+                    options={[
+                        { value: '', label: 'Whichever branch has it' },
+                        ...branches.map((b) => ({
+                            value: b.id,
+                            label: b.name,
+                        })),
+                    ]}
+                    helperText="The branch the stock comes off. At a showroom counter, choose that showroom."
+                />
+            )}
 
             <FormInput
                 label="Where it is going"

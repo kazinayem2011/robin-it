@@ -188,11 +188,12 @@ class StorefrontContractTest extends TestCase
         $guestCart = $cartService->getOrCreateCart(null, 'guest-session-xyz');
         $cartService->addItem($guestCart, $product->id, 2);
 
-        // Signing in must not fail, and must not create an unfulfillable cart.
+        // Signing in must not fail. With some in stock the extra is owed
+        // (waiting for stock), so both carts' units survive the merge.
         $cartService->mergeGuestCart($user->id, 'guest-session-xyz');
 
         $merged = $cartService->getCartWithItems($user->id, null);
-        $this->assertSame(2, $merged->items->first()->quantity);
+        $this->assertSame(4, $merged->items->first()->quantity);
     }
 
     /**

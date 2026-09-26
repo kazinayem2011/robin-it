@@ -473,6 +473,21 @@ class Product extends Model
     }
 
     /**
+     * More than is in stock, taken and owed: the shop's rule for a product
+     * that is not on pre-order.
+     *
+     * With some on hand across the branches, an order for more is accepted
+     * and the rest is owed — flagged "waiting for stock" on the order, the
+     * invoice and the admin — until the next delivery. With none at all it is
+     * Sold Out, and the shopper is offered "Notify me" instead. A pre-order
+     * product keeps its own limit, which this does not widen.
+     */
+    public function takesOrdersBeyondStock(int $onHand): bool
+    {
+        return $this->is_active && ! $this->allowsPreorder() && $onHand > 0;
+    }
+
+    /**
      * The one rule every stock path asks.
      *
      * A negative balance is not corruption, it is the number of units owed to
@@ -505,6 +520,11 @@ class Product extends Model
     public function sellableCeiling(?int $onHand = null): ?int
     {
         $onHand ??= (int) $this->stock_quantity;
+
+        // Some in stock: more is taken and owed, so no ceiling.
+        if ($this->takesOrdersBeyondStock($onHand)) {
+            return null;
+        }
 
         if (! $this->allowsPreorder()) {
             return max(0, $onHand);

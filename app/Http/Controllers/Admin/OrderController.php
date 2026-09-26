@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
+use App\Exceptions\StorefrontException;
 use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DispatchOrderRequest;
@@ -12,15 +13,22 @@ use App\Models\Coupon;
 use App\Models\Courier;
 use App\Models\Order;
 use App\Models\OrderPayment;
+use App\Models\ProductStock;
 use App\Models\Refund;
+use App\Models\StockMovement;
+use App\Models\Store;
 use App\Models\User;
 use App\Services\OrderEditService;
 use App\Services\OrderPaymentService;
 use App\Services\OrderService;
+use App\Services\StockService;
 use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,8 +74,16 @@ class OrderController extends Controller
             });
         }
 
+        $orders = $query->paginate(15)->withQueryString();
+        $this->attachShipFrom($orders->getCollection());
+
         return Inertia::render('Admin/Orders', [
-            'orders' => $query->paginate(15)->withQueryString(),
+            'orders' => $orders,
+            // The branches an order can ship from, for the counter-sale form
+            // and the return desk.
+            'branches' => Store::holdsStock()
+                ->orderByDesc('fulfils_online')->orderBy('sort_order')->orderBy('id')
+                ->get(['id', 'name', 'fulfils_online']),
             'currentStatus' => $status,
             'search' => $search,
             'couriers' => Courier::active()->ordered()->get(['id', 'name', 'phone']),
@@ -149,6 +165,8 @@ class OrderController extends Controller
             'lines.*.product_id' => 'required|integer|exists:products,id',
             'lines.*.product_variant_id' => 'nullable|integer|exists:product_variants,id',
             'lines.*.quantity' => 'required|integer|min:1|max:1000',
+            // The branch the counter is at; it ships from there first.
+            'store_id' => ['nullable', 'integer', Rule::exists('stores', 'id')->where('holds_stock', true)->where('is_active', true)],
         ], [
             'phone.regex' => PhoneHelper::MESSAGE,
             'street_address.required' => 'Enter where this is going, or the shop counter if they are taking it with them.',
@@ -174,7 +192,8 @@ class OrderController extends Controller
             $data['lines'],
             $data + ['payment_method' => $data['payment_method'] ?? 'COD'],
             $customer,
-            $coupon
+            $coupon,
+            isset($data['store_id']) ? (int) $data['store_id'] : null,
         );
 
         return $this->successResponse(
@@ -281,6 +300,240 @@ class OrderController extends Controller
      * without recording who took it is what left customers ringing up with a
      * question nobody could answer.
      */
+    /**
+     * The branches this order could ship from, and whether each has it all.
+     *
+     * Each branch's holding is counted as it would stand after the order's
+     * own units came back to it, since that is what moving there does.
+     */
+    public function shipFromOptions(StockService $stock, int $id): JsonResponse
+    {
+        $order = Order::with('items')->findOrFail($id);
+        $holding = $stock->branchesHolding($order);
+
+        $branches = Store::holdsStock()
+            ->orderByDesc('fulfils_online')->orderBy('sort_order')->orderBy('id')
+            ->get(['id', 'name', 'fulfils_online']);
+
+        $levels = ProductStock::query()
+            ->whereIn('store_id', $branches->pluck('id'))
+            ->whereIn('product_id', $order->items->pluck('product_id'))
+            ->get(['product_id', 'product_variant_id', 'store_id', 'quantity']);
+
+        $options = $branches->map(function (Store $branch) use ($order, $holding, $levels) {
+            $short = [];
+
+            foreach ($order->items as $item) {
+                $key = $item->product_id.':'.($item->product_variant_id ?: '-');
+                $needed = array_sum($holding[$key] ?? []);
+
+                if ($needed === 0) {
+                    continue;
+                }
+
+                $has = (int) $levels
+                    ->where('product_id', $item->product_id)
+                    ->where('product_variant_id', $item->product_variant_id)
+                    ->where('store_id', $branch->id)
+                    ->sum('quantity');
+
+                $heldHere = $holding[$key][$branch->id] ?? 0;
+
+                // Already all here: covered, even on a pre-order, where the
+                // branch's own count is below zero until the delivery lands.
+                if ($heldHere >= $needed) {
+                    continue;
+                }
+
+                // The units the order already holds here count as its own.
+                $available = $has + $heldHere;
+
+                if ($available < $needed) {
+                    $short[] = ['name' => $item->display_name, 'needed' => $needed, 'available' => max(0, $available)];
+                }
+            }
+
+            $units = 0;
+            foreach ($holding as $stores) {
+                $units += $stores[$branch->id] ?? 0;
+            }
+
+            return [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'is_default' => (bool) $branch->fulfils_online,
+                // Everything the order holds is here already.
+                'is_current' => $units > 0 && $units === array_sum(array_map('array_sum', $holding)),
+                'covers' => $short === [],
+                'short' => $short,
+            ];
+        });
+
+        /*
+         * Each line on its own, for choosing branch by item: where its units
+         * are now, and what each branch could give it — its own stock plus
+         * whatever this line already holds there.
+         */
+        $lines = $order->items->map(function ($item) use ($holding, $branches, $levels) {
+            $key = $item->product_id.':'.($item->product_variant_id ?: '-');
+            $current = $holding[$key] ?? [];
+
+            if (array_sum($current) === 0) {
+                return null;
+            }
+
+            return [
+                'order_item_id' => $item->id,
+                'name' => $item->display_name,
+                'units' => array_sum($current),
+                // Ships later: a pre-order, or more than was in stock.
+                'owed' => $item->was_preordered,
+                'waiting_for_stock' => $item->waiting_for_stock,
+                'current' => collect($current)->map(fn ($u, $id) => ['id' => (int) $id, 'units' => $u])->values(),
+                'branches' => $branches->map(fn (Store $b) => [
+                    'id' => $b->id,
+                    'name' => $b->name,
+                    // Units really there for this line: the branch's count
+                    // with the line's own units back — so an owed unit is
+                    // not counted as one it could give.
+                    'available' => max(0, (int) $levels
+                        ->where('product_id', $item->product_id)
+                        ->where('product_variant_id', $item->product_variant_id)
+                        ->where('store_id', $b->id)
+                        ->sum('quantity') + max(0, $current[$b->id] ?? 0)),
+                ])->values(),
+            ];
+        })->filter()->values();
+
+        return $this->successResponse([
+            'current' => $this->shipFromSummary($holding),
+            'can_change' => $this->canChangeShipFrom($order),
+            'branches' => $options->values(),
+            'lines' => $lines,
+        ]);
+    }
+
+    /**
+     * Where the order's units come from: the whole order from one branch
+     * (`store_id`), or item by item (`lines`, each a branch => units split).
+     */
+    public function shipFrom(Request $request, StockService $stock, int $id): JsonResponse
+    {
+        $order = Order::with('items')->findOrFail($id);
+        $branch = ['integer', Rule::exists('stores', 'id')->where('holds_stock', true)->where('is_active', true)];
+
+        $data = $request->validate([
+            'store_id' => ['required_without:lines', ...$branch],
+            'lines' => 'required_without:store_id|array|min:1',
+            'lines.*.order_item_id' => 'required|integer',
+            'lines.*.stores' => 'required|array|min:1',
+            'lines.*.stores.*' => 'integer|min:0',
+        ]);
+
+        if (! $this->canChangeShipFrom($order)) {
+            return $this->errorResponse(
+                'The branch can only be changed before the order is dispatched.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        if (isset($data['store_id'])) {
+            $store = Store::find($data['store_id']);
+            $moved = $stock->moveOrderTo($order, $store->id);
+            $message = $moved > 0
+                ? "{$order->order_number} now ships from {$store->name}."
+                : "{$order->order_number} already ships from {$store->name}.";
+        } else {
+            DB::transaction(function () use ($data, $order, $stock) {
+                foreach ($data['lines'] as $line) {
+                    $item = $order->items->firstWhere('id', (int) $line['order_item_id']);
+
+                    if (! $item) {
+                        throw new StorefrontException('One of those items is not on this order.', 422, ApiCode::VALIDATION_ERROR);
+                    }
+
+                    [$product, $variant] = $stock->resolveUnit($item->product_id, $item->product_variant_id);
+                    $stock->allocateOrderLine($order, $product, $variant, $line['stores']);
+                }
+            });
+
+            $message = "Updated where {$order->order_number} ships from.";
+        }
+
+        return $this->successResponse(
+            ['ship_from' => $this->shipFromSummary($stock->branchesHolding($order))],
+            $message
+        );
+    }
+
+    /**
+     * Before the parcel leaves, and while the units are the order's: once it
+     * is cancelled they are back on the shelf, and once dispatched they have
+     * gone from whichever branch packed it.
+     */
+    private function canChangeShipFrom(Order $order): bool
+    {
+        return in_array($order->status, ['pending', 'processing'], true)
+            && $order->stock_released_at === null;
+    }
+
+    /**
+     * Where each order on a page ships from, in one query for the page.
+     *
+     * @param  Collection<int, Order>  $orders
+     */
+    private function attachShipFrom($orders): void
+    {
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $rows = StockMovement::query()
+            ->where('reference_type', (new Order)->getMorphClass())
+            ->whereIn('reference_id', $orders->pluck('id'))
+            ->where('type', '!=', StockMovement::WRITE_OFF)
+            ->whereNotNull('store_id')
+            ->groupBy('reference_id', 'store_id')
+            ->selectRaw('reference_id, store_id, SUM(quantity) as net')
+            ->get();
+
+        $names = Store::whereIn('id', $rows->pluck('store_id')->unique())->pluck('name', 'id');
+
+        foreach ($orders as $order) {
+            $order->setAttribute('ship_from', $rows->where('reference_id', $order->id)
+                ->map(fn ($r) => ['id' => (int) $r->store_id, 'name' => $names[$r->store_id] ?? 'Branch', 'units' => -(int) $r->net])
+                ->filter(fn ($b) => $b['units'] > 0)
+                ->sortByDesc('units')
+                ->values()
+                ->all());
+            $order->setAttribute('can_change_ship_from', $this->canChangeShipFrom($order));
+        }
+    }
+
+    /**
+     * @param  array<string, array<int, int>>  $holding
+     * @return list<array{id: int, name: string, units: int}>
+     */
+    private function shipFromSummary(array $holding): array
+    {
+        $totals = [];
+
+        foreach ($holding as $stores) {
+            foreach ($stores as $storeId => $units) {
+                $totals[$storeId] = ($totals[$storeId] ?? 0) + $units;
+            }
+        }
+
+        arsort($totals);
+        $names = Store::whereIn('id', array_keys($totals))->pluck('name', 'id');
+
+        return collect($totals)
+            ->map(fn ($units, $id) => ['id' => (int) $id, 'name' => $names[$id] ?? 'Branch', 'units' => $units])
+            ->values()
+            ->all();
+    }
+
     public function dispatchOrder(DispatchOrderRequest $request, OrderService $orders, int $id): JsonResponse
     {
         $order = Order::findOrFail($id);

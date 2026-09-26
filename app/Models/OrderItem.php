@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     /** Whether the line waits on a delivery; see getWasPreorderedAttribute(). */
-    protected $appends = ['was_preordered'];
+    protected $appends = ['was_preordered', 'waiting_for_stock'];
 
     protected $fillable = [
         'order_id', 'product_id', 'product_variant_id', 'product_name',
@@ -100,6 +100,36 @@ class OrderItem extends Model
     public function getWasPreorderedAttribute(): bool
     {
         return $this->wasPreordered();
+    }
+
+    /**
+     * Owed because more was ordered than was in stock, not a pre-order: the
+     * line reads "waiting for stock" wherever it is shown.
+     */
+    public function waitingForStock(): bool
+    {
+        return app(PreorderLedger::class)->waitingForStock(
+            (int) $this->order_id,
+            (int) $this->product_id,
+            $this->product_variant_id ? (int) $this->product_variant_id : null,
+        );
+    }
+
+    public function getWaitingForStockAttribute(): bool
+    {
+        return $this->waitingForStock();
+    }
+
+    /** What an email or invoice says about a line that ships later. */
+    public function owedLabel(): ?string
+    {
+        if (! $this->wasPreordered()) {
+            return null;
+        }
+
+        return $this->waitingForStock()
+            ? 'Waiting for stock — ships when the next delivery arrives'
+            : 'Pre-order — ships when the delivery arrives';
     }
 
     /** The physical units handed over for this line, where they are tracked. */

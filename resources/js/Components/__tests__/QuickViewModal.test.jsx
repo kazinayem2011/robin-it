@@ -109,20 +109,22 @@ describe('QuickViewModal', () => {
         );
     });
 
-    it('will not offer more than is in stock', async () => {
+    /* Some in stock: more is taken and owed, so the stepper goes on. */
+    it('offers more than is in stock, to be owed', async () => {
         const person = userEvent.setup();
         open({ ...plain, stock_quantity: 2 });
 
         const more = screen.getByRole('button', { name: /increase quantity/i });
 
         await person.click(more);
-        expect(more).toBeDisabled();
+        await person.click(more);
+        expect(more).not.toBeDisabled();
 
         await person.click(
             screen.getByRole('button', { name: /add to cart/i }),
         );
         // The third argument is the option, null for a product without one.
-        expect(addToCart).toHaveBeenCalledWith(3, 2, null);
+        expect(addToCart).toHaveBeenCalledWith(3, 3, null);
     });
 
     it('does not offer to sell something that is out of stock', () => {

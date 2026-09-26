@@ -499,6 +499,30 @@ export const adminService = {
     },
 
     /**
+     * The branches an order could ship from, and whether each has it all.
+     * @param {number|string} orderId
+     */
+    async getOrderShipFrom(orderId) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.ORDER_SHIP_FROM(orderId),
+        );
+        return response?.data;
+    },
+
+    /**
+     * Where an order's units come from; they move there.
+     * @param {number|string} orderId
+     * @param {Object} payload - { store_id } for the whole order, or
+     *                           { lines: [{ order_item_id, stores: { [storeId]: units } }] }
+     */
+    async setOrderShipFrom(orderId, payload) {
+        return axiosInstance.put(
+            API_ENDPOINTS.ADMIN.ORDER_SHIP_FROM(orderId),
+            payload,
+        );
+    },
+
+    /**
      * Take back a delivered order, item by item.
      * @param {number|string} orderId
      * @param {Object} payload - { note, lines: [{ order_item_id, resellable, damaged }] }

@@ -1055,6 +1055,100 @@ a.admin-card:hover,
     background: var(--bg-surface-subtle);
 }
 
+/* Ships from: the branch, and the control to change it, on one line. */
+.admin-ship-from {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+}
+
+.admin-ship-from strong {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.admin-ship-from-change {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: min(100%, 320px);
+}
+
+.admin-ship-from-change > :last-child {
+    flex: 1;
+}
+
+.admin-ship-from-change > .admin-field-hint {
+    white-space: nowrap;
+}
+
+.admin-ship-from-hint {
+    margin: 8px 0 0;
+}
+
+.admin-ship-from-summary {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+/* One row per item: its name, and where it comes from. */
+.admin-ship-line {
+    display: grid;
+    gap: 6px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-light);
+}
+
+.admin-ship-line:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.admin-ship-line-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.admin-ship-line-head > :last-child {
+    min-width: min(100%, 300px);
+}
+
+/* Splitting one item between branches: a units box per branch. */
+.admin-ship-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+
+.admin-ship-split label {
+    display: grid;
+    gap: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-ship-split-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.admin-ship-split-foot > span {
+    margin-right: auto;
+}
+
 .admin-detail-panel-label {
     display: block;
     margin-bottom: 12px;
@@ -5375,4 +5469,14 @@ a.admin-card:hover,
     font-size: 0.75rem;
     color: var(--text-subtle);
     font-style: italic;
+}
+
+/* Branches: the two stock switches, set apart from the contact details. */
+.admin-branch-stock-flags {
+    display: grid;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface-subtle);
 }

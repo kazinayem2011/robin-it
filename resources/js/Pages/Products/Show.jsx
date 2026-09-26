@@ -36,7 +36,7 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
-import { orderableCeiling } from '../../utils/orderable';
+import { orderableCeiling, waitsForStock } from '../../utils/orderable';
 import { photosOf } from '../../utils/productPhotos';
 import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
@@ -1318,6 +1318,29 @@ export default function ProductDetails(props) {
                                 </div>
                             </div>
                         )}
+
+                        {/* More than is in stock: said before they buy, as
+                            a pre-order is. The order is taken; the rest is
+                            owed until the next delivery. */}
+                        {!isPreorder &&
+                            waitsForStock(
+                                product,
+                                availableStock,
+                                quantity,
+                            ) && (
+                                <div
+                                    className="pdp-preorder-notice"
+                                    role="status"
+                                >
+                                    <Clock size={18} />
+                                    <div>
+                                        <strong>Waiting for stock</strong>
+                                        <p>
+                                            {`Only ${availableStock} in stock right now. We'll send those and the other ${quantity - availableStock} as soon as the next delivery arrives.`}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                         {/* Only when the thing being looked at is actually
                             unavailable — on a variant product that means

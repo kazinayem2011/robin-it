@@ -22,6 +22,7 @@ import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
 import EditOrderModal from './Components/EditOrderModal';
 import NewOrderModal from './Components/NewOrderModal';
+import ShipFromPanel from './Components/ShipFromPanel';
 import PreorderTag from '../../Components/PreorderTag';
 // The edit modal reuses the purchase-order line table.
 import './Purchasing.css';
@@ -64,6 +65,7 @@ export default function Orders({
     refundMethods = [],
     paymentMethods = [],
     refundReasons = [],
+    branches = [],
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -150,6 +152,16 @@ export default function Orders({
                     <div className="admin-order-date">
                         {formatDate(order.created_at)}
                     </div>
+                    {/* Something on it ships later: seen from the list,
+                        before opening it, so it is not packed as complete. */}
+                    {order.items?.some((i) => i.was_preordered) && (
+                        <PreorderTag
+                            compact
+                            waiting={order.items.some(
+                                (i) => i.waiting_for_stock,
+                            )}
+                        />
+                    )}
                 </div>
             ),
         },
@@ -541,6 +553,16 @@ export default function Orders({
                             </dl>
                         </div>
 
+                        <ShipFromPanel
+                            order={selectedOrder}
+                            onChanged={(shipFrom) => {
+                                setSelectedOrder((o) =>
+                                    o ? { ...o, ship_from: shipFrom } : o,
+                                );
+                                router.reload({ only: ['orders'] });
+                            }}
+                        />
+
                         {/* Order Items Table */}
                         <h4 className="admin-modal-items-title">
                             Purchased Hardware Items
@@ -575,7 +597,11 @@ export default function Orders({
                                                 needs to know before it tries. */}
                                             {item.was_preordered && (
                                                 <div>
-                                                    <PreorderTag />
+                                                    <PreorderTag
+                                                        waiting={
+                                                            item.waiting_for_stock
+                                                        }
+                                                    />
                                                 </div>
                                             )}
                                         </td>
@@ -683,6 +709,7 @@ export default function Orders({
             />
 
             <NewOrderModal
+                branches={branches}
                 open={takingOrder}
                 onClose={() => setTakingOrder(false)}
                 onCreated={() => {

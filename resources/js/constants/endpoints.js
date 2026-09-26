@@ -152,6 +152,7 @@ export const API_ENDPOINTS = {
         ORDERS: '/admin/orders',
         ORDER_STATUS: (id) => `/admin/orders/${id}/status`,
         ORDER_DISPATCH: (id) => `/admin/orders/${id}/dispatch`,
+        ORDER_SHIP_FROM: (id) => `/admin/orders/${id}/ship-from`,
         ORDER_REFUND: (id) => `/admin/orders/${id}/refund`,
         ORDER_PAYMENT: (id) => `/admin/orders/${id}/payment`,
         REFUND_ITEM: (id) => `/admin/refunds/${id}`,

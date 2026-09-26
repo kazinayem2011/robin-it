@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\OrderService;
 use App\Services\ProductVariantService;
@@ -106,10 +107,26 @@ class VariantCommerceTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // The product holds 10 in total, but only 4 of the 32GB option.
-        $this->addToCart($user, $this->large->id, 5)->assertStatus(422);
+        // The 32GB option sold out while the product still holds 6 of the 16GB:
+        // the option is what is sold, so it is Sold Out.
+        app(StockService::class)->record($this->product, $this->large, -4, StockMovement::ADJUSTMENT, ['reason' => 'other']);
 
-        $this->assertSame(4, $this->large->fresh()->stock_quantity);
+        $this->addToCart($user, $this->large->id, 1)->assertStatus(422);
+
+        $this->assertSame(0, $this->large->fresh()->stock_quantity);
+        $this->assertSame(6, $this->small->fresh()->stock_quantity);
+    }
+
+    /* Some of the option in stock: more is taken and owed, on that option. */
+    public function test_more_of_an_option_than_it_holds_is_owed_on_that_option(): void
+    {
+        $user = User::factory()->create();
+
+        $this->addToCart($user, $this->large->id, 5)->assertStatus(200);
+        $this->checkout($user)->assertStatus(201);
+
+        $this->assertSame(-1, $this->large->fresh()->stock_quantity);
+        $this->assertSame(6, $this->small->fresh()->stock_quantity);
     }
 
     public function test_two_options_of_the_same_product_are_separate_cart_lines(): void

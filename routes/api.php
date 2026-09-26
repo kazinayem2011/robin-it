@@ -276,6 +276,8 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         // Orders
         Route::patch(ApiEndpoints::ADMIN_ORDERS_STATUS, [AdminOrderController::class, 'updateStatus'])->middleware('can:orders');
         Route::post(ApiEndpoints::ADMIN_ORDERS_RETURN, [StockController::class, 'returnOrder'])->middleware('can:orders');
+        Route::get(ApiEndpoints::ADMIN_ORDER_SHIP_FROM, [AdminOrderController::class, 'shipFromOptions'])->middleware('can:orders');
+        Route::put(ApiEndpoints::ADMIN_ORDER_SHIP_FROM, [AdminOrderController::class, 'shipFrom'])->middleware('can:orders');
         Route::patch(ApiEndpoints::ADMIN_ORDERS_DISPATCH, [AdminOrderController::class, 'dispatchOrder'])->middleware('can:orders');
         // Money received against an order — a deposit, or the balance on
         // delivery. Under refunds rather than orders: it is the till.

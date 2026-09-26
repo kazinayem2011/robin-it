@@ -23,7 +23,7 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Tag, X, AlertTriangle } from 'lucide-react';
 import PreorderTag from '../../Components/PreorderTag';
-import { preordersBeyondShelf } from '../../utils/orderable';
+import { preordersBeyondShelf, waitsForStock } from '../../utils/orderable';
 import './Checkout.css';
 
 /**
@@ -966,6 +966,14 @@ export default function Checkout({
                                                         }
                                                     />
                                                 )}
+                                                {waitsForStock(
+                                                    item.product,
+                                                    item.variant
+                                                        ?.stock_quantity ??
+                                                        item.product
+                                                            .stock_quantity,
+                                                    item.quantity,
+                                                ) && <PreorderTag waiting />}
 
                                                 {/*
                                                  * Changeable here. It used to

@@ -136,7 +136,11 @@ export default function Orders({
                                                             : ''}
                                                     </div>
                                                     {item.was_preordered && (
-                                                        <PreorderTag />
+                                                        <PreorderTag
+                                                            waiting={
+                                                                item.waiting_for_stock
+                                                            }
+                                                        />
                                                     )}
                                                     <div className="order-item-sub">
                                                         Qty: {item.quantity} ×{' '}

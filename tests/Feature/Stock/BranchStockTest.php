@@ -147,28 +147,98 @@ class BranchStockTest extends TestCase
     }
 
     /**
-     * The whole point of the split: the shop can hold plenty while the branch
-     * that posts parcels holds none.
+     * Held only in a showroom: it used to show "In Stock", go into the cart,
+     * and be refused at checkout because the online branch had none. An order
+     * now takes from whichever branch has it.
      */
-    public function test_checkout_measures_the_branch_that_ships(): void
+    public function test_an_order_takes_from_another_branch_when_the_default_has_none(): void
     {
         $product = $this->product();
         app(StockService::class)->record($product, null, 8, StockMovement::PURCHASE, [
             'store_id' => $this->showroom->id,
         ]);
 
-        // Eight in the shop, none where orders are picked from.
-        $this->assertSame(8, $product->fresh()->stock_quantity);
+        $this->checkout($product, 2)->assertStatus(201);
 
-        $user = User::factory()->create();
-        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 2]);
+        $this->assertSame(6, $this->stockAt($product, $this->showroom));
+        $this->assertSame(0, $this->stockAt($product, $this->online));
+    }
 
-        $this->actingAs($user)->postJson('/api/checkout', [
-            'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
-            'street_address' => 'House 45', 'city' => 'Dhaka',
-        ])->assertStatus(422);
+    /* The default branch first, while it has the units. */
+    public function test_the_default_branch_is_used_first(): void
+    {
+        $product = $this->product();
+        $stock = app(StockService::class);
+        $stock->record($product, null, 5, StockMovement::PURCHASE, ['store_id' => $this->online->id]);
+        $stock->record($product->fresh(), null, 5, StockMovement::PURCHASE, ['store_id' => $this->showroom->id]);
+
+        $this->checkout($product, 2)->assertStatus(201);
+
+        $this->assertSame(3, $this->stockAt($product, $this->online));
+        $this->assertSame(5, $this->stockAt($product, $this->showroom));
+    }
+
+    /* More than any one branch has, fewer than the shop has: both give. */
+    public function test_a_line_can_come_from_two_branches(): void
+    {
+        $product = $this->product();
+        $stock = app(StockService::class);
+        $stock->record($product, null, 2, StockMovement::PURCHASE, ['store_id' => $this->online->id]);
+        $stock->record($product->fresh(), null, 3, StockMovement::PURCHASE, ['store_id' => $this->showroom->id]);
+
+        $this->checkout($product, 4)->assertStatus(201);
+
+        $this->assertSame(0, $this->stockAt($product, $this->online));
+        $this->assertSame(1, $this->stockAt($product, $this->showroom));
+
+        $order = Order::latest('id')->first();
+        $this->assertSame(
+            [$this->online->id => 2, $this->showroom->id => 2],
+            app(StockService::class)->branchesHolding($order)[$product->id.':-'],
+        );
+
+        // Cancelled: each part goes back where it came from.
+        app(OrderService::class)->updateOrderStatus($order, 'cancelled');
+
+        $this->assertSame(2, $this->stockAt($product, $this->online));
+        $this->assertSame(3, $this->stockAt($product, $this->showroom));
+    }
+
+    /*
+     * More than every branch holds: what there is is taken, and the rest is
+     * owed at the default branch until the next delivery lands there.
+     */
+    public function test_more_than_every_branch_holds_is_taken_and_owed_at_the_default(): void
+    {
+        $product = $this->product();
+        app(StockService::class)->record($product, null, 3, StockMovement::PURCHASE, ['store_id' => $this->showroom->id]);
+
+        $this->checkout($product, 4)->assertStatus(201);
+
+        $this->assertSame(0, $this->stockAt($product, $this->showroom));
+        $this->assertSame(-1, $this->stockAt($product, $this->online), 'one owed at the default branch');
+        $this->assertTrue(Order::latest('id')->first()->items()->first()->waiting_for_stock);
+    }
+
+    /* Nothing anywhere: Sold Out. */
+    public function test_with_nothing_in_any_branch_it_is_refused(): void
+    {
+        $product = $this->product();
+
+        $this->checkout($product, 1)->assertStatus(422);
 
         $this->assertSame(0, Order::count());
+    }
+
+    private function checkout(Product $product, int $quantity)
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => $quantity]);
+
+        return $this->actingAs($user)->postJson('/api/checkout', [
+            'name' => 'Rahim Chowdhury', 'phone' => '01712345678',
+            'street_address' => 'House 45', 'city' => 'Dhaka',
+        ]);
     }
 
     public function test_transferring_stock_in_makes_it_sellable_online(): void

@@ -93,8 +93,13 @@ class StockService
              */
             $mayGoNegative = $type === StockMovement::SALE;
 
+            // Units taken beyond stock on a product that takes orders past it
+            // (sellForOrder decided that, with the whole shop's holding in view).
+            $owed = $mayGoNegative && ! empty($meta['owed']);
+
             if ($branchBefore !== null
                 && $branchBefore + $delta < 0
+                && ! $owed
                 && ! ($mayGoNegative && $product->allowsBalance($branchBefore + $delta))
             ) {
                 throw StorefrontException::outOfStock(
@@ -106,6 +111,7 @@ class StockService
             $balanceAfter = $current + $delta;
 
             if ($balanceAfter < 0
+                && ! $owed
                 && ! ($mayGoNegative && $product->allowsBalance($balanceAfter))
             ) {
                 throw StorefrontException::outOfStock(
@@ -210,7 +216,10 @@ class StockService
         ?ProductVariant $variant,
         int $quantity,
         ?Model $order = null,
-        ?int $storeId = null
+        ?int $storeId = null,
+        // Beyond stock, on a product that takes orders past it: marked, so
+        // the order line says "waiting for stock" rather than "pre-order".
+        bool $owed = false,
     ): StockMovement {
         $this->assertSellable($product, $variant);
 
@@ -219,7 +228,326 @@ class StockService
             // A customer checkout has no admin author, even if an admin is browsing.
             'user_id' => null,
             'store_id' => $storeId ?? Store::onlineFulfilment()?->id,
-        ]);
+        ] + ($owed ? ['owed' => true, 'reason' => StockMovement::REASON_BACKORDER] : []));
+    }
+
+    /**
+     * Take an order line's units off the shelves that hold them.
+     *
+     * The branch it ships from is chosen here, not fixed: the one asked for
+     * (a counter sale at a showroom), else the default online branch, else
+     * each other branch in the shop's order — as many as it takes. It was
+     * always the one online branch, so a laptop sitting in a showroom showed
+     * "In Stock", went into the cart, and was refused at checkout.
+     *
+     * A line can come from two branches; the ledger records each part where it
+     * was taken, which is what a cancellation, a return or a change of branch
+     * later reads (branchesHolding). What no branch has is owed by the first
+     * one — allowed only on a pre-order product, which record() enforces.
+     *
+     * @return array<int, int> store id => units taken there
+     */
+    public function sellForOrder(
+        Product $product,
+        ?ProductVariant $variant,
+        int $quantity,
+        Order $order,
+        ?int $preferredStoreId = null,
+    ): array {
+        $this->assertSellable($product, $variant);
+
+        $branches = $this->branchesInPickingOrder($preferredStoreId);
+
+        if ($branches === []) {
+            // No branch set up at all: the shop-wide balance, as before —
+            // owing what is short, where the product takes orders past stock.
+            $onHand = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            $owed = $onHand < abs($quantity) && $product->takesOrdersBeyondStock($onHand);
+
+            $this->sell($product, $variant, $quantity, $order, null, $owed);
+
+            return [];
+        }
+
+        $held = ProductStock::forUnit($product->id, $variant?->id)
+            ->whereIn('store_id', $branches)
+            ->pluck('quantity', 'store_id');
+
+        $taken = [];
+        $left = abs($quantity);
+
+        foreach ($branches as $storeId) {
+            $here = min($left, max(0, (int) ($held[$storeId] ?? 0)));
+
+            if ($here > 0) {
+                $this->sell($product, $variant, $here, $order, $storeId);
+                $taken[$storeId] = $here;
+                $left -= $here;
+            }
+
+            if ($left === 0) {
+                return $taken;
+            }
+        }
+
+        /*
+         * Owed, at the first branch: on a pre-order product within its limit
+         * (record() checks), or on any product with some in stock across the
+         * shop, which takes the order and flags it "waiting for stock".
+         */
+        $onHand = (int) collect($held)->filter(fn ($q) => $q > 0)->sum();
+        $owed = $product->takesOrdersBeyondStock($onHand);
+
+        $this->sell($product, $variant, $left, $order, $branches[0], $owed);
+        $taken[$branches[0]] = ($taken[$branches[0]] ?? 0) + $left;
+
+        return $taken;
+    }
+
+    /**
+     * Where an order's units stand, per branch, for each thing it bought.
+     *
+     * Read from the ledger rather than kept in a column of its own, so it
+     * cannot drift from what happened: every movement tied to the order —
+     * the sale, a change of branch, a cancellation or return — nets out per
+     * branch. A write-off is left out: a damaged return is still a unit the
+     * customer no longer has.
+     *
+     * @return array<string, array<int, int>> "product:variant" => [store id => units]
+     */
+    public function branchesHolding(Order $order): array
+    {
+        $rows = StockMovement::query()
+            ->where('reference_type', $order->getMorphClass())
+            ->where('reference_id', $order->getKey())
+            ->where('type', '!=', StockMovement::WRITE_OFF)
+            ->whereNotNull('store_id')
+            ->groupBy('product_id', 'product_variant_id', 'store_id')
+            ->selectRaw('product_id, product_variant_id, store_id, SUM(quantity) as net')
+            ->get();
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $units = -(int) $row->net;
+
+            if ($units > 0) {
+                $out[self::unitKey((int) $row->product_id, $row->product_variant_id)][(int) $row->store_id] = $units;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Put an order's units back where they came from.
+     *
+     * The branch each unit left is read from the ledger, most first, so a
+     * cancellation undoes the sale exactly. A return may name a branch
+     * instead — the parcel came back to a different shop than it left.
+     *
+     * @return array<int, int> store id => units put back there
+     */
+    public function restoreForOrder(
+        Product $product,
+        ?ProductVariant $variant,
+        int $quantity,
+        Order $order,
+        string $type,
+        ?string $note = null,
+        ?int $toStoreId = null,
+    ): array {
+        $left = abs($quantity);
+
+        if ($left === 0) {
+            return [];
+        }
+
+        $meta = ['reference' => $order, 'note' => $note];
+
+        if ($toStoreId) {
+            $this->record($product, $variant, $left, $type, $meta + ['store_id' => $toStoreId]);
+
+            return [$toStoreId => $left];
+        }
+
+        $holding = $this->branchesHolding($order)[self::unitKey($product->id, $variant?->id)] ?? [];
+        arsort($holding);
+
+        $put = [];
+
+        foreach ($holding as $storeId => $units) {
+            $here = min($left, $units);
+            $this->record($product, $variant, $here, $type, $meta + ['store_id' => $storeId]);
+            $put[$storeId] = $here;
+            $left -= $here;
+
+            if ($left === 0) {
+                return $put;
+            }
+        }
+
+        // Nothing in the ledger says where (an order from before branches):
+        // the default branch, as it always was.
+        $this->record($product, $variant, $left, $type, $meta);
+        $default = Store::onlineFulfilment()?->id;
+
+        if ($default) {
+            $put[$default] = ($put[$default] ?? 0) + $left;
+        }
+
+        return $put;
+    }
+
+    /**
+     * Have an order ship from one branch, moving its units there.
+     *
+     * Nothing moves physically; the order just draws on another branch. It is
+     * written as a transfer tied to the order — out of the new branch, back
+     * into the old — so the shelves' balances and branchesHolding() both say
+     * where the units now are. Refused when the branch does not have them.
+     */
+    public function moveOrderTo(Order $order, int $storeId): int
+    {
+        $target = Store::holdsStock()->whereKey($storeId)->first();
+
+        if (! $target) {
+            throw new StorefrontException('That branch does not hold stock.', 422, ApiCode::VALIDATION_ERROR);
+        }
+
+        return DB::transaction(function () use ($order, $target) {
+            $moved = 0;
+            $note = "Order {$order->order_number} now ships from {$target->name}.";
+
+            foreach ($this->branchesHolding($order) as $key => $stores) {
+                [$productId, $variantId] = self::splitKey($key);
+                [$product, $variant] = $this->resolveUnit($productId, $variantId);
+
+                foreach ($stores as $storeId => $units) {
+                    if ($storeId === $target->id) {
+                        continue;
+                    }
+
+                    $meta = ['reference' => $order, 'note' => $note];
+                    $this->record($product, $variant, -$units, StockMovement::TRANSFER, $meta + ['store_id' => $target->id]);
+                    $this->record($product, $variant, $units, StockMovement::TRANSFER, $meta + ['store_id' => $storeId]);
+                    $moved += $units;
+                }
+            }
+
+            return $moved;
+        });
+    }
+
+    /**
+     * Set where one of an order's lines comes from: [store id => units].
+     *
+     * The admin's per-item choice — the laptop from Khulna, the mouse from
+     * Dhaka, or a line split two and one. Written like moveOrderTo(): each
+     * branch gaining units for the order gives them up (a transfer out tied
+     * to the order), each losing them gets them back. Owed units move too,
+     * which is how a "waiting for stock" line is filled from a branch that
+     * has it. The total cannot change here; that is an edit of the order.
+     *
+     * @param  array<int, int>  $target
+     */
+    public function allocateOrderLine(Order $order, Product $product, ?ProductVariant $variant, array $target): void
+    {
+        $target = array_filter(array_map('intval', $target), fn ($q) => $q > 0);
+        $current = $this->branchesHolding($order)[self::unitKey($product->id, $variant?->id)] ?? [];
+
+        if (array_sum($target) !== array_sum($current)) {
+            throw new StorefrontException(
+                'The branches must add up to '.array_sum($current).' for '.$this->unitName($product, $variant).'.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $branches = Store::holdsStock()->whereIn('id', array_keys($target))->pluck('name', 'id');
+
+        if (count($branches) !== count($target)) {
+            throw new StorefrontException('One of those branches does not hold stock.', 422, ApiCode::VALIDATION_ERROR);
+        }
+
+        DB::transaction(function () use ($order, $product, $variant, $target, $current, $branches) {
+            $note = 'Order '.$order->order_number.' now ships from '.$branches->implode(', ').'.';
+            $meta = ['reference' => $order, 'note' => $note];
+
+            // Back first, then taken, so a branch is never briefly short.
+            foreach ($current as $storeId => $units) {
+                $less = $units - ($target[$storeId] ?? 0);
+                if ($less > 0) {
+                    $this->record($product, $variant, $less, StockMovement::TRANSFER, $meta + ['store_id' => $storeId]);
+                }
+            }
+
+            foreach ($target as $storeId => $units) {
+                $more = $units - ($current[$storeId] ?? 0);
+                if ($more > 0) {
+                    $this->record($product, $variant, -$more, StockMovement::TRANSFER, $meta + ['store_id' => $storeId]);
+                }
+            }
+        });
+    }
+
+    /**
+     * The branch an order mostly ships from, for its label and for where an
+     * edit takes more units first. Null for an order with nothing on a shelf.
+     */
+    public function mainBranchOf(Order $order): ?int
+    {
+        $totals = [];
+
+        foreach ($this->branchesHolding($order) as $stores) {
+            foreach ($stores as $storeId => $units) {
+                $totals[$storeId] = ($totals[$storeId] ?? 0) + $units;
+            }
+        }
+
+        if ($totals === []) {
+            return null;
+        }
+
+        arsort($totals);
+
+        return (int) array_key_first($totals);
+    }
+
+    /**
+     * Branches to take from: the one asked for, the online default, then the
+     * rest in the shop's own order.
+     *
+     * @return array<int, int>
+     */
+    private function branchesInPickingOrder(?int $preferredStoreId): array
+    {
+        $ids = Store::holdsStock()
+            ->orderByDesc('fulfils_online')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if ($preferredStoreId && in_array($preferredStoreId, $ids, true)) {
+            $ids = array_values(array_unique([$preferredStoreId, ...$ids]));
+        }
+
+        return $ids;
+    }
+
+    private static function unitKey(int $productId, $variantId): string
+    {
+        return $productId.':'.($variantId ? (int) $variantId : '-');
+    }
+
+    /** @return array{0: int, 1: ?int} */
+    private static function splitKey(string $key): array
+    {
+        [$product, $variant] = explode(':', $key);
+
+        return [(int) $product, $variant === '-' ? null : (int) $variant];
     }
 
     /** Put reserved units back after a cancellation. */

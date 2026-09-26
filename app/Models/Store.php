@@ -27,6 +27,8 @@ class Store extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'holds_stock' => 'boolean',
+        'fulfils_online' => 'boolean',
     ];
 
     public function scopeActive($query)

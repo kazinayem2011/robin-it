@@ -9,13 +9,17 @@
  *
  * @param {object|null} product  carries allow_preorder and preorder_limit
  * @param {number|null} stock    on hand for this unit: the option's when there is one
+ * Not on pre-order, the shop's rule (Product::takesOrdersBeyondStock): with
+ * some in stock, more is taken and owed, so there is no ceiling; with none it
+ * is Sold Out.
+ *
  * @returns {number} the most that may be ordered; Infinity when uncapped
  */
 export const orderableCeiling = (product, stock) => {
     const onHand = Number(stock ?? 0);
 
     if (!product?.allow_preorder) {
-        return Math.max(0, onHand);
+        return onHand > 0 ? Number.POSITIVE_INFINITY : 0;
     }
 
     const limit = product.preorder_limit;
@@ -33,6 +37,16 @@ export const orderableCeiling = (product, stock) => {
  */
 export const preordersBeyondShelf = (product, stock, quantity) =>
     Boolean(product?.allow_preorder) && Number(quantity) > Number(stock ?? 0);
+
+/**
+ * Whether this many would outrun the stock on a product that is not on
+ * pre-order: taken, and the rest owed until the next delivery — "waiting for
+ * stock" on the line, not "pre-order".
+ */
+export const waitsForStock = (product, stock, quantity) =>
+    !product?.allow_preorder &&
+    Number(stock ?? 0) > 0 &&
+    Number(quantity) > Number(stock ?? 0);
 
 /** "3 October 2026", as the product page words the expected date; null when unset. */
 export const preorderDate = (value) =>

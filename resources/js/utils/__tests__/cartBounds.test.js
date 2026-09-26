@@ -20,9 +20,16 @@ describe('boundsFor', () => {
 
     const cartWith = (cap) => ({ max_quantity_per_item: cap });
 
-    it('stops at the stock on the line', () => {
+    /* Some in stock: more is taken and owed, up to the per-item cap. */
+    it('goes past the stock on the line, to the cap', () => {
         expect(boundsFor(line({ stock_quantity: 3 }), cartWith(20)).max).toBe(
-            3,
+            20,
+        );
+    });
+
+    it('stops at nothing when there is nothing', () => {
+        expect(boundsFor(line({ stock_quantity: 0 }), cartWith(20)).max).toBe(
+            0,
         );
     });
 
@@ -35,9 +42,9 @@ describe('boundsFor', () => {
     /* Stock and price live on the option for a variant product, so the
        option's shelf is the one that counts. */
     it('prefers the option’s stock over the product’s', () => {
-        const item = line({ stock_quantity: 99 }, { stock_quantity: 2 });
+        const item = line({ stock_quantity: 99 }, { stock_quantity: 0 });
 
-        expect(boundsFor(item, cartWith(20)).max).toBe(2);
+        expect(boundsFor(item, cartWith(20)).max).toBe(0);
     });
 
     it('honours a minimum order quantity', () => {

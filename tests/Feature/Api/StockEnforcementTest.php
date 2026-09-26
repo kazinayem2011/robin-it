@@ -48,40 +48,56 @@ class StockEnforcementTest extends TestCase
         ];
     }
 
-    public function test_cannot_add_more_to_cart_than_is_in_stock(): void
+    /* Sold out: nothing to take, nothing to owe. */
+    public function test_cannot_add_a_sold_out_product_to_the_cart(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->makeProduct(0);
+
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(422)
+            ->assertJsonPath('error', true)
+            ->assertJsonPath('code', 'OUT_OF_STOCK');
+    }
+
+    /*
+     * The shop's rule: with some in stock, more goes in the cart, and the
+     * order owes the rest — "waiting for stock" — until the next delivery.
+     */
+    public function test_more_than_is_in_stock_goes_in_the_cart_when_some_is(): void
     {
         $user = User::factory()->create();
         $product = $this->makeProduct(2);
 
-        $response = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id,
             'quantity' => 5,
-        ]);
-
-        $response->assertStatus(422)
-            ->assertJsonPath('error', true)
-            ->assertJsonPath('code', 'OUT_OF_STOCK')
-            ->assertJsonPath('data.available', 2);
-
-        $this->assertStringContainsString('Only 2 left', $response->json('message'));
+        ])->assertStatus(200);
     }
 
-    public function test_repeated_adds_cannot_accumulate_past_stock(): void
+    /* Past stock is owed, but a line never goes past the per-item cap. */
+    public function test_repeated_adds_cannot_accumulate_past_the_per_item_cap(): void
     {
         $user = User::factory()->create();
         $product = $this->makeProduct(3);
+        $cap = CartService::MAX_QUANTITY_PER_ITEM;
 
         $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
-            'product_id' => $product->id, 'quantity' => 2,
+            'product_id' => $product->id, 'quantity' => $cap,
         ])->assertStatus(200);
 
-        // 2 already in the cart + 2 more would be 4 against 3 units of stock.
         $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
-            'product_id' => $product->id, 'quantity' => 2,
-        ])->assertStatus(422)->assertJsonPath('code', 'OUT_OF_STOCK');
+            'product_id' => $product->id, 'quantity' => 5,
+        ]);
+
+        $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART)
+            ->assertJsonPath('data.items.0.quantity', $cap);
     }
 
-    public function test_cannot_raise_cart_quantity_beyond_stock(): void
+    /* It sold out while in the cart: the quantity can no longer be raised. */
+    public function test_cannot_raise_cart_quantity_once_it_sold_out(): void
     {
         $user = User::factory()->create();
         $product = $this->makeProduct(2);
@@ -89,6 +105,8 @@ class StockEnforcementTest extends TestCase
         $itemId = $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
             'product_id' => $product->id, 'quantity' => 1,
         ])->json('data.id');
+
+        $product->update(['stock_quantity' => 0]);
 
         $this->actingAs($user)
             ->patchJson('/api/'.str_replace('{itemId}', $itemId, ApiEndpoints::CART_ITEM), ['quantity' => 9])
@@ -115,15 +133,15 @@ class StockEnforcementTest extends TestCase
             'product_id' => $product->id, 'quantity' => 4,
         ])->assertStatus(200);
 
-        // Someone else buys the stock while this cart is sitting open.
-        $product->update(['stock_quantity' => 1]);
+        // Someone else buys the last of it while this cart is sitting open.
+        $product->update(['stock_quantity' => 0]);
 
         $this->actingAs($user)
             ->postJson('/api/'.ApiEndpoints::CHECKOUT, $this->address())
             ->assertStatus(422)
             ->assertJsonPath('code', 'OUT_OF_STOCK');
 
-        $this->assertSame(1, $product->fresh()->stock_quantity, 'Stock must not move on a refused checkout.');
+        $this->assertSame(0, $product->fresh()->stock_quantity, 'Stock must not move on a refused checkout.');
         $this->assertDatabaseCount('orders', 0);
     }
 

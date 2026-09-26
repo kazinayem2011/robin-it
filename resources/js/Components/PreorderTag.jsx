@@ -11,19 +11,27 @@ import { preorderDate } from '../utils/orderable';
  *
  * @param {string|null} expected  the product's expected date, when there is one
  * @param {boolean}     compact   the tag alone, for a dense table row
+ * @param {boolean}     waiting   owed because more was ordered than was in
+ *                                stock, not a pre-order: "Waiting for stock"
  */
-export default function PreorderTag({ expected = null, compact = false }) {
-    const date = preorderDate(expected);
+export default function PreorderTag({
+    expected = null,
+    compact = false,
+    waiting = false,
+}) {
+    const date = waiting ? null : preorderDate(expected);
 
     return (
         <span className="preorder-tag">
             <Clock size={12} aria-hidden="true" />
             <span>
-                Pre-order
+                {waiting ? 'Waiting for stock' : 'Pre-order'}
                 {!compact && (
                     <>
                         {' '}
-                        — ships when the delivery arrives
+                        {waiting
+                            ? '— ships when the next delivery arrives'
+                            : '— ships when the delivery arrives'}
                         {date ? `, expected ${date}` : ''}
                     </>
                 )}

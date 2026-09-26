@@ -390,7 +390,9 @@ class CartService
          */
         $onHand = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
 
-        if ($product->allowsBalance($onHand - $quantity)) {
+        // Within stock or a pre-order's limit — or more than is in stock on a
+        // product that takes the order and owes the rest.
+        if ($product->allowsBalance($onHand - $quantity) || $product->takesOrdersBeyondStock($onHand)) {
             return;
         }
 

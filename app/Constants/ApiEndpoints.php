@@ -302,6 +302,9 @@ class ApiEndpoints
 
     public const ADMIN_ORDERS_RETURN = 'orders/{id}/return';
 
+    /** Which branch an order's units come off, and changing it. */
+    public const ADMIN_ORDER_SHIP_FROM = 'orders/{id}/ship-from';
+
     /** Handing a parcel to a carrier, with the number to chase it by. */
     public const ADMIN_ORDERS_DISPATCH = 'orders/{id}/dispatch';
 

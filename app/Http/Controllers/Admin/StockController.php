@@ -389,6 +389,7 @@ class StockController extends Controller
             'lines.*.damaged' => 'nullable|integer|min:0',
         ]);
 
+        // Back to the branch each unit left, always.
         $order = $orders->returnOrder($order, $validated['lines'], $validated['note'] ?? null);
 
         return $this->successResponse($order, "Order {$order->order_number} has been returned.");

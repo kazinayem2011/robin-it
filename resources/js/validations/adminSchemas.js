@@ -307,7 +307,13 @@ export const adminOrderReturnSchema = Yup.object().shape({
     note: Yup.string()
         .max(1000, 'Note cannot exceed 1000 characters')
         .nullable(),
-    lines: Yup.array().test(
+    /*
+     * Keyed by order item — { [itemId]: { resellable, damaged } } — not a
+     * list. As Yup.array() an object never passed the type check, so the
+     * form refused to submit every time and showed nothing: "Confirm return"
+     * did nothing at all.
+     */
+    lines: Yup.mixed().test(
         'something-came-back',
         'Enter how many units came back.',
         (lines) =>

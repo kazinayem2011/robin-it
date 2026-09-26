@@ -10,7 +10,11 @@ import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
 import { boundsFor as cartBounds } from '../../utils/cartBounds';
-import { preordersBeyondShelf, preorderDate } from '../../utils/orderable';
+import {
+    preordersBeyondShelf,
+    preorderDate,
+    waitsForStock,
+} from '../../utils/orderable';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Trash2, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -267,6 +271,27 @@ export default function Cart() {
                                                         )
                                                             ? `, expected ${preorderDate(item.product.preorder_release_at)}`
                                                             : ''}
+                                                    </div>
+                                                )}
+                                                {/* More than is in stock: taken,
+                                                    and the rest ships later. */}
+                                                {waitsForStock(
+                                                    item.product,
+                                                    item.variant
+                                                        ?.stock_quantity ??
+                                                        item.product
+                                                            .stock_quantity,
+                                                    item.quantity,
+                                                ) && (
+                                                    <div className="cart-item-preorder">
+                                                        Waiting for stock —{' '}
+                                                        {item.variant
+                                                            ?.stock_quantity ??
+                                                            item.product
+                                                                .stock_quantity}{' '}
+                                                        in stock now, the rest
+                                                        ship when the next
+                                                        delivery arrives
                                                     </div>
                                                 )}
                                                 <div className="cart-item-price">

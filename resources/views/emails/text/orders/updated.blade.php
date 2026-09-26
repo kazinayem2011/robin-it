@@ -12,7 +12,7 @@ what it holds now, and what to pay on delivery.
 ITEMS NOW
 ---------
 @foreach ($order->items as $item)
-- {{ $item->display_name }}@if ($item->wasPreordered()) (pre-order, ships when the delivery arrives)@endif
+- {{ $item->display_name }}@if ($item->wasPreordered()) ({{ mb_strtolower($item->owedLabel()) }})@endif
   {{ $item->quantity }} x ৳{{ number_format($item->price, 2) }} = ৳{{ number_format($item->total, 2) }}
 @endforeach
 
