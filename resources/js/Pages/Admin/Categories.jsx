@@ -16,6 +16,7 @@ import { toast } from '@/Components/Toast';
 import { adminCategorySchema } from '@/validations';
 import { adminService } from '@/services';
 import { reorderSiblings, indexOnShelf } from '@/utils/reorderTree';
+import { EmptyCategoriesContext } from './Components/NotInMenuTag';
 import { siteConfig } from '@/constants';
 import {
     CategoryParentCard,
@@ -30,7 +31,10 @@ export default function Categories({
     categories = [],
     parentOptions = [],
     brandOptions = [],
+    emptyIds = [],
 }) {
+    // Categories the menu leaves out until something is on them.
+    const emptySet = useMemo(() => new Set(emptyIds), [emptyIds]);
     const [searchQuery, setSearchQuery] = useState('');
 
     /*
@@ -456,102 +460,111 @@ export default function Categories({
             title="Category Hierarchy & Mega Menu"
             subtitle={`Organize the 3-Level Category Architecture for ${siteConfig.name} Mega Menu & Taxonomy`}
         >
-            <Head title={`Category Organizer — Admin ${siteConfig.name}`} />
+            <EmptyCategoriesContext.Provider value={emptySet}>
+                <Head title={`Category Organizer — Admin ${siteConfig.name}`} />
 
-            {/* Main Taxonomy Management Card */}
-            <div className="admin-card">
-                <div className="admin-card-header">
-                    <div className="admin-card-title-group">
-                        <h3 className="admin-card-title">
-                            Catalog Taxonomy Tree
-                        </h3>
-                        <span className="admin-table-item-sub">
-                            Manage mega menu & category hierarchy
-                        </span>
+                {/* Main Taxonomy Management Card */}
+                <div className="admin-card">
+                    <div className="admin-card-header">
+                        <div className="admin-card-title-group">
+                            <h3 className="admin-card-title">
+                                Catalog Taxonomy Tree
+                            </h3>
+                            <span className="admin-table-item-sub">
+                                Manage mega menu & category hierarchy
+                            </span>
+                        </div>
+
+                        <div className="admin-header-actions">
+                            <SearchInput
+                                value={searchQuery}
+                                onSearch={setSearchQuery}
+                                placeholder="Search categories..."
+                            />
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={toggleAll}
+                            >
+                                {collapsedIds.size > 0
+                                    ? 'Expand All'
+                                    : 'Collapse All'}
+                            </Button>
+
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                icon={Plus}
+                                onClick={openCreateRootModal}
+                            >
+                                Add Root Category
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="admin-header-actions">
-                        <SearchInput
-                            value={searchQuery}
-                            onSearch={setSearchQuery}
-                            placeholder="Search categories..."
+                    {filteredCategories.length === 0 ? (
+                        <EmptyState
+                            title="No Categories Found"
+                            description={
+                                searchQuery
+                                    ? `No category matching "${searchQuery}"`
+                                    : 'Get started by creating your first root category.'
+                            }
+                            icon={Layers}
+                            actionText="Create Root Category"
+                            onAction={openCreateRootModal}
                         />
-
-                        <Button variant="outline" size="sm" onClick={toggleAll}>
-                            {collapsedIds.size > 0
-                                ? 'Expand All'
-                                : 'Collapse All'}
-                        </Button>
-
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            icon={Plus}
-                            onClick={openCreateRootModal}
-                        >
-                            Add Root Category
-                        </Button>
-                    </div>
+                    ) : (
+                        <div className="admin-cat-tree-list">
+                            {filteredCategories.map((parent, index) => (
+                                <CategoryParentCard
+                                    key={parent.id}
+                                    parent={parent}
+                                    onMove={canReorder ? moveCategory : null}
+                                    index={index}
+                                    isFirst={index === 0}
+                                    isLast={
+                                        index === filteredCategories.length - 1
+                                    }
+                                    draggingId={draggingId}
+                                    onDragStart={canReorder ? startDrag : null}
+                                    onDragEnterRow={dragOver}
+                                    onDrop={drop}
+                                    onDragEnd={endDrag}
+                                    isCollapsed={
+                                        canReorder &&
+                                        collapsedIds.has(parent.id)
+                                    }
+                                    onToggleCollapse={toggleCollapse}
+                                    onEdit={openEditModal}
+                                    onDelete={openDeleteModal}
+                                    onAddSubcategory={openCreateChildModal}
+                                    onAddChild={openCreateChildModal}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {filteredCategories.length === 0 ? (
-                    <EmptyState
-                        title="No Categories Found"
-                        description={
-                            searchQuery
-                                ? `No category matching "${searchQuery}"`
-                                : 'Get started by creating your first root category.'
-                        }
-                        icon={Layers}
-                        actionText="Create Root Category"
-                        onAction={openCreateRootModal}
-                    />
-                ) : (
-                    <div className="admin-cat-tree-list">
-                        {filteredCategories.map((parent, index) => (
-                            <CategoryParentCard
-                                key={parent.id}
-                                parent={parent}
-                                onMove={canReorder ? moveCategory : null}
-                                index={index}
-                                isFirst={index === 0}
-                                isLast={index === filteredCategories.length - 1}
-                                draggingId={draggingId}
-                                onDragStart={canReorder ? startDrag : null}
-                                onDragEnterRow={dragOver}
-                                onDrop={drop}
-                                onDragEnd={endDrag}
-                                isCollapsed={
-                                    canReorder && collapsedIds.has(parent.id)
-                                }
-                                onToggleCollapse={toggleCollapse}
-                                onEdit={openEditModal}
-                                onDelete={openDeleteModal}
-                                onAddSubcategory={openCreateChildModal}
-                                onAddChild={openCreateChildModal}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
+                {/* Category Create / Edit Modal */}
+                <CategoryFormModal
+                    modalState={modalState}
+                    brandOptions={brandOptions}
+                    onClose={closeModal}
+                    formik={formik}
+                    parentOptions={parentOptions}
+                    isSubmitting={isSubmitting}
+                />
 
-            {/* Category Create / Edit Modal */}
-            <CategoryFormModal
-                modalState={modalState}
-                brandOptions={brandOptions}
-                onClose={closeModal}
-                formik={formik}
-                parentOptions={parentOptions}
-                isSubmitting={isSubmitting}
-            />
-
-            {/* Delete Confirmation Modal */}
-            <CategoryDeleteModal
-                deleteModalState={deleteModalState}
-                onClose={closeDeleteModal}
-                onConfirmDelete={handleDelete}
-                isSubmitting={isSubmitting}
-            />
+                {/* Delete Confirmation Modal */}
+                <CategoryDeleteModal
+                    deleteModalState={deleteModalState}
+                    onClose={closeDeleteModal}
+                    onConfirmDelete={handleDelete}
+                    isSubmitting={isSubmitting}
+                />
+            </EmptyCategoriesContext.Provider>
         </AdminLayout>
     );
 }

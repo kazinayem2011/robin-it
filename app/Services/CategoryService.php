@@ -41,6 +41,29 @@ class CategoryService
     }
 
     /**
+     * Active categories the menu leaves out because nothing is on them yet.
+     *
+     * The mega menu hides a category with no products anywhere beneath it,
+     * so a customer is never sent to "No products found". The admin tree did
+     * not say so, and a category the shop had just made — "Used Laptop" —
+     * looked as if the menu were broken. Same rule as the menu: an offer
+     * category is always shown.
+     *
+     * @return list<int>
+     */
+    public function emptyCategoryIds(): array
+    {
+        $stocked = $this->categoryIdsWithProducts();
+
+        return Category::where('is_active', true)
+            ->where('is_offer', false)
+            ->whereNotIn('id', $stocked)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
      * Get the nested category tree for the Mega Menu.
      *
      * Categories holding nothing are left out. Three of the nine top-level

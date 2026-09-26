@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import NotInMenuTag from './NotInMenuTag';
 import {
     Edit2,
     Trash2,
@@ -127,6 +128,7 @@ const CategorySubCardInner = ({
             </div>
 
             <span className="admin-sub-slug-tag">/{sub.slug}</span>
+            <NotInMenuTag id={sub.id} />
 
             {/* Level 3: Children Series & Lineups */}
             <div className="admin-cat-tree-l3-list">

@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import NotInMenuTag from './NotInMenuTag';
 import { Edit2, XCircle } from 'lucide-react';
 
 /**
@@ -74,6 +75,7 @@ const Chip = ({
                 aria-label={`Edit ${child.name}`}
             >
                 {child.name}
+                <NotInMenuTag id={child.id} compact />
                 <Edit2
                     size={10}
                     className="l3-chip-pencil"

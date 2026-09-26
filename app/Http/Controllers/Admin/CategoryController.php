@@ -83,6 +83,9 @@ class CategoryController extends Controller
             'categories' => $categories,
             'parentOptions' => $parentOptions,
             'brandOptions' => $brandOptions,
+            // Left out of the menu until something is on them; marked in the
+            // tree so an empty category does not look like a broken menu.
+            'emptyIds' => app(CategoryService::class)->emptyCategoryIds(),
         ]);
     }
 

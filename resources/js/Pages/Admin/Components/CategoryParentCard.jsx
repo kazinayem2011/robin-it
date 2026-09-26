@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import NotInMenuTag from './NotInMenuTag';
 import {
     Plus,
     Edit2,
@@ -132,6 +133,8 @@ const CategoryParentCardInner = ({
                                     Inactive
                                 </span>
                             ) : null}
+
+                            <NotInMenuTag id={parent.id} />
                         </div>
 
                         <span className="admin-cat-tree-parent-slug">

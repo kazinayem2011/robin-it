@@ -5480,3 +5480,28 @@ a.admin-card:hover,
     border-radius: var(--radius-sm);
     background: var(--bg-surface-subtle);
 }
+
+/* Category tree: left out of the menu until something is on it. */
+.admin-cat-not-in-menu {
+    display: inline-flex;
+    /* Its own width, not the card's, wherever it sits. */
+    width: fit-content;
+    align-self: flex-start;
+    justify-self: start;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    background: var(--bg-muted);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-cat-not-in-menu.is-compact {
+    padding: 0;
+    background: none;
+    margin-left: 4px;
+    vertical-align: middle;
+}
