@@ -26,10 +26,11 @@ class StockRequested extends ShopNotification
 
         return [
             'kind' => 'stock.requested',
-            'title' => 'Wanted: '.$name,
+            // Named as the menu names it, so the alert and the page match.
+            'title' => 'Notify-me request: '.$name,
             'body' => $this->waiting === 1
-                ? 'A customer wants to know when it is back.'
-                : "{$this->waiting} customers are waiting for it to come back.",
+                ? 'A customer asked to be told when it is back in stock.'
+                : "A customer asked to be told when it is back in stock — {$this->waiting} waiting now.",
             'url' => '/admin/stock/requests',
             'icon' => 'stock',
         ];
