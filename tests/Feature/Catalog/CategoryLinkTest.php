@@ -30,6 +30,9 @@ class CategoryLinkTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** How many front-end files the scan read, so an empty result means something. */
+    private int $scanned = 0;
+
     /** Every `SHOP_CATEGORY('x')` written literally in the front end. */
     private function hardCodedSlugs(): array
     {
@@ -43,6 +46,8 @@ class CategoryLinkTest extends TestCase
             if ($file->getExtension() !== 'jsx' || str_contains($file->getPathname(), '__tests__')) {
                 continue;
             }
+
+            $this->scanned++;
 
             preg_match_all(
                 "/SHOP_CATEGORY\(\s*['\"]([a-z0-9-]+)['\"]\s*\)/",
@@ -63,7 +68,14 @@ class CategoryLinkTest extends TestCase
         $this->seed(StarTechTaxonomySeeder::class);
 
         $slugs = $this->hardCodedSlugs();
-        $this->assertNotEmpty($slugs, 'Found no hard-coded category links to check.');
+
+        /*
+         * None at all is fine — the last one went with the homepage's built-in
+         * promo cards, and a link the shop sets in the admin cannot drift like
+         * this. What must not happen is the scan reading nothing and passing,
+         * so it has to have read the front end.
+         */
+        $this->assertGreaterThan(50, $this->scanned, 'The scan read no front-end files.');
 
         foreach ($slugs as $slug => $files) {
             $this->assertDatabaseHas('categories', ['slug' => $slug, 'is_active' => true]);

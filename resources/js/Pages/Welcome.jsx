@@ -36,6 +36,7 @@ import Select from '../Components/Select';
 import Tabs from '../Components/Tabs';
 import { getCategoryIcon } from '../utils/iconMap';
 import { formatBdt } from '../utils/formatters';
+import { homepageBanners } from '../utils/homepageBanners';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import { useWishlist, useAddToCart } from '../hooks';
@@ -93,8 +94,13 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
         }
     }, [blogs]);
 
-    // All active banner slides directly from Database (100% Admin Controlled)
-    const activeHeroSlides = bannersList.filter((b) => b.is_active);
+    /*
+     * Hero slides are the banners placed in the hero, and only those. It took
+     * every active banner, so the three promo cards rotated through the slider
+     * as well as sitting in their own grid below it: six slides, three twice.
+     */
+    const { hero: activeHeroSlides, promos: activePromos } =
+        homepageBanners(bannersList);
 
     // 1. Auto-advance hero slides dynamically based on available slide count
     useEffect(() => {
@@ -185,142 +191,150 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
             />
 
             <div className="homepage-master-container">
-                {/* 1. HERO SLIDER & GRAPHICAL SHOWCASE */}
-                <section className="hero-master-section">
-                    <div className="container hero-banner-layout">
-                        <div className="hero-slider-surface">
-                            <div className="hero-slider-track">
-                                {activeHeroSlides.map((slide, idx) => (
-                                    <div
-                                        key={slide.id || idx}
-                                        className={`hero-slide-item ${activeHeroSlide === idx ? 'slide-active' : ''}`}
-                                        style={{
-                                            backgroundImage: `url(${slide.image_path || slide.image})`,
-                                        }}
-                                    >
-                                        <div className="slide-gradient-overlay"></div>
+                {/* 1. HERO SLIDER & GRAPHICAL SHOWCASE — only while a hero
+                    banner is switched on; an empty dark box otherwise. */}
+                {activeHeroSlides.length > 0 && (
+                    <section className="hero-master-section">
+                        <div className="container hero-banner-layout">
+                            <div className="hero-slider-surface">
+                                <div className="hero-slider-track">
+                                    {activeHeroSlides.map((slide, idx) => (
+                                        <div
+                                            key={slide.id || idx}
+                                            className={`hero-slide-item ${activeHeroSlide === idx ? 'slide-active' : ''}`}
+                                            style={{
+                                                backgroundImage: `url(${slide.image_path || slide.image})`,
+                                            }}
+                                        >
+                                            <div className="slide-gradient-overlay"></div>
 
-                                        <div className="slide-content-box">
-                                            {(slide.badge || slide.tag) && (
-                                                <div className="slide-tag-badge">
-                                                    <Zap size={13} />{' '}
-                                                    {slide.badge || slide.tag}
-                                                </div>
-                                            )}
+                                            <div className="slide-content-box">
+                                                {(slide.badge || slide.tag) && (
+                                                    <div className="slide-tag-badge">
+                                                        <Zap size={13} />{' '}
+                                                        {slide.badge ||
+                                                            slide.tag}
+                                                    </div>
+                                                )}
 
-                                            {/*
-                                             * Every slide is in the DOM at
-                                             * once, so six banners put six
-                                             * <h1>s in the document outline.
-                                             * Assistive tech never heard them
-                                             * — the inactive slides are
-                                             * visibility:hidden — but a
-                                             * crawler reading the markup did.
-                                             * The slide on screen is the
-                                             * page's heading; the rest are
-                                             * text until their turn comes.
-                                             */}
-                                            {activeHeroSlide === idx ? (
-                                                <h1 className="slide-title">
-                                                    {slide.title}
-                                                </h1>
-                                            ) : (
-                                                <p className="slide-title">
-                                                    {slide.title}
-                                                </p>
-                                            )}
-                                            {slide.subtitle && (
-                                                <p className="slide-desc">
-                                                    {slide.subtitle}
-                                                </p>
-                                            )}
+                                                {/*
+                                                 * Every slide is in the DOM at
+                                                 * once, so six banners put six
+                                                 * <h1>s in the document outline.
+                                                 * Assistive tech never heard them
+                                                 * — the inactive slides are
+                                                 * visibility:hidden — but a
+                                                 * crawler reading the markup did.
+                                                 * The slide on screen is the
+                                                 * page's heading; the rest are
+                                                 * text until their turn comes.
+                                                 */}
+                                                {activeHeroSlide === idx ? (
+                                                    <h1 className="slide-title">
+                                                        {slide.title}
+                                                    </h1>
+                                                ) : (
+                                                    <p className="slide-title">
+                                                        {slide.title}
+                                                    </p>
+                                                )}
+                                                {slide.subtitle && (
+                                                    <p className="slide-desc">
+                                                        {slide.subtitle}
+                                                    </p>
+                                                )}
 
-                                            <div className="slide-action-btns">
-                                                <Link
-                                                    href={
-                                                        slide.link_url ||
-                                                        slide.primaryLink ||
-                                                        ROUTES.SHOP
-                                                    }
-                                                    className="btn btn-primary btn-lg"
-                                                >
-                                                    <span>
-                                                        {slide.button_text ||
-                                                            slide.primaryCta ||
-                                                            'Shop Now'}
-                                                    </span>
-                                                    <ArrowRight size={18} />
-                                                </Link>
-                                                {slide.secondaryLink && (
+                                                <div className="slide-action-btns">
                                                     <Link
                                                         href={
-                                                            slide.secondaryLink
+                                                            slide.link_url ||
+                                                            slide.primaryLink ||
+                                                            ROUTES.SHOP
                                                         }
-                                                        className="btn btn-outline-white btn-lg"
+                                                        className="btn btn-primary btn-lg"
                                                     >
                                                         <span>
-                                                            {slide.secondaryCta ||
-                                                                'Build Rig'}
+                                                            {slide.button_text ||
+                                                                slide.primaryCta ||
+                                                                'Shop Now'}
                                                         </span>
+                                                        <ArrowRight size={18} />
                                                     </Link>
-                                                )}
+                                                    {slide.secondaryLink && (
+                                                        <Link
+                                                            href={
+                                                                slide.secondaryLink
+                                                            }
+                                                            className="btn btn-outline-white btn-lg"
+                                                        >
+                                                            <span>
+                                                                {slide.secondaryCta ||
+                                                                    'Build Rig'}
+                                                            </span>
+                                                        </Link>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
 
-                                {/* Slider Navigation Controls (Only shown if 2+ banners exist) */}
-                                {activeHeroSlides.length > 1 && (
-                                    <div className="slider-bottom-controls">
-                                        <div className="slide-dots-indicator">
-                                            {activeHeroSlides.map((_, i) => (
+                                    {/* Slider Navigation Controls (Only shown if 2+ banners exist) */}
+                                    {activeHeroSlides.length > 1 && (
+                                        <div className="slider-bottom-controls">
+                                            <div className="slide-dots-indicator">
+                                                {activeHeroSlides.map(
+                                                    (_, i) => (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() =>
+                                                                setActiveHeroSlide(
+                                                                    i,
+                                                                )
+                                                            }
+                                                            className={`slider-dot ${activeHeroSlide === i ? 'dot-active' : ''}`}
+                                                            aria-label={`Slide ${i + 1}`}
+                                                        />
+                                                    ),
+                                                )}
+                                            </div>
+
+                                            <div className="slider-arrows-group">
                                                 <button
-                                                    key={i}
+                                                    className="slider-arrow-btn"
                                                     onClick={() =>
-                                                        setActiveHeroSlide(i)
+                                                        setActiveHeroSlide(
+                                                            (prev) =>
+                                                                prev === 0
+                                                                    ? activeHeroSlides.length -
+                                                                      1
+                                                                    : prev - 1,
+                                                        )
                                                     }
-                                                    className={`slider-dot ${activeHeroSlide === i ? 'dot-active' : ''}`}
-                                                    aria-label={`Slide ${i + 1}`}
-                                                />
-                                            ))}
+                                                    aria-label="Previous Slide"
+                                                >
+                                                    <ChevronLeft size={20} />
+                                                </button>
+                                                <button
+                                                    className="slider-arrow-btn"
+                                                    onClick={() =>
+                                                        setActiveHeroSlide(
+                                                            (prev) =>
+                                                                (prev + 1) %
+                                                                activeHeroSlides.length,
+                                                        )
+                                                    }
+                                                    aria-label="Next Slide"
+                                                >
+                                                    <ChevronRight size={20} />
+                                                </button>
+                                            </div>
                                         </div>
-
-                                        <div className="slider-arrows-group">
-                                            <button
-                                                className="slider-arrow-btn"
-                                                onClick={() =>
-                                                    setActiveHeroSlide(
-                                                        (prev) =>
-                                                            prev === 0
-                                                                ? activeHeroSlides.length -
-                                                                  1
-                                                                : prev - 1,
-                                                    )
-                                                }
-                                                aria-label="Previous Slide"
-                                            >
-                                                <ChevronLeft size={20} />
-                                            </button>
-                                            <button
-                                                className="slider-arrow-btn"
-                                                onClick={() =>
-                                                    setActiveHeroSlide(
-                                                        (prev) =>
-                                                            (prev + 1) %
-                                                            activeHeroSlides.length,
-                                                    )
-                                                }
-                                                aria-label="Next Slide"
-                                            >
-                                                <ChevronRight size={20} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                )}
 
                 {/* 2. SERVICE TRUST & BENEFIT STRIP (DRY via siteConfig) */}
                 <section className="container section-gap">
@@ -494,52 +508,16 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
 
                 {/* 5. DYNAMIC HIGH-IMPACT GRAPHICAL PROMOTIONAL SHOWCASES */}
                 {(() => {
-                    const promoCards = bannersList.filter(
-                        (b) =>
-                            (b.position === 'promo_side' ||
-                                b.position === 'promo_top') &&
-                            b.is_active,
-                    );
-
-                    const activePromos =
-                        promoCards.length > 0
-                            ? promoCards
-                            : [
-                                  {
-                                      id: 'p1',
-                                      badge: 'CUSTOM RIG',
-                                      title: 'BUILD YOUR DREAM RIG',
-                                      subtitle:
-                                          'Instant Compatibility Checker & Free Express Assembly',
-                                      image_path:
-                                          '/images/promo_banner_pc_builder.jpg',
-                                      link_url: ROUTES.PC_BUILDER,
-                                      button_text: 'Build Now',
-                                  },
-                                  {
-                                      id: 'p2',
-                                      badge: 'SAVE 35%',
-                                      title: 'ULTIMATE PC UPGRADE BUNDLE',
-                                      subtitle:
-                                          'Samsung 990 PRO NVMe + Corsair Dominator DDR5 + 360mm AIO',
-                                      image_path:
-                                          '/images/promo_banner_special_deals.jpg',
-                                      link_url:
-                                          ROUTES.SHOP_CATEGORY('component'),
-                                      button_text: 'Shop Bundles',
-                                  },
-                                  {
-                                      id: 'p3',
-                                      badge: 'CUSTOMER FIRST',
-                                      title: 'OFFICIAL WARRANTY CLAIM',
-                                      subtitle:
-                                          'Doorstep Pickup & Rapid 48H Diagnostic Turnaround',
-                                      image_path:
-                                          '/images/promo_banner_warranty.jpg',
-                                      link_url: ROUTES.STORES,
-                                      button_text: 'Get Service',
-                                  },
-                              ];
+                    /*
+                     * The promo cards the shop has switched on, and nothing
+                     * else. When there were none it showed three built-in
+                     * cards instead — "SAVE 35%" on a bundle, doorstep
+                     * pickup — offers the shop may not make, which switching
+                     * every card off in the admin could not remove. No cards
+                     * now means no section. Which banners count as cards:
+                     * see homepageBanners.
+                     */
+                    if (activePromos.length === 0) return null;
 
                     return (
                         <section className="container section-gap">

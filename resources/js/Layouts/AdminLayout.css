@@ -2056,6 +2056,42 @@ a.admin-card:hover,
     overflow: hidden;
 }
 
+/* Each list previewed at the shape the homepage draws it: the slider wide,
+   a promo card 16:10 — so a crop that works here works there. */
+.admin-banners-grid.is-hero .admin-banner-preview {
+    height: auto;
+    aspect-ratio: 12 / 5;
+}
+
+.admin-banners-grid.is-promo .admin-banner-preview {
+    height: auto;
+    aspect-ratio: 16 / 10;
+}
+
+/* Switched off: still listed, plainly not live. */
+.admin-banner-card.is-hidden .admin-banner-preview img {
+    opacity: 0.45;
+    filter: grayscale(1);
+}
+
+.banner-status-live {
+    color: var(--success-hover);
+}
+
+.banner-status-hidden {
+    color: var(--text-subtle);
+}
+
+.admin-banner-empty {
+    margin: 20px 0 0;
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
+}
+
 .admin-banner-preview img {
     width: 100%;
     height: 100%;

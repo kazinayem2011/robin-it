@@ -306,7 +306,7 @@ const NAV_GROUPS = [
                 ability: 'marketing',
             },
             {
-                label: 'Banners & Sliders',
+                label: 'Banners & Promo Cards',
                 href: ROUTES.ADMIN_BANNERS,
                 icon: Image,
                 ability: 'marketing',
