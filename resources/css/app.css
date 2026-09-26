@@ -2465,36 +2465,43 @@ textarea.has-error:focus,
 }
 
 /* Key Specifications */
+/*
+ * A real list, bulleted the way StarTech's cards are.
+ *
+ * The bullet was a "•" typed at the start of each line, so a line that wrapped
+ * carried on underneath it. It is the list's own marker now, hung outside the
+ * text in a 14px gutter (StarTech's figure), so every wrapped line starts where
+ * the text does. The marker is sized with the text, so the two move together.
+ */
 .product-specs-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    margin-bottom: 8px;
-    min-height: 48px;
+    --spec-line-size: calc(0.72rem + 1px);
+
+    list-style: disc outside;
+    margin: 0 0 8px;
+    padding-left: 14px;
+    /* Room for the four lines a card carries (ProductService::CARD_LINES):
+       each at a 1.5 line height, with the 3px gaps between. Every card keeps
+       the same height whether its product has four lines or one. */
+    min-height: calc(4 * var(--spec-line-size) * 1.5 + 3 * 3px);
 }
 
+/* Each line whole, wrapping as it needs to, as StarTech's cards do: it was cut
+   to one line with an ellipsis, which on a laptop lost the part of every line
+   that mattered — "Processor: AMD Ryzen 3 30 (6…". overflow-wrap only for an
+   unbroken run such as a part number, which would otherwise widen the card. */
 .product-specs-list li {
-    font-size: 0.72rem;
+    font-size: var(--spec-line-size);
+    line-height: 1.5;
     color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
 }
 
-/* Ratings */
-.product-rating-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-    /*
-     * Held at the height of the reviewed state, which carries a 13px star the
-     * unreviewed one does not. Without it a card grew the day its first review
-     * landed, and a shelf mixing reviewed and unreviewed products had its
-     * prices sitting at two different heights.
-     */
-    min-height: 18px;
+.product-specs-list li + li {
+    margin-top: 3px;
+}
+
+.product-specs-list li::marker {
+    color: var(--text-subtle);
 }
 
 /*
@@ -2531,11 +2538,6 @@ textarea.has-error:focus,
     color: var(--text-secondary);
 }
 
-.review-count {
-    font-size: 0.7rem;
-    color: var(--text-subtle);
-}
-
 /* Stock Status Pill */
 .stock-status-row {
     margin-bottom: 8px;
@@ -2559,42 +2561,12 @@ textarea.has-error:focus,
     color: var(--accent-amber-ink);
 }
 
-/* Stock Progress for Flash Sale */
-.stock-progress-container {
-    margin-bottom: 12px;
-}
-
-.stock-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-}
-
-/* The colour the rest of the app uses for "this is a problem". */
-.stock-none {
-    font-weight: 700;
-    color: var(--danger-text);
-}
-
-.sold-count {
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
 .progress-track {
     width: 100%;
     height: 6px;
     background: var(--bg-muted-strong);
     border-radius: var(--radius-full);
     overflow: hidden;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--warning) 0%, #ea484f 100%);
-    border-radius: var(--radius-full);
 }
 
 /* Card Footer */
@@ -2659,6 +2631,14 @@ textarea.has-error:focus,
     font-size: 0.75rem;
     color: var(--text-subtle);
     text-decoration: line-through;
+}
+
+/* "Sold Out" in the price's place, as on StarTech, in the colour the rest of
+   the app uses for "this stops a sale". Smaller than a price: it is a status,
+   not a figure. */
+.current-price.price-sold-out {
+    font-size: 1rem;
+    color: var(--danger-text);
 }
 
 .btn-add-cart {

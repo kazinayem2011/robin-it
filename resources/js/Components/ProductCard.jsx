@@ -4,7 +4,6 @@ import {
     Scale,
     ShoppingCart,
     Heart,
-    Star,
     CheckCircle,
     Flame,
     Eye,
@@ -53,19 +52,6 @@ export const ProductCard = ({
         product.inStock !== undefined
             ? Boolean(product.inStock)
             : Number(product.stock_quantity ?? 0) > 0;
-
-    // Social proof, straight from the API — no invented fallbacks.
-    const rating = Number(product.rating ?? 0);
-    const reviewCount = Number(product.reviews ?? 0);
-    const soldCount = Number(product.sold ?? 0);
-    const stockQuantity = Number(
-        product.stockQuantity ?? product.stock_quantity ?? 0,
-    );
-    const totalStock = Number(product.totalStock ?? stockQuantity + soldCount);
-    const soldPercent =
-        totalStock > 0
-            ? Math.min(100, Math.round((soldCount / totalStock) * 100))
-            : 0;
 
     const handleAddToCart = (e) => {
         e.preventDefault();
@@ -156,11 +142,40 @@ export const ProductCard = ({
     );
     const canBuy = inStock || isPreorder;
 
+    // The shop's own words for it when it set them on the product, as the
+    // product page uses; StarTech's "Sold Out" otherwise.
+    const soldOutLabel = product.out_of_stock_status || 'Sold Out';
+
+    /*
+     * The saving goes with the price. A sold-out card shows no price, and a
+     * "Save ৳4,000" badge over it advertised money off something that could
+     * not be bought. A pre-order keeps both: it can be ordered at that price.
+     */
+    const showSaving = Boolean(discountInfo) && canBuy;
+
+    /*
+     * The price, or "Sold Out" in its place, as StarTech's cards have it: a
+     * product that cannot be bought shows no price to be bought at. Pre-order
+     * keeps its price, since it can still be ordered.
+     */
+    const priceStack = canBuy ? (
+        <div className="price-stack">
+            <span className="current-price">{formatBdt(currentPrice)}</span>
+            {discountInfo && (
+                <span className="old-price">{formatBdt(regularPrice)}</span>
+            )}
+        </div>
+    ) : (
+        <div className="price-stack">
+            <span className="current-price price-sold-out">{soldOutLabel}</span>
+        </div>
+    );
+
     // The rail icon adds to the cart; the button buys.
     const cartActionLabel = isPreorder
         ? 'Pre-order'
         : !inStock
-          ? 'Out of stock'
+          ? soldOutLabel
           : hasOptions
             ? 'Choose options'
             : 'Add to cart';
@@ -168,7 +183,7 @@ export const ProductCard = ({
     const buyActionLabel = isPreorder
         ? 'Pre-order'
         : !inStock
-          ? 'Out of stock'
+          ? soldOutLabel
           : hasOptions
             ? 'Choose options'
             : 'Buy Now';
@@ -187,7 +202,7 @@ export const ProductCard = ({
                         pounds apart. The trade here quotes the saving, and so
                         does the shop this one is modelled on.
                     */}
-                    {discountInfo && (
+                    {showSaving && (
                         <span className="card-badge discount-badge">
                             <Flame size={12} /> Save {discountInfo.saving}
                         </span>
@@ -263,85 +278,25 @@ export const ProductCard = ({
                         {/* Key Specifications */}
                         {product.specs && product.specs.length > 0 && (
                             <ul className="product-specs-list">
-                                {product.specs.slice(0, 3).map((spec, idx) => (
-                                    <li key={idx}>• {spec}</li>
+                                {product.specs.slice(0, 4).map((spec, idx) => (
+                                    <li key={idx}>{spec}</li>
                                 ))}
                             </ul>
                         )}
 
-                        {/* Ratings — real values only; a product with no reviews
-                            says so rather than borrowing an invented score. */}
-                        <div className="product-rating-row">
-                            {reviewCount > 0 ? (
-                                <>
-                                    <div className="star-rating">
-                                        <Star
-                                            size={13}
-                                            fill="#F59E0B"
-                                            color="#F59E0B"
-                                        />
-                                        <span>{rating.toFixed(1)}</span>
-                                    </div>
-                                    <span className="review-count">
-                                        ({reviewCount}{' '}
-                                        {reviewCount === 1
-                                            ? 'review'
-                                            : 'reviews'}
-                                        )
-                                    </span>
-                                </>
-                            ) : (
-                                <span className="review-count">
-                                    No reviews yet
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Stock bar — driven by real stock and real units sold. */}
-                        <div className="stock-progress-container">
-                            <div className="stock-labels">
-                                {/*
-                                 * Out of stock is the one thing on this card
-                                 * that stops a sale, and it was rendered in
-                                 * the same grey as the unit count beside it —
-                                 * so the card said "nothing to sell you" in
-                                 * the voice it used for everything else.
-                                 */}
-                                <span
-                                    className={
-                                        stockQuantity > 0 ? '' : 'stock-none'
-                                    }
-                                >
-                                    {stockQuantity > 0
-                                        ? `Available: ${stockQuantity} units`
-                                        : 'Out of stock'}
-                                </span>
-                                <span className="sold-count">
-                                    {soldCount} Sold
-                                </span>
-                            </div>
-                            <div className="progress-track">
-                                <div
-                                    className="progress-bar-fill"
-                                    style={{
-                                        width: `${soldPercent}%`,
-                                    }}
-                                ></div>
-                            </div>
-                        </div>
+                        {/*
+                         * No rating row and no stock bar, as on StarTech: its
+                         * cards carry the name, the key features, the price
+                         * and the button, and say stock through the button —
+                         * "Buy Now" or "Sold Out". The rating row read "No
+                         * reviews yet" on nearly every card, and the bar
+                         * "Out of stock · 0 Sold" above a button that already
+                         * said Sold out.
+                         */}
 
                         {/* Price Stack & Buy Action */}
                         <div className="flash-card-footer">
-                            <div className="price-stack">
-                                <span className="current-price">
-                                    {formatBdt(currentPrice)}
-                                </span>
-                                {discountInfo && (
-                                    <span className="old-price">
-                                        {formatBdt(regularPrice)}
-                                    </span>
-                                )}
-                            </div>
+                            {priceStack}
 
                             <button
                                 type="button"
@@ -356,7 +311,7 @@ export const ProductCard = ({
                                         ? 'Pre-order'
                                         : inStock
                                           ? 'Buy Now'
-                                          : 'Sold out'}
+                                          : soldOutLabel}
                                 </span>
                             </button>
                         </div>
@@ -377,7 +332,7 @@ export const ProductCard = ({
         <>
             <div className="standard-product-card">
                 {/* The money off, as on the flash card above. */}
-                {discountInfo && (
+                {showSaving && (
                     <span className="card-badge discount-badge">
                         Save {discountInfo.saving}
                     </span>
@@ -461,8 +416,8 @@ export const ProductCard = ({
                     {/* Specs */}
                     {product.specs && product.specs.length > 0 && (
                         <ul className="product-specs-list">
-                            {product.specs.slice(0, 3).map((spec, idx) => (
-                                <li key={idx}>• {spec}</li>
+                            {product.specs.slice(0, 4).map((spec, idx) => (
+                                <li key={idx}>{spec}</li>
                             ))}
                         </ul>
                     )}
@@ -480,16 +435,7 @@ export const ProductCard = ({
 
                     {/* Price & Add to Cart Footer */}
                     <div className="product-card-footer">
-                        <div className="price-stack">
-                            <span className="current-price">
-                                {formatBdt(currentPrice)}
-                            </span>
-                            {discountInfo && (
-                                <span className="old-price">
-                                    {formatBdt(regularPrice)}
-                                </span>
-                            )}
-                        </div>
+                        {priceStack}
 
                         {/*
                          * Says what it does. It was labelled "Buy" while
@@ -510,7 +456,7 @@ export const ProductCard = ({
                                     ? 'Pre-order'
                                     : inStock
                                       ? 'Buy Now'
-                                      : 'Sold out'}
+                                      : soldOutLabel}
                             </span>
                         </button>
                     </div>

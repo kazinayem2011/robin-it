@@ -485,10 +485,86 @@ class ProductService
             'preorder' => $product->allowsPreorder() && ! $product->isInStock(),
             'preorderReleaseAt' => $product->preorder_release_at?->toDateString(),
             'wattage' => $product->estimatedWattage(),
-            'specs' => $product->specifications->take(3)->map(function ($s) {
-                return $s->name.': '.$s->value;
-            })->values()->toArray() ?: $this->summaryLines($product),
+            'specs' => $this->cardLines($product),
+            // What the card says when it cannot be sold ("When Out of Stock,
+            // say" on the product form); blank leaves the card's own wording.
+            'out_of_stock_status' => $product->out_of_stock_status ?: null,
         ];
+    }
+
+    /**
+     * The lines under a card's name: the product's key features, as StarTech
+     * shows them.
+     *
+     * The card took the first three rows of the specification table, which on a
+     * laptop reads "Processor Brand / Processor Model / Processor Frequency" —
+     * three lines about one part. StarTech's card is the product page's Key
+     * Features without the model line: processor, memory and storage, display,
+     * features — four lines about the whole machine. Key Features is already
+     * written that way here, opening with the model, so the card is that list
+     * with the model line dropped.
+     *
+     * A product with no key features written falls back to the spec table and
+     * then to its summary, as before, four lines at most.
+     *
+     * @return list<string>
+     */
+    private function cardLines(Product $product): array
+    {
+        $features = $this->keyFeatureLines((string) $product->key_features);
+
+        if ($features !== []) {
+            return $features;
+        }
+
+        return $product->specifications->take(self::CARD_LINES)->map(function ($s) {
+            return $s->name.': '.$s->value;
+        })->values()->toArray() ?: $this->summaryLines($product);
+    }
+
+    /** How many lines a card carries under its name; StarTech's card has four. */
+    private const CARD_LINES = 4;
+
+    /**
+     * The lines that say which product this is rather than what it does.
+     *
+     * StarTech's Key Features open with them in every category — "Model:", and
+     * on memory "MPN:" before it — and its cards leave them all out.
+     */
+    private const IDENTITY_LINE = '/^(model|mpn|part\s*(no\.?|number))\s*:/i';
+
+    /**
+     * Key Features, as plain lines, without the model.
+     *
+     * It is authored markup — usually a <ul>, sometimes paragraphs or line
+     * breaks from a pasted list — so it is read as items, stripped to text
+     * and decoded. The model and part-number lines head the list on the page;
+     * the card already shows the product's name above it. The same rule holds
+     * in every category, since only the labels after them differ.
+     *
+     * @return list<string>
+     */
+    private function keyFeatureLines(string $html): array
+    {
+        if (trim(strip_tags($html)) === '') {
+            return [];
+        }
+
+        $items = preg_match_all('#<li\b[^>]*>(.*?)</li>#is', $html, $matches)
+            ? $matches[1]
+            : preg_split('#<br\s*/?>|</p>|\R#i', $html);
+
+        return collect($items)
+            ->map(fn ($item) => trim(preg_replace('/\s+/u', ' ', html_entity_decode(
+                strip_tags((string) $item),
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8',
+            ))))
+            ->filter()
+            ->reject(fn ($line) => preg_match(self::IDENTITY_LINE, $line) === 1)
+            ->take(self::CARD_LINES)
+            ->values()
+            ->all();
     }
 
     /**
@@ -514,7 +590,7 @@ class ProductService
         $lines = collect(preg_split('/\R|\s+[·|•]\s+/u', $summary))
             ->map(fn ($line) => trim((string) $line))
             ->filter()
-            ->take(3)
+            ->take(self::CARD_LINES)
             ->values()
             ->all();
 

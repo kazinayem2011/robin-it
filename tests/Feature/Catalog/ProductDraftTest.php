@@ -151,14 +151,14 @@ class ProductDraftTest extends TestCase
      * The summary was handed over whole, so a card carrying a real one drew a
      * single bullet running the width of the tile — "Core i5 · 16GB · 512GB ·
      * RTX 3050" as one item — while every seeded product beside it, which does
-     * have specifications, showed three.
+     * have specifications, showed several.
      */
     public function test_a_summary_is_listed_as_separate_points(): void
     {
         $this->actingAs($this->admin())
             ->postJson('/api/admin/products', $this->payload([
                 'is_active' => true,
-                'short_description' => 'Intel Core i5-13420H · 16GB DDR5 · 512GB NVMe SSD · RTX 3050',
+                'short_description' => 'Intel Core i5-13420H · 16GB DDR5 · 512GB NVMe SSD · RTX 3050 · 144Hz',
             ]))
             ->assertStatus(201);
 
@@ -168,7 +168,74 @@ class ProductDraftTest extends TestCase
             'Intel Core i5-13420H',
             '16GB DDR5',
             '512GB NVMe SSD',
-        ], $card['specs'], 'Capped at three, like a spec sheet.');
+            'RTX 3050',
+        ], $card['specs'], 'Capped at four, as StarTech\'s card is.');
+    }
+
+    /**
+     * The card is the product page's Key Features without the model line, as
+     * on StarTech: processor, memory and storage, display, features.
+     */
+    public function test_a_card_lists_the_key_features_without_the_model(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'key_features' => '<ul><li>Model: 15-fc0626AU</li>'
+                    .'<li>Processor: AMD Ryzen 3 7320U (4MB L3 Cache, Up to 4.1 GHz)</li>'
+                    .'<li>RAM: 8GB LPDDR5, Storage: 512GB NVMe SSD</li>'
+                    .'<li>Display: 15.6&quot; FHD (1920 x 1080)</li>'
+                    .'<li>Features: Backlit Keyboard, Type-C</li>'
+                    .'<li>Warranty: 2 years</li></ul>',
+                'specifications' => [
+                    ['group' => 'Processor', 'name' => 'Processor Brand', 'value' => 'AMD'],
+                ],
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame([
+            'Processor: AMD Ryzen 3 7320U (4MB L3 Cache, Up to 4.1 GHz)',
+            'RAM: 8GB LPDDR5, Storage: 512GB NVMe SSD',
+            'Display: 15.6" FHD (1920 x 1080)',
+            'Features: Backlit Keyboard, Type-C',
+        ], $this->getJson('/api/products')->json('data.0.specs'));
+    }
+
+    /**
+     * Any category, not only laptops: memory on StarTech opens with the part
+     * number and then the model, and its card leaves both out.
+     */
+    public function test_a_card_leaves_out_the_part_number_as_well(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'key_features' => '<ul><li>MPN: F4-2666C19S-8GNT</li><li>Model: Value</li>'
+                    .'<li>Capacity: 8GB</li><li>Speed: 2666 MHz</li>'
+                    .'<li>Latency: 19-19-19-43</li><li>Voltage: 1.20V</li></ul>',
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame(
+            ['Capacity: 8GB', 'Speed: 2666 MHz', 'Latency: 19-19-19-43', 'Voltage: 1.20V'],
+            $this->getJson('/api/products')->json('data.0.specs'),
+        );
+    }
+
+    /** Pasted as paragraphs or line breaks rather than a list, it reads the same. */
+    public function test_key_features_written_as_lines_are_read_as_lines(): void
+    {
+        $this->actingAs($this->admin())
+            ->postJson('/api/admin/products', $this->payload([
+                'is_active' => true,
+                'key_features' => '<p>Model: K8 Pro</p><p>Switch: Gateron Red<br>Layout: 75%</p>',
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame(
+            ['Switch: Gateron Red', 'Layout: 75%'],
+            $this->getJson('/api/products')->json('data.0.specs'),
+        );
     }
 
     /** Newlines too, which is what the box now invites. */
