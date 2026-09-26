@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import Modal from './Modal';
 import Button from './Button';
 import ProductImage from './ProductImage';
-import { cartService } from '../services';
+import { cartService, productService } from '../services';
 import useAppStore from '../store/useAppStore';
 import { toast } from './Toast';
 import { formatBdt } from '../utils/formatters';
 import { boundsFor } from '../utils/cartBounds';
 import { ROUTES } from '../constants/endpoints';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { productSummary, shortSummary } from '../utils/productSummary';
+import { Bell, ShoppingCart, Plus, Minus } from 'lucide-react';
+
+/*
+ * What Quick View has fetched this visit, by slug. Only the words are read
+ * from it — price and stock come from the card, which is current — so an
+ * entry going a little stale during one visit cannot mislead anyone.
+ */
+const detailsCache = new Map();
+
+/** For tests: each starts with nothing fetched. */
+export function forgetQuickViewDetails() {
+    detailsCache.clear();
+}
 
 export default function QuickViewModal({ show, onClose, product }) {
     // Hooks first, then the early return — see ProductCard for why. This modal
@@ -18,11 +31,89 @@ export default function QuickViewModal({ show, onClose, product }) {
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
 
+    /*
+     * The product's own words, fetched when the panel opens.
+     *
+     * A card carries its name, price and key features, but no description —
+     * so the panel fell back to one fixed line of marketing, the same under
+     * every product in the shop. The summary is read from the product page's
+     * own data instead; everything the card already knew is shown at once.
+     */
+    const slug = product?.slug;
+    // Kept per slug for the visit, so opening the same product again shows
+    // it at once instead of fetching it and flashing the loading lines.
+    const [fetched, setFetched] = useState(() =>
+        slug && detailsCache.has(slug) ? detailsCache.get(slug) : undefined,
+    );
+    const details = fetched && fetched.slug === slug ? fetched.data : null;
+    const loadingDetails =
+        Boolean(show && slug) && !details && !fetched?.failed;
+
+    useEffect(() => {
+        if (!show || !slug) return undefined;
+        if (detailsCache.has(slug)) {
+            setFetched(detailsCache.get(slug));
+            return undefined;
+        }
+
+        let cancelled = false;
+
+        productService
+            .getProductBySlug(slug)
+            .then((res) => {
+                const entry = { slug, data: res ?? null, failed: !res };
+                if (res) detailsCache.set(slug, entry);
+                if (!cancelled) setFetched(entry);
+            })
+            .catch(() => {
+                // Without it the panel is the card's facts, which is enough.
+                if (!cancelled) setFetched({ slug, data: null, failed: true });
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [show, slug]);
+
+    /*
+     * Parsed once per product, not on every render: a quantity click
+     * re-renders the panel, and the description is a page of markup.
+     */
+    const lead = useMemo(() => shortSummary(details), [details]);
+    const written = useMemo(() => productSummary(details), [details]);
+
     if (!product) return null;
 
-    const price = product.discount_price || product.price;
+    /*
+     * A card sends its prices formatted ("৳77,000") with the numbers beside
+     * them, and the old price under its own name; reading only discount_price
+     * meant a discounted product never showed what it was reduced from.
+     */
+    const current = Number(
+        product.raw_price ?? product.discount_price ?? product.price ?? 0,
+    );
+    const original = Number(product.raw_old_price ?? product.price ?? 0);
+    const price = current || product.price;
     const hasDiscount =
-        product.discount_price && product.discount_price < product.price;
+        Boolean(product.oldPrice ?? product.discount_price) &&
+        original > current;
+
+    const keyFeatures = (product.specs ?? []).slice(0, 4);
+    /*
+     * The shop's own short summary ("Short Summary / Key Highlights" on the
+     * product form), then a few sentences of the description.
+     *
+     * Not the same words twice: a product with no key features has its short
+     * description as its one feature line, and one with no description has it
+     * as the summary too — each was printed again underneath the other.
+     */
+    const plain = (text) => String(text).replace(/\s+/g, ' ').trim();
+    const shown = keyFeatures.map(plain);
+    const leadShown = shown.includes(plain(lead)) ? '' : lead;
+    const summary =
+        shown.includes(plain(written)) || plain(written) === plain(leadShown)
+            ? ''
+            : written;
 
     const hasOptions = Boolean(product.has_variants ?? product.hasVariants);
 
@@ -37,6 +128,14 @@ export default function QuickViewModal({ show, onClose, product }) {
         product.preorder ?? product.is_preorder ?? false,
     );
     const canBuy = hasOptions || inStock || isPreorder;
+    const soldOutLabel = product.out_of_stock_status || 'Sold Out';
+
+    /* One line on whether it can be had, in the card's colours. */
+    let status = { label: 'In Stock', tone: 'in' };
+    if (!inStock && isPreorder)
+        status = { label: 'Pre-order', tone: 'preorder' };
+    else if (!inStock && !hasOptions)
+        status = { label: soldOutLabel, tone: 'out' };
 
     /* The same ceiling the cart and checkout use, so this cannot offer a
        quantity the next request refuses. An option product is bounded by the
@@ -132,29 +231,62 @@ export default function QuickViewModal({ show, onClose, product }) {
                         )}
                         <h3 className="quick-view-title">{product.name}</h3>
 
-                        {/* Price */}
+                        {/* No price once it cannot be bought, as on the card. */}
                         <div className="quick-view-price-stack">
-                            <span className="quick-view-current-price">
-                                {formatBdt(price)}
-                            </span>
-                            {hasDiscount && (
-                                <span className="quick-view-old-price">
-                                    {formatBdt(product.price)}
-                                </span>
+                            {canBuy && (
+                                <>
+                                    <span className="quick-view-current-price">
+                                        {formatBdt(price)}
+                                    </span>
+                                    {hasDiscount && (
+                                        <span className="quick-view-old-price">
+                                            {formatBdt(original)}
+                                        </span>
+                                    )}
+                                </>
                             )}
+                            <span
+                                className={`quick-view-status is-${status.tone}`}
+                            >
+                                {status.label}
+                            </span>
                         </div>
 
-                        {/* Description / Highlights */}
-                        <p className="quick-view-desc">
-                            {product.short_description ||
-                                product.description ||
-                                'Experience next-generation performance with full manufacturer warranty and authentic quality guarantee.'}
-                        </p>
+                        {/* The card's key features: processor, memory,
+                            display — what a shopper opens this to check. */}
+                        {keyFeatures.length > 0 && (
+                            <ul className="product-specs-list quick-view-specs">
+                                {keyFeatures.map((line, idx) => (
+                                    <li key={idx}>{line}</li>
+                                ))}
+                            </ul>
+                        )}
+
+                        {leadShown && (
+                            <p className="quick-view-lead">{leadShown}</p>
+                        )}
+
+                        {/* A few sentences of the description; nothing at
+                            all rather than words that fit any product. */}
+                        {loadingDetails && !summary ? (
+                            <div
+                                className="quick-view-desc-loading"
+                                aria-hidden="true"
+                            >
+                                <span className="skeleton-shimmer" />
+                                <span className="skeleton-shimmer" />
+                                <span className="skeleton-shimmer" />
+                            </div>
+                        ) : (
+                            summary && (
+                                <p className="quick-view-desc">{summary}</p>
+                            )
+                        )}
                     </div>
 
                     {/* Footer Quantity & CTA */}
                     <div>
-                        {!hasOptions && (
+                        {!hasOptions && canBuy && (
                             <div className="quick-view-qty-row">
                                 <span className="quick-view-qty-label">
                                     Quantity:
@@ -199,29 +331,38 @@ export default function QuickViewModal({ show, onClose, product }) {
                         )}
 
                         <div className="quick-view-cta-row">
-                            <Button
-                                variant="primary"
-                                size="md"
-                                fullWidth
-                                icon={ShoppingCart}
-                                loading={adding}
-                                disabled={!canBuy}
-                                onClick={handleAddToCart}
-                                className={
-                                    isPreorder && !hasOptions
-                                        ? 'btn-preorder'
-                                        : ''
-                                }
-                            >
-                                {hasOptions
-                                    ? 'Choose options'
-                                    : !canBuy
-                                      ? product.out_of_stock_status ||
-                                        'Sold Out'
-                                      : isPreorder
-                                        ? 'Pre-order'
-                                        : 'Add to Cart'}
-                            </Button>
+                            {/* Sold out: the status above says so, and this
+                                is the next step — the product page's
+                                back-in-stock form, as the card offers. */}
+                            {!canBuy ? (
+                                <Link
+                                    href={`${ROUTES.PRODUCT_DETAIL(product.slug)}#notify`}
+                                    className="btn btn-primary btn-md btn-full quick-view-notify-btn"
+                                >
+                                    <Bell size={16} />
+                                    Notify me
+                                </Link>
+                            ) : (
+                                <Button
+                                    variant="primary"
+                                    size="md"
+                                    fullWidth
+                                    icon={ShoppingCart}
+                                    loading={adding}
+                                    onClick={handleAddToCart}
+                                    className={
+                                        isPreorder && !hasOptions
+                                            ? 'btn-preorder'
+                                            : ''
+                                    }
+                                >
+                                    {hasOptions
+                                        ? 'Choose options'
+                                        : isPreorder
+                                          ? 'Pre-order'
+                                          : 'Add to Cart'}
+                                </Button>
+                            )}
                             <Link
                                 href={ROUTES.PRODUCT_DETAIL(product.slug)}
                                 className="btn btn-secondary btn-md quick-view-details-btn"

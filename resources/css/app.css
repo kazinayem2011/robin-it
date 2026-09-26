@@ -2066,6 +2066,62 @@ textarea.has-error:focus,
     margin-bottom: 16px;
 }
 
+/* The shop's short summary, above the description: the line it wrote to sit
+   under the name, so a shade stronger than the prose beneath it. */
+.quick-view-lead {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+/* Whether it can be had, beside the price: green, amber for a pre-order, red
+   for sold out — the colours the card and product page use. */
+.quick-view-status {
+    font-size: 0.78rem;
+    font-weight: 700;
+    align-self: center;
+}
+
+.quick-view-status.is-in {
+    color: var(--success-hover);
+}
+
+.quick-view-status.is-preorder {
+    color: var(--warning-text);
+}
+
+.quick-view-status.is-out {
+    color: var(--danger-text);
+}
+
+/* The card's key-feature list, a touch larger here and without the card's
+   reserved height: the panel has room, and no grid to keep in line. */
+.product-specs-list.quick-view-specs {
+    --spec-line-size: 0.8rem;
+
+    min-height: 0;
+    margin-bottom: 12px;
+}
+
+/* Three grey lines where the summary will be, so the panel does not jump. */
+.quick-view-desc-loading {
+    display: grid;
+    gap: 7px;
+    margin-bottom: 16px;
+}
+
+.quick-view-desc-loading span {
+    display: block;
+    height: 10px;
+    border-radius: var(--radius-xs);
+}
+
+.quick-view-desc-loading span:last-child {
+    width: 60%;
+}
+
 .quick-view-qty-row {
     display: flex;
     align-items: center;

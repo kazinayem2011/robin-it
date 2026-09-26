@@ -16,7 +16,7 @@ vi.mock('../../services', () => ({
     cartService: { addToCart: vi.fn().mockResolvedValue({}) },
     wishlistService: { toggle: vi.fn().mockResolvedValue({}) },
     compareService: { add: vi.fn() },
-    productService: {},
+    productService: { getProductBySlug: vi.fn().mockResolvedValue(null) },
     reviewService: {},
 }));
 
