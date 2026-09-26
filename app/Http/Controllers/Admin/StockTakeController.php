@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductSerial;
 use App\Models\StockMovement;
+use App\Models\StockReceipt;
 use App\Models\StockTake;
 use App\Models\Store;
 use App\Services\BarcodeLookup;
@@ -276,17 +278,33 @@ class StockTakeController extends Controller
         $from = $request->query('from') ?: now()->startOfMonth()->toDateString();
         $to = $request->query('to') ?: now()->toDateString();
 
-        $query = StockMovement::where('type', StockMovement::ADJUSTMENT)
+        /*
+         * Every change to stock, not only corrections: the page is the
+         * shop's stock history now, filtered by what happened. It listed
+         * adjustments alone, so a delivery, a transfer or a returned parcel
+         * could only be found one product at a time.
+         */
+        $kind = array_key_exists((string) $request->query('kind'), self::HISTORY_KINDS)
+            ? $request->query('kind')
+            : 'all';
+
+        $window = fn ($q) => $q
             ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->when($branch, fn ($q) => $q->where('store_id', $branch))
-            ->when($request->integer('store'), fn ($q, $id) => $q->where('store_id', $id))
+            ->when($request->integer('store'), fn ($q, $id) => $q->where('store_id', $id));
+
+        $all = StockMovement::query()->tap($window)
+            ->when($kind !== 'all', fn ($q) => $q->whereIn('type', self::HISTORY_KINDS[$kind]['types']))
             ->when(in_array($reason, array_keys(StockService::ADJUSTMENT_REASONS), true),
                 fn ($q) => $q->where('reason', $reason));
 
+        // The write-off figures are about corrections, whatever is listed.
+        $query = StockMovement::where('type', StockMovement::ADJUSTMENT)->tap($window);
+
         $costs = $stock->latestUnitCosts();
 
-        $movements = (clone $query)
-            ->with(['product:id,name', 'variant:id,name', 'user:id,name', 'store:id,name'])
+        $movements = (clone $all)
+            ->with(['product:id,name', 'variant:id,name', 'user:id,name', 'store:id,name', 'reference'])
             ->latest('id')
             ->paginate(30)
             ->withQueryString()
@@ -296,6 +314,7 @@ class StockTakeController extends Controller
                     ? "{$m->product?->name} ({$m->variant->name})"
                     : ($m->product?->name ?? 'Removed product'),
                 'quantity' => (int) $m->quantity,
+                'what' => $this->whatHappened($m),
                 'reason' => StockService::ADJUSTMENT_REASONS[$m->reason] ?? $m->reason,
                 'note' => $m->note,
                 'store' => $m->store?->name,
@@ -309,7 +328,9 @@ class StockTakeController extends Controller
 
         return Inertia::render('Admin/Stock/Adjustments', [
             'movements' => $movements,
+            'kinds' => collect(self::HISTORY_KINDS)->map(fn ($k, $key) => ['value' => $key, 'label' => $k['label']])->values(),
             'filters' => [
+                'kind' => $kind,
                 'reason' => $reason,
                 'from' => $from,
                 'to' => $to,
@@ -320,6 +341,39 @@ class StockTakeController extends Controller
             'branch' => BranchScope::name($request->user()),
             'summary' => $this->writeOffSummary(clone $query, $costs),
         ]);
+    }
+
+    /** What the History filter offers, and the movements behind each. */
+    private const HISTORY_KINDS = [
+        'all' => ['label' => 'Everything', 'types' => []],
+        'deliveries' => ['label' => 'Deliveries', 'types' => [StockMovement::PURCHASE, StockMovement::OPENING]],
+        'sales' => ['label' => 'Sold', 'types' => [StockMovement::SALE]],
+        'back' => ['label' => 'Came back (cancelled or returned)', 'types' => [StockMovement::CANCELLATION, StockMovement::RETURN]],
+        'transfers' => ['label' => 'Transfers', 'types' => [StockMovement::TRANSFER]],
+        'corrections' => ['label' => 'Corrections and write-offs', 'types' => [StockMovement::ADJUSTMENT, StockMovement::WRITE_OFF]],
+    ];
+
+    /** One line saying what a movement was, the way the shop would say it. */
+    private function whatHappened(StockMovement $m): string
+    {
+        $ref = $m->reference;
+        $order = $ref instanceof Order ? $ref->order_number : null;
+        $delivery = $ref instanceof StockReceipt ? $ref->reference : null;
+
+        return match ($m->type) {
+            StockMovement::PURCHASE => 'Delivery'.($delivery ? " {$delivery}" : ''),
+            StockMovement::OPENING => 'Stock already held (opening)',
+            StockMovement::SALE => 'Sold'.($order ? " — order {$order}" : ''),
+            StockMovement::CANCELLATION => 'Order cancelled'.($order ? " — {$order}" : ''),
+            StockMovement::RETURN => 'Returned by customer'.($order ? " — {$order}" : ''),
+            StockMovement::TRANSFER => $order
+                ? "Order {$order} moved to another branch"
+                : ($m->quantity > 0 ? 'Transferred in' : 'Transferred out'),
+            StockMovement::WRITE_OFF => 'Written off'.($m->reason ? ' — '.(StockService::ADJUSTMENT_REASONS[$m->reason] ?? $m->reason) : ''),
+            StockMovement::ADJUSTMENT => 'Corrected — '.(StockService::ADJUSTMENT_REASONS[$m->reason] ?? $m->reason ?? 'no reason given'),
+            StockMovement::CONVERSION => 'Moved between options',
+            default => ucfirst((string) $m->type),
+        };
     }
 
     /**

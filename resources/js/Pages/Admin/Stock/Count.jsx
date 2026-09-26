@@ -1,4 +1,5 @@
 import Select from '@/Components/Select';
+import { StockTabs } from './StockTabs';
 import React, { useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -171,10 +172,11 @@ export default function StockCount({
 
     return (
         <AdminLayout
-            title="Stock take"
+            title="Stock"
             subtitle="Count what is on the shelves, and correct the books in one go"
         >
             <Head title="Stock take" />
+            <StockTabs current={ROUTES.ADMIN_STOCK_COUNT} />
 
             <div className="admin-card">
                 {/* The same bar as every other screen: heading left, then the

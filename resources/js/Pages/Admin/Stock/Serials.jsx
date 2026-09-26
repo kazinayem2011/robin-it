@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { StockTabs } from './StockTabs';
 import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -170,7 +171,7 @@ export default function StockSerials({
 
     return (
         <AdminLayout
-            title="Serial numbers"
+            title="Stock"
             subtitle={
                 branch
                     ? `Units tracked at ${branch}`
@@ -178,6 +179,7 @@ export default function StockSerials({
             }
         >
             <Head title="Serial numbers" />
+            <StockTabs current={ROUTES.ADMIN_STOCK_SERIALS} />
 
             <Tabs
                 variant="enclosed"

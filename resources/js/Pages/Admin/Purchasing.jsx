@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { PurchaseTabs } from './Stock/StockTabs';
+import { ROUTES } from '@/constants/endpoints';
 import ReceiveDeliveryModal from './Components/ReceiveDeliveryModal';
 import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
@@ -197,7 +199,7 @@ export default function Purchasing({
 
     return (
         <AdminLayout
-            title="Purchasing"
+            title="Purchases"
             subtitle={
                 branch
                     ? `Orders coming into ${branch}`
@@ -205,6 +207,7 @@ export default function Purchasing({
             }
         >
             <Head title="Purchasing" />
+            <PurchaseTabs current={ROUTES.ADMIN_PURCHASING} />
 
             <Tabs
                 variant="enclosed"

@@ -1,4 +1,5 @@
 import React from 'react';
+import { StockTabs } from './StockTabs';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { BellRing } from 'lucide-react';
@@ -102,10 +103,11 @@ export default function StockRequests({
 
     return (
         <AdminLayout
-            title="Notify-me requests"
+            title="Stock"
             subtitle="Customers waiting for something sold out to come back"
         >
             <Head title="Notify-me requests" />
+            <StockTabs current={ROUTES.ADMIN_STOCK_REQUESTS} />
 
             <Tabs
                 variant="enclosed"

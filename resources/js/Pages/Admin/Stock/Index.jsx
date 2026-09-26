@@ -1,4 +1,5 @@
-import Select from '@/Components/Select';
+import { StockTabs } from './StockTabs';
+import { ROUTES } from '@/constants/endpoints';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
@@ -105,9 +106,77 @@ export default function AdminStock({
         );
     }, [filters.search, filters.reorder]);
 
+    /*
+     * A row's count at one branch. An option's row reads its own; the parent
+     * of a variant product adds up its options there.
+     */
+    const atBranch = (row, storeId) =>
+        (row.stock_levels || [])
+            .filter(
+                (l) =>
+                    Number(l.store_id) === Number(storeId) &&
+                    (row._kind === 'variant'
+                        ? l.product_variant_id === row._variant.id
+                        : row._kind === 'parent'
+                          ? Boolean(l.product_variant_id)
+                          : !l.product_variant_id),
+            )
+            .reduce((sum, l) => sum + Number(l.quantity || 0), 0);
+
+    /** { [storeId]: count } for a row, for the Correct window. */
+    const branchLevels = (row) =>
+        Object.fromEntries(stores.map((st) => [st.id, atBranch(row, st.id)]));
+
+    /*
+     * What can be done to a row, under its name: Transfer, Correct, History.
+     * Words rather than icons, for whoever runs the shop; under the name
+     * rather than in a column of their own, so four branches fit beside it.
+     */
+    const rowActions = (row) => (
+        <div className="admin-stock-row-actions">
+            {stores.length > 1 && (
+                <button
+                    type="button"
+                    onClick={() =>
+                        setTransferring({
+                            product: row,
+                            variant: row._variant || null,
+                        })
+                    }
+                >
+                    <ArrowLeftRight size={13} /> Transfer
+                </button>
+            )}
+            <button
+                type="button"
+                onClick={() =>
+                    setAdjusting({
+                        product: row,
+                        variant: row._variant || null,
+                        levels: branchLevels(row),
+                    })
+                }
+            >
+                <SlidersHorizontal size={13} /> Correct
+            </button>
+            <button
+                type="button"
+                onClick={() =>
+                    setLedgerFor({
+                        product: row,
+                        variant: row._variant || null,
+                    })
+                }
+            >
+                <History size={13} /> History
+            </button>
+        </div>
+    );
+
     const columns = [
         {
             key: 'name',
+            className: 'admin-stock-col-product',
             header: 'Product',
             render: (row) =>
                 row._kind === 'variant' ? (
@@ -121,6 +190,7 @@ export default function AdminStock({
                                 {row._variant.sku}
                             </span>
                         )}
+                        {rowActions(row)}
                     </div>
                 ) : (
                     <div>
@@ -132,12 +202,52 @@ export default function AdminStock({
                             {row._kind === 'parent' &&
                                 ' · stock is held per option'}
                         </div>
+                        {row._kind !== 'parent' && rowActions(row)}
                     </div>
                 ),
         },
+        /*
+         * One column per branch: how many each has, side by side, which is
+         * the question asked of this page. Below zero is units owed to
+         * customers who ordered more than was in stock.
+         */
+        ...stores.map((store) => ({
+            key: `branch-${store.id}`,
+            // The first word — "Chattogram", not "Chattogram Agrabad Regional
+            // Hub" — so four branches fit beside the product; the full name
+            // is on each cell.
+            header: store.name.split(' ')[0],
+            className: 'admin-stock-col-branch',
+            align: 'right',
+            render: (row) => {
+                const qty = atBranch(row, store.id);
+
+                if (qty === 0) {
+                    return (
+                        <span className="admin-stock-zero" title={store.name}>
+                            —
+                        </span>
+                    );
+                }
+
+                return qty < 0 ? (
+                    <span
+                        className="admin-stock-owed"
+                        title={`${store.name}: owed to customers who ordered more than was in stock`}
+                    >
+                        {qty} owed
+                    </span>
+                ) : (
+                    <span className="admin-stock-qty" title={store.name}>
+                        {qty}
+                    </span>
+                );
+            },
+        })),
         {
-            key: 'on_hand',
-            header: 'On hand',
+            key: 'total',
+            header: 'Total',
+            align: 'right',
             render: (row) => {
                 const qty =
                     row._kind === 'variant'
@@ -153,114 +263,23 @@ export default function AdminStock({
                 const low = qty <= level;
 
                 return (
-                    <span
-                        className={`${
+                    <strong
+                        className={
                             low
                                 ? 'admin-badge-stock-danger'
                                 : 'admin-badge-stock-ok'
-                        }`}
+                        }
                         title={
-                            row._kind === 'parent'
-                                ? 'Total across every option'
-                                : `Reorder at ${level}`
+                            low
+                                ? `Running low — reorder at ${level}`
+                                : undefined
                         }
                     >
-                        {low && '⚠️ '}
                         {qty}
-                        {row._kind === 'parent' && ' total'}
-                    </span>
+                        {low && ' · low'}
+                    </strong>
                 );
             },
-        },
-        {
-            key: 'branches',
-            header: 'At branch',
-            render: (row) => {
-                if (row._kind === 'parent') return null;
-
-                const levels = (row.stock_levels || []).filter(
-                    (l) =>
-                        l.quantity > 0 &&
-                        (row._kind === 'variant'
-                            ? l.product_variant_id === row._variant.id
-                            : !l.product_variant_id),
-                );
-
-                if (levels.length === 0) {
-                    return <span className="admin-field-hint">—</span>;
-                }
-
-                return (
-                    <div className="admin-branch-chips">
-                        {levels.map((l) => (
-                            <span key={l.id} className="admin-branch-chip">
-                                {l.store?.name ?? 'Unknown'}
-                                <strong>{l.quantity}</strong>
-                            </span>
-                        ))}
-                    </div>
-                );
-            },
-        },
-        {
-            key: 'value',
-            header: 'Price',
-            render: (row) =>
-                formatBdt(
-                    row._kind === 'variant'
-                        ? (row._variant.effective_price ?? row.price)
-                        : row.price,
-                ),
-        },
-        {
-            key: 'actions',
-            header: '',
-            render: (row) =>
-                // The parent of a variant product holds no stock of its own,
-                // so there is nothing to adjust at that level.
-                row._kind === 'parent' ? null : (
-                    <div className="admin-input-row-flex">
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            icon={SlidersHorizontal}
-                            onClick={() =>
-                                setAdjusting({
-                                    product: row,
-                                    variant: row._variant || null,
-                                })
-                            }
-                        >
-                            Adjust
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={ArrowLeftRight}
-                            onClick={() =>
-                                setTransferring({
-                                    product: row,
-                                    variant: row._variant || null,
-                                })
-                            }
-                        >
-                            Move
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={History}
-                            onClick={() =>
-                                setLedgerFor({
-                                    product: row,
-                                    variant: row._variant || null,
-                                })
-                            }
-                        >
-                            History
-                        </Button>
-                    </div>
-                ),
         },
     ];
 
@@ -273,10 +292,11 @@ export default function AdminStock({
      */
     return (
         <AdminLayout
-            title="Stock & Inventory"
+            title="Stock"
             subtitle="What the shop is holding, and how it got there"
         >
             <Head title="Stock & Inventory" />
+            <StockTabs current={ROUTES.ADMIN_STOCK} />
 
             <div>
                 <div className="admin-card">
@@ -291,7 +311,7 @@ export default function AdminStock({
                                 icon={ClipboardList}
                                 onClick={() => setHistoryOpen(true)}
                             >
-                                Deliveries
+                                Past deliveries
                             </Button>
                             <Button
                                 icon={PackagePlus}
@@ -303,9 +323,11 @@ export default function AdminStock({
                     </div>
 
                     <p className="admin-field-hint admin-stock-intro">
-                        Stock changes only through deliveries, customer orders
-                        and recorded adjustments. Every movement is kept with
-                        its reason, so the number here can always be explained.
+                        How many of each product every branch has. Stock goes up
+                        when you receive a delivery and down when a customer
+                        orders — by itself. Use <strong>Transfer</strong> to
+                        move stock between branches, and{' '}
+                        <strong>Correct</strong> to fix a count that is wrong.
                     </p>
 
                     {summary && (
@@ -347,51 +369,6 @@ export default function AdminStock({
                                     <strong className="admin-stock-branch-fixed">
                                         {branch}
                                     </strong>
-                                </div>
-                            )}
-
-                            {!branch && stores.length > 1 && (
-                                <div className="admin-stock-stat admin-stock-branch-filter">
-                                    <label
-                                        className="admin-stock-stat-label"
-                                        htmlFor="branch-filter"
-                                    >
-                                        Showing
-                                    </label>
-                                    <Select
-                                        id="branch-filter"
-                                        value={filters.store || ''}
-                                        onChange={(e) =>
-                                            router.get(
-                                                '/admin/stock',
-                                                {
-                                                    search:
-                                                        filters.search ||
-                                                        undefined,
-                                                    reorder: filters.reorder
-                                                        ? 1
-                                                        : undefined,
-                                                    store:
-                                                        e.target.value ||
-                                                        undefined,
-                                                },
-                                                {
-                                                    preserveState: true,
-                                                    replace: true,
-                                                },
-                                            )
-                                        }
-                                        options={[
-                                            {
-                                                value: '',
-                                                label: 'All branches',
-                                            },
-                                            ...stores.map((s) => ({
-                                                value: s.id,
-                                                label: s.name,
-                                            })),
-                                        ]}
-                                    />
                                 </div>
                             )}
 
@@ -461,6 +438,7 @@ export default function AdminStock({
             <AdjustStockModal
                 target={adjusting}
                 reasons={adjustmentReasons}
+                stores={stores}
                 onClose={() => setAdjusting(null)}
                 onSaved={() => {
                     setAdjusting(null);

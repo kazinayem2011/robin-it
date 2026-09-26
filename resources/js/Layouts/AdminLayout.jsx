@@ -10,14 +10,10 @@ import {
     BookOpen,
     Boxes,
     ClipboardCheck,
-    ClipboardList,
     Cpu,
     ExternalLink,
-    Factory,
     FileText,
     FolderTree,
-    Hash,
-    BellRing,
     HelpCircle,
     Image,
     Inbox,
@@ -207,58 +203,33 @@ const NAV_GROUPS = [
         ],
     },
     {
+        /*
+         * The whole stock cycle in two items. It was seven — Stock &
+         * Inventory, Stock Take, Adjustments, Serial Numbers, Notify-me,
+         * Purchasing, Suppliers — and whoever ran the shop had to know which
+         * held what. The others are tabs inside these two now (StockTabs).
+         */
         label: 'Stock',
         items: [
             {
-                label: 'Stock & Inventory',
+                label: 'Stock',
                 href: ROUTES.ADMIN_STOCK,
                 icon: Boxes,
                 ability: 'stock',
+                // Lit on every tab inside it.
+                also: [
+                    ROUTES.ADMIN_STOCK_ADJUSTMENTS,
+                    ROUTES.ADMIN_STOCK_COUNT,
+                    ROUTES.ADMIN_STOCK_SERIALS,
+                    ROUTES.ADMIN_STOCK_REQUESTS,
+                ],
             },
             {
-                label: 'Stock Take',
-                href: ROUTES.ADMIN_STOCK_COUNT,
-                icon: ClipboardList,
-                ability: 'stock',
-            },
-            {
-                label: 'Adjustments',
-                href: ROUTES.ADMIN_STOCK_ADJUSTMENTS,
-                icon: SlidersHorizontal,
-                ability: 'stock',
-            },
-            {
-                label: 'Serial Numbers',
-                href: ROUTES.ADMIN_STOCK_SERIALS,
-                icon: Hash,
-                ability: 'stock',
-            },
-            {
-                // Customers waiting on something sold out: what to order next.
-                label: 'Notify-me Requests',
-                href: ROUTES.ADMIN_STOCK_REQUESTS,
-                icon: BellRing,
-                ability: 'stock',
-            },
-        ],
-    },
-    {
-        /* Getting stock in, as opposed to counting what is already here. */
-        label: 'Buying',
-        items: [
-            {
-                label: 'Purchasing',
+                label: 'Purchases',
                 href: ROUTES.ADMIN_PURCHASING,
                 icon: ClipboardCheck,
                 ability: 'stock',
-            },
-            {
-                // Factory rather than Truck: couriers already own the lorry,
-                // and two links with the same icon read as the same thing.
-                label: 'Suppliers',
-                href: ROUTES.ADMIN_SUPPLIERS,
-                icon: Factory,
-                ability: 'stock',
+                also: [ROUTES.ADMIN_SUPPLIERS],
             },
         ],
     },
@@ -457,7 +428,8 @@ export default function AdminLayout({
         );
     }, [currentUrl]);
 
-    const isActive = (path) => activePath === path;
+    const isActive = (path, also = []) =>
+        activePath === path || also.includes(activePath);
 
     // Close it after navigating, or the drawer stays over the page just
     // arrived at. Declared after currentUrl: a dependency array is evaluated
@@ -515,7 +487,8 @@ export default function AdminLayout({
                                     key={item.href + item.label}
                                     href={item.href}
                                     className={`admin-nav-link ${
-                                        !item.external && isActive(item.href)
+                                        !item.external &&
+                                        isActive(item.href, item.also)
                                             ? 'active'
                                             : ''
                                     }`}

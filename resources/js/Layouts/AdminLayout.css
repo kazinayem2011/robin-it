@@ -5630,3 +5630,98 @@ a.admin-card:hover,
     margin-left: 4px;
     vertical-align: middle;
 }
+
+/*
+ * Tabs across the top of the Stock and Purchases pages: what used to be
+ * separate menu items, side by side where the page is. Scrolls sideways on a
+ * phone rather than wrapping into a second row.
+ */
+.admin-page-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 18px;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.admin-page-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.admin-page-tab {
+    padding: 10px 16px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-page-tab:hover {
+    color: var(--text-primary);
+}
+
+.admin-page-tab.is-active {
+    border-bottom-color: var(--primary);
+    color: var(--primary-ink);
+}
+
+/* Stock page, one column per branch: a count, nothing, or units owed. */
+.admin-stock-qty {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-stock-zero {
+    color: var(--text-subtle);
+}
+
+.admin-stock-owed {
+    font-weight: 700;
+    color: var(--warning-text);
+    white-space: nowrap;
+}
+
+/* Room for the product's name beside four branch columns. */
+.admin-stock-col-product {
+    min-width: 220px;
+}
+
+.admin-stock-col-branch {
+    white-space: nowrap;
+}
+
+/* "4 · low" on one line in the Total column. */
+.admin-stock-col-product ~ td strong,
+.admin-badge-stock-danger,
+.admin-badge-stock-ok {
+    white-space: nowrap;
+}
+
+/* Transfer · Correct · History, small and labelled, under the product. */
+.admin-stock-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 6px;
+}
+
+.admin-stock-row-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    color: var(--primary-ink);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-stock-row-actions button:hover {
+    text-decoration: underline;
+}

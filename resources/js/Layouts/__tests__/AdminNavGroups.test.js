@@ -46,9 +46,9 @@ describe('admin navigation groups', () => {
         ['Customers', 'Customers'],
         ['Messages', 'Customers'],
         ['Warranty & RMA', 'Customers'],
-        // Ordering from a supplier is a different job from counting what came.
-        ['Purchasing', 'Buying'],
-        ['Suppliers', 'Buying'],
+        // The stock cycle: what is held, and what is being bought.
+        ['Stock', 'Stock'],
+        ['Purchases', 'Stock'],
         // Written once and left up, unlike a campaign that runs and ends.
         ['Tech Journal', 'Content'],
         ['Pages', 'Content'],
@@ -58,7 +58,6 @@ describe('admin navigation groups', () => {
         // A filter is declared on a category and inherited by everything under
         // it, so it belongs beside the tree rather than under Setup.
         ['Filters', 'Catalogue'],
-        ['Stock Take', 'Stock'],
         ['Site Settings', 'Setup'],
         /*
          * Beside Settings rather than inside it: Settings is how the shop is
@@ -92,8 +91,8 @@ describe('admin navigation groups', () => {
     it('keeps every screen, exactly once', () => {
         const items = groups().flatMap((g) => g.items);
 
-        // 37 with Notify-me Requests under Stock.
-        expect(items).toHaveLength(37);
+        // 32: the stock cycle's seven items became two, the rest tabs.
+        expect(items).toHaveLength(32);
         expect(new Set(items).size).toBe(items.length);
     });
 
@@ -107,5 +106,36 @@ describe('admin navigation groups', () => {
         const abilities = block.match(/ability:/g) ?? [];
 
         expect(abilities.length).toBe(entries.length);
+    });
+
+    /*
+     * Seven items for one cycle — Stock & Inventory, Stock Take, Adjustments,
+     * Serial Numbers, Notify-me, Purchasing, Suppliers — and the shop had to
+     * know which held what. Two now; the rest are tabs inside them.
+     */
+    it('keeps the stock cycle to Stock and Purchases', () => {
+        expect(groups().find((g) => g.name === 'Stock').items).toEqual([
+            'Stock',
+            'Purchases',
+        ]);
+        expect(groups().some((g) => g.name === 'Buying')).toBe(false);
+    });
+
+    it('keeps the old screens as tabs, none lost', () => {
+        const tabs = readFileSync(
+            'resources/js/Pages/Admin/Stock/StockTabs.jsx',
+            'utf8',
+        );
+
+        for (const label of [
+            'History',
+            'Stock count',
+            'Serial numbers',
+            'Notify-me',
+            'Purchase orders',
+            'Suppliers',
+        ]) {
+            expect(tabs).toContain(`label: '${label}'`);
+        }
     });
 });

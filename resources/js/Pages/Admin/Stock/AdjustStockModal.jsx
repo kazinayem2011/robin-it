@@ -9,36 +9,57 @@ import { adminService } from '../../../services';
 import { adminStockAdjustmentSchema } from '../../../validations';
 
 /**
- * A counted correction: breakage, loss, or a stock-take that disagrees.
+ * Correcting a count: breakage, loss, or a count that disagrees.
  *
  * Deliberately asks for the change and a reason rather than a new total. Typing
  * an absolute number is how sold units used to come back to life; a signed
  * change against the live balance cannot do that.
+ *
+ * At one branch, named here. It had no branch choice at all: every correction
+ * landed on the primary branch, and was checked against the whole shop's
+ * count, so a branch could be taken below zero without a word.
  */
+const primaryOf = (stores) =>
+    String(stores.find((s) => s.fulfils_online)?.id ?? stores[0]?.id ?? '');
+
 export default function AdjustStockModal({
     target,
     reasons = {},
+    stores = [],
     onClose,
     onSaved,
 }) {
     const product = target?.product;
     const variant = target?.variant;
-    const onHand = variant
-        ? variant.stock_quantity
-        : (product?.stock_quantity ?? 0);
+    const levels = target?.levels ?? {};
+
+    /*
+     * Where to start: the branch holding most of it, which is where a wrong
+     * count usually is; the primary branch when nobody holds any.
+     */
+    const startBranch = () => {
+        const held = Object.entries(levels).filter(([, q]) => q !== 0);
+        if (held.length === 0) return primaryOf(stores);
+        held.sort((a, b) => b[1] - a[1]);
+        return String(held[0][0]);
+    };
 
     const formik = useFormik({
-        initialValues: { quantity: '', reason: 'stock_take', note: '' },
+        initialValues: {
+            store_id: '',
+            quantity: '',
+            reason: 'stock_take',
+            note: '',
+        },
         validationSchema: adminStockAdjustmentSchema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             const delta = Number(values.quantity);
+            const here = Number(levels[values.store_id] ?? 0);
 
-            // The server refuses this too; catching it here keeps the admin
-            // from losing a typed note to a round trip.
-            if (onHand + delta < 0) {
+            if (here + delta < 0) {
                 setFieldError(
                     'quantity',
-                    `Only ${onHand} on hand — that would go below zero.`,
+                    `${branchName} has only ${Math.max(0, here)} — that would go below zero.`,
                 );
                 setSubmitting(false);
 
@@ -46,27 +67,27 @@ export default function AdjustStockModal({
             }
 
             try {
-                const movement = await adminService.adjustStock({
+                await adminService.adjustStock({
                     product_id: product.id,
                     product_variant_id: variant?.id ?? null,
+                    store_id: values.store_id ? Number(values.store_id) : null,
                     quantity: delta,
                     reason: values.reason,
                     note: values.note || null,
                 });
                 toast.success(
-                    `Stock adjusted to ${movement?.balance_after ?? onHand + delta}.`,
+                    `${branchName} now has ${here + delta}.`,
+                    'Stock corrected',
                 );
                 onSaved?.();
             } catch (err) {
-                toast.error(err?.message || 'Could not adjust stock.');
+                toast.error(err?.message || 'Could not correct the stock.');
             } finally {
                 setSubmitting(false);
             }
         },
     });
 
-    // Reset whenever a different unit is opened, without enableReinitialize:
-    // paired with resetForm it fights back and blanks the form.
     const targetKey = `${product?.id ?? ''}:${variant?.id ?? ''}`;
     const lastKey = React.useRef(null);
 
@@ -74,23 +95,32 @@ export default function AdjustStockModal({
         if (target && lastKey.current !== targetKey) {
             lastKey.current = targetKey;
             formik.resetForm({
-                values: { quantity: '', reason: 'stock_take', note: '' },
+                values: {
+                    store_id: startBranch(),
+                    quantity: '',
+                    reason: 'stock_take',
+                    note: '',
+                },
             });
         }
 
         if (!target) lastKey.current = null;
-        // formik is stable enough here; re-running on its identity would loop.
+        // Reset on a new target only; formik and the helpers change identity.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [target, targetKey]);
 
+    const branchName =
+        stores.find((s) => String(s.id) === String(formik.values.store_id))
+            ?.name ?? 'This branch';
+    const here = Number(levels[formik.values.store_id] ?? 0);
     const delta = Number(formik.values.quantity) || 0;
-    const projected = onHand + delta;
+    const projected = here + delta;
 
     return (
         <Modal
             isOpen={Boolean(target)}
             onClose={onClose}
-            title="Adjust stock"
+            title="Correct stock"
             maxWidth="520px"
             footer={
                 <div className="admin-input-row-flex admin-modal-actions">
@@ -101,9 +131,7 @@ export default function AdjustStockModal({
                         onClick={formik.handleSubmit}
                         disabled={formik.isSubmitting || !delta}
                     >
-                        {formik.isSubmitting
-                            ? 'Recording…'
-                            : 'Record adjustment'}
+                        {formik.isSubmitting ? 'Saving…' : 'Save correction'}
                     </Button>
                 </div>
             }
@@ -115,21 +143,38 @@ export default function AdjustStockModal({
                         {variant && <span> — {variant.name}</span>}
                     </div>
                     <div className="admin-field-hint">
-                        Currently {onHand} on hand
+                        {branchName} has {here} now
                     </div>
                 </div>
 
+                {stores.length > 1 && (
+                    <Select
+                        id="adjust-branch"
+                        label="Which branch"
+                        name="store_id"
+                        required
+                        formik={formik}
+                        options={stores.map((s) => ({
+                            value: String(s.id),
+                            label: `${s.name} — has ${levels[s.id] ?? 0}`,
+                        }))}
+                    />
+                )}
+
                 <FormInput
-                    label="Change"
+                    id="adjust-quantity"
+                    label="Add or remove"
                     name="quantity"
                     required
                     type="number"
                     formik={formik}
                     placeholder="e.g. -2 to remove two, 3 to add three"
+                    helperText="Use a minus sign to remove."
                 />
 
                 <Select
-                    label="Reason"
+                    id="adjust-reason"
+                    label="Why"
                     name="reason"
                     required
                     formik={formik}
@@ -140,10 +185,11 @@ export default function AdjustStockModal({
                 />
 
                 <FormInput
+                    id="adjust-note"
                     label={
                         formik.values.reason === 'other'
                             ? 'Note (required)'
-                            : 'Note'
+                            : 'Note (optional)'
                     }
                     name="note"
                     formik={formik}
@@ -157,8 +203,8 @@ export default function AdjustStockModal({
                         }`}
                     >
                         {projected < 0
-                            ? `Only ${onHand} on hand — this would go below zero.`
-                            : `New balance will be ${projected}.`}
+                            ? `${branchName} has only ${Math.max(0, here)} — this would go below zero.`
+                            : `${branchName} will have ${projected}.`}
                     </div>
                 )}
             </form>

@@ -1,10 +1,9 @@
 import Select from '@/Components/Select';
+import { StockTabs } from './StockTabs';
 import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { SlidersHorizontal, ArrowRight, ClipboardList } from 'lucide-react';
-import { Link } from '@inertiajs/react';
-import Button from '@/Components/Button';
+import { SlidersHorizontal } from 'lucide-react';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
 import { formatBdt } from '@/utils/formatters';
@@ -12,7 +11,10 @@ import { ROUTES } from '@/constants/endpoints';
 import './Count.css';
 
 /**
- * Every correction made to stock, and what it cost.
+ * Every change to stock — deliveries, sales, returns, transfers and
+ * corrections — filtered by what happened. It was corrections alone.
+ *
+ * And every correction made to stock, and what it cost.
  *
  * Adjustments were only ever visible one product at a time, so there was
  * nowhere to see that a branch had written off nine graphics cards this month,
@@ -22,6 +24,7 @@ export default function StockAdjustments({
     movements = { data: [] },
     filters = {},
     reasons = {},
+    kinds = [],
     stores = [],
     branch = null,
     summary = {},
@@ -32,6 +35,10 @@ export default function StockAdjustments({
             { ...filters, ...params },
             { preserveState: true, preserveScroll: true, replace: true },
         );
+
+    const kind = filters.kind || 'all';
+    // What units were worth only means something for a correction.
+    const showValue = kind === 'corrections';
 
     const columns = [
         {
@@ -62,7 +69,7 @@ export default function StockAdjustments({
                 </span>
             ),
         },
-        {
+        showValue && {
             key: 'value',
             header: 'Value',
             align: 'right',
@@ -81,10 +88,10 @@ export default function StockAdjustments({
                     </span>
                 ),
         },
-        { key: 'reason', header: 'Reason', render: (m) => m.reason },
+        { key: 'what', header: 'What happened', render: (m) => m.what },
         {
             key: 'who',
-            header: 'Where & who',
+            header: 'Branch & who',
             render: (m) => (
                 <div>
                     <div>{m.store ?? '—'}</div>
@@ -92,86 +99,74 @@ export default function StockAdjustments({
                 </div>
             ),
         },
-    ];
+    ].filter(Boolean);
 
     return (
         <AdminLayout
-            title="Stock adjustments"
+            title="Stock"
             subtitle={
                 branch
-                    ? `Every correction made at ${branch}`
-                    : 'Every correction made to stock, and what it cost'
+                    ? `Everything that changed stock at ${branch}`
+                    : 'Everything that changed stock: deliveries, sales, returns, transfers and corrections'
             }
         >
             <Head title="Stock adjustments" />
+            <StockTabs current={ROUTES.ADMIN_STOCK_ADJUSTMENTS} />
 
-            {/*
-             * This screen is the record, not the place corrections are made —
-             * an adjustment needs a product, and the product list is where you
-             * have one in front of you. Saying so, with the way there, beats
-             * leaving somebody to hunt for a button that is on another page.
-             */}
-            <div className="adj-intro">
-                <p>
-                    Corrections are made from the product list: find the item,
-                    press <strong>Adjust</strong>, and say how many and why.
-                    Counting a whole branch at once is a{' '}
-                    <strong>stock take</strong>.
-                </p>
-                <div className="admin-input-row-flex">
-                    <Link href={ROUTES.ADMIN_STOCK}>
-                        <Button variant="secondary" icon={ArrowRight}>
-                            Adjust a product
-                        </Button>
-                    </Link>
-                    <Link href={ROUTES.ADMIN_STOCK_COUNT}>
-                        <Button variant="secondary" icon={ClipboardList}>
-                            Start a stock take
-                        </Button>
-                    </Link>
-                </div>
-            </div>
+            <p className="admin-field-hint adj-intro-line">
+                Everything that changed stock, newest first. To fix a wrong
+                count, find the product on the <strong>Stock</strong> tab and
+                press <strong>Correct</strong>.
+            </p>
 
             {/* The three numbers the screen exists to answer. */}
-            <div
-                className="admin-attention-grid"
-                style={{ marginBottom: '18px' }}
-            >
-                <div className="admin-attention-card">
-                    <span className="admin-attention-count">
-                        {summary.units_lost ?? 0}
-                    </span>
-                    <span className="admin-attention-label">
-                        Units written off
-                    </span>
-                    <span className="admin-attention-hint">In this period</span>
-                </div>
-                <div className="admin-attention-card">
-                    <span className="admin-attention-count">
-                        {summary.units_found ?? 0}
-                    </span>
-                    <span className="admin-attention-label">Units found</span>
-                    <span className="admin-attention-hint">
-                        Counted higher than the books
-                    </span>
-                </div>
+            {showValue && (
                 <div
-                    className={`admin-attention-card ${(summary.value_change ?? 0) < 0 ? 'tone-warn' : ''}`}
+                    className="admin-attention-grid"
+                    style={{ marginBottom: '18px' }}
                 >
-                    <span className="admin-attention-count">
-                        {formatBdt(summary.value_change ?? 0)}
-                    </span>
-                    <span className="admin-attention-label">Value change</span>
-                    <span className="admin-attention-hint">
-                        At what those units cost
-                    </span>
+                    <div className="admin-attention-card">
+                        <span className="admin-attention-count">
+                            {summary.units_lost ?? 0}
+                        </span>
+                        <span className="admin-attention-label">
+                            Units written off
+                        </span>
+                        <span className="admin-attention-hint">
+                            In this period
+                        </span>
+                    </div>
+                    <div className="admin-attention-card">
+                        <span className="admin-attention-count">
+                            {summary.units_found ?? 0}
+                        </span>
+                        <span className="admin-attention-label">
+                            Units found
+                        </span>
+                        <span className="admin-attention-hint">
+                            Counted higher than the books
+                        </span>
+                    </div>
+                    <div
+                        className={`admin-attention-card ${(summary.value_change ?? 0) < 0 ? 'tone-warn' : ''}`}
+                    >
+                        <span className="admin-attention-count">
+                            {formatBdt(summary.value_change ?? 0)}
+                        </span>
+                        <span className="admin-attention-label">
+                            Value change
+                        </span>
+                        <span className="admin-attention-hint">
+                            At what those units cost
+                        </span>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <DataTable
                 columns={columns}
                 data={movements.data ?? []}
-                title="Adjustments"
+                title="History"
                 subtitle={`${filters.from} to ${filters.to}`}
                 headerActions={
                     <div className="admin-input-row-flex">
@@ -189,17 +184,31 @@ export default function StockAdjustments({
                         />
                         <Select
                             className="count-branch-select"
-                            value={filters.reason || ''}
+                            aria-label="Show"
+                            value={kind}
                             onChange={(e) =>
-                                go({ reason: e.target.value || undefined })
+                                go({
+                                    kind: e.target.value,
+                                    reason: undefined,
+                                })
                             }
-                            options={[
-                                { value: '', label: 'Any reason' },
-                                ...Object.entries(reasons).map(
-                                    ([value, label]) => ({ value, label }),
-                                ),
-                            ]}
+                            options={kinds}
                         />
+                        {['all', 'corrections'].includes(kind) && (
+                            <Select
+                                className="count-branch-select"
+                                value={filters.reason || ''}
+                                onChange={(e) =>
+                                    go({ reason: e.target.value || undefined })
+                                }
+                                options={[
+                                    { value: '', label: 'Any reason' },
+                                    ...Object.entries(reasons).map(
+                                        ([value, label]) => ({ value, label }),
+                                    ),
+                                ]}
+                            />
+                        )}
                         {!branch && stores.length > 1 && (
                             <Select
                                 className="count-branch-select"
@@ -218,8 +227,8 @@ export default function StockAdjustments({
                         )}
                     </div>
                 }
-                emptyTitle="No adjustments in this period"
-                emptyDescription="Nothing has been corrected in this period. Adjustments made from the product list, and stock takes, appear here."
+                emptyTitle="Nothing in this period"
+                emptyDescription="Nothing of this kind changed stock between these dates. Try another date or 'Everything'."
                 emptyIcon={SlidersHorizontal}
                 pagination={false}
             />

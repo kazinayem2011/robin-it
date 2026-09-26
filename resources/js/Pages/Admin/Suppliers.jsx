@@ -1,4 +1,6 @@
 import React, { useCallback, useState } from 'react';
+import { PurchaseTabs } from './Stock/StockTabs';
+import { ROUTES } from '@/constants/endpoints';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -186,8 +188,9 @@ export default function AdminSuppliers({ suppliers = {}, filters = {} }) {
     ];
 
     return (
-        <AdminLayout title="Suppliers" subtitle="Who the shop buys stock from">
+        <AdminLayout title="Purchases" subtitle="Who the shop buys stock from">
             <Head title="Suppliers" />
+            <PurchaseTabs current={ROUTES.ADMIN_SUPPLIERS} />
 
             <DataTable
                 columns={columns}

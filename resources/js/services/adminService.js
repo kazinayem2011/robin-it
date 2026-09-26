@@ -264,7 +264,12 @@ export const adminService = {
             API_ENDPOINTS.ADMIN.STOCK_BRANCHES(productId),
             { params: variantId ? { variant_id: variantId } : {} },
         );
-        return response;
+        /*
+         * The list, not the envelope around it. The transfer window checked
+         * for an array and got the envelope, so it always said "Not held at
+         * any branch yet" and offered no branch to move from.
+         */
+        return Array.isArray(response?.data) ? response.data : [];
     },
 
     /** The ledger for one product, newest first. */

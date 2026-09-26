@@ -275,7 +275,7 @@ class StockTakeTest extends TestCase
         ])->assertStatus(201);
 
         $props = $this->actingAs($this->keeper())
-            ->get('/admin/stock/adjustments')
+            ->get('/admin/stock/adjustments?kind=corrections')
             ->assertStatus(200)
             ->viewData('page')['props'];
 
@@ -299,7 +299,7 @@ class StockTakeTest extends TestCase
             ->assertStatus(201);
 
         $props = $this->actingAs($this->keeper($this->store))
-            ->get('/admin/stock/adjustments')
+            ->get('/admin/stock/adjustments?kind=corrections')
             ->viewData('page')['props'];
 
         $this->assertCount(1, $props['movements']['data']);

@@ -73,10 +73,10 @@ export default function TransferStockModal({
                     to_store_id: Number(values.to_store_id),
                     note: values.note || null,
                 });
-                toast.success('Stock moved between branches.');
+                toast.success('Stock transferred.');
                 onSaved?.();
             } catch (err) {
-                toast.error(err?.message || 'Could not move that stock.');
+                toast.error(err?.message || 'Could not transfer that stock.');
             } finally {
                 setSubmitting(false);
             }
@@ -92,7 +92,21 @@ export default function TransferStockModal({
         adminService
             .getStockBranches(productId, variantId)
             .then((rows) => {
-                if (!cancelled) setBreakdown(Array.isArray(rows) ? rows : []);
+                if (cancelled) return;
+                const list = Array.isArray(rows) ? rows : [];
+                setBreakdown(list);
+
+                // Start from the branch holding most, which is usually where
+                // stock is being sent from.
+                const most = [...list].sort(
+                    (a, b) => b.quantity - a.quantity,
+                )[0];
+                if (most && most.quantity > 0) {
+                    formik.setFieldValue(
+                        'from_store_id',
+                        String(most.store_id),
+                    );
+                }
             })
             .catch(() => {
                 if (!cancelled) setBreakdown([]);
@@ -109,20 +123,37 @@ export default function TransferStockModal({
         breakdown.find((b) => String(b.store_id) === String(storeId))
             ?.quantity ?? 0;
 
-    const storeOptions = useMemo(
+    // Each branch with what it holds, so nobody has to remember it.
+    const fromOptions = useMemo(
         () =>
             stores.map((s) => ({
                 value: String(s.id),
-                label: `${s.name}${s.fulfils_online ? ' (ships online orders)' : ''}`,
+                label: `${s.name} — has ${heldAt(s.id)}`,
+                disabled: heldAt(s.id) <= 0,
             })),
-        [stores],
+        // heldAt reads breakdown.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [stores, breakdown],
+    );
+
+    const toOptions = useMemo(
+        () =>
+            stores
+                .filter(
+                    (s) => String(s.id) !== String(formik.values.from_store_id),
+                )
+                .map((s) => ({
+                    value: String(s.id),
+                    label: `${s.name}${s.fulfils_online ? ' (primary)' : ''}`,
+                })),
+        [stores, formik.values.from_store_id],
     );
 
     return (
         <Modal
             isOpen={Boolean(target)}
             onClose={onClose}
-            title="Move stock between branches"
+            title="Transfer stock between branches"
             maxWidth="620px"
             footer={
                 <div className="admin-input-row-flex admin-modal-actions">
@@ -133,7 +164,7 @@ export default function TransferStockModal({
                         onClick={formik.handleSubmit}
                         disabled={formik.isSubmitting}
                     >
-                        {formik.isSubmitting ? 'Moving…' : 'Move stock'}
+                        {formik.isSubmitting ? 'Transferring…' : 'Transfer'}
                     </Button>
                 </div>
             }
@@ -159,32 +190,32 @@ export default function TransferStockModal({
                         name="from_store_id"
                         formik={formik}
                         placeholder="Where it is now…"
-                        options={storeOptions}
+                        options={fromOptions}
                     />
                     <Select
                         label="To"
                         name="to_store_id"
                         formik={formik}
                         placeholder="Where it's going…"
-                        options={storeOptions}
+                        options={toOptions}
                     />
                 </div>
 
                 <FormInput
-                    label="Units to move"
+                    label="How many"
                     name="quantity"
                     type="number"
                     min="1"
                     formik={formik}
                     helperText={
                         formik.values.from_store_id
-                            ? `${heldAt(formik.values.from_store_id)} available at that branch`
+                            ? `${heldAt(formik.values.from_store_id)} there to send`
                             : undefined
                     }
                 />
 
                 <FormInput
-                    label="Note"
+                    label="Note (optional)"
                     name="note"
                     formik={formik}
                     placeholder="Why is it moving?"

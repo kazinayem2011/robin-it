@@ -371,3 +371,8 @@
     flex-direction: column;
     gap: 1px;
 }
+
+/* History: one line on where corrections are made. */
+.adj-intro-line {
+    margin: 0 0 16px;
+}
