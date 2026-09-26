@@ -51,6 +51,8 @@ class CustomerThreadTest extends TestCase
         $request->postJson('/api/contact', [
             'name' => 'Karim Uddin',
             'email' => 'karim@example.com',
+            // A guest leaves a number; signed in, the account is the reply.
+            ...($as ? [] : ['phone' => '01711223344']),
             'subject' => 'Is the RTX 4060 in stock?',
             'message' => 'Asking about the Gigabyte one, in Uttara.',
         ])->assertSuccessful();
@@ -262,6 +264,7 @@ class CustomerThreadTest extends TestCase
         $this->postJson('/api/contact', [
             'name' => 'Karim Uddin',
             'email' => 'karim@example.com',
+            'phone' => '01711223344',
             'subject' => 'A question',
             'message' => 'About the warranty on my build.',
         ])->assertSuccessful();

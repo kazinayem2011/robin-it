@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
-const bdPhoneRegex = /^(?:\+8801|8801|01|1)[3-9]\d{8}$/;
+// The one BD mobile check, shared with every other form.
+import { isBDPhone } from '../constants/patterns';
 
 /**
  * @param signedIn A guest proves the order is theirs with the mobile number on
@@ -20,18 +21,14 @@ export const trackingSchema = (signedIn = false) =>
                   .test(
                       'bd-phone',
                       'Please enter a valid 11-digit BD mobile number',
-                      (value) =>
-                          !value ||
-                          bdPhoneRegex.test(value.trim().replace(/[\s-]/g, '')),
+                      (value) => !value || isBDPhone(value),
                   )
             : Yup.string()
                   .required('Bangladeshi mobile number is required')
                   .test(
                       'bd-phone',
                       'Please enter a valid 11-digit BD mobile number',
-                      (value) =>
-                          !!value &&
-                          bdPhoneRegex.test(value.trim().replace(/[\s-]/g, '')),
+                      (value) => !!value && isBDPhone(value),
                   ),
     });
 
@@ -44,9 +41,8 @@ export const trackingSchema = (signedIn = false) =>
  *                 the ones who registered by mobile inventing one, or typing
  *                 somebody else's — which is how an answer reaches a stranger.
  *
- *                 A guest is asked for one or the other, so there is always
- *                 some way to answer. A number given is one the shop could
- *                 actually ring.
+ *                 A guest leaves a mobile number, the way most customers here
+ *                 reach the shop, and an address too if they like.
  */
 export const contactSchema = (signedIn = false) =>
     Yup.object().shape({
@@ -54,30 +50,27 @@ export const contactSchema = (signedIn = false) =>
         email: Yup.string()
             .trim()
             .email('That does not look like an email address')
-            .max(180)
-            .when('phone', {
-                is: (phone) => !signedIn && !phone,
-                then: (schema) =>
-                    schema.required(
-                        'Leave us an email address or a mobile number, so we can reply.',
-                    ),
-            }),
+            .max(180),
         phone: Yup.string()
             .nullable()
             .test(
                 'bd-phone',
-                'Enter a valid 11-digit BD mobile number, or leave it blank',
-                (value) =>
-                    !value ||
-                    bdPhoneRegex.test(value.trim().replace(/[\s-]/g, '')),
+                'Enter a valid 11-digit mobile number, such as 01711223344',
+                (value) => !value || isBDPhone(value),
+            )
+            .test(
+                'guest-phone',
+                'Leave us a mobile number, so we can reply.',
+                (value) => signedIn || Boolean(value?.trim()),
             ),
+        // The service chosen at the top of the form.
         subject: Yup.string()
             .trim()
-            .required('What is it about?')
+            .required('Choose what you need help with')
             .max(160, 'Keep the subject under 160 characters'),
         message: Yup.string()
             .trim()
-            .required('Please write your message')
+            .required('Tell us a little about the problem')
             .min(10, 'Please say a little more so we can help')
             .max(
                 4000,

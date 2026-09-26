@@ -5,11 +5,16 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle2 } from 'lucide-react';
 import Button from '../../Components/Button';
 import FormInput from '../../Components/FormInput';
+import Select from '../../Components/Select';
 import { toast } from '../../Components/Toast';
 import { contactService } from '../../services';
 import { contactSchema } from '../../validations';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
+import {
+    SUPPORT_SERVICES,
+    serviceFromQuery,
+} from '../../constants/supportServices';
 import './Contact.css';
 
 /**
@@ -26,12 +31,19 @@ export default function Contact({
 
     const [sent, setSent] = useState(null);
 
+    // Read once: another page may open this on a service (?service=…).
+    const [startService] = useState(() =>
+        typeof window === 'undefined'
+            ? ''
+            : serviceFromQuery(window.location.search),
+    );
+
     const formik = useFormik({
         initialValues: {
             name: contact?.name || '',
             email: contact?.email || '',
             phone: contact?.phone || '',
-            subject: '',
+            subject: startService,
             message: '',
         },
         validationSchema: contactSchema(signedIn),
@@ -41,7 +53,9 @@ export default function Contact({
         ) => {
             try {
                 const data = await contactService.sendMessage(values);
-                setSent(values.email);
+                // The address, or the number when that was all they left:
+                // "we will reply to" with nothing after it read as a fault.
+                setSent(values.email || values.phone || null);
                 resetForm({
                     values: {
                         name: contact?.name || '',
@@ -131,76 +145,22 @@ export default function Contact({
                             </div>
                         )}
 
+                        {/*
+                         * StarTech's service-desk order: what it is about,
+                         * then the problem, then who to answer. Choosing the
+                         * service first sends it to the right person before a
+                         * word is read. The choice is kept as the subject.
+                         */}
                         <form onSubmit={formik.handleSubmit} noValidate>
-                            <div className="contact-form-row">
-                                <FormInput
-                                    id="name"
-                                    name="name"
-                                    required
-                                    label="Your name"
-                                    placeholder="e.g. Rahim Chowdhury"
-                                    value={formik.values.name}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={
-                                        formik.touched.name &&
-                                        formik.errors.name
-                                    }
-                                />
-                                <FormInput
-                                    id="email"
-                                    name="email"
-                                    /* Only a guest with no number to ring
-                                       must leave an address. */
-                                    required={!signedIn && !formik.values.phone}
-                                    type="email"
-                                    label={
-                                        signedIn ? 'Email (optional)' : 'Email'
-                                    }
-                                    helperText={
-                                        signedIn
-                                            ? 'We will reply in your messages, and by email if you leave one.'
-                                            : 'An email address or a mobile number — either will do.'
-                                    }
-                                    placeholder="you@example.com"
-                                    value={formik.values.email}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={
-                                        formik.touched.email &&
-                                        formik.errors.email
-                                    }
-                                />
-                            </div>
-
-                            <div className="contact-form-row">
-                                <FormInput
-                                    id="phone"
-                                    name="phone"
-                                    label="Mobile number (optional)"
-                                    placeholder="01711223344"
-                                    isBdPhone={true}
-                                    value={formik.values.phone}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={
-                                        formik.touched.phone &&
-                                        formik.errors.phone
-                                    }
-                                />
-                                <FormInput
+                            <div className="contact-field">
+                                <Select
                                     id="subject"
                                     name="subject"
+                                    label="What do you need help with?"
                                     required
-                                    label="Subject"
-                                    placeholder="e.g. Warranty on an RTX 4090"
-                                    value={formik.values.subject}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={
-                                        formik.touched.subject &&
-                                        formik.errors.subject
-                                    }
+                                    placeholder="Choose a service"
+                                    options={SUPPORT_SERVICES}
+                                    formik={formik}
                                 />
                             </div>
 
@@ -209,15 +169,15 @@ export default function Contact({
                                     className="form-control-label"
                                     htmlFor="message"
                                 >
-                                    Message{' '}
+                                    Tell us about the problem{' '}
                                     <span className="required-asterisk">*</span>
                                 </label>
                                 <textarea
                                     id="message"
                                     name="message"
-                                    rows="7"
+                                    rows="5"
                                     className={`form-control-input ${formik.touched.message && formik.errors.message ? 'has-error' : ''}`}
-                                    placeholder="Tell us what you need. Order numbers and part names help us answer faster."
+                                    placeholder="What is happening, the make and model, and anything you have already tried. An order number helps if you bought it here."
                                     value={formik.values.message}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
@@ -233,6 +193,61 @@ export default function Contact({
                                 </div>
                             </div>
 
+                            <div className="contact-form-row">
+                                <FormInput
+                                    id="name"
+                                    name="name"
+                                    required
+                                    label="Name"
+                                    placeholder="e.g. Rahim Chowdhury"
+                                    value={formik.values.name}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.name &&
+                                        formik.errors.name
+                                    }
+                                />
+                                <FormInput
+                                    id="phone"
+                                    name="phone"
+                                    /* What a guest is asked for; signed in,
+                                       the reply goes to their messages. */
+                                    required={!signedIn}
+                                    label={
+                                        signedIn ? 'Phone (optional)' : 'Phone'
+                                    }
+                                    placeholder="01711223344"
+                                    isBdPhone={true}
+                                    value={formik.values.phone}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    error={
+                                        formik.touched.phone &&
+                                        formik.errors.phone
+                                    }
+                                />
+                            </div>
+
+                            <FormInput
+                                id="email"
+                                name="email"
+                                type="email"
+                                label="Email (optional)"
+                                helperText={
+                                    signedIn
+                                        ? 'We will reply in your messages, and by email if you leave one.'
+                                        : 'If you would like the answer in writing as well.'
+                                }
+                                placeholder="you@example.com"
+                                value={formik.values.email}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={
+                                    formik.touched.email && formik.errors.email
+                                }
+                            />
+
                             <Button
                                 type="submit"
                                 variant="primary"
@@ -240,7 +255,7 @@ export default function Contact({
                                 icon={Send}
                                 loading={formik.isSubmitting}
                             >
-                                Send message
+                                Request support
                             </Button>
                         </form>
                     </div>

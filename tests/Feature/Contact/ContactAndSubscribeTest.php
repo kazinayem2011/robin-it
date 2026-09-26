@@ -84,10 +84,10 @@ class ContactAndSubscribeTest extends TestCase
         $this->assertNotNull($message->ip_address);
     }
 
-    public function test_the_phone_is_optional_but_must_be_real_when_given(): void
+    public function test_a_guest_leaves_a_real_phone_number(): void
     {
         $this->postJson('/api/contact', $this->payload(['phone' => null]))
-            ->assertStatus(201);
+            ->assertStatus(422);
 
         $this->postJson('/api/contact', $this->payload(['phone' => '12345']))
             ->assertStatus(422)

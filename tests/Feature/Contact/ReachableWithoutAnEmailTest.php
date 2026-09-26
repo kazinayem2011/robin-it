@@ -104,7 +104,7 @@ class ReachableWithoutAnEmailTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('threads.0.replies.0.body', 'It ships tomorrow.'));
     }
 
-    /** A guest is asked for one or the other, so there is always a way to answer. */
+    /** A guest leaves a number; an address is theirs to add or not. */
     public function test_a_guest_may_leave_a_number_instead_of_an_address(): void
     {
         $this->send(['phone' => '01341789939'])
@@ -205,22 +205,36 @@ class ReachableWithoutAnEmailTest extends TestCase
         $this->assertSame([], $this->textsSent());
     }
 
-    public function test_a_guest_with_neither_is_asked_for_one(): void
+    public function test_a_guest_with_neither_is_asked_for_a_number(): void
     {
         $this->send([])
             ->assertStatus(422)
-            ->assertJsonPath(
-                'data.errors.email.0',
-                'Leave us an email address or a mobile number, so we can reply.'
-            );
+            ->assertJsonPath('data.errors.phone.0', 'Leave us a mobile number, so we can reply.');
 
         $this->assertSame(0, ContactMessage::count());
     }
 
-    public function test_a_guest_with_an_address_alone_is_unchanged(): void
+    /*
+     * The number is what the form asks a guest for; an address alone left the
+     * shop a reply that might never be read, and nobody it could ring.
+     */
+    public function test_a_guest_with_an_address_alone_is_asked_for_a_number_too(): void
     {
-        $this->send(['email' => 'karim@example.com'])->assertSuccessful();
+        $this->send(['email' => 'karim@example.com'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('phone', 'data.errors');
 
-        $this->assertSame('karim@example.com', ContactMessage::latest('id')->first()->email);
+        $this->send(['email' => 'karim@example.com', 'phone' => '01341789939'])->assertSuccessful();
+
+        $message = ContactMessage::latest('id')->first();
+        $this->assertSame('karim@example.com', $message->email);
+        $this->assertSame('01341789939', $message->phone);
+    }
+
+    public function test_a_signed_in_customer_needs_neither(): void
+    {
+        $byAddress = User::factory()->create(['phone' => null]);
+
+        $this->send([], $byAddress)->assertSuccessful();
     }
 }

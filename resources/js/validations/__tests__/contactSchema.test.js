@@ -25,8 +25,16 @@ describe('contactSchema', () => {
         expect(await check(contactSchema(true), message)).toEqual([]);
     });
 
-    it('asks a guest for one or the other', async () => {
-        expect(await check(contactSchema(false), message)).toContain('email');
+    /* A number the shop can ring or text back; an address is optional. */
+    it('asks a guest for a mobile number, and not for an address', async () => {
+        expect(await check(contactSchema(false), message)).toEqual(['phone']);
+
+        expect(
+            await check(contactSchema(false), {
+                ...message,
+                email: 'karim@example.com',
+            }),
+        ).toEqual(['phone']);
 
         expect(
             await check(contactSchema(false), {
@@ -34,13 +42,28 @@ describe('contactSchema', () => {
                 phone: '01712345678',
             }),
         ).toEqual([]);
+    });
 
-        expect(
-            await check(contactSchema(false), {
-                ...message,
-                email: 'karim@example.com',
-            }),
-        ).toEqual([]);
+    /* The shared check (isBDPhone): the ways people write a number here. */
+    it('takes a mobile however it is written, and refuses what is not one', async () => {
+        for (const phone of [
+            '01711223344',
+            '01711 223344',
+            '01711-223344',
+            '+8801711223344',
+            '+880 1711-223344',
+            '1711223344',
+        ]) {
+            expect(
+                await check(contactSchema(false), { ...message, phone }),
+            ).toEqual([]);
+        }
+
+        for (const phone of ['12345', '01211223344', '0171122334', 'abc']) {
+            expect(
+                await check(contactSchema(false), { ...message, phone }),
+            ).toEqual(['phone']);
+        }
     });
 
     it('still refuses an address that is not one, and a number that is not', async () => {

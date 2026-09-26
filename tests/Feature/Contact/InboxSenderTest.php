@@ -38,6 +38,8 @@ class InboxSenderTest extends TestCase
         $request->postJson('/api/contact', array_merge([
             'name' => 'Karim Uddin',
             'email' => 'karim@example.com',
+            // A guest leaves a number; signed in, the account is the reply.
+            ...($as ? [] : ['phone' => '01711223344']),
             'subject' => 'A question',
             'message' => 'About the warranty on my build.',
         ], $overrides))->assertSuccessful();

@@ -36,25 +36,27 @@ class ContactController extends Controller
          * answer ends up in a stranger's inbox.
          *
          * Signed in, neither is needed: the answer appears in their own
-         * messages and rings their bell. A guest is asked for one or the
-         * other, so there is always some way to answer.
+         * messages and rings their bell. A guest leaves a mobile number, and
+         * an address too if they like: most customers here reach the shop by
+         * phone, and a number is one the shop can ring or text back the same
+         * day. It was "either one", which let a guest leave only an address
+         * nobody checks for a reply.
          */
         $guest = $request->user() === null;
 
         $validated = $request->validate([
             'name' => 'required|string|max:120',
-            'email' => [$guest ? 'required_without:phone' : 'nullable', 'nullable', 'email', 'max:180'],
+            'email' => ['nullable', 'email', 'max:180'],
             'phone' => [
-                $guest ? 'required_without:email' : 'nullable',
-                'nullable', 'string', 'max:20', PhoneHelper::RULE,
+                $guest ? 'required' : 'nullable',
+                'string', 'max:20', PhoneHelper::RULE,
             ],
             'subject' => 'required|string|max:160',
             'message' => 'required|string|min:10|max:4000',
         ], [
             'message.min' => 'Please say a little more so we can help.',
-            'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number, or leave it blank.',
-            'email.required_without' => 'Leave us an email address or a mobile number, so we can reply.',
-            'phone.required_without' => 'Leave us a mobile number or an email address, so we can reply.',
+            'phone.regex' => 'Please enter a valid 11-digit mobile number, such as 01711223344.',
+            'phone.required' => 'Leave us a mobile number, so we can reply.',
         ]);
 
         $message = $this->contact->record($validated, $request->ip(), $request->user());

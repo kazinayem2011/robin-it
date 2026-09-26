@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
-const bdPhoneRegex = /^(?:\+8801|8801|01|1)[3-9]\d{8}$/;
+// The one BD mobile check, shared with every other form.
+import { isBDPhone } from '../constants/patterns';
 
 /**
  * Checkout Delivery Information Validation Schema
@@ -17,7 +18,7 @@ export const checkoutSchema = Yup.object().shape({
             'Please enter a valid 11-digit BD mobile number (e.g. 01711223344)',
             (value) => {
                 if (!value) return false;
-                return bdPhoneRegex.test(value.trim().replace(/[\s-]/g, ''));
+                return isBDPhone(value);
             },
         ),
     /*
