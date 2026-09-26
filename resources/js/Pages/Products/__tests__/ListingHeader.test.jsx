@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 
 const getProducts = vi.fn();
 const getFilters = vi.fn();
-const getCategoryBrands = vi.fn();
+const getSubcategories = vi.fn();
 
 vi.mock('@inertiajs/react', () => ({
     Head: () => null,
@@ -17,7 +17,7 @@ vi.mock('@inertiajs/react', () => ({
 vi.mock('../../../Layouts/MainLayout', () => ({ mainLayout: (page) => page }));
 
 vi.mock('../../../services', () => ({
-    productService: { getProducts, getFilters, getCategoryBrands },
+    productService: { getProducts, getFilters, getSubcategories },
 }));
 
 vi.mock('../../../hooks', () => ({
@@ -48,7 +48,7 @@ describe('the listing header', () => {
             total: 51,
             brands: [],
         });
-        getCategoryBrands.mockResolvedValue([]);
+        getSubcategories.mockResolvedValue([]);
     });
 
     const draw = () =>

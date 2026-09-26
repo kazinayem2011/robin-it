@@ -13,7 +13,7 @@ import EmptyState from '../../Components/EmptyState';
 import Pagination from '../../Components/Pagination';
 import { ProductCard } from '../../Components/ProductCard';
 import ProductFilters from '../../Components/ProductFilters';
-import CategoryBrandRow from '../../Components/CategoryBrandRow';
+import CategorySubRow from '../../Components/CategorySubRow';
 import Select from '../../Components/Select';
 import SEOHead from '../../Components/SEOHead';
 import { ProductCardSkeleton } from '../../Components/Skeleton';
@@ -208,31 +208,31 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     }, [page, sort, perPage, categorySlug, filterKey, reloadKey]);
 
     /*
-     * The makers on this shelf. Keyed on the shelf alone, not on the shopper's
-     * choices: the row is the way into a maker, so narrowing by price must not
-     * make makers vanish from it — that is the sidebar's job, where the counts
-     * are supposed to move.
+     * The shelves one level down. Keyed on the shelf alone, not on the
+     * shopper's choices: the row is the way further in, so narrowing by price
+     * must not make shelves vanish from it — that is the sidebar's job, where
+     * the counts are supposed to move.
      */
-    const [categoryBrands, setCategoryBrands] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
 
     useEffect(() => {
         if (!categorySlug) {
-            setCategoryBrands([]);
+            setSubcategories([]);
             return;
         }
 
         let cancelled = false;
 
         productService
-            .getCategoryBrands(categorySlug)
+            .getSubcategories(categorySlug)
             .then((rows) => {
                 if (!cancelled)
-                    setCategoryBrands(Array.isArray(rows) ? rows : []);
+                    setSubcategories(Array.isArray(rows) ? rows : []);
             })
             .catch(() => {
                 // A row that cannot load is simply absent; the page is not
                 // about it, and an error where pills should be says nothing.
-                if (!cancelled) setCategoryBrands([]);
+                if (!cancelled) setSubcategories([]);
             });
 
         return () => {
@@ -405,15 +405,11 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                     </div>
 
                     {/*
-                     * The makers on this shelf, before any filter. Not part of
-                     * ProductFilters on purpose: these are shelves with their
-                     * own addresses, not checkboxes, and the sidebar's Brand
-                     * list still does the job of picking two at once.
+                     * The shelves one level down, before any filter, as Star
+                     * Tech lays it out. Not part of ProductFilters on purpose:
+                     * these are pages with their own addresses, not checkboxes.
                      */}
-                    <CategoryBrandRow
-                        brands={categoryBrands}
-                        activeSlug={categorySlug}
-                    />
+                    <CategorySubRow categories={subcategories} />
 
                     <div className="plp-layout">
                         <ProductFilters

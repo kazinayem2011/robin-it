@@ -31,20 +31,17 @@ class CategoryController extends Controller
     }
 
     /**
-     * Get Featured Categories for Homepage Bubble Carousel.
+     * The shelves one level down, for the row of pills across a category page:
+     * Projector, Conference System… on Office Equipment, as Star Tech lays it.
      */
-    /**
-     * The makers stocked on one shelf, for the row across a category page.
-     *
-     * A shopper arriving at Laptop usually knows whose laptop they want, and
-     * this is the one click that gets them there — ahead of the filters, the
-     * way the trade lays it out.
-     */
-    public function brands(string $slug): JsonResponse
+    public function subcategories(string $slug): JsonResponse
     {
-        return $this->successResponse($this->categoryService->brandShelvesIn($slug));
+        return $this->successResponse($this->categoryService->subcategoriesOf($slug));
     }
 
+    /**
+     * Get Featured Categories for Homepage Bubble Carousel.
+     */
     public function featured(): JsonResponse
     {
         return $this->successResponse(

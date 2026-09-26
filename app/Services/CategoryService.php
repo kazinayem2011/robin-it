@@ -21,6 +21,9 @@ class CategoryService
 
     public const FEATURED_KEY = 'catalog.featured_categories';
 
+    /** See version(). */
+    public const VERSION_KEY = 'catalog.version';
+
     /** Long, because every write path invalidates explicitly. */
     private const TTL = 21600;
 
@@ -34,6 +37,7 @@ class CategoryService
     {
         Cache::forget(self::MEGA_MENU_KEY);
         Cache::forget(self::FEATURED_KEY);
+        Cache::forever(self::VERSION_KEY, self::version() + 1);
     }
 
     /**
@@ -232,73 +236,57 @@ class CategoryService
     }
 
     /**
-     * The makers on a shelf, as the shelves that stand for them.
+     * The shelves one level down, for the row of pills across a category page.
      *
-     * Shown as a row across the top of a category page, which is how the trade
-     * presents it — Star Tech puts Lenovo, MSI, HP, Asus in a line under the
-     * heading, each one a page of its own, before any filter is touched. It is
-     * the shortest route a shopper has: most people arriving at Laptop already
-     * know whose laptop they want.
+     * What Star Tech puts under the heading: on Office Equipment, Projector,
+     * Conference System, PA System and the rest; on Projector, its own shelves
+     * (Epson Projector, Projection Screen…); on a shelf with none below it,
+     * nothing. It used to be the makers stocked anywhere beneath, which on a
+     * department like Office Equipment was a row of brands where the way into
+     * the department's own shelves belonged.
      *
-     * Distinct by maker, not by shelf. ASUS can stand under both All Laptop
-     * and Gaming Laptop within the same department, and the row wants one ASUS
-     * — the nearest one, so the link stays as close to where the shopper is as
-     * it can.
+     * Only shelves with something on them, by the mega menu's rule, so a pill
+     * never opens onto "No products found". In the shop's menu order.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array{id: int, name: string, slug: string}>
      */
-    public function brandShelvesIn(string|int $categoryOrSlug): array
+    public function subcategoriesOf(string|int $categoryOrSlug): array
     {
-        $key = 'category:brand-shelves:'.$categoryOrSlug;
+        $key = 'category:children:'.self::version().':'.$categoryOrSlug;
 
-        return Cache::remember($key, now()->addHour(), function () use ($categoryOrSlug) {
-            $ids = $this->getDescendantIds($categoryOrSlug);
+        return Cache::remember($key, self::TTL, function () use ($categoryOrSlug) {
+            $parent = Category::query()
+                ->where(is_int($categoryOrSlug) ? 'id' : 'slug', $categoryOrSlug)
+                ->where('is_active', true)
+                ->first(['id']);
 
-            if ($ids === []) {
+            if (! $parent) {
                 return [];
             }
 
             $stocked = $this->categoryIdsWithProducts();
 
-            /*
-             * Ordered by the parent's place in the menu, which is what decides
-             * the dedupe below, and it matters more than it looks. Under
-             * Laptop, ASUS stands on All Laptop, Gaming Laptop, Premium
-             * Ultrabook and Laptop Bag; ordering these any other way gave the
-             * row an ASUS that led to laptop bags. The shop already says which
-             * of those shelves comes first, and that is the answer.
-             */
-            $shelves = Category::query()
-                ->from('categories as c')
-                ->join('categories as p', 'p.id', '=', 'c.parent_id')
-                ->whereIn('c.id', $ids)
-                ->whereNotNull('c.brand_id')
-                ->where('c.is_active', true)
-                ->whereIn('c.id', $stocked)
-                ->with('brand:id,name,logo_path')
-                ->orderBy('p.position')
-                ->orderBy('p.name')
-                ->orderBy('c.position')
-                ->orderBy('c.name')
-                ->get(['c.id', 'c.name', 'c.slug', 'c.brand_id', 'c.parent_id']);
-
-            $seen = [];
-
-            foreach ($shelves as $shelf) {
-                if (! $shelf->brand || isset($seen[$shelf->brand_id])) {
-                    continue;
-                }
-
-                $seen[$shelf->brand_id] = [
-                    'id' => $shelf->id,
-                    'name' => $shelf->brand->name,
-                    'slug' => $shelf->slug,
-                    'logo' => $shelf->brand->logo_path,
-                ];
-            }
-
-            return array_values($seen);
+            return Category::where('parent_id', $parent->id)
+                ->where('is_active', true)
+                ->whereIn('id', $stocked)
+                ->inMenuOrder()
+                ->get(['id', 'name', 'slug'])
+                ->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])
+                ->all();
         });
+    }
+
+    /**
+     * Bumped by flush(), so every per-category entry is left behind at once.
+     *
+     * The mega menu and featured list have one key each and are forgotten by
+     * name; a key per category cannot be, so it carries this in its name
+     * instead. An admin who adds a shelf sees it in the row straight away,
+     * where the brand row it replaced waited out an hour.
+     */
+    private static function version(): int
+    {
+        return (int) Cache::get(self::VERSION_KEY, 0);
     }
 
     /**

@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
     CATEGORIES: {
         MEGA_MENU: '/categories/mega-menu',
         FEATURED: '/categories/featured',
-        BRANDS: (slug) => `/categories/${slug}/brands`,
+        SUBCATEGORIES: (slug) => `/categories/${slug}/subcategories`,
     },
 
     // Products API

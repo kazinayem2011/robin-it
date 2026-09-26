@@ -19,15 +19,15 @@ export const productService = {
      * The price range and brands present in a selection, for the filter panel.
      */
     /**
-     * The makers stocked on one shelf, as the shelves that stand for them.
+     * The shelves one level down, for the row of pills on a category page.
      *
      * Separate from getFilters because it does not follow the shopper's
-     * choices: the row is the way into a maker, so narrowing by price must not
-     * make makers disappear from it.
+     * choices: the row is the way further into the catalogue, so narrowing by
+     * price must not make shelves disappear from it.
      */
-    async getCategoryBrands(slug) {
+    async getSubcategories(slug) {
         const response = await axiosInstance.get(
-            API_ENDPOINTS.CATEGORIES.BRANDS(slug),
+            API_ENDPOINTS.CATEGORIES.SUBCATEGORIES(slug),
         );
         return response.data;
     },

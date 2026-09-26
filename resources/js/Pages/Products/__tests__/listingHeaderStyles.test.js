@@ -113,7 +113,7 @@ describe('the listing page rhythm', () => {
         /* Nothing between the container's children may add to it. */
         expect(spacing('.plp-header-banner {', 'padding')).toBeNull();
         expect(spacing('.plp-header-banner {', 'padding-bottom')).toBeNull();
-        expect(spacing('.cat-brand-row {', 'margin-bottom')).toBeNull();
+        expect(spacing('.cat-sub-row {', 'margin-bottom')).toBeNull();
     });
 
     /* So the first gap on the page matches every one after it. */

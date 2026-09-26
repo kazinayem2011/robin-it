@@ -728,19 +728,19 @@
 }
 
 /*
- * The makers on a shelf, in a line across the top of it.
+ * The shelves one level down, in a line across the top of a category page, as
+ * Star Tech lays it out.
  *
  * Sits above the filters rather than inside them because it is not a filter:
- * each one is a shelf with its own address. Most people arriving at Laptop
- * already know whose laptop they want.
+ * each one is a shelf with its own address.
  */
-.cat-brand-row {
+.cat-sub-row {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.cat-brand-pill {
+.cat-sub-pill {
     display: inline-flex;
     align-items: center;
     padding: 7px 18px;
@@ -758,24 +758,18 @@
         color 0.15s ease;
 }
 
-.cat-brand-pill:hover {
+.cat-sub-pill:hover {
     border-color: var(--primary-ink);
     color: var(--primary-ink);
 }
 
-.cat-brand-pill.is-active {
-    border-color: var(--primary-ink);
-    background: var(--primary-ink);
-    color: var(--text-on-accent);
-}
-
 /*
  * One line that scrolls on a phone rather than four rows of wrapped pills.
- * Fourteen makers stacked four deep pushes the grid off the screen, and the
+ * Thirty shelves stacked eight deep push the grid off the screen, and the
  * row is meant to be glanced at on the way past.
  */
 @media (max-width: 640px) {
-    .cat-brand-row {
+    .cat-sub-row {
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
@@ -783,7 +777,7 @@
         padding-inline: 16px;
     }
 
-    .cat-brand-row::-webkit-scrollbar {
+    .cat-sub-row::-webkit-scrollbar {
         display: none;
     }
 }
