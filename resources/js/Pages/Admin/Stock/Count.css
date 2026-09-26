@@ -344,3 +344,30 @@
 .count-scan-note.is-bad {
     color: var(--danger-ink);
 }
+
+/* Notify-me requests: the stock figure red while nothing is on the shelf, and
+   the addresses behind a disclosure so a busy row stays one line. */
+.stock-request-empty {
+    color: var(--danger-ink);
+    font-weight: 700;
+}
+
+.stock-request-who summary {
+    cursor: pointer;
+    color: var(--primary-ink);
+    font-weight: 600;
+}
+
+.stock-request-who ul {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.stock-request-who li {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}

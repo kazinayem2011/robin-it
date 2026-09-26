@@ -3,10 +3,13 @@
 namespace App\Support;
 
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\SmsTemplate;
 use App\Services\OtpService;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * What the shop actually says in a text message.
@@ -104,6 +107,27 @@ class SmsTemplates
     {
         return self::stored('account_created', ['shop_name' => $shop],
             "({$shop}) অ্যাকাউন্ট তৈরি হয়েছে। প্রোফাইলে পাসওয়ার্ড দিন।");
+    }
+
+    /**
+     * Something a customer asked to hear about is back.
+     *
+     * No link by default: a product address is long enough on its own to
+     * double the bill, and the name is enough to find it. A shop that wants
+     * the link can put {product_url} in its own wording. The name is cut
+     * short so a long laptop title cannot take it to a third part.
+     */
+    public static function backInStock(Product $product, ?ProductVariant $variant, string $shop): string
+    {
+        $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
+        $short = Str::limit($name, 40, '…');
+        $url = rtrim((string) config('app.url'), '/').'/products/'.$product->slug;
+
+        return self::stored('back_in_stock', [
+            'shop_name' => $shop,
+            'product_name' => $short,
+            'product_url' => $url,
+        ], "({$shop}) {$short} আবার স্টকে এসেছে। এখনই অর্ডার করুন।");
     }
 
     /**

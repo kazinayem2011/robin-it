@@ -4,11 +4,26 @@ import * as Yup from 'yup';
 import { Bell, Check } from 'lucide-react';
 import Button from './Button';
 import stockNotificationService from '../services/stockNotificationService';
+import { isBDPhone } from '../constants/patterns';
 
+const isEmail = (value = '') => Yup.string().email().isValidSync(value.trim());
+
+/*
+ * An email address or a mobile number, in the one box, as signing in takes
+ * either. Most accounts here are a mobile number, and a guest may have no
+ * address to give.
+ */
 const schema = Yup.object().shape({
-    email: Yup.string()
-        .email('That does not look like an email address')
-        .required('Enter an email address so we can tell you'),
+    contact: Yup.string()
+        .trim()
+        .required(
+            'Enter an email address or a mobile number so we can tell you',
+        )
+        .test(
+            'email-or-phone',
+            'Enter an email address, or an 11-digit mobile number such as 01711223344',
+            (value = '') => isEmail(value) || isBDPhone(value),
+        ),
 });
 
 /**
@@ -22,35 +37,37 @@ export default function BackInStockForm({
     productId,
     variantId = null,
     /*
-     * The address on the shopper's account, when they are signed in.
+     * The email, or failing that the mobile, on the shopper's account when
+     * they are signed in.
      *
      * Having one settles both the value and the field: there is nothing to ask
-     * and nothing to get wrong, so it is filled in and locked. An account with
-     * no address on it — which registration does not currently allow, but the
-     * form should not assume — falls back to an empty box to type into.
+     * and nothing to get wrong, so it is filled in and locked.
      */
-    accountEmail = '',
+    accountContact = '',
 }) {
     const [done, setDone] = useState(false);
+    const [byText, setByText] = useState(false);
     const [waiting, setWaiting] = useState(0);
 
-    const locked = Boolean(accountEmail);
+    const locked = Boolean(accountContact);
+    const lockedIsPhone = locked && !isEmail(accountContact);
 
     const formik = useFormik({
-        initialValues: { email: accountEmail },
+        initialValues: { contact: accountContact },
         validationSchema: schema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             try {
                 const res = await stockNotificationService.subscribe({
                     product_id: productId,
                     product_variant_id: variantId,
-                    email: values.email,
+                    contact: values.contact.trim(),
                 });
                 setWaiting(res?.waiting ?? waiting + 1);
+                setByText(!isEmail(values.contact));
                 setDone(true);
             } catch (err) {
                 setFieldError(
-                    'email',
+                    'contact',
                     err?.message || 'We could not save that just now.',
                 );
             } finally {
@@ -88,11 +105,20 @@ export default function BackInStockForm({
                 <div>
                     <strong>We&rsquo;ll let you know.</strong>
                     <span>
-                        An email goes out the moment it&rsquo;s back in stock.
+                        {byText ? 'A text' : 'An email'} goes out the moment
+                        it&rsquo;s back in stock.
                     </span>
                 </div>
             </div>
         );
+    }
+
+    let prompt =
+        'Leave your email or mobile number and we’ll tell you when it returns.';
+    if (locked) {
+        prompt = lockedIsPhone
+            ? 'We’ll text you the moment it returns.'
+            : 'We’ll email you the moment it returns.';
     }
 
     return (
@@ -102,9 +128,7 @@ export default function BackInStockForm({
                 <div>
                     <strong>Sold Out</strong>
                     <span>
-                        {locked
-                            ? 'We\u2019ll email you the moment it returns.'
-                            : 'Leave your email and we\u2019ll tell you when it returns.'}
+                        {prompt}
                         {waiting > 0 && ` ${waiting} already waiting.`}
                     </span>
                 </div>
@@ -112,17 +136,18 @@ export default function BackInStockForm({
 
             <div className="pdp-notify-row">
                 <input
-                    type="email"
-                    name="email"
-                    value={formik.values.email}
+                    type="text"
+                    autoComplete="email"
+                    name="contact"
+                    value={formik.values.contact}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    placeholder="you@example.com"
-                    aria-label="Email address"
+                    placeholder="Email or mobile number"
+                    aria-label="Email or mobile number"
                     disabled={locked}
-                    title={locked ? 'The address on your account' : undefined}
+                    title={locked ? 'The contact on your account' : undefined}
                     className={
-                        formik.touched.email && formik.errors.email
+                        formik.touched.contact && formik.errors.contact
                             ? 'has-error'
                             : ''
                     }
@@ -136,8 +161,10 @@ export default function BackInStockForm({
                 </Button>
             </div>
 
-            {formik.touched.email && formik.errors.email && (
-                <span className="pdp-notify-error">{formik.errors.email}</span>
+            {formik.touched.contact && formik.errors.contact && (
+                <span className="pdp-notify-error">
+                    {formik.errors.contact}
+                </span>
             )}
         </form>
     );

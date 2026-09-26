@@ -303,7 +303,12 @@ class OrderService
             // delivery lands.
             if ($available < $item->quantity
                 && ! $product->allowsBalance($available - $item->quantity)) {
-                throw StorefrontException::outOfStock($item->displayName(), max(0, $available));
+                // Past a pre-order limit is not "out of stock": say the number.
+                $ceiling = $product->allowsPreorder() ? $product->sellableCeiling($available) : null;
+
+                throw $ceiling !== null
+                    ? StorefrontException::preorderLimit($item->displayName(), $ceiling)
+                    : StorefrontException::outOfStock($item->displayName(), max(0, $available));
             }
         }
     }

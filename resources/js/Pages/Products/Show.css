@@ -297,6 +297,12 @@
     color: var(--danger);
 }
 
+/* Pre-Order, and any wording the shop chose for "coming back": amber, as the
+   pre-order buttons are. The class was set and never had a rule. */
+.meta-value.is-stock-waiting {
+    color: var(--warning-text);
+}
+
 /* The countdown sat inside the price block. With the price moved up into the
    chips, the clock needs its own line rather than being wedged into the row. */
 .pdp-deal-clock {
@@ -411,6 +417,7 @@
  * strength. It was a disabled button, and every disabled button is drawn at
  * half opacity, so grey text on a grey ground on a grey page all but vanished.
  * Theme tokens rather than StarTech's hex, so it reads in the dark theme too.
+ * Red, matching the card's Sold Out button: pale ground, red ink, red rule.
  */
 .pdp-stock-status {
     display: inline-flex;
@@ -418,8 +425,9 @@
     min-height: 42px;
     padding: 0 32px;
     border-radius: var(--radius-sm);
-    background: var(--bg-muted-strong);
-    color: var(--text-secondary);
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
     font-weight: 700;
 }
 

@@ -6,6 +6,9 @@ use App\Mail\BackInStockMail;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockNotification;
+use App\Services\SmsService;
+use App\Support\BrandDetails;
+use App\Support\SmsTemplates;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,6 +23,8 @@ use Illuminate\Support\Facades\Mail;
  * Queued, because a delivery of thirty lines should not sit waiting on thirty
  * batches of mail, and because a stock movement must never fail on account of
  * an unreachable SMTP server.
+ *
+ * By email or by text, whichever the request carries.
  */
 class NotifyBackInStock implements ShouldQueue
 {
@@ -30,7 +35,7 @@ class NotifyBackInStock implements ShouldQueue
         public ?int $variantId = null,
     ) {}
 
-    public function handle(): void
+    public function handle(SmsService $sms): void
     {
         $product = Product::find($this->productId);
 
@@ -53,20 +58,37 @@ class NotifyBackInStock implements ShouldQueue
             ->pending()
             ->get();
 
+        $text = null;
+
         foreach ($waiting as $request) {
             try {
-                Mail::to($request->email)->send(
-                    new BackInStockMail($product, $variant, $available)
-                );
+                if ($request->email) {
+                    Mail::to($request->email)->send(
+                        new BackInStockMail($product, $variant, $available)
+                    );
+                } elseif ($request->phone) {
+                    $text ??= SmsTemplates::backInStock($product, $variant, BrandDetails::name());
+
+                    /*
+                     * Left waiting when the text did not go — texts switched
+                     * off, or the gateway down — rather than marked as told.
+                     * Next time the stock comes back it is tried again.
+                     */
+                    if (! $sms->sendEvent('back_in_stock', $request->phone, $text)) {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
 
                 // Marked before the next send so a failure partway through a
                 // long list cannot re-mail everyone who already heard.
                 $request->update(['notified_at' => now()]);
             } catch (\Throwable $e) {
-                Log::warning('Could not send a back-in-stock email: '.$e->getMessage(), [
+                Log::warning('Could not send a back-in-stock message: '.$e->getMessage(), [
                     'product_id' => $this->productId,
                     'variant_id' => $this->variantId,
-                    'email' => $request->email,
+                    'request_id' => $request->id,
                 ]);
             }
         }

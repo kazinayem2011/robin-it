@@ -107,6 +107,39 @@ class PreorderTest extends TestCase
         $this->assertSame(0, $product->fresh()->stock_quantity);
     }
 
+    /**
+     * Refused in words that fit. It said the product "just went out of stock",
+     * true of every pre-order and no help to the customer: the number is what
+     * stopped them, so the number is what it says.
+     */
+    public function test_going_past_the_limit_says_how_many_can_be_ordered(): void
+    {
+        $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 2]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson('/api/cart', [
+            'product_id' => $product->id, 'quantity' => 3,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Only 2 of', $response->json('message'));
+        $this->assertStringContainsString('before the delivery arrives', $response->json('message'));
+        $this->assertStringNotContainsString('went out of stock', $response->json('message'));
+    }
+
+    /** Stock on hand counts towards the figure it quotes. */
+    public function test_the_figure_includes_what_is_on_the_shelf(): void
+    {
+        $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 2]);
+        app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 1]]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson('/api/cart', [
+            'product_id' => $product->fresh()->id, 'quantity' => 4,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Only 3 of', $response->json('message'));
+    }
+
     public function test_stock_on_hand_counts_towards_the_limit(): void
     {
         // Two on the shelf and two of headroom is four sellable, not two.

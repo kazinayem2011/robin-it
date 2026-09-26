@@ -10,6 +10,7 @@ import { LineItemsSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
 import { boundsFor as cartBounds } from '../../utils/cartBounds';
+import { preordersBeyondShelf, preorderDate } from '../../utils/orderable';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Trash2, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -243,6 +244,29 @@ export default function Cart() {
                                                 {item.variant && (
                                                     <div className="cart-item-variant">
                                                         {item.variant.name}
+                                                    </div>
+                                                )}
+                                                {/* Said in the cart as well: the
+                                                    notice when it was added is
+                                                    gone by now, and nothing here
+                                                    said this line ships later. */}
+                                                {preordersBeyondShelf(
+                                                    item.product,
+                                                    item.variant
+                                                        ?.stock_quantity ??
+                                                        item.product
+                                                            .stock_quantity,
+                                                    item.quantity,
+                                                ) && (
+                                                    <div className="cart-item-preorder">
+                                                        Pre-order — ships when
+                                                        the delivery arrives
+                                                        {preorderDate(
+                                                            item.product
+                                                                .preorder_release_at,
+                                                        )
+                                                            ? `, expected ${preorderDate(item.product.preorder_release_at)}`
+                                                            : ''}
                                                     </div>
                                                 )}
                                                 <div className="cart-item-price">

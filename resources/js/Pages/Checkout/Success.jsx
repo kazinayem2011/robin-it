@@ -3,6 +3,7 @@ import { mainLayout } from '../../Layouts/MainLayout';
 import { ROUTES } from '../../constants/endpoints';
 import './Checkout.css';
 import ProductSuggestions from '../../Components/ProductSuggestions';
+import PreorderTag from '../../Components/PreorderTag';
 
 /**
  * @param trackUrl The order's unlocked tracking link, given only to whoever
@@ -16,6 +17,7 @@ export default function Success({
     orderNumber,
     trackUrl = null,
     accountIsNew = false,
+    preorderItems = [],
     suggestions = [],
 }) {
     const customer = usePage().props?.auth?.user ?? null;
@@ -51,6 +53,21 @@ export default function Success({
                     </strong>{' '}
                     has been received.
                 </p>
+
+                {/* The part that ships later, said here too: "placed" alone
+                    reads as everything being on its way. */}
+                {preorderItems.length > 0 && (
+                    <div className="order-success-preorder">
+                        <PreorderTag compact />
+                        <span>
+                            {preorderItems.length === 1
+                                ? `${preorderItems[0]} ships`
+                                : `${preorderItems.join(', ')} ship`}{' '}
+                            when the delivery arrives; we will let you know when
+                            it is on its way.
+                        </span>
+                    </div>
+                )}
 
                 {accountIsNew && (
                     <div className="order-success-account">

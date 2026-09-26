@@ -45,6 +45,7 @@ class SmsService
         'sms_on_returned',
         'sms_on_refund',
         'sms_on_payment_due',
+        'sms_on_back_in_stock',
     ];
 
     public const PROVIDER_GREENWEB = 'greenweb';
@@ -111,6 +112,8 @@ class SmsService
             'hint' => 'Your courier already texts this too.'],
         'returned' => ['label' => 'Return received', 'default' => false,
             'hint' => 'Rarely worth the cost; the refund message covers what the customer cares about.'],
+        'back_in_stock' => ['label' => 'Back in stock', 'default' => true,
+            'hint' => 'For someone who pressed Notify me and left a mobile number rather than an email: the only way they hear.'],
     ];
 
     /**

@@ -22,6 +22,7 @@ import DispatchOrderModal from './Components/DispatchOrderModal';
 import OrderReturnModal from './Components/OrderReturnModal';
 import EditOrderModal from './Components/EditOrderModal';
 import NewOrderModal from './Components/NewOrderModal';
+import PreorderTag from '../../Components/PreorderTag';
 // The edit modal reuses the purchase-order line table.
 import './Purchasing.css';
 import RecordPaymentModal from './Components/RecordPaymentModal';
@@ -568,6 +569,13 @@ export default function Orders({
                                             {item.variant_name && (
                                                 <div className="admin-field-hint">
                                                     {item.variant_name}
+                                                </div>
+                                            )}
+                                            {/* Waits on a delivery: packing
+                                                needs to know before it tries. */}
+                                            {item.was_preordered && (
+                                                <div>
+                                                    <PreorderTag />
                                                 </div>
                                             )}
                                         </td>

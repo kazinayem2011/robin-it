@@ -36,6 +36,7 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
+import { orderableCeiling } from '../../utils/orderable';
 import { photosOf } from '../../utils/productPhotos';
 import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
@@ -58,12 +59,6 @@ export default function ProductDetails(props) {
     /* Shared by Inertia on every page, so a signed-in shopper is not asked
        for a name the shop already has. */
     const { auth, brand_name: brandName } = usePage().props;
-
-    /*
-     * A signed-in customer may have registered with a mobile number instead of
-     * an email address. A guest is asked for one, so they can always be told.
-     */
-    const canBeEmailed = !auth?.user || Boolean(auth.user.email);
 
     /*
      * The shared hook, not a handler of this page's own. It loads what is
@@ -117,6 +112,14 @@ export default function ProductDetails(props) {
     const availableStock = product?.has_variants
         ? (selectedVariant?.stock_quantity ?? 0)
         : (product?.stock_quantity ?? 0);
+
+    /*
+     * The most the quantity stepper goes to: the shelf, or beyond it by the
+     * pre-order limit. It stopped at the shelf, which on a pre-order product is
+     * nothing, so a customer allowed three could only ever take one. 99 stands
+     * in for "no limit set", as it did before for an unknown stock figure.
+     */
+    const maxQuantity = Math.min(orderableCeiling(product, availableStock), 99);
 
     /*
      * The two figures the page quotes: what this costs paid outright, and the
@@ -427,6 +430,29 @@ export default function ProductDetails(props) {
               year: 'numeric',
           })
         : null;
+
+    /*
+     * Arriving from a sold-out card's "Notify me" (…#notify): take the shopper
+     * to the back-in-stock form and put the cursor in it. The browser's own
+     * jump to the anchor happens before the product has loaded, when the form
+     * is not there yet, so it is done here once it is.
+     */
+    useEffect(() => {
+        if (loading || !soldOut || window.location.hash !== '#notify') {
+            return undefined;
+        }
+
+        const frame = requestAnimationFrame(() => {
+            const form = document.getElementById('notify');
+
+            form?.scrollIntoView({ block: 'center' });
+            form?.querySelector('input:not(:disabled)')?.focus({
+                preventScroll: true,
+            });
+        });
+
+        return () => cancelAnimationFrame(frame);
+    }, [loading, soldOut]);
 
     // Reviews & Ratings State
     const [reviewsData, setReviewsData] = useState({
@@ -1222,13 +1248,11 @@ export default function ProductDetails(props) {
                                         />
                                         <button
                                             type="button"
-                                            disabled={
-                                                quantity >= availableStock
-                                            }
+                                            disabled={quantity >= maxQuantity}
                                             onClick={() =>
                                                 setQuantity((prev) =>
                                                     Math.min(
-                                                        availableStock || 99,
+                                                        maxQuantity,
                                                         prev + 1,
                                                     ),
                                                 )
@@ -1242,6 +1266,9 @@ export default function ProductDetails(props) {
                                         size="lg"
                                         disabled={soldOut}
                                         onClick={handleBuyNow}
+                                        className={
+                                            isPreorder ? 'btn-preorder' : ''
+                                        }
                                     >
                                         {needsVariantChoice
                                             ? 'Choose an option'
@@ -1257,6 +1284,11 @@ export default function ProductDetails(props) {
                                         disabled={soldOut}
                                         onClick={handleAddToCart}
                                         loading={addingToCart}
+                                        className={
+                                            isPreorder && !addedToCart
+                                                ? 'btn-preorder-outline'
+                                                : ''
+                                        }
                                         icon={
                                             addedToCart ? Check : ShoppingCart
                                         }
@@ -1290,18 +1322,20 @@ export default function ProductDetails(props) {
                         {/* Only when the thing being looked at is actually
                             unavailable — on a variant product that means
                             the chosen option, not the product overall.
-
-                            And only when there is somewhere to write to.
-                            An account can be opened with a mobile number
-                            and no address; this waiting list is email, so
-                            for those customers it is not an offer at all
-                            and asking would be a form they cannot use. */}
-                        {soldOut && canBeEmailed && (
-                            <BackInStockForm
-                                productId={product.id}
-                                variantId={selectedVariant?.id ?? null}
-                                accountEmail={auth?.user?.email ?? ''}
-                            />
+                            Told by email or by text, whichever the account
+                            has or the shopper types. */}
+                        {soldOut && (
+                            <div id="notify">
+                                <BackInStockForm
+                                    productId={product.id}
+                                    variantId={selectedVariant?.id ?? null}
+                                    accountContact={
+                                        auth?.user?.email ||
+                                        auth?.user?.phone ||
+                                        ''
+                                    }
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

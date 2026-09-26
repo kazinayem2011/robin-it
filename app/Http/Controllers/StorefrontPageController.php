@@ -262,6 +262,14 @@ class StorefrontPageController extends Controller
              */
             'trackUrl' => $order && Gate::allows('print', [$order, $request]) ? $order->trackPath() : null,
             /*
+             * The lines that ship later, said on the page that confirms the
+             * order: "your order is placed" read as "it is all on its way".
+             * Only to whoever placed it, by the same test as the link above.
+             */
+            'preorderItems' => $order && Gate::allows('print', [$order, $request])
+                ? $order->items->filter->wasPreordered()->map->display_name->values()
+                : [],
+            /*
              * Checkout made this customer an account and signed them in, and
              * nothing said so — they would have found out by coming back to
              * the shop one day. True for their own order while the account has

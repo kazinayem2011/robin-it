@@ -92,7 +92,8 @@ describe('admin navigation groups', () => {
     it('keeps every screen, exactly once', () => {
         const items = groups().flatMap((g) => g.items);
 
-        expect(items).toHaveLength(36);
+        // 37 with Notify-me Requests under Stock.
+        expect(items).toHaveLength(37);
         expect(new Set(items).size).toBe(items.length);
     });
 

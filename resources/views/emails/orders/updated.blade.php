@@ -34,6 +34,12 @@
                     @if ($item->variant_name)
                         <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">{{ $item->variant_name }}</span>
                     @endif
+                    {{-- Ships later: an order mixing stock and pre-order lines
+                         is not one shipment, and this email has to say which
+                         line is waiting on a delivery, as the invoice does. --}}
+                    @if ($item->wasPreordered())
+                        <span style="display:block; margin-top:3px; font-size:12px; font-weight:bold; color:#92400e;">Pre-order &mdash; ships when the delivery arrives</span>
+                    @endif
                     <span class="eml-muted" style="display:block; margin-top:3px; font-size:12px; color:#64748b;">৳{{ number_format($item->price, 2) }} each</span>
                 </td>
                 <td align="center" style="padding:14px 0; border-bottom:1px solid #f1f5f9; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#334155;">{{ $item->quantity }}</td>

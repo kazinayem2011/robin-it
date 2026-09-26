@@ -461,6 +461,14 @@
     margin-top: 2px;
 }
 
+/* A line that ships later, in the amber every pre-order is shown in. */
+.cart-item-preorder {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--warning-text);
+    margin-top: 4px;
+}
+
 /*
  * Order summary lines.
  *
@@ -681,6 +689,25 @@
 }
 
 /* The account checkout just made, said on the page they are already reading. */
+/* The lines that ship later, beside the "placed" message: amber, as every
+   pre-order is shown. Laid out like the account notice below it. */
+.order-success-preorder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 8px;
+    max-width: 560px;
+    margin: 0 auto 24px;
+    padding: 14px 18px;
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-body);
+    text-align: left;
+}
+
 .order-success-account {
     max-width: 560px;
     margin: 0 auto 24px;

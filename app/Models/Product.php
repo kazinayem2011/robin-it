@@ -142,6 +142,12 @@ class Product extends Model
         return $this->belongsTo(Brand::class);
     }
 
+    /** "Notify me" requests: customers waiting for it to come back. */
+    public function stockNotifications()
+    {
+        return $this->hasMany(StockNotification::class);
+    }
+
     public function variants()
     {
         return $this->hasMany(ProductVariant::class)->orderBy('position')->orderBy('id');

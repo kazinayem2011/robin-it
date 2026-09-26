@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ApiCode;
 use App\Exceptions\StorefrontException;
 use App\Jobs\NotifyBackInStock;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\ProductVariant;
@@ -13,6 +14,7 @@ use App\Models\StockReceipt;
 use App\Models\StockReceiptItem;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Support\PreorderLedger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +131,12 @@ class StockService
                 // Customer-driven movements have no admin behind them.
                 'user_id' => $meta['user_id'] ?? Auth::id(),
             ]);
+
+            // An order's pre-order marks are read from its sales; this one
+            // may change them, so the next read goes back to the ledger.
+            if ($reference instanceof Order) {
+                app(PreorderLedger::class)->forget((int) $reference->getKey());
+            }
 
             if ($storeId) {
                 ProductStock::updateOrCreate(

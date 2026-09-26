@@ -16,6 +16,7 @@ use App\Notifications\OrderStatusChanged;
 use App\Notifications\OrderUpdated;
 use App\Notifications\ProductQuestionAsked;
 use App\Notifications\StockRanLow;
+use App\Notifications\StockRequested;
 use App\Support\Roles;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +106,15 @@ class ShopNotifier
         $this->deliver('stock ran low', fn () => Notification::send(
             $this->staffWith('stock'),
             new StockRanLow($product, $variant, $remaining)
+        ));
+    }
+
+    /** Somebody joined the queue for something sold out. */
+    public function stockRequested(Product $product, ?ProductVariant $variant, int $waiting): void
+    {
+        $this->deliver('stock requested', fn () => Notification::send(
+            $this->staffWith('stock'),
+            new StockRequested($product, $variant, $waiting)
         ));
     }
 

@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\ShowroomController as AdminShowroomController;
 use App\Http\Controllers\Admin\StaffController as AdminStaffController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StockRequestController;
 use App\Http\Controllers\Admin\StockTakeController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SupplierController;
@@ -228,6 +229,7 @@ Route::middleware(['auth', 'admin'])
         Route::get(ApiEndpoints::ADMIN_STOCK_COUNT, [StockTakeController::class, 'create'])->name('stock.count')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_ADJUSTMENTS, [StockTakeController::class, 'adjustments'])->name('stock.adjustments')->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_SERIALS, [StockTakeController::class, 'serials'])->name('stock.serials')->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_STOCK_REQUESTS, [StockRequestController::class, 'index'])->name('stock.requests')->middleware('can:stock');
         Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchasing')->middleware('can:stock');
         Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns')->middleware('can:marketing');
     });

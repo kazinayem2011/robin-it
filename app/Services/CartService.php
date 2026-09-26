@@ -394,9 +394,15 @@ class CartService
             return;
         }
 
-        throw StorefrontException::outOfStock(
-            $variant ? "{$product->name} ({$variant->name})" : $product->name,
-            max(0, $onHand)
-        );
+        $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
+
+        // Past a pre-order limit is not "out of stock": say the number.
+        $ceiling = $product->allowsPreorder() ? $product->sellableCeiling($onHand) : null;
+
+        if ($ceiling !== null) {
+            throw StorefrontException::preorderLimit($name, $ceiling);
+        }
+
+        throw StorefrontException::outOfStock($name, max(0, $onHand));
     }
 }

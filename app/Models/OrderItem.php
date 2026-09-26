@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Support\PreorderLedger;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderItem extends Model
 {
+    /** Whether the line waits on a delivery; see getWasPreorderedAttribute(). */
+    protected $appends = ['was_preordered'];
+
     protected $fillable = [
         'order_id', 'product_id', 'product_variant_id', 'product_name',
         'variant_name', 'price', 'unit_cost', 'quantity', 'returned_quantity', 'total',
@@ -81,19 +85,21 @@ class OrderItem extends Model
      */
     public function wasPreordered(): bool
     {
-        $balance = StockMovement::where('reference_type', Order::class)
-            ->where('reference_id', $this->order_id)
-            ->where('type', StockMovement::SALE)
-            ->where('product_id', $this->product_id)
-            ->when(
-                $this->product_variant_id,
-                fn ($q) => $q->where('product_variant_id', $this->product_variant_id),
-                fn ($q) => $q->whereNull('product_variant_id')
-            )
-            ->orderByDesc('id')
-            ->value('balance_after');
+        return app(PreorderLedger::class)->wasPreordered(
+            (int) $this->order_id,
+            (int) $this->product_id,
+            $this->product_variant_id ? (int) $this->product_variant_id : null,
+        );
+    }
 
-        return $balance !== null && (int) $balance < 0;
+    /**
+     * Sent with the line wherever it is serialised, so every screen that lists
+     * an order can mark it — the cart, checkout, the customer's orders, the
+     * tracking page, the admin — not only the invoice, which alone did.
+     */
+    public function getWasPreorderedAttribute(): bool
+    {
+        return $this->wasPreordered();
     }
 
     /** The physical units handed over for this line, where they are tracked. */

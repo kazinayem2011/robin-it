@@ -4,6 +4,7 @@ namespace Tests\Feature\Sms;
 
 use App\Models\Campaign;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\SmsTemplate;
 use App\Models\User;
 use App\Services\CampaignService;
@@ -118,6 +119,15 @@ class SmsGatewayRulesTest extends TestCase
             'payment due' => SmsTemplates::paymentDue($order, 84500, $shop),
             'verification' => SmsTemplates::verificationCode('123456', 'verify', $shop),
             'password reset' => SmsTemplates::verificationCode('123456', 'password_reset', $shop),
+            // The longest name a shop is likely to list, to hold it to two parts.
+            'back in stock' => SmsTemplates::backInStock(
+                (new Product)->forceFill([
+                    'name' => 'ASUS Vivobook Go 15 E1504FA Ryzen 3 7320U 15.6" FHD Display Laptop',
+                    'slug' => 'asus-vivobook-go-15',
+                ]),
+                null,
+                $shop,
+            ),
         ];
 
         foreach (['processing', 'shipped', 'delivered', 'cancelled', 'returned'] as $status) {

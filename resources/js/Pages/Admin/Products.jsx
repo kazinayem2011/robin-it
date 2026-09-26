@@ -998,16 +998,28 @@ export default function Products({
              * it. Restocking goes through a delivery.
              */
             render: (p) => (
-                <span
-                    className={`${
-                        p.stock_quantity <= 5
-                            ? 'admin-badge-stock-danger'
-                            : 'admin-badge-stock-ok'
-                    }`}
-                >
-                    {p.stock_quantity <= 5 && '⚠️ '}
-                    {p.stock_quantity} in Stock
-                </span>
+                <div>
+                    <span
+                        className={`${
+                            p.stock_quantity <= 5
+                                ? 'admin-badge-stock-danger'
+                                : 'admin-badge-stock-ok'
+                        }`}
+                    >
+                        {p.stock_quantity <= 5 && '⚠️ '}
+                        {p.stock_quantity} in Stock
+                    </span>
+                    {/* Customers who pressed Notify me and have not yet
+                        heard: demand the shelf figure alone does not show. */}
+                    {p.waiting_count > 0 && (
+                        <Link
+                            href={ROUTES.ADMIN_STOCK_REQUESTS}
+                            className="admin-waiting-count"
+                        >
+                            {p.waiting_count} waiting
+                        </Link>
+                    )}
+                </div>
             ),
         },
         {

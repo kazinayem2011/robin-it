@@ -49,6 +49,26 @@ class StorefrontException extends RuntimeException
         ]);
     }
 
+    /**
+     * Past a pre-order product's limit.
+     *
+     * It said the product "just went out of stock", which is true of every
+     * pre-order and tells the customer nothing: the shelf was empty when they
+     * chose it. What stopped them is the number, so that is what this says.
+     * Same code as out-of-stock, so a client handling that handles this.
+     */
+    public static function preorderLimit(string $productName, int $ceiling): self
+    {
+        $message = $ceiling > 0
+            ? "Only {$ceiling} of \"{$productName}\" can be ordered before the delivery arrives. Please reduce the quantity."
+            : "\"{$productName}\" has reached its pre-order limit. Please remove it from your cart to continue.";
+
+        return new self($message, 422, ApiCode::OUT_OF_STOCK, [
+            'product_name' => $productName,
+            'available' => $ceiling,
+        ]);
+    }
+
     public static function unavailable(string $productName): self
     {
         return new self(

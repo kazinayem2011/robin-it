@@ -214,6 +214,11 @@ class EveryKeyIsSuppliedTest extends TestCase
             'order_updated' => SmsTemplates::orderUpdated($order, $shop),
             'payment_due' => SmsTemplates::paymentDue($order, 84500, $shop),
             'refund' => SmsTemplates::refundIssued($order, 12000, $shop),
+            'back_in_stock' => SmsTemplates::backInStock(
+                (new Product)->forceFill(['name' => 'ASUS TUF Gaming A15', 'slug' => 'asus-tuf-gaming-a15']),
+                null,
+                $shop,
+            ),
         ];
 
         /* The courier is a declared variable, so the order has to carry one. */

@@ -165,6 +165,9 @@ class ApiEndpoints
 
     public const ADMIN_STOCK_SERIALS = 'stock/serials';
 
+    /** Customers waiting to hear that something sold out is back. */
+    public const ADMIN_STOCK_REQUESTS = 'stock/requests';
+
     public const ADMIN_STOCK_SERIAL_ITEM = 'stock/serials/{id}';
 
     public const ADMIN_BARCODE_LOOKUP = 'stock/barcode';

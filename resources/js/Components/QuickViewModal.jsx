@@ -207,6 +207,11 @@ export default function QuickViewModal({ show, onClose, product }) {
                                 loading={adding}
                                 disabled={!canBuy}
                                 onClick={handleAddToCart}
+                                className={
+                                    isPreorder && !hasOptions
+                                        ? 'btn-preorder'
+                                        : ''
+                                }
                             >
                                 {hasOptions
                                     ? 'Choose options'

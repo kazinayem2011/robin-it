@@ -226,6 +226,13 @@ class MessageTemplateSeeder extends Seeder
                 'hint' => 'A bank transfer takes days to appear; without this the customer chases it.',
                 'body' => '({shop_name}) অর্ডার {order_number}-এর Tk {amount} রিফান্ড হয়েছে। ব্যাংকে আসতে কয়েক দিন লাগতে পারে।',
             ],
+            [
+                'key' => 'back_in_stock',
+                'name' => 'Back in stock',
+                'group' => 'Catalogue',
+                'hint' => 'For someone who pressed Notify me and left a mobile number. Adding {product_url} usually makes it three parts.',
+                'body' => '({shop_name}) {product_name} আবার স্টকে এসেছে। এখনই অর্ডার করুন।',
+            ],
         ];
     }
 }

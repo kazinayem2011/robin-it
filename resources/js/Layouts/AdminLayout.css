@@ -539,6 +539,21 @@ a.admin-card:hover,
     font-weight: 800;
 }
 
+/* "N waiting" under the stock figure: customers who pressed Notify me. Amber,
+   the colour of a sale that is waiting on a delivery. Links to the list. */
+.admin-waiting-count {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--warning-text);
+    text-decoration: none;
+}
+
+.admin-waiting-count:hover {
+    text-decoration: underline;
+}
+
 .admin-badge-stock-ok {
     background: rgba(16, 185, 129, 0.08);
     color: var(--success-hover);

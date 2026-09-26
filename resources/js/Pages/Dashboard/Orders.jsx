@@ -10,6 +10,7 @@ import { Pagination } from '@/Components/Pagination';
 import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES, API_ENDPOINTS } from '@/constants/endpoints';
 import { mainLayout } from '../../Layouts/MainLayout';
+import PreorderTag from '../../Components/PreorderTag';
 
 export default function Orders({
     user,
@@ -134,6 +135,9 @@ export default function Orders({
                                                             ? ` (${item.variant_name})`
                                                             : ''}
                                                     </div>
+                                                    {item.was_preordered && (
+                                                        <PreorderTag />
+                                                    )}
                                                     <div className="order-item-sub">
                                                         Qty: {item.quantity} ×{' '}
                                                         {formatBdt(item.price)}

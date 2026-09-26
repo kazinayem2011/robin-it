@@ -335,6 +335,7 @@ export const ROUTES = {
     ADMIN_PURCHASING: '/admin/purchase-orders',
     ADMIN_CAMPAIGNS: '/admin/campaigns',
     ADMIN_STOCK_SERIALS: '/admin/stock/serials',
+    ADMIN_STOCK_REQUESTS: '/admin/stock/requests',
     ADMIN_STOCK_ADJUSTMENTS: '/admin/stock/adjustments',
     ADMIN_SUBSCRIBERS: '/admin/subscribers',
     ADMIN_SETTINGS: '/admin/settings',

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ApiCode;
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\StockNotification;
+use App\Services\ShopNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 /**
  * "Tell me when this is back."
@@ -24,11 +27,36 @@ class StockNotificationController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'product_variant_id' => 'nullable|integer|exists:product_variants,id',
-            'email' => 'required|email|max:255',
-        ], [
-            'email.required' => 'Enter an email address so we can tell you.',
-            'email.email' => 'That does not look like an email address.',
+            'contact' => 'nullable|string|max:255',
+            'email' => 'nullable|string|max:255',
         ]);
+
+        /*
+         * An email address or a mobile number, in the one box — as signing in
+         * takes either. The list was email only, so a customer whose account
+         * is a mobile number, and a guest with no address, could not join it.
+         * `email` is still read, for anything posting the old field.
+         */
+        $field = $request->filled('contact') ? 'contact' : 'email';
+        $raw = trim((string) $request->input($field, ''));
+        $email = null;
+        $phone = null;
+
+        if ($raw === '') {
+            throw ValidationException::withMessages([
+                $field => 'Enter an email address or a mobile number so we can tell you.',
+            ]);
+        }
+
+        if (filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+            $email = strtolower($raw);
+        } elseif (PhoneHelper::isValidBdPhone($raw)) {
+            $phone = PhoneHelper::normalizeBdPhone($raw);
+        } else {
+            throw ValidationException::withMessages([
+                $field => 'Enter an email address, or an 11-digit mobile number such as 01711223344.',
+            ]);
+        }
 
         $product = Product::find($validated['product_id']);
         $variant = null;
@@ -65,15 +93,13 @@ class StockNotificationController extends Controller
             );
         }
 
-        $email = strtolower(trim($validated['email']));
-
         // updateOrCreate rather than create: asking twice should be reassuring,
-        // not a duplicate-key error.
+        // not a duplicate-key error. Keyed on whichever of the two was given.
         $notification = StockNotification::updateOrCreate(
             [
                 'product_id' => $product->id,
                 'product_variant_id' => $variant?->id,
-                'email' => $email,
+                ...($email !== null ? ['email' => $email] : ['phone' => $phone]),
             ],
             [
                 'user_id' => Auth::id(),
@@ -83,12 +109,25 @@ class StockNotificationController extends Controller
             ]
         );
 
+        $waiting = StockNotification::forUnit($product->id, $variant?->id)
+            ->pending()->count();
+
+        /*
+         * Tell the shop, once per request: new, or re-armed after they were
+         * told last time. Pressing it twice while already waiting is the
+         * customer reassuring themselves, not a second person in the queue.
+         */
+        if ($notification->wasRecentlyCreated || $notification->wasChanged('notified_at')) {
+            app(ShopNotifier::class)->stockRequested($product, $variant, $waiting);
+        }
+
         return $this->successResponse(
             [
-                'waiting' => StockNotification::forUnit($product->id, $variant?->id)
-                    ->pending()->count(),
+                'waiting' => $waiting,
             ],
-            "We'll email {$email} as soon as it's back.",
+            $email !== null
+                ? "We'll email {$email} as soon as it's back."
+                : "We'll text {$phone} as soon as it's back.",
             201
         );
     }

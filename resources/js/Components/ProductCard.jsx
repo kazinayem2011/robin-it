@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import {
+    Bell,
     Scale,
     ShoppingCart,
     Heart,
@@ -188,6 +189,35 @@ export const ProductCard = ({
             ? 'Choose options'
             : 'Buy Now';
 
+    /*
+     * The card's one action. Sold out, it was a disabled red "Sold Out" under
+     * a red "Sold Out" in the price slot — the same fact twice and nothing to
+     * do. The price slot says it now, and the button offers the next step:
+     * the product page's back-in-stock form, which takes an email address or
+     * a mobile number, so it is offered to everyone.
+     */
+    const footerAction = canBuy ? (
+        <button
+            type="button"
+            onClick={handleBuyNow}
+            className={`btn-add-cart${isPreorder ? ' is-preorder' : ''}`}
+            disabled={buying}
+            title={buyActionLabel}
+        >
+            <ShoppingCart size={16} />
+            <span>{isPreorder ? 'Pre-order' : 'Buy Now'}</span>
+        </button>
+    ) : (
+        <Link
+            href={`${ROUTES.PRODUCT_DETAIL(product.slug)}#notify`}
+            className="btn-add-cart is-notify"
+            title="Tell me when it is back"
+        >
+            <Bell size={16} />
+            <span>Notify me</span>
+        </Link>
+    );
+
     if (variant === 'flash') {
         return (
             <>
@@ -297,23 +327,7 @@ export const ProductCard = ({
                         {/* Price Stack & Buy Action */}
                         <div className="flash-card-footer">
                             {priceStack}
-
-                            <button
-                                type="button"
-                                onClick={handleBuyNow}
-                                className="btn-add-cart"
-                                disabled={!canBuy || buying}
-                                title={buyActionLabel}
-                            >
-                                <ShoppingCart size={16} />
-                                <span>
-                                    {isPreorder
-                                        ? 'Pre-order'
-                                        : inStock
-                                          ? 'Buy Now'
-                                          : soldOutLabel}
-                                </span>
-                            </button>
+                            {footerAction}
                         </div>
                     </div>
                 </div>
@@ -443,22 +457,7 @@ export const ProductCard = ({
                          * checkout — and an out-of-stock card should not
                          * offer the action at all.
                          */}
-                        <button
-                            type="button"
-                            onClick={handleBuyNow}
-                            className="btn-add-cart"
-                            disabled={!canBuy || buying}
-                            title={buyActionLabel}
-                        >
-                            <ShoppingCart size={16} />
-                            <span>
-                                {isPreorder
-                                    ? 'Pre-order'
-                                    : inStock
-                                      ? 'Buy Now'
-                                      : soldOutLabel}
-                            </span>
-                        </button>
+                        {footerAction}
                     </div>
                 </div>
             </div>

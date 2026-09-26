@@ -1,3 +1,5 @@
+import { orderableCeiling } from './orderable';
+
 /**
  * How many of one line a customer may have.
  *
@@ -20,9 +22,14 @@ export const boundsFor = (item, cart) => {
        written here, so the two cannot disagree after somebody changes it. */
     const cap = cart?.max_quantity_per_item ?? 20;
 
+    /* Not the shelf alone: a pre-order product may go beyond it by its
+       limit. Capping at the shelf held a pre-order line at nothing. */
     return {
         min: Math.max(1, Number(item.product?.min_order_quantity) || 1),
-        max: stock === null ? cap : Math.min(Number(stock), cap),
+        max:
+            stock === null
+                ? cap
+                : Math.min(orderableCeiling(item.product, stock), cap),
     };
 };
 

@@ -133,6 +133,10 @@
     --warning-hover: #d97706;
     --warning-light: #fffbeb;
     --warning-border: #fde68a;
+    /* Ink for a filled amber control. The amber fill is the same in both
+       themes, so this is one dark brown in both rather than following the
+       theme's text colour, which turns pale in the dark one. */
+    --text-on-warning: #2b1a02;
 
     --info: #2563eb;
     --info-hover: #1d4ed8;
@@ -2664,6 +2668,85 @@ textarea.has-error:focus,
     background: var(--bg-muted-strong);
     color: var(--text-muted);
     cursor: not-allowed;
+}
+
+/*
+ * Sold out: the price slot says so in red, and this is the next step — the
+ * product page's back-in-stock form. Outlined and neutral, so it reads as an
+ * option rather than a second red "Sold Out"; brand red on hover, like every
+ * other action. The border is an inset shadow so it keeps the button's size.
+ */
+.btn-add-cart.is-notify {
+    background: transparent;
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    text-decoration: none;
+}
+
+.btn-add-cart.is-notify:hover {
+    background: transparent;
+    color: var(--primary-ink);
+    box-shadow: inset 0 0 0 1px var(--primary);
+    transform: none;
+}
+
+/*
+ * Pre-order in amber: something that can be bought now and arrives later, so
+ * neither the brand red of Buy Now nor the red of Sold Out. The same amber on
+ * the card, the product page, Quick View and the Pre-Order status.
+ */
+.btn-add-cart.is-preorder {
+    background: var(--warning);
+    color: var(--text-on-warning);
+}
+
+.btn-add-cart.is-preorder:hover:not(:disabled) {
+    background: var(--warning-hover);
+    box-shadow: none;
+}
+
+.btn.btn-preorder {
+    background: var(--warning);
+    border-color: var(--warning);
+    color: var(--text-on-warning);
+    /* The primary button's red glow, which read pink under amber. */
+    box-shadow: none;
+}
+
+.btn.btn-preorder:hover:not(:disabled) {
+    background: var(--warning-hover);
+    border-color: var(--warning-hover);
+    color: var(--text-on-warning);
+    box-shadow: none;
+}
+
+/* The mark on a line that ships later (PreorderTag), wherever an order is
+   listed. Wraps with the text beside it rather than widening a table cell. */
+.preorder-tag {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--warning-text);
+}
+
+.preorder-tag svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.btn.btn-preorder-outline {
+    background: var(--warning-light);
+    border: 1px solid var(--warning-border);
+    color: var(--warning-text);
+}
+
+.btn.btn-preorder-outline:hover:not(:disabled) {
+    background: var(--warning-light);
+    border-color: var(--warning);
+    color: var(--warning-text);
 }
 
 .btn-add-cart:hover:not(:disabled) {

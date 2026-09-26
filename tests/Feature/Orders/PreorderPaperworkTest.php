@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Orders;
 
+use App\Mail\OrderConfirmationMail;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -106,6 +107,66 @@ class PreorderPaperworkTest extends TestCase
 
         $this->assertGreaterThan(0, $preorder->fresh()->stock_quantity);
         $this->assertTrue($order->items->first()->fresh()->wasPreordered());
+    }
+
+    /**
+     * Sent with the line, so every screen that lists an order can mark it —
+     * the customer's orders, tracking, the admin — not only the invoice.
+     */
+    public function test_a_serialised_line_says_whether_it_waits(): void
+    {
+        $inStock = $this->product('On the shelf');
+        app(StockService::class)->receive([], [['product_id' => $inStock->id, 'quantity' => 5]]);
+        $preorder = $this->product('Not yet landed', [
+            'allow_preorder' => true, 'preorder_limit' => 10,
+        ]);
+
+        $order = $this->buy(User::factory()->create(), [[$inStock, 1], [$preorder, 1]]);
+
+        $lines = collect($order->fresh('items')->toArray()['items'])->keyBy('product_id');
+
+        $this->assertFalse($lines[$inStock->id]['was_preordered']);
+        $this->assertTrue($lines[$preorder->id]['was_preordered']);
+    }
+
+    /** "Placed" alone reads as everything being on its way. */
+    public function test_the_confirmation_page_names_what_ships_later(): void
+    {
+        $owner = User::factory()->create();
+        $preorder = $this->product('Not yet landed', [
+            'allow_preorder' => true, 'preorder_limit' => 10,
+        ]);
+
+        $order = $this->buy($owner, [[$preorder, 1]]);
+
+        $this->actingAs($owner)
+            ->get('/order/success?order='.$order->order_number)
+            ->assertInertia(fn ($page) => $page->where('preorderItems', ['Not yet landed']));
+
+        // Nobody else is told what is in someone's order.
+        $this->actingAs(User::factory()->create())
+            ->get('/order/success?order='.$order->order_number)
+            ->assertInertia(fn ($page) => $page->where('preorderItems', []));
+    }
+
+    public function test_the_confirmation_email_says_so_on_the_line_that_waits(): void
+    {
+        $inStock = $this->product('On the shelf');
+        app(StockService::class)->receive([], [['product_id' => $inStock->id, 'quantity' => 5]]);
+        $preorder = $this->product('Not yet landed', [
+            'allow_preorder' => true, 'preorder_limit' => 10,
+        ]);
+
+        $order = $this->buy(User::factory()->create(), [[$inStock, 1], [$preorder, 1]]);
+
+        $html = (new OrderConfirmationMail($order->fresh('items')))->render();
+
+        $this->assertSame(1, substr_count($html, 'Pre-order &mdash; ships when the delivery arrives'));
+        $this->assertLessThan(
+            strpos($html, 'Pre-order &mdash;'),
+            strpos($html, 'Not yet landed'),
+            'the mark sits under the line it belongs to',
+        );
     }
 
     public function test_the_invoice_says_so(): void

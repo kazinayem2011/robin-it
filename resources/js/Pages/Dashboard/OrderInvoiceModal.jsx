@@ -3,6 +3,7 @@ import { Printer } from 'lucide-react';
 import { Modal } from '@/Components/Modal';
 import { StatusBadge } from '@/Components/StatusBadge';
 import { formatBdt, formatDate } from '@/utils/formatters';
+import PreorderTag from '../../Components/PreorderTag';
 
 /**
  * Shared by the orders list and the overview, which both offer "view details" —
@@ -52,6 +53,11 @@ export default function OrderInvoiceModal({ selectedOrder, setSelectedOrder }) {
                             <div key={item.id} className="dash-modal-item-row">
                                 <div className="dash-modal-item-info">
                                     <strong>{item.product_name}</strong>
+                                    {item.was_preordered && (
+                                        <div>
+                                            <PreorderTag />
+                                        </div>
+                                    )}
                                     <div className="dash-modal-item-meta">
                                         Qty: {item.quantity} ×{' '}
                                         {formatBdt(item.price)}

@@ -17,6 +17,7 @@ import {
     FileText,
     FolderTree,
     Hash,
+    BellRing,
     HelpCircle,
     Image,
     Inbox,
@@ -230,6 +231,13 @@ const NAV_GROUPS = [
                 label: 'Serial Numbers',
                 href: ROUTES.ADMIN_STOCK_SERIALS,
                 icon: Hash,
+                ability: 'stock',
+            },
+            {
+                // Customers waiting on something sold out: what to order next.
+                label: 'Notify-me Requests',
+                href: ROUTES.ADMIN_STOCK_REQUESTS,
+                icon: BellRing,
                 ability: 'stock',
             },
         ],

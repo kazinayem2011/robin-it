@@ -11,6 +11,7 @@ use App\Models\StockNotification;
 use App\Models\User;
 use App\Services\OrderService;
 use App\Services\ProductVariantService;
+use App\Services\SmsService;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -159,7 +160,7 @@ class BackInStockTest extends TestCase
         // Someone bought both before the queue got to it.
         app(StockService::class)->adjust($product->fresh(), null, -2, 'lost');
 
-        (new NotifyBackInStock($product->id))->handle();
+        (new NotifyBackInStock($product->id))->handle(app(SmsService::class));
 
         Mail::assertNothingSent();
         $this->assertSame(1, StockNotification::pending()->count(), 'the request was consumed for nothing');

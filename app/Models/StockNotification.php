@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class StockNotification extends Model
 {
+    /** Email or phone: a request carries one, and is told by that channel. */
     protected $fillable = [
-        'product_id', 'product_variant_id', 'email', 'user_id', 'notified_at',
+        'product_id', 'product_variant_id', 'email', 'phone', 'user_id', 'notified_at',
     ];
 
     protected $casts = [

@@ -7,6 +7,7 @@ import { ProductImage } from '@/Components/ProductImage';
 import { formatBdt } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
 import { mainLayout } from '../../Layouts/MainLayout';
+import PreorderTag from '../../Components/PreorderTag';
 
 export default function Index({
     user,
@@ -120,6 +121,9 @@ export default function Index({
                                                             ? ` (${item.variant_name})`
                                                             : ''}
                                                     </div>
+                                                    {item.was_preordered && (
+                                                        <PreorderTag />
+                                                    )}
                                                     <div className="order-item-sub">
                                                         Qty: {item.quantity} ×{' '}
                                                         {formatBdt(item.price)}

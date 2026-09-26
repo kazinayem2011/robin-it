@@ -22,6 +22,8 @@ import { boundsFor as cartBounds } from '../../utils/cartBounds';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Tag, X, AlertTriangle } from 'lucide-react';
+import PreorderTag from '../../Components/PreorderTag';
+import { preordersBeyondShelf } from '../../utils/orderable';
 import './Checkout.css';
 
 /**
@@ -949,6 +951,21 @@ export default function Checkout({
                                                         ? ` (${item.variant.name})`
                                                         : ''}
                                                 </span>
+                                                {preordersBeyondShelf(
+                                                    item.product,
+                                                    item.variant
+                                                        ?.stock_quantity ??
+                                                        item.product
+                                                            .stock_quantity,
+                                                    item.quantity,
+                                                ) && (
+                                                    <PreorderTag
+                                                        expected={
+                                                            item.product
+                                                                .preorder_release_at
+                                                        }
+                                                    />
+                                                )}
 
                                                 {/*
                                                  * Changeable here. It used to

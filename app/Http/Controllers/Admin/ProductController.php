@@ -62,6 +62,9 @@ class ProductController extends Controller
             // withExists rather than asking per product: checking each row
             // individually took this page from 23 queries to 52.
             ->withExists(['stockMovements', 'orderItems'])
+            // Customers waiting on it ("Notify me"), shown beside the stock
+            // figure; counted in the same query, as the exists above are.
+            ->withCount(['stockNotifications as waiting_count' => fn ($q) => $q->whereNull('notified_at')])
             ->latest();
 
         if (! empty($search)) {
