@@ -22,6 +22,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\Courier\CourierDriverRegistry;
 use App\Support\BrandDetails;
+use App\Support\PreorderLedger;
 use App\Support\ShippingRates;
 use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
@@ -594,6 +595,11 @@ class OrderService
                 );
             }
 
+            if (in_array($status, ['shipped', 'delivered'], true)
+                && in_array($fresh->status, ['pending', 'processing'], true)) {
+                $this->refuseWhileOwed($fresh);
+            }
+
             if ($status === 'cancelled') {
                 $this->releaseStock($fresh);
             }
@@ -609,6 +615,38 @@ class OrderService
         }
 
         return $order;
+    }
+
+    /**
+     * Refuse to let an order leave while any of it is still owed.
+     *
+     * A line waiting for stock, or a pre-order whose delivery has not landed,
+     * has nothing on the shelf to put in the box. Marking it shipped or
+     * delivered anyway told the customer it was on its way, and left the
+     * ledger owing units to an order that had already "gone".
+     */
+    private function refuseWhileOwed(Order $order): void
+    {
+        $ledger = app(PreorderLedger::class);
+        $ledger->forget($order->id);
+
+        $owed = $order->items()->get()->filter(
+            fn (OrderItem $item) => $ledger->stillOwed($order->id, (int) $item->product_id, $item->product_variant_id ? (int) $item->product_variant_id : null)
+        );
+
+        if ($owed->isEmpty()) {
+            return;
+        }
+
+        $names = $owed->map(fn (OrderItem $item) => $item->product_name.($item->variant_name ? " ({$item->variant_name})" : ''))
+            ->implode(', ');
+
+        throw new StorefrontException(
+            "Not in stock yet: {$names}. Receive the delivery first, or ship it from a branch that has it "
+                .'(Ships from, on this order). Then mark it shipped — or cancel the order.',
+            422,
+            ApiCode::VALIDATION_ERROR
+        );
     }
 
     /**
@@ -643,6 +681,8 @@ class OrderService
          * Carriers with no API, and integrated ones with no credentials saved,
          * fall back to the number the admin typed.
          */
+        $this->refuseWhileOwed($order);
+
         $consignment = null;
 
         if ($courier->canBook()) {
@@ -663,6 +703,10 @@ class OrderService
                     422,
                     ApiCode::VALIDATION_ERROR
                 );
+            }
+
+            if ($fresh->status !== 'shipped') {
+                $this->refuseWhileOwed($fresh);
             }
 
             $fresh->forceFill([

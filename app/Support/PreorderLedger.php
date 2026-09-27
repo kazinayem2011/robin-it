@@ -73,6 +73,24 @@ class PreorderLedger
         return true;
     }
 
+    /**
+     * Units on this line are owed right now — a pre-order whose delivery has
+     * not landed, or an order taken past stock — so it cannot leave yet.
+     *
+     * Unlike wasPreordered(), a pre-order stops counting once the stock is in:
+     * that one keeps the "pre-order" tag as sold, this one asks what is on the
+     * shelf now.
+     */
+    public function stillOwed(int $orderId, int $productId, ?int $variantId): bool
+    {
+        $key = self::key($productId, $variantId);
+        $this->balances[$orderId] ??= $this->read($orderId);
+
+        $balance = $this->balances[$orderId][$key] ?? null;
+
+        return $balance !== null && $balance < 0 && $this->stillShort($orderId, $key);
+    }
+
     public function forget(int $orderId): void
     {
         unset($this->balances[$orderId], $this->backorders[$orderId], $this->shortNow[$orderId]);

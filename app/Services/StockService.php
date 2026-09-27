@@ -15,6 +15,7 @@ use App\Models\StockReceiptItem;
 use App\Models\Store;
 use App\Models\Supplier;
 use App\Support\PreorderLedger;
+use App\Support\ShopDate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -592,7 +593,7 @@ class StockService
                 // supplier if that record is later removed.
                 'supplier_name' => $supplier?->name ?? ($header['supplier_name'] ?? null),
                 'invoice_number' => $header['invoice_number'] ?? null,
-                'received_on' => $header['received_on'] ?? now()->toDateString(),
+                'received_on' => $header['received_on'] ?? ShopDate::today(),
                 'note' => $header['note'] ?? null,
                 'user_id' => $userId ?? Auth::id(),
             ]);

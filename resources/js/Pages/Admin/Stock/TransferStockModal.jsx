@@ -38,6 +38,8 @@ export default function TransferStockModal({
     onSaved,
 }) {
     const [breakdown, setBreakdown] = useState([]);
+    // Serial numbers ticked as moving, by id.
+    const [picked, setPicked] = useState([]);
 
     const product = target?.product;
     const variant = target?.variant;
@@ -64,6 +66,18 @@ export default function TransferStockModal({
                 return;
             }
 
+            const needed = serialsNeeded(values);
+            if (picked.length !== needed) {
+                toast.error(
+                    needed === 1
+                        ? 'Tick the serial number of the unit you are moving.'
+                        : `Tick the ${needed} serial numbers of the units you are moving.`,
+                );
+                setSubmitting(false);
+
+                return;
+            }
+
             try {
                 await adminService.transferStock({
                     product_id: productId,
@@ -72,6 +86,7 @@ export default function TransferStockModal({
                     from_store_id: Number(values.from_store_id),
                     to_store_id: Number(values.to_store_id),
                     note: values.note || null,
+                    serials: picked,
                 });
                 toast.success('Stock transferred.');
                 onSaved?.();
@@ -88,6 +103,7 @@ export default function TransferStockModal({
 
         let cancelled = false;
         formik.resetForm();
+        setPicked([]);
 
         adminService
             .getStockBranches(productId, variantId)
@@ -118,6 +134,31 @@ export default function TransferStockModal({
         // Resetting on the unit alone; formik's identity would loop.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [productId, variantId]);
+
+    // A different branch has different boxes.
+    useEffect(() => {
+        setPicked([]);
+    }, [formik.values.from_store_id]);
+
+    /* The serial numbers on the From branch's shelf. */
+    const serialsAt = (storeId) =>
+        breakdown.find((b) => String(b.store_id) === String(storeId))
+            ?.serials ?? [];
+
+    /* How many to tick: one per unit moving, as far as the shelf has them. */
+    const serialsNeeded = (values) =>
+        Math.min(
+            Number(values.quantity) || 0,
+            serialsAt(values.from_store_id).length,
+        );
+
+    const toggle = (id) =>
+        setPicked((now) =>
+            now.includes(id) ? now.filter((x) => x !== id) : [...now, id],
+        );
+
+    const fromSerials = serialsAt(formik.values.from_store_id);
+    const needed = serialsNeeded(formik.values);
 
     const heldAt = (storeId) =>
         breakdown.find((b) => String(b.store_id) === String(storeId))
@@ -213,6 +254,42 @@ export default function TransferStockModal({
                             : undefined
                     }
                 />
+
+                {fromSerials.length > 0 && (
+                    <fieldset className="admin-transfer-serials">
+                        <legend>Which serial numbers are moving?</legend>
+                        <p
+                            className={`admin-field-hint ${
+                                needed > 0 && picked.length === needed
+                                    ? 'admin-transfer-serials-done'
+                                    : ''
+                            }`}
+                            aria-live="polite"
+                        >
+                            {needed === 0
+                                ? 'Enter how many first.'
+                                : picked.length === needed
+                                  ? `✓ ${needed} ticked`
+                                  : `Tick ${needed} — ${picked.length} ticked so far`}
+                        </p>
+                        <div className="admin-transfer-serials-list">
+                            {fromSerials.map((sn) => (
+                                <label key={sn.id}>
+                                    <input
+                                        type="checkbox"
+                                        checked={picked.includes(sn.id)}
+                                        disabled={
+                                            !picked.includes(sn.id) &&
+                                            picked.length >= needed
+                                        }
+                                        onChange={() => toggle(sn.id)}
+                                    />
+                                    <span>{sn.serial}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </fieldset>
+                )}
 
                 <FormInput
                     label="Note (optional)"

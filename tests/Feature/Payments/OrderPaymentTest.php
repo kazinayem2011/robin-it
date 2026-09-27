@@ -123,7 +123,7 @@ class OrderPaymentTest extends TestCase
     {
         $this->pay([
             'amount' => 1000,
-            'received_on' => now()->addDay()->toDateString(),
+            'received_on' => now(config('app.shop_timezone'))->addDay()->toDateString(),
         ])->assertStatus(422);
     }
 

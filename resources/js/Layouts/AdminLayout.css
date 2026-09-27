@@ -5736,3 +5736,38 @@ a.admin-card:hover,
     clip-path: inset(50%);
     white-space: nowrap;
 }
+
+/* Transfer: tick the serial numbers of the boxes that are moving. */
+.admin-transfer-serials {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.admin-transfer-serials legend {
+    padding: 0 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.admin-transfer-serials-done {
+    color: var(--success-ink);
+}
+
+.admin-transfer-serials-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.admin-transfer-serials-list label {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}

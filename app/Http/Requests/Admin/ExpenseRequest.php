@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\ShopDate;
+
 class ExpenseRequest extends AdminRequest
 {
     /**
@@ -15,7 +17,7 @@ class ExpenseRequest extends AdminRequest
             'description' => 'required|string|max:255',
             // Costs can be entered late, but not in advance — a bill that has
             // not happened yet does not belong in a period's accounts.
-            'incurred_on' => 'required|date|before_or_equal:today',
+            'incurred_on' => 'required|date|'.ShopDate::notInFuture(),
             'reference' => 'nullable|string|max:100',
             'note' => 'nullable|string|max:1000',
             'supplier_id' => 'nullable|exists:suppliers,id',

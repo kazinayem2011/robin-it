@@ -394,7 +394,7 @@ export const adminService = {
         return response;
     },
 
-    /** Correct a draft: its lines, their quantities and what they cost. */
+    /** Change an open order: its lines, their quantities and what they cost. */
     async updatePurchaseOrder(id, payload) {
         const response = await axiosInstance.put(
             API_ENDPOINTS.ADMIN.PURCHASE_ORDER_ITEM(id),
@@ -403,11 +403,12 @@ export const adminService = {
         return response;
     },
 
-    async sendPurchaseOrder(id) {
-        const response = await axiosInstance.post(
-            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_SEND(id),
+    /** One order with every delivery against it, and where each went. */
+    async getPurchaseOrder(id) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.PURCHASE_ORDER_ITEM(id),
         );
-        return response;
+        return response?.data ?? null;
     },
 
     async cancelPurchaseOrder(id) {

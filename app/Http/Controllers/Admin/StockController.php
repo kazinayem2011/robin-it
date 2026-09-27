@@ -6,6 +6,7 @@ use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductSerial;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\Supplier;
@@ -13,8 +14,10 @@ use App\Services\OrderService;
 use App\Services\SerialService;
 use App\Services\StockService;
 use App\Support\BranchScope;
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -220,7 +223,7 @@ class StockController extends Controller
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_name' => 'nullable|string|max:255',
             'invoice_number' => 'nullable|string|max:100',
-            'received_on' => 'nullable|date|before_or_equal:today',
+            'received_on' => 'nullable|date|'.ShopDate::notInFuture(),
             'note' => 'nullable|string|max:1000',
             'lines' => 'required|array|min:1',
             'lines.*.product_id' => 'required|exists:products,id',
@@ -258,7 +261,7 @@ class StockController extends Controller
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'supplier_name' => $validated['supplier_name'] ?? null,
                 'invoice_number' => $validated['invoice_number'] ?? null,
-                'received_on' => $validated['received_on'] ?? now()->toDateString(),
+                'received_on' => $validated['received_on'] ?? ShopDate::today(),
                 'note' => $validated['note'] ?? null,
                 'store_id' => BranchScope::narrow($request->user(), $validated['store_id'] ?? null),
             ],
@@ -424,6 +427,9 @@ class StockController extends Controller
             'from_store_id' => 'required|exists:stores,id',
             'to_store_id' => 'required|exists:stores,id|different:from_store_id',
             'note' => 'nullable|string|max:1000',
+            // Which serial numbers are physically moving, when it has them.
+            'serials' => 'nullable|array',
+            'serials.*' => 'integer',
         ], [
             'to_store_id.different' => 'Choose two different branches.',
         ]);
@@ -439,15 +445,56 @@ class StockController extends Controller
             $validated['product_variant_id'] ?? null
         );
 
-        $this->stock->transfer(
-            $product,
-            $variant,
-            (int) $validated['quantity'],
-            (int) $validated['from_store_id'],
-            (int) $validated['to_store_id'],
-            $validated['note'] ?? null,
-            $request->user()?->id
-        );
+        /*
+         * Serial numbers go with the boxes. A transfer used to move the count
+         * and leave every serial recorded at the old branch, so the new one
+         * could not sell them against a serial and the Serial numbers tab
+         * showed them in the wrong place. The admin says which ones moved:
+         * the boxes on the van, not the oldest on paper.
+         */
+        $from = (int) $validated['from_store_id'];
+        $quantity = (int) $validated['quantity'];
+        $atFrom = ProductSerial::available()
+            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant?->id)
+            ->where('store_id', $from)
+            ->pluck('id');
+        $picked = collect($validated['serials'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+        $needed = min($quantity, $atFrom->count());
+
+        if ($picked->diff($atFrom)->isNotEmpty()) {
+            return $this->errorResponse(
+                'One of those serial numbers is not in stock at that branch. Refresh and choose again.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        if ($picked->count() !== $needed) {
+            return $this->errorResponse(
+                $needed === 1
+                    ? 'Tick the serial number of the unit you are moving.'
+                    : "Tick the {$needed} serial numbers of the units you are moving.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        DB::transaction(function () use ($product, $variant, $quantity, $from, $validated, $request, $picked) {
+            $this->stock->transfer(
+                $product,
+                $variant,
+                $quantity,
+                $from,
+                (int) $validated['to_store_id'],
+                $validated['note'] ?? null,
+                $request->user()?->id
+            );
+
+            if ($picked->isNotEmpty()) {
+                ProductSerial::whereIn('id', $picked)->update(['store_id' => (int) $validated['to_store_id']]);
+            }
+        });
 
         $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
 
@@ -470,6 +517,20 @@ class StockController extends Controller
         );
 
         $breakdown = $this->stock->branchBreakdown($product, $variant);
+
+        // The serial numbers on each branch's shelf, for the Transfer window.
+        $serials = ProductSerial::available()
+            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variant?->id)
+            ->orderBy('serial')
+            ->get(['id', 'serial', 'store_id'])
+            ->groupBy('store_id');
+
+        $breakdown = collect($breakdown)->map(fn ($row) => $row + [
+            'serials' => ($serials[$row['store_id']] ?? collect())
+                ->map(fn ($s) => ['id' => $s->id, 'serial' => $s->serial])->values()->all(),
+        ])->all();
+
         $branch = BranchScope::for($request->user());
 
         // What the other branches are holding is not this person's to see.

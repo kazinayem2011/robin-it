@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\OrderPayment;
+use App\Support\ShopDate;
 use Illuminate\Validation\Rule;
 
 class OrderPaymentRequest extends AdminRequest
@@ -15,7 +16,7 @@ class OrderPaymentRequest extends AdminRequest
             'method' => ['required', Rule::in(array_keys(OrderPayment::METHODS))],
             'reference' => 'nullable|string|max:100',
             'note' => 'nullable|string|max:500',
-            'received_on' => 'nullable|date|before_or_equal:today',
+            'received_on' => 'nullable|date|'.ShopDate::notInFuture(),
         ];
     }
 

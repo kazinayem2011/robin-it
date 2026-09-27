@@ -92,6 +92,13 @@ export default function ProductDetails(props) {
     const [quantity, setQuantity] = useState(1);
     const [addedToCart, setAddedToCart] = useState(false);
     const [addingToCart, setAddingToCart] = useState(false);
+    /*
+     * Its own flag. Buy Now used Add to Cart's, so the spinner turned up on
+     * the other button while Buy Now sat there clickable — and a second click
+     * put the item in the cart twice.
+     */
+    const [buyingNow, setBuyingNow] = useState(false);
+    const busy = addingToCart || buyingNow;
     const [selectedVariantId, setSelectedVariantId] = useState(null);
 
     /*
@@ -542,6 +549,7 @@ export default function ProductDetails(props) {
     };
 
     const handleAddToCart = async () => {
+        if (busy) return;
         if (needsVariantChoice) {
             toast.error('Please choose an option first.', 'Almost There');
             return;
@@ -576,12 +584,13 @@ export default function ProductDetails(props) {
     };
 
     const handleBuyNow = async () => {
+        if (busy) return;
         if (needsVariantChoice) {
             toast.error('Please choose an option first.', 'Almost There');
             return;
         }
 
-        setAddingToCart(true);
+        setBuyingNow(true);
         try {
             await cartService.addToCart(
                 product.id,
@@ -596,7 +605,7 @@ export default function ProductDetails(props) {
                 err?.message || 'We could not start checkout for this item.',
                 'Could Not Add To Cart',
             );
-            setAddingToCart(false);
+            setBuyingNow(false);
         }
     };
 
@@ -1264,7 +1273,8 @@ export default function ProductDetails(props) {
                                     <Button
                                         variant="primary"
                                         size="lg"
-                                        disabled={soldOut}
+                                        disabled={soldOut || addingToCart}
+                                        loading={buyingNow}
                                         onClick={handleBuyNow}
                                         className={
                                             isPreorder ? 'btn-preorder' : ''
@@ -1281,7 +1291,7 @@ export default function ProductDetails(props) {
                                             addedToCart ? 'dark' : 'secondary'
                                         }
                                         size="lg"
-                                        disabled={soldOut}
+                                        disabled={soldOut || buyingNow}
                                         onClick={handleAddToCart}
                                         loading={addingToCart}
                                         className={

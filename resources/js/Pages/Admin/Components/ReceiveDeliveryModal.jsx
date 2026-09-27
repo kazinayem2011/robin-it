@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { localToday } from '@/utils/localToday';
 import { Plus, Trash2, Split, Hash } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
@@ -26,12 +27,8 @@ import { formatBdt } from '@/utils/formatters';
 
 let nextKey = 1;
 
-/** Today, as the date box wants it (YYYY-MM-DD), in the shop's own time. */
-const today = () => {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+/** Today, as the date box wants it, in the shop's own time. */
+const today = localToday;
 const newKey = () => `line-${nextKey++}`;
 
 const countSerials = (text) =>

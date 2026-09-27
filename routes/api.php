@@ -365,6 +365,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::delete(ApiEndpoints::ADMIN_CAMPAIGN_ITEM, [CampaignController::class, 'destroy'])->middleware('can:marketing');
 
         Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDERS, [PurchaseOrderController::class, 'store'])->middleware('can:stock');
+        Route::get(ApiEndpoints::ADMIN_PURCHASE_ORDER_ITEM, [PurchaseOrderController::class, 'show'])->middleware('can:stock');
         Route::put(ApiEndpoints::ADMIN_PURCHASE_ORDER_ITEM, [PurchaseOrderController::class, 'update'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_SEND, [PurchaseOrderController::class, 'send'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_PURCHASE_ORDER_CANCEL, [PurchaseOrderController::class, 'cancel'])->middleware('can:stock');

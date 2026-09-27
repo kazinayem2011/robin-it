@@ -27,8 +27,10 @@ class PurchaseOrder extends Model
     public const CANCELLED = 'cancelled';
 
     public const STATUSES = [
-        self::DRAFT => 'Draft',
-        self::SENT => 'With the supplier',
+        // No Draft: an order is open from the moment it is saved. The old
+        // "send" step only changed this word, and Receive stayed hidden
+        // until someone remembered to click it. Old drafts were migrated.
+        self::SENT => 'Ordered',
         self::PARTIAL => 'Part delivered',
         self::RECEIVED => 'Delivered',
         self::CANCELLED => 'Cancelled',
@@ -96,15 +98,15 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * A draft can still be changed; anything else cannot.
+     * Open to changes until everything has arrived or it is cancelled.
      *
-     * Once an order is with a supplier, editing the lines here would leave the
-     * shop's copy disagreeing with the one the supplier is picking from, which
-     * is worse than not being able to edit it.
+     * Suppliers change quantities and prices after an order goes out, and the
+     * only way round a locked order was to cancel it and write another. What
+     * has already arrived is still protected, line by line, by the service.
      */
     public function isEditable(): bool
     {
-        return $this->status === self::DRAFT;
+        return in_array($this->status, [self::DRAFT, self::SENT, self::PARTIAL], true);
     }
 
     public static function nextReference(): string

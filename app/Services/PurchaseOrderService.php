@@ -9,6 +9,7 @@ use App\Models\PurchaseOrderItem;
 use App\Models\StockReceipt;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Support\ShopDate;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -52,18 +53,68 @@ class PurchaseOrderService
 
         if ($order && ! $order->isEditable()) {
             throw new StorefrontException(
-                'This order is already with the supplier. Cancel it and write a new one, '
-                    .'or receive against it — changing the lines now would leave your copy '
-                    .'disagreeing with the one they are picking from.',
+                $order->status === PurchaseOrder::CANCELLED
+                    ? 'This order was cancelled, so it can no longer be changed.'
+                    : 'Everything on this order has arrived, so it can no longer be changed.',
                 422,
                 ApiCode::VALIDATION_ERROR
             );
         }
 
+        // The same product twice is one line.
+        $merged = [];
+        foreach ($lines as $line) {
+            $key = (int) $line['product_id'].':'.(int) ($line['product_variant_id'] ?? 0);
+            if (isset($merged[$key])) {
+                $merged[$key]['quantity'] = (int) $merged[$key]['quantity'] + (int) $line['quantity'];
+            } else {
+                $merged[$key] = $line;
+            }
+        }
+        $lines = $merged;
+
         return DB::transaction(function () use ($order, $supplier, $user, $lines, $header) {
+            if ($order) {
+                $order = PurchaseOrder::whereKey($order->id)->lockForUpdate()->firstOrFail();
+                $received = $order->items()->with(['product:id,name', 'variant:id,name'])->get()->keyBy(
+                    fn ($i) => $i->product_id.':'.(int) $i->product_variant_id
+                );
+
+                // What arrived is a record, not a plan: it cannot be edited away.
+                if ($received->sum('quantity_received') > 0 && (int) $order->supplier_id !== (int) $supplier->id) {
+                    throw new StorefrontException(
+                        'Part of this order has already arrived from '.$order->supplier_name
+                            .', so the supplier cannot be changed. Cancel what is still owed and '
+                            .'write a new order for the other supplier.',
+                        422,
+                        ApiCode::VALIDATION_ERROR
+                    );
+                }
+
+                foreach ($received as $key => $item) {
+                    if ($item->quantity_received === 0) {
+                        continue;
+                    }
+
+                    $asked = (int) ($lines[$key]['quantity'] ?? 0);
+
+                    if ($asked < $item->quantity_received) {
+                        throw new StorefrontException(
+                            "{$item->display_name}: {$item->quantity_received} have already arrived, "
+                                .($asked === 0
+                                    ? 'so it cannot be taken off the order.'
+                                    : "so the quantity cannot go below {$item->quantity_received}."),
+                            422,
+                            ApiCode::VALIDATION_ERROR
+                        );
+                    }
+                }
+            }
+
             $order ??= new PurchaseOrder([
                 'reference' => PurchaseOrder::nextReference(),
-                'status' => PurchaseOrder::DRAFT,
+                'status' => PurchaseOrder::SENT,
+                'sent_at' => now(),
                 'user_id' => $user->id,
                 'ordered_by_name' => $user->name,
             ]);
@@ -76,10 +127,20 @@ class PurchaseOrderService
                 'note' => $header['note'] ?? null,
             ])->save();
 
-            // Rewritten wholesale rather than diffed: a draft is a piece of
-            // paper being edited, and nothing has been received against it, so
-            // there is no history in the old lines worth preserving.
-            $order->items()->delete();
+            /*
+             * Changed in place, not rewritten: a line that has had deliveries
+             * against it carries how many arrived, and the deliveries point at
+             * it. Lines dropped from the form go only if nothing arrived.
+             */
+            $existing = $order->items()->get()->keyBy(
+                fn ($i) => $i->product_id.':'.(int) $i->product_variant_id
+            );
+
+            foreach ($existing as $key => $item) {
+                if (! isset($lines[$key])) {
+                    $item->delete();
+                }
+            }
 
             $quantity = 0;
             $cost = 0.0;
@@ -94,13 +155,19 @@ class PurchaseOrderService
                     ? (float) $line['unit_cost']
                     : null;
 
-                PurchaseOrderItem::create([
-                    'purchase_order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'product_variant_id' => $variant?->id,
-                    'quantity' => (int) $line['quantity'],
-                    'unit_cost' => $unitCost,
-                ]);
+                $item = $existing->get($product->id.':'.(int) $variant?->id);
+
+                if ($item) {
+                    $item->update(['quantity' => (int) $line['quantity'], 'unit_cost' => $unitCost]);
+                } else {
+                    PurchaseOrderItem::create([
+                        'purchase_order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'product_variant_id' => $variant?->id,
+                        'quantity' => (int) $line['quantity'],
+                        'unit_cost' => $unitCost,
+                    ]);
+                }
 
                 $quantity += (int) $line['quantity'];
                 $cost += $unitCost !== null ? $unitCost * (int) $line['quantity'] : 0.0;
@@ -111,24 +178,22 @@ class PurchaseOrderService
                 'total_cost' => round($cost, 2),
             ]);
 
+            // Lowering a line to what has arrived closes the order.
+            $this->syncStatus($order->fresh('items'));
+
             return $order->fresh(['items.product', 'items.variant', 'supplier', 'store']);
         });
     }
 
     /**
-     * Send it. From here the units count as on their way.
+     * Kept for an old draft, or a screen still open from before orders were
+     * open on saving. An order already open is simply returned.
      */
     public function send(PurchaseOrder $order): PurchaseOrder
     {
-        if ($order->status !== PurchaseOrder::DRAFT) {
-            throw new StorefrontException(
-                'Only a draft can be sent.',
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
+        if ($order->status === PurchaseOrder::DRAFT) {
+            $order->update(['status' => PurchaseOrder::SENT, 'sent_at' => now()]);
         }
-
-        $order->update(['status' => PurchaseOrder::SENT, 'sent_at' => now()]);
 
         return $order->fresh();
     }
@@ -153,14 +218,8 @@ class PurchaseOrderService
              * used to be invisible here, and the goods landed on the shelf
              * against an order that no longer existed to receive them.
              */
-            if (in_array($order->status, [PurchaseOrder::DRAFT, PurchaseOrder::CANCELLED], true)) {
-                throw new StorefrontException(
-                    $order->status === PurchaseOrder::DRAFT
-                        ? 'Send the order to the supplier before receiving against it.'
-                        : 'This order was cancelled.',
-                    422,
-                    ApiCode::VALIDATION_ERROR
-                );
+            if ($order->status === PurchaseOrder::CANCELLED) {
+                throw new StorefrontException('This order was cancelled.', 422, ApiCode::VALIDATION_ERROR);
             }
             $items = $order->items()->get()->keyBy('id');
             $receiptLines = [];
@@ -184,8 +243,10 @@ class PurchaseOrderService
                     $room = max(0, $item->quantity - $item->quantity_received);
 
                     throw new StorefrontException(
-                        "{$item->display_name}: only {$room} still outstanding on this order, "
-                            ."and {$quantity} were entered. Receive the extra as a separate delivery.",
+                        "{$item->display_name}: only {$room} still to come on this order, "
+                            ."and {$quantity} were entered. Receive {$room} here, then book the extra "
+                            .'with Stock → Receive delivery, or edit the order first if the supplier '
+                            .'agreed to send more.',
                         422,
                         ApiCode::VALIDATION_ERROR
                     );
@@ -247,7 +308,7 @@ class PurchaseOrderService
                     'supplier_name' => $order->supplier_name,
                     'store_id' => $header['store_id'] ?? $order->store_id,
                     'invoice_number' => $header['invoice_number'] ?? null,
-                    'received_on' => $header['received_on'] ?? now()->toDateString(),
+                    'received_on' => $header['received_on'] ?? ShopDate::today(),
                     'note' => $header['note'] ?? "Against {$order->reference}.",
                 ],
                 $receiptLines,
@@ -315,9 +376,14 @@ class PurchaseOrderService
         }
 
         $outstanding = $order->items->sum(fn ($item) => max(0, $item->quantity - $item->quantity_received));
+        $arrived = $order->items->sum('quantity_received');
 
         $order->update([
-            'status' => $outstanding === 0 ? PurchaseOrder::RECEIVED : PurchaseOrder::PARTIAL,
+            'status' => match (true) {
+                $outstanding === 0 => PurchaseOrder::RECEIVED,
+                $arrived > 0 => PurchaseOrder::PARTIAL,
+                default => PurchaseOrder::SENT,
+            },
         ]);
     }
 

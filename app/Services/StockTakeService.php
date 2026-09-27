@@ -54,7 +54,10 @@ class StockTakeService
                     ? "{$row->product->name} ({$row->variant->name})"
                     : $row->product->name,
                 'sku' => $row->variant?->sku,
-                'system_quantity' => (int) $row->quantity,
+                // What should be on the shelf. Below zero is units owed to
+                // customers, not units missing from the shelf.
+                'system_quantity' => max(0, (int) $row->quantity),
+                'owed' => max(0, -(int) $row->quantity),
                 // So the screen can price a discrepancy as it is typed.
                 'unit_cost' => $costs[$row->product_id.':'.($row->product_variant_id ?: '')] ?? null,
             ])
@@ -105,7 +108,15 @@ class StockTakeService
                     $line['product_variant_id'] ?? null
                 );
 
-                $onBooks = $this->onBooks($store, $product, $variant);
+                /*
+                 * Counted against what should be on the shelf. A branch at -2
+                 * owes two units to customers who ordered past stock; its
+                 * shelf should hold none. Counting that empty shelf as 0
+                 * against -2 "found" two units that do not exist and cleared
+                 * the customers' wait. Units counted are still set against
+                 * what is owed first, as a delivery would be.
+                 */
+                $onBooks = max(0, $this->onBooks($store, $product, $variant));
                 $delta = ((int) $line['counted_quantity']) - $onBooks;
 
                 if ($delta === 0) {

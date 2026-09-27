@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PurchaseTabs } from './Stock/StockTabs';
 import { ROUTES } from '@/constants/endpoints';
 import ReceiveDeliveryModal from './Components/ReceiveDeliveryModal';
+import PurchaseOrderDetailsModal from './Components/PurchaseOrderDetailsModal';
 import { unitLabel } from '@/utils/unitLabel';
 import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -10,7 +11,6 @@ import {
     PackageCheck,
     Pencil,
     Plus,
-    Send,
     Trash2,
     XCircle,
 } from 'lucide-react';
@@ -47,6 +47,7 @@ export default function Purchasing({
     const [writing, setWriting] = useState(false);
     const [receiving, setReceiving] = useState(null);
     const [editing, setEditing] = useState(null);
+    const [viewing, setViewing] = useState(null);
 
     const go = (params) =>
         router.get(
@@ -80,11 +81,17 @@ export default function Purchasing({
         {
             key: 'reference',
             header: 'Order',
+            // The number opens everything about the order.
             render: (o) => (
                 <div>
-                    <strong className="admin-table-item-title">
+                    <button
+                        type="button"
+                        className="po-open-details"
+                        title="See the order and its deliveries"
+                        onClick={() => setViewing(o.id)}
+                    >
                         {o.reference}
-                    </strong>
+                    </button>
                     <div className="admin-field-hint">{o.supplier_name}</div>
                 </div>
             ),
@@ -135,16 +142,16 @@ export default function Purchasing({
             align: 'right',
             render: (o) => (
                 <div className="admin-input-row-flex">
-                    {o.status === 'draft' && (
+                    {/* Open until everything has arrived: it can be
+                        changed and received against. What already arrived
+                        is protected line by line. */}
+                    {OPEN_STATUSES.includes(o.status) && (
                         <>
-                            {/* A draft is the only thing safe to rewrite: once
-                                it is sent the supplier has been told, and once
-                                anything is received the lines are a record of
-                                what arrived. */}
                             <button
                                 type="button"
                                 className="admin-table-icon-btn"
                                 title="Edit — quantities and prices"
+                                aria-label={`Edit ${o.reference}`}
                                 onClick={() => setEditing(o)}
                             >
                                 <Pencil size={14} />
@@ -153,25 +160,13 @@ export default function Purchasing({
                             <button
                                 type="button"
                                 className="admin-table-icon-btn"
-                                title="Send to the supplier"
-                                onClick={() =>
-                                    act(adminService.sendPurchaseOrder, o)
-                                }
+                                title="Receive delivery"
+                                aria-label={`Receive delivery for ${o.reference}`}
+                                onClick={() => setReceiving(o)}
                             >
-                                <Send size={14} />
+                                <PackageCheck size={14} />
                             </button>
                         </>
-                    )}
-
-                    {['sent', 'partial'].includes(o.status) && (
-                        <button
-                            type="button"
-                            className="admin-table-icon-btn"
-                            title="Receive delivery"
-                            onClick={() => setReceiving(o)}
-                        >
-                            <PackageCheck size={14} />
-                        </button>
                     )}
 
                     {o.status !== 'received' && o.status !== 'cancelled' && (
@@ -220,7 +215,7 @@ export default function Purchasing({
                 columns={columns}
                 data={orders.data ?? []}
                 title="Purchase orders"
-                subtitle="A draft can be changed; once it is with the supplier it can only be received against or cancelled"
+                subtitle="Click an order number to see its deliveries. An order can be changed until everything has arrived."
                 headerActions={
                     <Button
                         variant="primary"
@@ -264,6 +259,19 @@ export default function Purchasing({
                 }}
             />
 
+            <PurchaseOrderDetailsModal
+                orderId={viewing}
+                onClose={() => setViewing(null)}
+                onEdit={(o) => {
+                    setViewing(null);
+                    setEditing(o);
+                }}
+                onReceive={(o) => {
+                    setViewing(null);
+                    setReceiving(o);
+                }}
+            />
+
             <ReceiveDeliveryModal
                 isOpen={Boolean(receiving)}
                 order={receiving}
@@ -278,9 +286,12 @@ export default function Purchasing({
     );
 }
 
+/** Orders that can still be changed and received against. */
+const OPEN_STATUSES = ['draft', 'sent', 'partial'];
+
 /** Writing an order: a supplier, a date, and the lines. */
 /**
- * @param editing A draft to correct, or null to raise a new order.
+ * @param editing An open order to change, or null to raise a new one.
  *
  * The screen offered Send, Receive and Cancel and nothing else, so an order
  * saved with the wrong price — or with none, which the form allows because a
@@ -324,6 +335,9 @@ function WriteOrderModal({
                 product_variant_id: i.product_variant_id ?? null,
                 name: i.display_name ?? `#${i.product_id}`,
                 quantity: i.quantity,
+                // Already arrived: the floor for the quantity, and the reason
+                // the line cannot be taken off.
+                received: i.quantity_received ?? 0,
                 unit_cost:
                     i.unit_cost === null || i.unit_cost === undefined
                         ? ''
@@ -373,6 +387,9 @@ function WriteOrderModal({
         setLines((prev) =>
             prev.map((l) => (l.key === key ? { ...l, [field]: value } : l)),
         );
+
+    const anyArrived = lines.some((l) => l.received > 0);
+    const tooLow = lines.find((l) => Number(l.quantity) < (l.received || 1));
 
     const total = lines.reduce(
         (sum, l) => sum + Number(l.quantity || 0) * Number(l.unit_cost || 0),
@@ -428,9 +445,11 @@ function WriteOrderModal({
                         variant="primary"
                         onClick={save}
                         loading={saving}
-                        disabled={!supplierId || lines.length === 0}
+                        disabled={
+                            !supplierId || lines.length === 0 || Boolean(tooLow)
+                        }
                     >
-                        Save as draft
+                        Save order
                     </Button>
                 </>
             }
@@ -440,6 +459,13 @@ function WriteOrderModal({
                     label="Supplier"
                     name="po_supplier"
                     required
+                    // Deliveries came from this supplier; they stay theirs.
+                    disabled={anyArrived}
+                    helperText={
+                        anyArrived
+                            ? 'Part of this order has arrived, so the supplier stays.'
+                            : undefined
+                    }
                     value={supplierId}
                     onChange={(e) => setSupplierId(e.target.value)}
                     options={[
@@ -518,6 +544,7 @@ function WriteOrderModal({
                         <tr>
                             <th>Product</th>
                             <th className="po-num">Quantity</th>
+                            {editing && <th className="po-num">Arrived</th>}
                             <th className="po-num">Unit cost</th>
                             <th />
                         </tr>
@@ -529,7 +556,12 @@ function WriteOrderModal({
                                 <td className="po-num">
                                     <input
                                         type="number"
-                                        min="1"
+                                        min={Math.max(1, l.received || 0)}
+                                        aria-label={`How many ${l.name}`}
+                                        aria-invalid={
+                                            Number(l.quantity) <
+                                            (l.received || 1)
+                                        }
                                         value={l.quantity}
                                         onChange={(e) =>
                                             setLine(
@@ -540,11 +572,17 @@ function WriteOrderModal({
                                         }
                                     />
                                 </td>
+                                {editing && (
+                                    <td className="po-num">
+                                        {l.received || '—'}
+                                    </td>
+                                )}
                                 <td className="po-num">
                                     <input
                                         type="number"
                                         min="0"
                                         step="0.01"
+                                        aria-label={`Cost of each ${l.name}`}
                                         value={l.unit_cost}
                                         placeholder="What they quoted"
                                         onChange={(e) =>
@@ -557,26 +595,30 @@ function WriteOrderModal({
                                     />
                                 </td>
                                 <td>
-                                    <button
-                                        type="button"
-                                        className="admin-table-icon-btn"
-                                        onClick={() =>
-                                            setLines((prev) =>
-                                                prev.filter(
-                                                    (x) => x.key !== l.key,
-                                                ),
-                                            )
-                                        }
-                                    >
-                                        <Trash2 size={13} />
-                                    </button>
+                                    {l.received > 0 ? null : (
+                                        <button
+                                            type="button"
+                                            className="admin-table-icon-btn"
+                                            title="Take off the order"
+                                            aria-label={`Take ${l.name} off the order`}
+                                            onClick={() =>
+                                                setLines((prev) =>
+                                                    prev.filter(
+                                                        (x) => x.key !== l.key,
+                                                    ),
+                                                )
+                                            }
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                     <tfoot>
                         <tr>
-                            <td colSpan={2}>
+                            <td colSpan={editing ? 3 : 2}>
                                 {lines.length} line
                                 {lines.length === 1 ? '' : 's'}
                             </td>
@@ -586,6 +628,14 @@ function WriteOrderModal({
                         </tr>
                     </tfoot>
                 </table>
+            )}
+
+            {tooLow && (
+                <p className="auth-field-error" role="alert">
+                    {tooLow.received > 0
+                        ? `${tooLow.name}: ${tooLow.received} have already arrived, so the quantity cannot go below ${tooLow.received}.`
+                        : `${tooLow.name}: enter at least 1.`}
+                </p>
             )}
 
             <FormInput

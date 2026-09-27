@@ -376,3 +376,8 @@
 .adj-intro-line {
     margin: 0 0 16px;
 }
+
+/* Units already sold to customers, waiting for a delivery. */
+.count-owed {
+    color: var(--warning-ink);
+}

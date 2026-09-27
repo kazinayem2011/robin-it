@@ -117,9 +117,11 @@ export default function Orders({
             router.reload({ preserveScroll: true });
         } catch (error) {
             console.error('Failed to update order status', error);
+            // The reason, when the server gave one ("Not in stock yet: …").
             toast.error(
-                'Failed to update order status. Please try again.',
-                'Update Error',
+                error?.message ||
+                    'Failed to update order status. Please try again.',
+                'Could not change the status',
             );
         }
     };

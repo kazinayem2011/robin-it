@@ -10,6 +10,7 @@ use App\Models\ProductSerial;
 use App\Models\WarrantyClaim;
 use App\Services\SerialService;
 use App\Support\BrandDetails;
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -118,7 +119,7 @@ class WarrantyController extends Controller
             'product_name' => 'required|string|max:150',
             'serial_number' => 'required|string|max:100',
             'invoice_number' => 'nullable|string|max:100',
-            'purchase_date' => 'nullable|date|before_or_equal:today',
+            'purchase_date' => 'nullable|date|'.ShopDate::notInFuture(),
             'issue_type' => 'required|string|max:100',
             'issue_description' => 'required|string|min:10|max:2000',
             'dropoff_branch' => 'nullable|string|max:100',

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Stock;
 
+use App\Exceptions\StorefrontException;
 use App\Models\Category;
+use App\Models\Courier;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductStock;
@@ -11,6 +13,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Services\OrderService;
 use App\Services\StockService;
+use App\Services\StockTakeService;
 use App\Support\PreorderLedger;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -368,5 +371,162 @@ class OrderShipFromTest extends TestCase
             $this->khulna->id,
             (int) StockMovement::where('type', StockMovement::WRITE_OFF)->value('store_id'),
         );
+    }
+
+    // --- Nothing leaves while it is still owed --------------------------------
+
+    /*
+     * An order waiting for stock has nothing on the shelf to put in the box.
+     * It could be marked shipped or delivered anyway, telling the customer it
+     * was on its way.
+     */
+    public function test_an_order_waiting_for_stock_cannot_be_shipped_or_delivered(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+        $orders = app(OrderService::class);
+
+        foreach (['shipped', 'delivered'] as $status) {
+            try {
+                $orders->updateOrderStatus($order->fresh(), $status);
+                $this->fail("A waiting order was marked {$status}.");
+            } catch (StorefrontException $e) {
+                $this->assertStringContainsString('Not in stock yet: ASUS Vivobook', $e->getMessage());
+            }
+        }
+
+        $this->assertSame('pending', $order->fresh()->status);
+
+        // Processing is fine: the shop is working on it.
+        $orders->updateOrderStatus($order->fresh(), 'processing');
+        $this->assertSame('processing', $order->fresh()->status);
+    }
+
+    public function test_once_the_delivery_covers_it_the_order_can_ship(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+
+        app(StockService::class)->record($product->fresh(), null, 1, StockMovement::PURCHASE, ['store_id' => $this->khulna->id]);
+
+        app(OrderService::class)->updateOrderStatus($order->fresh(), 'delivered');
+        $this->assertSame('delivered', $order->fresh()->status);
+    }
+
+    public function test_filling_it_from_another_branch_lets_it_ship(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+        app(StockService::class)->record($product->fresh(), null, 2, StockMovement::PURCHASE, ['store_id' => $this->dhaka->id]);
+        app(StockService::class)->allocateOrderLine($order, $product->fresh(), null, [
+            $this->khulna->id => 1, $this->dhaka->id => 1,
+        ]);
+
+        app(OrderService::class)->updateOrderStatus($order->fresh(), 'shipped');
+        $this->assertSame('shipped', $order->fresh()->status);
+    }
+
+    /* A pre-order waits for its delivery the same way, then ships. */
+    public function test_a_pre_order_ships_only_once_its_delivery_lands(): void
+    {
+        $product = $this->product(khulna: 0, dhaka: 0);
+        $product->update(['allow_preorder' => true]);
+        $order = $this->order($product->fresh());
+
+        try {
+            app(OrderService::class)->updateOrderStatus($order->fresh(), 'shipped');
+            $this->fail('A pre-order left before its stock arrived.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('Not in stock yet', $e->getMessage());
+        }
+
+        app(StockService::class)->record($product->fresh(), null, 1, StockMovement::PURCHASE, ['store_id' => $this->khulna->id]);
+
+        app(OrderService::class)->updateOrderStatus($order->fresh(), 'shipped');
+        $this->assertSame('shipped', $order->fresh()->status);
+    }
+
+    public function test_a_waiting_order_cannot_be_dispatched_either(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+        $courier = Courier::create(['name' => 'Steadfast', 'slug' => 'steadfast-owed', 'is_active' => true]);
+
+        $this->expectExceptionMessage('Not in stock yet');
+        app(OrderService::class)->dispatchOrder($order->fresh(), $courier, 'TRK-1');
+    }
+
+    public function test_the_admin_is_told_why_through_the_status_endpoint(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+
+        $this->actingAs($this->admin)
+            ->patchJson("/api/admin/orders/{$order->id}/status", ['status' => 'delivered'])
+            ->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'Not in stock yet'));
+
+        $this->assertSame('pending', $order->fresh()->status);
+    }
+
+    // --- A branch that owes units -------------------------------------------------
+
+    /*
+     * Khulna at -1: one unit sold past stock. Its shelf is empty, and counting
+     * it empty used to "find" a unit against -1 and end the customer's wait.
+     */
+    public function test_counting_an_empty_shelf_does_not_invent_the_owed_units(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+        $this->assertSame(-1, $this->at($product, $this->khulna));
+
+        $sheet = app(StockTakeService::class)->sheetFor($this->khulna)->firstWhere('product_id', $product->id);
+        $this->assertSame(0, $sheet['system_quantity']);
+        $this->assertSame(1, $sheet['owed']);
+
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/count', [
+            'store_id' => $this->khulna->id,
+            'lines' => [['product_id' => $product->id, 'counted_quantity' => 0]],
+        ])->assertSuccessful();
+
+        $this->assertSame(-1, $this->at($product->fresh(), $this->khulna), 'still owed');
+        app(PreorderLedger::class)->forget($order->id);
+        $this->assertTrue($order->items()->first()->waiting_for_stock);
+    }
+
+    /* Found on the shelf: those units go to the waiting customer first. */
+    public function test_units_found_by_a_count_fill_what_is_owed_first(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/count', [
+            'store_id' => $this->khulna->id,
+            'lines' => [['product_id' => $product->id, 'counted_quantity' => 3]],
+        ])->assertSuccessful();
+
+        $this->assertSame(2, $this->at($product->fresh(), $this->khulna));
+        app(PreorderLedger::class)->forget($order->id);
+        $this->assertFalse($order->items()->first()->waiting_for_stock);
+    }
+
+    public function test_a_branch_owing_units_cannot_be_closed_or_removed(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $this->order($product, 2);
+
+        $this->actingAs($this->admin)->putJson("/api/admin/stores/{$this->khulna->id}", [
+            'name' => 'Khulna', 'city' => 'Khulna', 'address' => 'Test address',
+            'phone' => '01711000000', 'is_active' => false,
+            'branch_type' => 'Express Outlet', 'opening_hours' => '10am - 8pm',
+        ])->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'owes 1 units to customers waiting for a delivery'));
+
+        $this->actingAs($this->admin)->deleteJson("/api/admin/stores/{$this->khulna->id}")
+            ->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'receive the delivery or ship those orders from another branch'));
+
+        $this->assertTrue((bool) $this->khulna->fresh()->is_active);
     }
 }

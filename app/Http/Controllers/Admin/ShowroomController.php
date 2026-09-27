@@ -65,12 +65,8 @@ class ShowroomController extends Controller
          */
         $wouldHide = $store->is_active && array_key_exists('is_active', $validated) && ! $validated['is_active'];
 
-        if ($wouldHide && ($units = (int) ProductStock::where('store_id', $store->id)->where('quantity', '>', 0)->sum('quantity')) > 0) {
-            return $this->errorResponse(
-                "{$store->name} still has {$units} units in stock. Move them to another branch first.",
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
+        if ($wouldHide && ($refusal = $this->refuseWhileHolding($store, 'closing it'))) {
+            return $refusal;
         }
 
         DB::transaction(function () use ($store, $validated) {
@@ -111,19 +107,47 @@ class ShowroomController extends Controller
     {
         $store = Store::findOrFail($id);
 
-        // Units on its shelf would vanish with it.
-        $units = (int) ProductStock::where('store_id', $store->id)->where('quantity', '>', 0)->sum('quantity');
-
-        if ($units > 0) {
-            return $this->errorResponse(
-                "{$store->name} still has {$units} units in stock. Move them to another branch before removing it.",
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
+        if ($refusal = $this->refuseWhileHolding($store, 'removing it')) {
+            return $refusal;
         }
 
         $store->delete();
 
         return $this->successResponse([], 'Branch deleted.');
+    }
+
+    /**
+     * A branch that holds stock, or owes it, cannot go.
+     *
+     * Units on its shelf would vanish with it. Units it owes — sold to
+     * customers who ordered past stock, waiting for a delivery there — were
+     * missed: only stock above zero was checked, so a branch at -2 could be
+     * closed with two customers still waiting on it.
+     */
+    private function refuseWhileHolding(Store $store, string $doing): ?JsonResponse
+    {
+        $rows = ProductStock::where('store_id', $store->id)->where('quantity', '!=', 0)->get(['quantity']);
+        $held = (int) $rows->where('quantity', '>', 0)->sum('quantity');
+        $owed = (int) -$rows->where('quantity', '<', 0)->sum('quantity');
+
+        if ($held === 0 && $owed === 0) {
+            return null;
+        }
+
+        $what = collect([
+            $held ? "has {$held} units in stock" : null,
+            $owed ? "owes {$owed} units to customers waiting for a delivery" : null,
+        ])->filter()->implode(' and ');
+
+        $fix = collect([
+            $held ? 'move the stock to another branch' : null,
+            $owed ? 'receive the delivery or ship those orders from another branch' : null,
+        ])->filter()->implode(', and ');
+
+        return $this->errorResponse(
+            "{$store->name} still {$what}. Before {$doing}, {$fix}.",
+            422,
+            ApiCode::VALIDATION_ERROR
+        );
     }
 }

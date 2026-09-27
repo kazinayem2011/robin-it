@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
+use App\Models\ProductSerial;
 use App\Models\PurchaseOrder;
+use App\Models\StockMovement;
+use App\Models\StockReceipt;
 use App\Models\Supplier;
 use App\Services\PurchaseOrderService;
 use App\Support\BranchScope;
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -69,7 +73,7 @@ class PurchaseOrderController extends Controller
             $data
         );
 
-        return $this->successResponse($order, "{$order->reference} saved as a draft.");
+        return $this->successResponse($order, "{$order->reference} saved. Receive against it when the goods arrive.");
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -92,6 +96,69 @@ class PurchaseOrderController extends Controller
         );
 
         return $this->successResponse($order, "{$order->reference} updated.");
+    }
+
+    /**
+     * Everything about one order: what was asked for, and every delivery
+     * against it — when, which invoice, who took it in, how many went to each
+     * branch, and the serial numbers.
+     *
+     * The list showed totals only, so "which branch got how many of that
+     * delivery" had no answer anywhere on screen.
+     */
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $order = PurchaseOrder::with(['items.product:id,name', 'items.variant:id,name', 'store:id,name'])
+            ->findOrFail($id);
+
+        if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
+            return $refusal;
+        }
+
+        $receipts = StockReceipt::with(['user:id,name'])
+            ->where('purchase_order_id', $order->id)
+            ->orderBy('received_on')->orderBy('id')
+            ->get();
+
+        // Where each delivery's units landed, from the ledger that moved them.
+        $landed = StockMovement::query()
+            ->with('store:id,name')
+            ->where('reference_type', StockReceipt::class)
+            ->whereIn('reference_id', $receipts->pluck('id'))
+            ->where('type', StockMovement::PURCHASE)
+            ->get(['reference_id', 'product_id', 'product_variant_id', 'store_id', 'quantity']);
+
+        $serials = ProductSerial::query()
+            ->whereIn('stock_receipt_id', $receipts->pluck('id'))
+            ->get(['stock_receipt_id', 'product_id', 'product_variant_id', 'serial']);
+
+        $names = $order->items->mapWithKeys(fn ($i) => [$i->product_id.':'.(int) $i->product_variant_id => $i->display_name]);
+
+        return $this->successResponse([
+            'order' => $order,
+            'deliveries' => $receipts->map(fn (StockReceipt $r) => [
+                'id' => $r->id,
+                'reference' => $r->reference,
+                'received_on' => $r->received_on?->toDateString(),
+                'invoice_number' => $r->invoice_number,
+                'note' => $r->note,
+                'received_by' => $r->user?->name,
+                'total_quantity' => $r->total_quantity,
+                'total_cost' => $r->total_cost,
+                'lines' => $landed->where('reference_id', $r->id)
+                    ->groupBy(fn ($m) => $m->product_id.':'.(int) $m->product_variant_id)
+                    ->map(fn ($moves, $key) => [
+                        'name' => $names[$key] ?? 'Removed product',
+                        'quantity' => (int) $moves->sum('quantity'),
+                        'branches' => $moves->groupBy('store_id')
+                            ->map(fn ($m) => ['name' => $m->first()->store?->name ?? 'No branch', 'quantity' => (int) $m->sum('quantity')])
+                            ->values(),
+                        'serials' => $serials->where('stock_receipt_id', $r->id)
+                            ->filter(fn ($s) => $s->product_id.':'.(int) $s->product_variant_id === $key)
+                            ->pluck('serial')->values(),
+                    ])->values(),
+            ]),
+        ]);
     }
 
     public function send(Request $request, int $id): JsonResponse
@@ -132,7 +199,7 @@ class PurchaseOrderController extends Controller
         $data = $request->validate([
             'store_id' => 'nullable|integer|exists:stores,id',
             'invoice_number' => 'nullable|string|max:80',
-            'received_on' => 'nullable|date|before_or_equal:today',
+            'received_on' => 'nullable|date|'.ShopDate::notInFuture(),
             'note' => 'nullable|string|max:500',
             'lines' => 'required|array|min:1',
             'lines.*.purchase_order_item_id' => 'required|integer',

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { localToday } from '@/utils/localToday';
 import { useFormik } from 'formik';
 import { Undo2 } from 'lucide-react';
 import Button from '@/Components/Button';
@@ -10,7 +11,7 @@ import { adminService } from '@/services';
 import { adminRefundSchema } from '@/validations';
 import { formatBdt } from '@/utils/formatters';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = localToday;
 
 /**
  * Money given back on an order.

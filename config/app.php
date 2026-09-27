@@ -68,6 +68,13 @@ return [
     'timezone' => 'UTC',
 
     /*
+     * Where the shop is. Timestamps stay in UTC; the dates people type and
+     * read — "received on", "paid on", "not in the future" — are the shop's.
+     * See App\Support\ShopDate.
+     */
+    'shop_timezone' => env('SHOP_TIMEZONE', 'Asia/Dhaka'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------

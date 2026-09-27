@@ -7,6 +7,7 @@ use App\Exceptions\StorefrontException;
 use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\User;
+use App\Support\ShopDate;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -93,7 +94,7 @@ class OrderPaymentService
                 'note' => $note,
                 'user_id' => $staff->id,
                 'received_by_name' => $staff->name,
-                'received_on' => $receivedOn ?: now()->toDateString(),
+                'received_on' => $receivedOn ?: ShopDate::today(),
             ]);
 
             $this->syncStatus($order->fresh());

@@ -229,3 +229,100 @@
     text-decoration: underline;
     cursor: pointer;
 }
+
+/* The order number opens the details. */
+.po-open-details {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--primary-ink);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* --- Details window ---------------------------------------------------- */
+
+.po-details-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px 18px;
+    margin: 0 0 18px;
+}
+
+.po-details-facts dt {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+}
+
+.po-details-facts dd {
+    margin: 2px 0 0;
+}
+
+.po-details-wide {
+    grid-column: 1 / -1;
+}
+
+.po-details-heading {
+    margin: 18px 0 8px;
+    font-size: 0.95rem;
+}
+
+/* The table scrolls inside the window on a phone, not the page. */
+.po-details-scroll {
+    overflow-x: auto;
+}
+
+.po-details-table {
+    margin: 0;
+}
+
+.po-delivery {
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.po-delivery-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: baseline;
+    font-size: 0.88rem;
+}
+
+.po-delivery-note {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-subtle);
+}
+
+.po-delivery-lines {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.po-delivery-lines li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0;
+    border-top: 1px dashed var(--border-color);
+    font-size: 0.86rem;
+}
+
+.po-delivery-product {
+    font-weight: 600;
+}
+
+.po-delivery-branches,
+.po-delivery-serials {
+    color: var(--text-subtle);
+    overflow-wrap: anywhere;
+}

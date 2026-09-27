@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\PurchaseOrderService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -137,7 +138,7 @@ class ReceiveSplitTest extends TestCase
     public function test_a_delivery_cannot_be_dated_in_the_future(): void
     {
         $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
-            'received_on' => now()->addDay()->toDateString(),
+            'received_on' => now(config('app.shop_timezone'))->addDay()->toDateString(),
             'lines' => [['product_id' => $this->laptop->id, 'quantity' => 1, 'unit_cost' => 60000]],
         ])->assertStatus(422)
             ->assertJsonPath('message', 'A delivery cannot be dated in the future.');
@@ -185,5 +186,31 @@ class ReceiveSplitTest extends TestCase
         $this->assertSame(2, $this->at($this->dhaka));
         $this->assertSame(PurchaseOrder::PARTIAL, $order->fresh()->status, '6 of 10 arrived');
         $this->assertSame($this->dhaka->id, (int) ProductSerial::where('serial', 'B1')->value('store_id'));
+    }
+
+    /*
+     * The app clock is UTC, six hours behind the shop. At 2am in Dhaka the
+     * server still thinks it is yesterday, and a delivery the screen dated
+     * today was refused as "dated in the future".
+     */
+    public function test_a_delivery_dated_today_at_the_shop_is_accepted_before_utc_catches_up(): void
+    {
+        Carbon::setTestNow('2026-09-27 20:00:00'); // 2am on the 28th in Dhaka
+
+        $line = [['product_id' => $this->laptop->id, 'quantity' => 1, 'unit_cost' => 60000]];
+
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'received_on' => '2026-09-28', 'lines' => $line,
+        ])->assertStatus(201);
+
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'received_on' => '2026-09-29', 'lines' => $line,
+        ])->assertStatus(422)->assertJsonPath('message', 'A delivery cannot be dated in the future.');
+
+        // Left blank, it is dated the shop's today too.
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', ['lines' => $line])->assertStatus(201);
+        $this->assertSame('2026-09-28', StockReceipt::latest('id')->first()->received_on->toDateString());
+
+        Carbon::setTestNow();
     }
 }

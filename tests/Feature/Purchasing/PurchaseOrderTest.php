@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
+use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Services\PurchaseOrderService;
@@ -64,7 +65,10 @@ class PurchaseOrderTest extends TestCase
     {
         $order = $this->draft();
 
-        $this->assertSame(PurchaseOrder::DRAFT, $order->status);
+        // Open from the moment it is saved: there is no draft stage.
+        $this->assertSame(PurchaseOrder::SENT, $order->status);
+        $this->assertSame('Ordered', $order->status_label);
+        $this->assertNotNull($order->sent_at);
         $this->assertStringStartsWith('PO-', $order->reference);
         $this->assertSame(20, $order->total_quantity);
         $this->assertSame(4000000.0, $order->total_cost);
@@ -87,19 +91,133 @@ class PurchaseOrderTest extends TestCase
         $this->orders->save(null, $this->supplier, $this->buyer, []);
     }
 
-    /**
-     * A draft is a piece of paper being edited. Once it is with the supplier,
-     * changing the lines would leave the shop's copy disagreeing with the one
-     * they are picking from.
-     */
-    public function test_an_order_already_sent_cannot_be_rewritten(): void
-    {
-        $order = $this->orders->send($this->draft());
+    // --- changing it after it is placed ----------------------------------------
 
-        $this->expectExceptionMessage('already with the supplier');
-        $this->orders->save($order, $this->supplier, $this->buyer, [
-            ['product_id' => $this->product->id, 'quantity' => 5],
+    /** Suppliers change quantities and prices; the order follows. */
+    public function test_an_open_order_can_be_changed(): void
+    {
+        $order = $this->draft(20, 200000);
+
+        $order = $this->orders->save($order, $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 12, 'unit_cost' => 195000],
         ]);
+
+        $this->assertSame(12, $order->total_quantity);
+        $this->assertSame(195000.0, (float) $order->items->first()->unit_cost);
+        $this->assertSame(PurchaseOrder::SENT, $order->status);
+    }
+
+    /** What has arrived stays arrived: a line keeps its count through an edit. */
+    public function test_editing_a_part_delivered_order_keeps_what_arrived(): void
+    {
+        $order = $this->draft(20);
+        $item = $order->items()->first();
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $item->id, 'quantity' => 8]]);
+
+        $order = $this->orders->save($order->fresh(), $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 15, 'unit_cost' => 200000],
+        ]);
+
+        $line = $order->items->first();
+        $this->assertSame($item->id, $line->id, 'the line is changed in place, not replaced');
+        $this->assertSame(8, $line->quantity_received);
+        $this->assertSame(7, $order->outstanding);
+        $this->assertSame(PurchaseOrder::PARTIAL, $order->status);
+    }
+
+    public function test_a_quantity_cannot_go_below_what_arrived(): void
+    {
+        $order = $this->draft(20);
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 8]]);
+
+        $this->expectExceptionMessage('8 have already arrived, so the quantity cannot go below 8.');
+        $this->orders->save($order->fresh(), $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 5, 'unit_cost' => 200000],
+        ]);
+    }
+
+    public function test_a_line_that_arrived_cannot_be_taken_off(): void
+    {
+        $other = Product::create([
+            'name' => 'Spare Mouse', 'slug' => 'spare-mouse', 'category_id' => $this->product->category_id,
+            'price' => 900, 'stock_quantity' => 0, 'is_active' => true,
+        ]);
+        $order = $this->orders->save(null, $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 5, 'unit_cost' => 200000],
+            ['product_id' => $other->id, 'quantity' => 5, 'unit_cost' => 500],
+        ]);
+        $laptopLine = $order->items->firstWhere('product_id', $this->product->id);
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $laptopLine->id, 'quantity' => 2]]);
+
+        // Dropping the mouse (nothing arrived) is fine.
+        $order = $this->orders->save($order->fresh(), $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 5, 'unit_cost' => 200000],
+        ]);
+        $this->assertCount(1, $order->items);
+
+        // Dropping the laptop (2 arrived) is not.
+        $this->expectExceptionMessage('cannot be taken off the order');
+        $this->orders->save($order, $this->supplier, $this->buyer, [
+            ['product_id' => $other->id, 'quantity' => 5, 'unit_cost' => 500],
+        ]);
+    }
+
+    /** Lowering a line to what has arrived means nothing more is coming. */
+    public function test_lowering_to_what_arrived_completes_the_order(): void
+    {
+        $order = $this->draft(20);
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 8]]);
+
+        $order = $this->orders->save($order->fresh(), $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 8, 'unit_cost' => 200000],
+        ]);
+
+        $this->assertSame(PurchaseOrder::RECEIVED, $order->status);
+        $this->assertSame(0, $order->outstanding);
+    }
+
+    public function test_the_supplier_cannot_change_once_something_arrived(): void
+    {
+        $order = $this->draft(20);
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 1]]);
+        $other = Supplier::create(['name' => 'Another Supplier']);
+
+        $this->expectExceptionMessage('the supplier cannot be changed');
+        $this->orders->save($order->fresh(), $other, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 20, 'unit_cost' => 200000],
+        ]);
+    }
+
+    public function test_a_delivered_or_cancelled_order_cannot_be_changed(): void
+    {
+        $order = $this->draft(2);
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 2]]);
+
+        try {
+            $this->orders->save($order->fresh(), $this->supplier, $this->buyer, [
+                ['product_id' => $this->product->id, 'quantity' => 3, 'unit_cost' => 1],
+            ]);
+            $this->fail('A delivered order was changed.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('Everything on this order has arrived', $e->getMessage());
+        }
+
+        $cancelled = $this->orders->cancel($this->draft(4));
+        $this->expectExceptionMessage('This order was cancelled');
+        $this->orders->save($cancelled, $this->supplier, $this->buyer, [
+            ['product_id' => $this->product->id, 'quantity' => 3, 'unit_cost' => 1],
+        ]);
+    }
+
+    /** An old draft left from before is opened, not stranded. */
+    public function test_an_old_draft_can_still_be_received(): void
+    {
+        $order = $this->draft(5);
+        $order->update(['status' => PurchaseOrder::DRAFT]);
+
+        $this->orders->receive($order, $this->buyer, [['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 5]]);
+
+        $this->assertSame(PurchaseOrder::RECEIVED, $order->fresh()->status);
     }
 
     // --- receiving against it ---------------------------------------------
@@ -171,20 +289,22 @@ class PurchaseOrderTest extends TestCase
         $order = $this->orders->send($this->draft());
         $item = $order->items()->first();
 
-        $this->expectExceptionMessage('only 20 still outstanding on this order, and 25 were entered');
+        $this->expectExceptionMessage('only 20 still to come on this order, and 25 were entered');
         $this->orders->receive($order, $this->buyer, [
             ['purchase_order_item_id' => $item->id, 'quantity' => 25],
         ]);
     }
 
-    public function test_a_draft_cannot_be_received_against(): void
+    /** No Send step: a new order is received against straight away. */
+    public function test_a_new_order_can_be_received_straight_away(): void
     {
-        $order = $this->draft();
+        $order = $this->draft(3);
 
-        $this->expectExceptionMessage('Send the order to the supplier before receiving against it.');
         $this->orders->receive($order, $this->buyer, [
-            ['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 1],
+            ['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 3],
         ]);
+
+        $this->assertSame(3, $this->product->fresh()->stock_quantity);
     }
 
     // --- what is on its way -------------------------------------------------
@@ -197,17 +317,17 @@ class PurchaseOrderTest extends TestCase
     {
         $key = $this->product->id.':';
 
-        $this->draft(20);                            // still a draft
-        $this->assertSame([], $this->orders->onOrder());
+        $this->draft(20);                            // open from saving
+        $this->assertSame(20, $this->orders->onOrder()[$key]);
 
-        $sent = $this->orders->send($this->draft(30));
-        $this->assertSame(30, $this->orders->onOrder()[$key]);
+        $sent = $this->draft(30);
+        $this->assertSame(50, $this->orders->onOrder()[$key]);
 
         $this->orders->receive($sent, $this->buyer, [
             ['purchase_order_item_id' => $sent->items()->first()->id, 'quantity' => 12],
         ]);
 
-        $this->assertSame(18, $this->orders->onOrder()[$key]);
+        $this->assertSame(38, $this->orders->onOrder()[$key]);
     }
 
     public function test_a_cancelled_order_is_no_longer_on_its_way(): void
@@ -292,6 +412,38 @@ class PurchaseOrderTest extends TestCase
 
         $this->assertSame(4, $this->product->fresh()->stock_quantity);
         $this->assertSame(PurchaseOrder::PARTIAL, PurchaseOrder::find($id)->status);
+    }
+
+    /** The details: each delivery, where its units went, and its serials. */
+    public function test_the_details_show_every_delivery_and_its_branches(): void
+    {
+        $a = Store::create(['name' => 'Alpha Branch', 'slug' => 'alpha', 'city' => 'Dhaka', 'address' => '1', 'phone' => '01700000001', 'is_active' => true, 'holds_stock' => true, 'sort_order' => 1]);
+        $b = Store::create(['name' => 'Beta Branch', 'slug' => 'beta', 'city' => 'Dhaka', 'address' => '2', 'phone' => '01700000002', 'is_active' => true, 'holds_stock' => true, 'sort_order' => 2]);
+        $order = $this->draft(10);
+        $itemId = $order->items()->first()->id;
+
+        $this->actingAs($this->buyer)->postJson("/api/admin/purchase-orders/{$order->id}/receive", [
+            'store_id' => $a->id,
+            'invoice_number' => 'INV-1',
+            'note' => 'First boxes',
+            'lines' => [['purchase_order_item_id' => $itemId, 'quantity' => 6, 'branches' => [$a->id => 4, $b->id => 2]]],
+        ])->assertOk();
+
+        $data = $this->actingAs($this->buyer)->getJson("/api/admin/purchase-orders/{$order->id}")
+            ->assertOk()->json('data');
+
+        $this->assertSame($order->reference, $data['order']['reference']);
+        $this->assertSame(4, $data['order']['outstanding']);
+        $this->assertCount(1, $data['deliveries']);
+        $delivery = $data['deliveries'][0];
+        $this->assertSame('INV-1', $delivery['invoice_number']);
+        $this->assertSame('First boxes', $delivery['note']);
+        $this->assertSame('Nayem', $delivery['received_by']);
+        $this->assertSame(6, $delivery['lines'][0]['quantity']);
+        $this->assertEqualsCanonicalizing(
+            [['name' => 'Alpha Branch', 'quantity' => 4], ['name' => 'Beta Branch', 'quantity' => 2]],
+            $delivery['lines'][0]['branches']
+        );
     }
 
     public function test_purchasing_needs_the_stock_ability(): void
@@ -417,11 +569,13 @@ class PurchaseOrderTest extends TestCase
         $this->assertSame(199000.0, (float) $order->fresh()->items()->first()->unit_cost);
     }
 
-    /** Once it is with the supplier, the lines are their copy too. */
-    public function test_a_sent_order_cannot_be_repriced(): void
+    /** Once everything has arrived, the prices are what was paid. */
+    public function test_a_delivered_order_cannot_be_repriced(): void
     {
         $order = $this->draft(quantity: 6, cost: 200000);
-        $this->orders->send($order);
+        $this->orders->receive($order, $this->buyer, [
+            ['purchase_order_item_id' => $order->items()->first()->id, 'quantity' => 6],
+        ]);
 
         $this->actingAs($this->buyer)
             ->putJson("/api/admin/purchase-orders/{$order->id}", [

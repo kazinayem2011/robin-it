@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { localToday } from '@/utils/localToday';
 import { Head, router } from '@inertiajs/react';
 import { useFormik } from 'formik';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -15,7 +16,7 @@ import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
 import './Expenses.css';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = localToday;
 
 const emptyExpense = () => ({
     expense_category_id: '',

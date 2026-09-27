@@ -309,6 +309,14 @@ export default function StockCount({
                                                             {line.sku}
                                                         </div>
                                                     )}
+                                                    {line.owed > 0 && (
+                                                        <div className="admin-field-hint count-owed">
+                                                            {line.owed} owed to
+                                                            customers — count
+                                                            only what is on the
+                                                            shelf
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="count-num count-system">
                                                     {line.system_quantity}

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { localToday } from '@/utils/localToday';
 import { useFormik } from 'formik';
 import { Wallet } from 'lucide-react';
 import Button from '@/Components/Button';
@@ -49,7 +50,7 @@ export default function RecordPaymentModal({
             method: 'cash',
             reference: '',
             note: '',
-            received_on: new Date().toISOString().slice(0, 10),
+            received_on: localToday(),
         },
         validationSchema: adminOrderPaymentSchema(due),
         onSubmit: async (values, { setSubmitting }) => {

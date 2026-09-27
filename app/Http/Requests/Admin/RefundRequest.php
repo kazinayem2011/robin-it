@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Refund;
+use App\Support\ShopDate;
 
 class RefundRequest extends AdminRequest
 {
@@ -20,7 +21,7 @@ class RefundRequest extends AdminRequest
             'reason' => 'required|string|in:'.implode(',', array_keys(Refund::REASONS)),
             'reference' => 'nullable|string|max:120',
             'note' => 'nullable|string|max:1000',
-            'refunded_on' => 'required|date|before_or_equal:today',
+            'refunded_on' => 'required|date|'.ShopDate::notInFuture(),
         ];
     }
 
