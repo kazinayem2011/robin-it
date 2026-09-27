@@ -167,7 +167,7 @@ export default function Purchasing({
                         <button
                             type="button"
                             className="admin-table-icon-btn"
-                            title="Book in a delivery"
+                            title="Receive delivery"
                             onClick={() => setReceiving(o)}
                         >
                             <PackageCheck size={14} />

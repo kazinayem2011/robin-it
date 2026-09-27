@@ -187,7 +187,7 @@ export default function StockCount({
                     <div className="admin-card-title-group">
                         <h3 className="admin-card-title">Count sheet</h3>
                         <span className="admin-table-item-sub">
-                            Differences are recorded as adjustments
+                            Any difference is saved as a correction
                         </span>
                     </div>
 
