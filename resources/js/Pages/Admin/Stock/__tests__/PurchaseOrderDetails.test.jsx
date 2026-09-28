@@ -57,7 +57,11 @@ const details = (status = 'partial') => ({
     ],
 });
 
-beforeEach(() => adminService.getPurchaseOrder.mockReset());
+// A block, not an arrow that returns the mock: a function returned from
+// beforeEach is run as cleanup, and would ask for the order after each test.
+beforeEach(() => {
+    adminService.getPurchaseOrder.mockReset();
+});
 
 describe('Purchase order details', () => {
     it('shows each line and every delivery, with where the units went', async () => {
@@ -126,5 +130,29 @@ describe('Purchase order details', () => {
         expect(
             screen.queryByRole('button', { name: 'Edit order' }),
         ).not.toBeInTheDocument();
+    });
+});
+
+describe('Purchase order details while loading', () => {
+    it('shows a skeleton of the order, not a sentence', () => {
+        adminService.getPurchaseOrder.mockReturnValue(new Promise(() => {}));
+        const { container } = render(
+            <PurchaseOrderDetailsModal
+                orderId={4}
+                onClose={() => {}}
+                onEdit={() => {}}
+                onReceive={() => {}}
+            />,
+        );
+
+        expect(screen.getByLabelText('Loading the order')).toHaveAttribute(
+            'aria-busy',
+            'true',
+        );
+        expect(
+            container.ownerDocument.querySelectorAll('.skeleton-shimmer')
+                .length,
+        ).toBeGreaterThan(8);
+        expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
     });
 });

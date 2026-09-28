@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
+import { Skeleton } from '@/Components/Skeleton';
 import { formatDate } from '@/utils/formatters';
 
 /**
@@ -77,7 +78,7 @@ export default function PurchaseOrderDetailsModal({
                     Could not load this order. Close and try again.
                 </p>
             )}
-            {!order && !failed && <p className="admin-field-hint">Loading…</p>}
+            {!order && !failed && <DetailsSkeleton />}
 
             {order && (
                 <div>
@@ -241,5 +242,49 @@ export default function PurchaseOrderDetailsModal({
                 </div>
             )}
         </Modal>
+    );
+}
+
+/*
+ * The shape of the details while they load: the facts across the top, the
+ * lines ordered, and a delivery. "Loading…" sat alone in an empty window and
+ * the window jumped to full height when the order arrived.
+ */
+function DetailsSkeleton() {
+    return (
+        <div aria-busy="true" aria-label="Loading the order">
+            <div className="po-details-facts">
+                {[0, 1, 2, 3].map((i) => (
+                    <div key={i}>
+                        <Skeleton width="70px" height="10px" />
+                        <Skeleton
+                            width="120px"
+                            height="16px"
+                            style={{ marginTop: '6px' }}
+                        />
+                    </div>
+                ))}
+            </div>
+
+            <Skeleton
+                width="140px"
+                height="14px"
+                style={{ margin: '18px 0 10px' }}
+            />
+            {[0, 1, 2].map((i) => (
+                <Skeleton
+                    key={i}
+                    height="32px"
+                    style={{ marginBottom: '6px' }}
+                />
+            ))}
+
+            <Skeleton
+                width="110px"
+                height="14px"
+                style={{ margin: '18px 0 10px' }}
+            />
+            <Skeleton height="96px" borderRadius="var(--radius-md)" />
+        </div>
     );
 }

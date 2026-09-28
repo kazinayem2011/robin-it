@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../../services/axiosInstance';
 import { API_ENDPOINTS } from '../../../constants/endpoints';
 import { payloadFrom } from '../../../utils/apiPayload';
+import { Skeleton } from '../../../Components/Skeleton';
 
 /**
  * The answers a product gives to its shelf's questions.
@@ -97,9 +98,7 @@ export default function AttributeEditor({ formik, onCount }) {
     };
 
     if (loading) {
-        return (
-            <p className="admin-form-hint">Loading this category’s filters…</p>
-        );
+        return <FiltersSkeleton />;
     }
 
     if (!attributes.length) {
@@ -151,6 +150,47 @@ export default function AttributeEditor({ formik, onCount }) {
                     </div>
                 );
             })}
+        </div>
+    );
+}
+
+/*
+ * The shape of the filters while they load: a heading, then a few questions,
+ * each with a row of answers. A sentence saying "Loading…" sat where the
+ * chips would be and the tab jumped when they arrived.
+ */
+function FiltersSkeleton() {
+    return (
+        <div
+            className="admin-attr-editor"
+            aria-busy="true"
+            aria-label="Loading this category's filters"
+        >
+            <Skeleton width="80px" height="16px" />
+            <Skeleton
+                width="70%"
+                height="12px"
+                style={{ margin: '8px 0 14px' }}
+            />
+            {[4, 3, 5].map((chips, i) => (
+                <div className="admin-attr-group" key={i}>
+                    <Skeleton
+                        width="110px"
+                        height="11px"
+                        style={{ marginBottom: '8px' }}
+                    />
+                    <div className="admin-attr-options">
+                        {Array.from({ length: chips }, (_, j) => (
+                            <Skeleton
+                                key={j}
+                                width={`${60 + ((i + j) % 3) * 16}px`}
+                                height="30px"
+                                borderRadius="var(--radius-full)"
+                            />
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

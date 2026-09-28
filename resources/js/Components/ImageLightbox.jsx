@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import ProductImage from './ProductImage';
+import './ImageLightbox.css';
 
 /**
  * A product's photos, large enough to look at.
