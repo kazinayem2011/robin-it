@@ -24,6 +24,7 @@ use App\Services\Courier\CourierDriverRegistry;
 use App\Support\BrandDetails;
 use App\Support\PreorderLedger;
 use App\Support\ShippingRates;
+use App\Support\ShopDate;
 use App\Support\SmsTemplates;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -412,7 +413,7 @@ class OrderService
 
         return [
             'order_number' => $order->order_number,
-            'created_at' => $order->created_at->format('d M, Y h:i A'),
+            'created_at' => ShopDate::show($order->created_at, 'd M, Y h:i A'),
             'status' => $order->status,
             'current_step' => $currentStepInfo['step'],
             'status_label' => $currentStepInfo['label'],
@@ -430,7 +431,7 @@ class OrderService
             'courier_phone' => $order->courier?->phone,
             'tracking_number' => $order->tracking_number,
             'tracking_url' => $order->tracking_url,
-            'dispatched_at' => $order->dispatched_at?->format('d M, Y h:i A'),
+            'dispatched_at' => ShopDate::show($order->dispatched_at, 'd M, Y h:i A'),
             'shipping_address' => $order->shipping_address,
             'items' => $order->items->map(function ($item) {
                 return [
@@ -604,7 +605,20 @@ class OrderService
                 $this->releaseStock($fresh);
             }
 
+            $leaving = in_array($status, ['shipped', 'delivered'], true)
+                && in_array($fresh->status, ['pending', 'processing'], true);
+
             $fresh->update(['status' => $status]);
+
+            /*
+             * The goods have left, so their serials are the customer's. Only
+             * Dispatch did this; an order moved to shipped or delivered by
+             * hand left its serials "in stock" at the branch, and a warranty
+             * lookup could not find who had the unit.
+             */
+            if ($leaving) {
+                app(SerialService::class)->assignToOrder($fresh->load('items.product'));
+            }
             $order->setRawAttributes($fresh->getAttributes(), true);
         });
 

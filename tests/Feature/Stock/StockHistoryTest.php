@@ -76,4 +76,19 @@ class StockHistoryTest extends TestCase
             $kinds->all(),
         );
     }
+
+    /*
+     * The shop's clock, not UTC. A change at 12:40 in the morning in Dhaka
+     * read "6:40 PM" the day before, and fell outside a filter for its day.
+     */
+    public function test_times_and_days_are_the_shops(): void
+    {
+        StockMovement::query()->update(['created_at' => '2026-09-27 18:40:00']); // 00:40 on the 28th in Dhaka
+
+        $rows = $this->rows('?from=2026-09-28&to=2026-09-28');
+        $this->assertNotEmpty($rows, 'it belongs to the 28th at the shop');
+        $this->assertSame('28 Sep 2026, 12:40 AM', $rows[0]['when']);
+
+        $this->assertEmpty($this->rows('?from=2026-09-27&to=2026-09-27'));
+    }
 }

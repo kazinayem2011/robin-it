@@ -213,4 +213,69 @@ class ReceiveSplitTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    // --- Serial numbers are checked before anything lands ---------------------------
+
+    private function receiveWith(string $serials, int $quantity = 2)
+    {
+        return $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'lines' => [['product_id' => $this->laptop->id, 'quantity' => $quantity, 'unit_cost' => 60000, 'serials' => $serials]],
+        ]);
+    }
+
+    public function test_more_serials_than_units_is_refused_and_nothing_lands(): void
+    {
+        $this->receiveWith("SN-1\nSN-2\nSN-3")
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'ASUS Vivobook: 2 arrived but 3 serial numbers were typed. Type one per unit that arrived.');
+
+        $this->assertSame(0, $this->laptop->fresh()->stock_quantity);
+        $this->assertSame(0, ProductSerial::count());
+    }
+
+    public function test_a_serial_typed_twice_is_refused(): void
+    {
+        $this->receiveWith("SN-1\nsn-1")
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'ASUS Vivobook: typed twice — SN-1.');
+    }
+
+    /* It used to land the units and mention the duplicate afterwards. */
+    public function test_a_serial_already_on_the_books_stops_the_delivery(): void
+    {
+        $this->receiveWith("SN-1\nSN-2")->assertStatus(201);
+
+        $this->receiveWith("SN-2\nSN-3")
+            ->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'already on the books — SN-2'));
+
+        $this->assertSame(2, $this->laptop->fresh()->stock_quantity, 'the second delivery did not land');
+        $this->assertSame(2, ProductSerial::count());
+    }
+
+    public function test_fewer_serials_than_units_is_fine(): void
+    {
+        $this->receiveWith('SN-1', 3)->assertStatus(201);
+
+        $this->assertSame(3, $this->laptop->fresh()->stock_quantity);
+        $this->assertSame(1, ProductSerial::count());
+    }
+
+    /* Against a purchase order the duplicate was dropped without a word. */
+    public function test_a_duplicate_serial_on_a_purchase_order_delivery_is_refused(): void
+    {
+        $this->receiveWith('SN-9', 1)->assertStatus(201);
+        $supplier = Supplier::create(['name' => 'Star Tech']);
+        $order = app(PurchaseOrderService::class)->save(null, $supplier, $this->admin, [
+            ['product_id' => $this->laptop->id, 'quantity' => 2, 'unit_cost' => 60000],
+        ]);
+
+        $this->actingAs($this->admin)->postJson("/api/admin/purchase-orders/{$order->id}/receive", [
+            'lines' => [['purchase_order_item_id' => $order->items->first()->id, 'quantity' => 2, 'serials' => "SN-9\nSN-10"]],
+        ])->assertStatus(422)->assertJsonPath('message', fn ($m) => str_contains($m, 'already on the books — SN-9'));
+
+        $this->assertSame(0, $order->fresh()->items->first()->quantity_received);
+        $this->assertSame(PurchaseOrder::SENT, $order->fresh()->status);
+        $this->assertSame(1, $this->laptop->fresh()->stock_quantity);
+    }
 }

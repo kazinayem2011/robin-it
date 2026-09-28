@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -94,7 +95,7 @@ class NotificationController extends Controller
                 'id' => $n->id,
                 'read' => $n->read_at !== null,
                 'at' => $n->created_at->diffForHumans(),
-                'on' => $n->created_at->format('d M Y, g:i A'),
+                'on' => ShopDate::show($n->created_at),
                 ...$n->data,
             ]);
 

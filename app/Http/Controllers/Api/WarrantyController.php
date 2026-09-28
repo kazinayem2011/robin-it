@@ -99,7 +99,7 @@ class WarrantyController extends Controller
                 'status' => $claim->status,
                 'issue_type' => $claim->issue_type,
                 'diagnostic_notes' => $claim->diagnostic_notes,
-                'updated_at' => $claim->updated_at->format('d M Y, h:i A'),
+                'updated_at' => ShopDate::show($claim->updated_at, 'd M Y, h:i A'),
             ] : null,
         ], $warranty), 'Warranty status retrieved successfully.');
     }
@@ -146,7 +146,7 @@ class WarrantyController extends Controller
             // here once meant echoing back a service centre that had been
             // renamed, and the customer would post the unit to it.
             'dropoff_branch' => $claim->dropoff_branch ?: 'Doorstep Courier Pickup (All 64 Districts)',
-            'created_at' => $claim->created_at->format('d M Y, h:i A'),
+            'created_at' => ShopDate::show($claim->created_at, 'd M Y, h:i A'),
         ], "Warranty claim #{$claim->claim_number} logged successfully! Our service technicians will inspect your unit.", 201);
     }
 

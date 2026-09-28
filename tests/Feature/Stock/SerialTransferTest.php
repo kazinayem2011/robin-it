@@ -3,11 +3,14 @@
 namespace Tests\Feature\Stock;
 
 use App\Models\Category;
+use App\Models\Courier;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductSerial;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\OrderService;
 use App\Services\StockService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,5 +127,51 @@ class SerialTransferTest extends TestCase
         ProductSerial::query()->delete();
 
         $this->transfer(2, [])->assertOk();
+    }
+
+    // --- Serials go to the customer from the branch the units left ---------------
+
+    private function orderFromKhulna(): Order
+    {
+        // Khulna ships online and holds one laptop, whose serial is the newest.
+        $this->khulna->update(['fulfils_online' => true]);
+        app(StockService::class)->record($this->laptop->fresh(), null, 1, StockMovement::PURCHASE, ['store_id' => $this->khulna->id]);
+        ProductSerial::create([
+            'product_id' => $this->laptop->id, 'serial' => 'SN-K',
+            'store_id' => $this->khulna->id, 'status' => ProductSerial::IN_STOCK,
+        ]);
+
+        $customer = User::factory()->create();
+        $this->actingAs($customer)->postJson('/api/cart', ['product_id' => $this->laptop->id, 'quantity' => 1]);
+        $this->actingAs($customer)->postJson('/api/checkout', [
+            'name' => 'Rahim', 'phone' => '01712345678', 'street_address' => 'House 1', 'city' => 'Dhaka',
+        ])->assertStatus(201);
+
+        return Order::latest('id')->first();
+    }
+
+    /*
+     * Marked delivered by hand, the serial stayed "in stock" at the branch:
+     * only Dispatch handed serials over.
+     */
+    public function test_marking_an_order_delivered_hands_over_its_serial(): void
+    {
+        $order = $this->orderFromKhulna();
+
+        app(OrderService::class)->updateOrderStatus($order, 'delivered');
+
+        $sold = ProductSerial::where('order_id', $order->id)->pluck('serial')->all();
+        $this->assertSame(['SN-K'], $sold, 'the Khulna box, not the oldest one anywhere');
+        $this->assertSame(3, ProductSerial::available()->where('store_id', $this->uttara->id)->count(), 'Uttara keeps all three');
+    }
+
+    public function test_dispatch_takes_the_serial_from_the_branch_it_ships_from(): void
+    {
+        $order = $this->orderFromKhulna();
+        $courier = Courier::create(['name' => 'Steadfast', 'slug' => 'steadfast-serial', 'is_active' => true]);
+
+        app(OrderService::class)->dispatchOrder($order, $courier, 'TRK-9');
+
+        $this->assertSame(['SN-K'], ProductSerial::where('order_id', $order->id)->pluck('serial')->all());
     }
 }

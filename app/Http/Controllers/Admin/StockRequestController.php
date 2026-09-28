@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\StockNotification;
+use App\Support\ShopDate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -69,8 +70,8 @@ class StockRequestController extends Controller
                     'contact' => $r->email ?? $r->phone,
                     'by' => $r->email ? 'email' : 'text',
                     'has_account' => (bool) $r->user_id,
-                    'asked' => $r->created_at?->format('d M Y, g:i a'),
-                    'told' => $r->notified_at?->format('d M Y'),
+                    'asked' => ShopDate::show($r->created_at, 'd M Y, g:i a'),
+                    'told' => ShopDate::show($r->notified_at, 'd M Y'),
                 ])->all(),
             ];
         })->values();

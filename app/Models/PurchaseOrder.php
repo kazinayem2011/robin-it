@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ShopDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -111,7 +112,7 @@ class PurchaseOrder extends Model
 
     public static function nextReference(): string
     {
-        $today = now()->format('Ymd');
+        $today = now(ShopDate::timezone())->format('Ymd');
         $todays = static::where('reference', 'like', "PO-{$today}-%")->count();
 
         return sprintf('PO-%s-%03d', $today, $todays + 1);

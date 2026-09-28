@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ShopDate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +44,6 @@ class StockTake extends Model
 
     public static function nextReference(): string
     {
-        return 'COUNT-'.now()->format('ymd').'-'.strtoupper(Str::random(4));
+        return 'COUNT-'.now(ShopDate::timezone())->format('ymd').'-'.strtoupper(Str::random(4));
     }
 }

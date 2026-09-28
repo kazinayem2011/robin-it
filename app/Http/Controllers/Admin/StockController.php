@@ -256,6 +256,18 @@ class StockController extends Controller
             }
         }
 
+        // Serials checked before a unit lands, so a bad one stops the delivery.
+        foreach ($validated['lines'] as $line) {
+            if (filled($line['serials'] ?? null)) {
+                [$product, $variant] = $this->stock->resolveUnit((int) $line['product_id'], $line['product_variant_id'] ?? null);
+                $this->serials->checkDelivery(
+                    $variant ? "{$product->name} ({$variant->name})" : $product->name,
+                    $line['serials'],
+                    (int) $line['quantity']
+                );
+            }
+        }
+
         $receipt = $this->stock->receive(
             [
                 'supplier_id' => $validated['supplier_id'] ?? null,

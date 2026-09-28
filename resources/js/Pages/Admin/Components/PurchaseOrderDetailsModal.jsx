@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
+import { localToday } from '@/utils/localToday';
 
 /**
  * Everything about one purchase order.
@@ -98,7 +99,7 @@ export default function PurchaseOrderDetailsModal({
                             <dd>
                                 {order.ordered_by_name || '—'}
                                 {order.created_at &&
-                                    `, ${String(order.created_at).slice(0, 10)}`}
+                                    `, ${localToday(new Date(order.created_at))}`}
                             </dd>
                         </div>
                         <div>

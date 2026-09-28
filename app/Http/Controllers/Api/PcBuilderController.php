@@ -10,6 +10,7 @@ use App\Models\SavedPcBuild;
 use App\Services\PcCompatibilityService;
 use App\Services\ProductService;
 use App\Support\BrandDetails;
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -138,7 +139,7 @@ class PcBuilderController extends Controller
                 fn ($c) => ($c['product']['raw_price'] ?? 0) * ($c['quantity'] ?? 1)
             ), 2),
             'unavailable_count' => collect($components)->whereNull('product')->count(),
-            'created_at' => $build->created_at->format('d M Y, h:i A'),
+            'created_at' => ShopDate::show($build->created_at, 'd M Y, h:i A'),
         ], 'PC Build loaded successfully.');
     }
 

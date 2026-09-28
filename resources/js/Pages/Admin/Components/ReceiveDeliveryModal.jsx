@@ -162,6 +162,23 @@ export default function ReceiveDeliveryModal({
         if (fromOrder && l.cost === '') {
             out.push(`${label}: enter what each one cost.`);
         }
+        const typedSerials = String(l.serials || '')
+            .split(/[\r\n,]+/)
+            .map((s) => s.replace(/\s+/g, '').toUpperCase())
+            .filter(Boolean);
+        if (typedSerials.length > arrived) {
+            out.push(
+                `${label}: ${arrived} arrived but ${typedSerials.length} serial numbers typed.`,
+            );
+        }
+        const twice = typedSerials.filter(
+            (s, i) => typedSerials.indexOf(s) !== i,
+        );
+        if (twice.length) {
+            out.push(
+                `${label}: typed twice — ${[...new Set(twice)].join(', ')}.`,
+            );
+        }
         if (l.split) {
             const placed = Object.values(l.split).reduce(
                 (sum, n) => sum + (Number(n) || 0),

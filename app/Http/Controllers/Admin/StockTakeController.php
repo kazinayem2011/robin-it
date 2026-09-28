@@ -16,6 +16,7 @@ use App\Services\SerialService;
 use App\Services\StockService;
 use App\Services\StockTakeService;
 use App\Support\BranchScope;
+use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -244,7 +245,7 @@ class StockTakeController extends Controller
                 'status_label' => $s->status_label,
                 'store' => $s->store?->name,
                 'order_number' => $s->order?->order_number,
-                'sold_at' => $s->sold_at?->format('d M Y'),
+                'sold_at' => ShopDate::show($s->sold_at, 'd M Y'),
                 'warranty_until' => $s->warranty_until?->format('d M Y'),
                 'under_warranty' => $s->under_warranty,
             ]);
@@ -275,8 +276,10 @@ class StockTakeController extends Controller
     {
         $branch = BranchScope::for($request->user());
         $reason = $request->query('reason');
-        $from = $request->query('from') ?: now()->startOfMonth()->toDateString();
-        $to = $request->query('to') ?: now()->toDateString();
+        // Days at the shop, not in UTC: an evening in Dhaka is the next
+        // morning's work, and a change at 1am belongs to that day.
+        $from = $request->query('from') ?: now(ShopDate::timezone())->startOfMonth()->toDateString();
+        $to = $request->query('to') ?: ShopDate::today();
 
         /*
          * Every change to stock, not only corrections: the page is the
@@ -289,7 +292,7 @@ class StockTakeController extends Controller
             : 'all';
 
         $window = fn ($q) => $q
-            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
+            ->whereBetween('created_at', ShopDate::dayBounds($from, $to))
             ->when($branch, fn ($q) => $q->where('store_id', $branch))
             ->when($request->integer('store'), fn ($q, $id) => $q->where('store_id', $id));
 
@@ -319,7 +322,7 @@ class StockTakeController extends Controller
                 'note' => $m->note,
                 'store' => $m->store?->name,
                 'by' => $m->user?->name,
-                'when' => $m->created_at->format('d M Y, g:i A'),
+                'when' => ShopDate::show($m->created_at),
                 // What those units cost, so a write-off has a number on it.
                 'value' => ($costs[$m->product_id.':'.($m->product_variant_id ?: '')] ?? null) === null
                     ? null

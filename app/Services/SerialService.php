@@ -66,6 +66,60 @@ class SerialService
         return ['added' => $added, 'skipped' => $skipped];
     }
 
+    /**
+     * Check a delivery line's serial numbers before anything is saved.
+     *
+     * A serial already on the books was skipped quietly (or reported after the
+     * units were already on the shelf), so a delivery of six could land with
+     * five serials and nobody knowing which box was missing one. More serials
+     * than units put numbers on the books for boxes that never arrived. Both
+     * are stopped at the door now, and nothing is received until they are put
+     * right. Fewer serials than units is fine: they are optional.
+     *
+     * @throws StorefrontException
+     */
+    public function checkDelivery(string $name, ?string $typed, int $units): void
+    {
+        $list = collect(preg_split('/[\r\n,]+/', (string) $typed) ?: [])
+            ->map(fn ($s) => ProductSerial::normalise($s))
+            ->filter()
+            ->values();
+
+        if ($list->isEmpty()) {
+            return;
+        }
+
+        if ($list->count() > $units) {
+            throw new StorefrontException(
+                "{$name}: {$units} arrived but {$list->count()} serial numbers were typed. "
+                    .'Type one per unit that arrived.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $twice = $list->duplicates()->unique()->values();
+
+        if ($twice->isNotEmpty()) {
+            throw new StorefrontException(
+                "{$name}: typed twice — ".$twice->take(5)->implode(', ').'.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $taken = ProductSerial::whereIn('serial', $list)->pluck('serial');
+
+        if ($taken->isNotEmpty()) {
+            throw new StorefrontException(
+                "{$name}: already on the books — ".$taken->take(5)->implode(', ')
+                    .($taken->count() > 5 ? '…' : '').'. Check the box, or leave it out.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+    }
+
     public function receive(
         Product $product,
         ?int $variantId,
@@ -126,6 +180,15 @@ class SerialService
         return DB::transaction(function () use ($order, $storeId) {
             $assigned = 0;
 
+            /*
+             * From the branches the units actually left, as the ledger has
+             * them. With no branch given it used to take the oldest serials
+             * anywhere, so an order shipped from Chattogram could mark
+             * Multiplan's boxes sold: one branch then showed more serials
+             * than units and the other fewer.
+             */
+            $holding = $storeId ? [] : app(StockService::class)->branchesHolding($order);
+
             foreach ($order->items as $item) {
                 $needed = (int) $item->quantity - $item->serials()->count();
 
@@ -133,14 +196,27 @@ class SerialService
                     continue;
                 }
 
-                $available = ProductSerial::available()
-                    ->where('product_id', $item->product_id)
-                    ->where('product_variant_id', $item->product_variant_id)
-                    ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
-                    ->orderBy('id')
-                    ->limit($needed)
-                    ->lockForUpdate()
-                    ->get();
+                $key = $item->product_id.':'.($item->product_variant_id ? (int) $item->product_variant_id : '-');
+                $from = $storeId ? [$storeId => $needed] : ($holding[$key] ?? [null => $needed]);
+                $available = collect();
+
+                foreach ($from as $branch => $units) {
+                    $take = min($units, $needed - $available->count());
+
+                    if ($take <= 0) {
+                        break;
+                    }
+
+                    $available = $available->concat(ProductSerial::available()
+                        ->where('product_id', $item->product_id)
+                        ->where('product_variant_id', $item->product_variant_id)
+                        ->when($branch !== '' && $branch !== null, fn ($q) => $q->where('store_id', $branch))
+                        ->whereNotIn('id', $available->pluck('id'))
+                        ->orderBy('id')
+                        ->limit($take)
+                        ->lockForUpdate()
+                        ->get());
+                }
 
                 $months = $item->product?->warranty_months;
 
