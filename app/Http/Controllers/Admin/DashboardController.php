@@ -7,12 +7,16 @@ use App\Models\ContactMessage;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductReview;
+use App\Models\PurchaseOrder;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\WarrantyClaim;
 use App\Support\PcBuilderHealth;
+use App\Support\PreorderLedger;
 use App\Support\ProfitAndLoss;
 use App\Support\QueueHealth;
 use App\Support\SalesMargin;
+use App\Support\ShopDate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,9 +53,11 @@ class DashboardController extends Controller
          *
          * Lowest stock first, so the cut keeps the ones that matter.
          */
-        $lowStockCount = Product::where('stock_quantity', '<=', 10)->count();
+        // What the shop stocks and is running out of — the same rule as the
+        // Stock page. The whole catalogue counted, most of it never bought in.
+        $lowStockCount = Product::needingReorder()->count();
 
-        $lowStockProducts = Product::where('stock_quantity', '<=', 10)
+        $lowStockProducts = Product::needingReorder()
             ->with(['brand', 'images'])
             ->orderBy('stock_quantity')
             ->orderBy('name')
@@ -106,6 +112,29 @@ class DashboardController extends Controller
     }
 
     /**
+     * Open orders with something still owed — sold past stock, or a pre-order
+     * whose delivery has not landed. They cannot ship until it arrives.
+     */
+    private function waitingForStock(): int
+    {
+        $ledger = app(PreorderLedger::class);
+
+        return Order::whereIn('status', ['pending', 'processing'])
+            ->whereIn('id', StockMovement::where('reference_type', Order::class)
+                ->where('type', StockMovement::SALE)
+                ->where('balance_after', '<', 0)
+                ->select('reference_id'))
+            ->with('items:id,order_id,product_id,product_variant_id')
+            ->get(['id'])
+            // Read afresh: a delivery since the last look ends the wait.
+            ->each(fn (Order $order) => $ledger->forget($order->id))
+            ->filter(fn (Order $order) => $order->items->contains(
+                fn ($item) => $ledger->stillOwed($order->id, (int) $item->product_id, $item->product_variant_id ? (int) $item->product_variant_id : null)
+            ))
+            ->count();
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function needsAttention(Request $request): array
@@ -124,9 +153,29 @@ class DashboardController extends Controller
             [
                 'ability' => 'stock',
                 'label' => 'Low stock',
-                'hint' => 'At or below the threshold',
-                'count' => Product::where('is_active', true)->where('stock_quantity', '<=', 10)->count(),
-                'url' => '/admin/stock',
+                'hint' => 'At or below their reorder level',
+                // Products the shop stocks; one never stocked is not "low".
+                'count' => Product::needingReorder()->count(),
+                'url' => '/admin/stock?reorder=1',
+                'tone' => 'warn',
+            ],
+            [
+                'ability' => 'orders',
+                'label' => 'Waiting for stock',
+                'hint' => 'Cannot ship until the stock arrives',
+                'count' => $this->waitingForStock(),
+                'url' => '/admin/orders',
+                'tone' => 'warn',
+            ],
+            [
+                'ability' => 'stock',
+                'label' => 'Purchase orders overdue',
+                'hint' => 'Past their expected date',
+                'count' => PurchaseOrder::open()
+                    ->whereNotNull('expected_on')
+                    ->where('expected_on', '<', ShopDate::today())
+                    ->count(),
+                'url' => '/admin/purchase-orders',
                 'tone' => 'warn',
             ],
             [
@@ -164,8 +213,11 @@ class DashboardController extends Controller
             [
                 'ability' => 'catalogue',
                 'label' => 'Out of stock',
-                'hint' => 'Listed but unbuyable',
-                'count' => Product::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
+                'hint' => 'Sold out of something you stock',
+                // Ran out, not never stocked: a listing never bought in is
+                // not news, and counting them buried the ones that matter.
+                'count' => Product::where('is_active', true)->where('stock_quantity', '<=', 0)
+                    ->whereIn('id', StockMovement::query()->select('product_id'))->count(),
                 'url' => '/admin/products',
                 'tone' => 'warn',
             ],

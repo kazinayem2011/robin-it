@@ -278,4 +278,55 @@ class ReceiveSplitTest extends TestCase
         $this->assertSame(PurchaseOrder::SENT, $order->fresh()->status);
         $this->assertSame(1, $this->laptop->fresh()->stock_quantity);
     }
+
+    // --- Every purchase is in Purchases --------------------------------------------
+
+    /* Bought at the market, or left by a supplier: listed as an order that arrived. */
+    public function test_a_purchase_without_an_order_is_listed_as_a_delivered_order(): void
+    {
+        $supplier = Supplier::create(['name' => 'Local Market']);
+
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'supplier_id' => $supplier->id,
+            'invoice_number' => 'CASH-1',
+            'lines' => [['product_id' => $this->laptop->id, 'quantity' => 3, 'unit_cost' => 60000, 'branches' => [$this->khulna->id => 2, $this->dhaka->id => 1]]],
+        ])->assertStatus(201)->assertJsonPath('message', fn ($m) => str_contains($m, 'Listed in Purchases as PO-'));
+
+        $order = PurchaseOrder::with('items')->latest('id')->first();
+        $this->assertSame(PurchaseOrder::RECEIVED, $order->status);
+        $this->assertSame('Local Market', $order->supplier_name);
+        $this->assertSame(3, $order->items->first()->quantity_received);
+        $this->assertSame(0, $order->outstanding);
+        $this->assertSame($order->id, StockReceipt::latest('id')->first()->purchase_order_id);
+
+        // And its details show where the units went.
+        $details = $this->actingAs($this->admin)->getJson("/api/admin/purchase-orders/{$order->id}")->json('data');
+        $this->assertSame('CASH-1', $details['deliveries'][0]['invoice_number']);
+        $this->assertCount(2, $details['deliveries'][0]['lines'][0]['branches']);
+    }
+
+    /* Stock already on the shelves is not a purchase. */
+    public function test_opening_stock_makes_no_purchase_order(): void
+    {
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'supplier_id' => Supplier::openingBalance()->id,
+            'lines' => [['product_id' => $this->laptop->id, 'quantity' => 4, 'unit_cost' => 50000]],
+        ])->assertStatus(201);
+
+        $this->assertSame(0, PurchaseOrder::count());
+        $this->assertSame(4, $this->laptop->fresh()->stock_quantity);
+    }
+
+    public function test_the_purchases_page_offers_open_orders_and_the_opening_balance(): void
+    {
+        $order = app(PurchaseOrderService::class)->save(null, Supplier::create(['name' => 'Star Tech']), $this->admin, [
+            ['product_id' => $this->laptop->id, 'quantity' => 5, 'unit_cost' => 60000],
+        ]);
+        Supplier::openingBalance();
+
+        $props = $this->actingAs($this->admin)->get('/admin/purchase-orders')->viewData('page')['props'];
+
+        $this->assertSame([$order->id], array_column($props['openOrders'], 'id'));
+        $this->assertContains('opening', array_column($props['suppliers'], 'kind'));
+    }
 }

@@ -349,6 +349,59 @@ class PurchaseOrderService
         });
     }
 
+    /**
+     * A purchase made without ordering first — bought at the market, or left
+     * by a supplier — written up as an order that arrived in full.
+     *
+     * Stock came in two ways, one through Purchases and one around it, so the
+     * list of what the shop bought was never complete, and goods on an open
+     * order could be booked in around it and then again against it. Every
+     * purchase is an order now. Opening stock is not a purchase and gets none.
+     */
+    public function recordBoughtWithoutOrder(StockReceipt $receipt, ?User $user): ?PurchaseOrder
+    {
+        $supplier = $receipt->supplier;
+
+        if (! $supplier || $supplier->isOpeningBalance() || $receipt->purchase_order_id) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($receipt, $supplier, $user) {
+            $lines = $receipt->items()->get()
+                ->groupBy(fn ($i) => $i->product_id.':'.(int) $i->product_variant_id);
+
+            $order = PurchaseOrder::create([
+                'reference' => PurchaseOrder::nextReference(),
+                'supplier_id' => $supplier->id,
+                'supplier_name' => $supplier->name,
+                'status' => PurchaseOrder::RECEIVED,
+                'sent_at' => now(),
+                'note' => trim('Bought without an order. '.($receipt->note ?? '')),
+                'user_id' => $user?->id,
+                'ordered_by_name' => $user?->name,
+                'total_quantity' => (int) $receipt->items()->sum('quantity'),
+                'total_cost' => round((float) $receipt->items()->get()->sum(fn ($i) => $i->quantity * (float) $i->unit_cost), 2),
+            ]);
+
+            foreach ($lines as $items) {
+                $quantity = (int) $items->sum('quantity');
+
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $order->id,
+                    'product_id' => $items->first()->product_id,
+                    'product_variant_id' => $items->first()->product_variant_id,
+                    'quantity' => $quantity,
+                    'quantity_received' => $quantity,
+                    'unit_cost' => $items->first()->unit_cost,
+                ]);
+            }
+
+            $receipt->update(['purchase_order_id' => $order->id]);
+
+            return $order;
+        });
+    }
+
     /** Nothing more is coming. */
     public function cancel(PurchaseOrder $order): PurchaseOrder
     {

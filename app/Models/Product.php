@@ -571,8 +571,14 @@ class Product extends Model
     {
         $default ??= (int) config('inventory.default_reorder_level', 10);
 
+        /*
+         * Only what the shop actually stocks. A product never received is not
+         * running low, and counting the whole catalogue — thirteen hundred
+         * listings, most never bought in — made the number meaningless.
+         */
         return $query->where('is_active', true)
-            ->whereRaw('stock_quantity <= COALESCE(reorder_level, ?)', [$default]);
+            ->whereRaw('stock_quantity <= COALESCE(reorder_level, ?)', [$default])
+            ->whereIn('id', StockMovement::query()->select('product_id'));
     }
 
     /** The lowest effective price across the options, for "from ৳X" on a card. */

@@ -1,20 +1,18 @@
 import { StockTabs } from './StockTabs';
 import { ROUTES } from '@/constants/endpoints';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 import Button from '../../../Components/Button';
 import DataTable from '../../../Components/DataTable';
 import { formatBdt } from '../../../utils/formatters';
 import {
     Boxes,
-    PackagePlus,
     History,
     SlidersHorizontal,
     ClipboardList,
     ArrowLeftRight,
 } from 'lucide-react';
-import ReceiveDeliveryModal from '../Components/ReceiveDeliveryModal';
 import ReceiptHistoryModal from './ReceiptHistoryModal';
 import AdjustStockModal from './AdjustStockModal';
 import StockLedgerModal from './StockLedgerModal';
@@ -33,11 +31,9 @@ export default function AdminStock({
     defaultReorderLevel = 10,
     adjustmentReasons = {},
     summary = null,
-    suppliers = [],
     stores = [],
     branch = null,
 }) {
-    const [receiveOpen, setReceiveOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
     const [adjusting, setAdjusting] = useState(null);
     const [ledgerFor, setLedgerFor] = useState(null);
@@ -313,21 +309,19 @@ export default function AdminStock({
                             >
                                 Past deliveries
                             </Button>
-                            <Button
-                                icon={PackagePlus}
-                                onClick={() => setReceiveOpen(true)}
-                            >
-                                Receive delivery
-                            </Button>
                         </div>
                     </div>
 
                     <p className="admin-field-hint admin-stock-intro">
                         How many of each product every branch has. Stock goes up
-                        when you receive a delivery and down when a customer
-                        orders — by itself. Use <strong>Transfer</strong> to
-                        move stock between branches, and{' '}
-                        <strong>Correct</strong> to fix a count that is wrong.
+                        when you receive a delivery in{' '}
+                        <Link href={`${ROUTES.ADMIN_PURCHASING}?receive=1`}>
+                            Purchases
+                        </Link>{' '}
+                        and down when a customer orders — by itself. Use{' '}
+                        <strong>Transfer</strong> to move stock between
+                        branches, and <strong>Correct</strong> to fix a count
+                        that is wrong.
                     </p>
 
                     {summary && (
@@ -423,17 +417,6 @@ export default function AdminStock({
                     />
                 </div>
             </div>
-
-            <ReceiveDeliveryModal
-                suppliers={suppliers}
-                stores={stores}
-                isOpen={receiveOpen}
-                onClose={() => setReceiveOpen(false)}
-                onSaved={() => {
-                    setReceiveOpen(false);
-                    reload();
-                }}
-            />
 
             <AdjustStockModal
                 target={adjusting}

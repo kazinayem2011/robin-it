@@ -4,7 +4,9 @@ namespace Tests\Feature\Dashboard;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
+use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,14 +30,19 @@ class OverviewPanelsTest extends TestCase
         $category = Category::create(['name' => 'CPU', 'slug' => 'cpu', 'is_active' => true]);
 
         for ($i = 1; $i <= $howMany; $i++) {
-            Product::create([
+            $product = Product::create([
                 'category_id' => $category->id,
                 'name' => "Part {$i}",
                 'slug' => "part-{$i}",
                 'price' => 1000,
-                'stock_quantity' => $quantity ? $quantity($i) : 0,
+                'stock_quantity' => 0,
                 'is_active' => true,
             ]);
+
+            // Stocked, then run down: a listing never bought in is not low.
+            $stock = app(StockService::class);
+            $stock->record($product, null, 20, StockMovement::PURCHASE);
+            $stock->record($product->fresh(), null, ($quantity ? $quantity($i) : 0) - 20, StockMovement::ADJUSTMENT);
         }
     }
 

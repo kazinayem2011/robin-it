@@ -11,6 +11,7 @@ use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\Supplier;
 use App\Services\OrderService;
+use App\Services\PurchaseOrderService;
 use App\Services\SerialService;
 use App\Services\StockService;
 use App\Support\BranchScope;
@@ -283,7 +284,11 @@ class StockController extends Controller
 
         $serials = $this->captureSerials($validated, $receipt, $request);
 
-        $message = "Received {$receipt->total_quantity} unit(s) into stock as {$receipt->reference}.";
+        // Listed in Purchases like any other purchase.
+        $order = app(PurchaseOrderService::class)->recordBoughtWithoutOrder($receipt, $request->user());
+
+        $message = "Received {$receipt->total_quantity} unit(s) into stock as {$receipt->reference}."
+            .($order ? " Listed in Purchases as {$order->reference}." : '');
 
         if ($serials['added'] > 0) {
             $message .= " {$serials['added']} serial number(s) recorded.";

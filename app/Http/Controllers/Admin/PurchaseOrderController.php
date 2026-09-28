@@ -49,7 +49,15 @@ class PurchaseOrderController extends Controller
             'orders' => $orders,
             'filters' => ['status' => $status],
             'statuses' => PurchaseOrder::STATUSES,
-            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            // "Opening balance" included, for stock already on the shelves.
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name', 'kind']),
+            // What is still to come, so a delivery booked without an order
+            // can be pointed at the order it belongs to.
+            'openOrders' => PurchaseOrder::open()
+                ->when($branch, fn ($q) => $q->where('store_id', $branch))
+                ->with(['items.product:id,name', 'items.variant:id,name'])
+                ->latest('id')
+                ->get(),
             'stores' => BranchScope::storesFor($request->user()),
             'branch' => BranchScope::name($request->user()),
             'counts' => PurchaseOrder::query()
@@ -73,7 +81,7 @@ class PurchaseOrderController extends Controller
             $data
         );
 
-        return $this->successResponse($order, "{$order->reference} saved. Receive against it when the goods arrive.");
+        return $this->successResponse($order, "{$order->reference} saved. When the goods arrive, press Receive delivery.");
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -235,8 +243,8 @@ class PurchaseOrderController extends Controller
         return $this->successResponse(
             ['receipt' => $receipt, 'order' => $order->fresh(['items.product:id,name', 'items.variant:id,name'])],
             $order->outstanding > 0
-                ? "Received. {$order->outstanding} still outstanding on {$order->reference}."
-                : "{$order->reference} is complete."
+                ? "Received. {$order->outstanding} still to come on {$order->reference} — receive the rest when it arrives."
+                : "{$order->reference} is complete — everything has arrived."
         );
     }
 

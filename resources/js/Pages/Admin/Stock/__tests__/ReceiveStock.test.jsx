@@ -232,7 +232,7 @@ describe('Receive delivery', () => {
             screen.getByRole('button', { name: /add another product/i }),
         ).toBeInTheDocument();
         expect(
-            screen.getByText(/receive them from that order/i),
+            screen.getByText(/listed in Purchases like any other purchase/i),
         ).toBeInTheDocument();
     });
 });

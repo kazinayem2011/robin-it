@@ -408,7 +408,7 @@ class PurchaseOrderTest extends TestCase
         $this->actingAs($this->buyer)->postJson("/api/admin/purchase-orders/{$id}/receive", [
             'invoice_number' => 'INV-9911',
             'lines' => [['purchase_order_item_id' => $itemId, 'quantity' => 4]],
-        ])->assertOk()->assertJsonPath('message', 'Received. 6 still outstanding on '.$created['reference'].'.');
+        ])->assertOk()->assertJsonPath('message', 'Received. 6 still to come on '.$created['reference'].' — receive the rest when it arrives.');
 
         $this->assertSame(4, $this->product->fresh()->stock_quantity);
         $this->assertSame(PurchaseOrder::PARTIAL, PurchaseOrder::find($id)->status);

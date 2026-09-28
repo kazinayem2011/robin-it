@@ -5771,3 +5771,32 @@ a.admin-card:hover,
     overflow-wrap: anywhere;
     cursor: pointer;
 }
+
+/* Receive without an order: the product is still owed on an open order. */
+.admin-receive-on-order {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--warning-light);
+    color: var(--warning-ink);
+    font-size: 0.86rem;
+}
+
+.admin-receive-on-order p {
+    margin: 0;
+}
+
+.admin-receive-on-order p + p {
+    margin-top: 6px;
+}
+
+.admin-receive-use-order {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}

@@ -1085,7 +1085,7 @@ export default function Products({
                         filtered to it rather than to thirteen hundred rows.
                     */}
                     <Link
-                        href={`${ROUTES.ADMIN_STOCK}?search=${encodeURIComponent(p.name || '')}`}
+                        href={`${ROUTES.ADMIN_PURCHASING}?receive=1`}
                         className="admin-table-icon-btn"
                         title="Receive a delivery for this product"
                         aria-label={`Receive a delivery for ${p.name}`}

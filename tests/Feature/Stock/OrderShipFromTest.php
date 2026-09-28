@@ -10,8 +10,10 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Services\OrderService;
+use App\Services\PurchaseOrderService;
 use App\Services\StockService;
 use App\Services\StockTakeService;
 use App\Support\PreorderLedger;
@@ -528,5 +530,45 @@ class OrderShipFromTest extends TestCase
             ->assertJsonPath('message', fn ($m) => str_contains($m, 'receive the delivery or ship those orders from another branch'));
 
         $this->assertTrue((bool) $this->khulna->fresh()->is_active);
+    }
+
+    // --- The dashboard says what needs doing ----------------------------------------
+
+    private function card(string $label): ?int
+    {
+        $cards = $this->actingAs($this->admin)->get('/admin/dashboard')->viewData('page')['props']['attention'];
+
+        return collect($cards)->firstWhere('label', $label)['count'] ?? null;
+    }
+
+    public function test_the_dashboard_counts_orders_waiting_for_stock_until_it_arrives(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $this->order($product, 2);
+        $this->assertSame(1, $this->card('Waiting for stock'));
+
+        app(StockService::class)->record($product->fresh(), null, 1, StockMovement::PURCHASE, ['store_id' => $this->khulna->id]);
+        $this->assertSame(0, $this->card('Waiting for stock'));
+    }
+
+    public function test_the_dashboard_counts_purchase_orders_past_their_date(): void
+    {
+        $product = $this->product(khulna: 0, dhaka: 0);
+        $supplier = Supplier::create(['name' => 'Star Tech']);
+        $orders = app(PurchaseOrderService::class);
+        $orders->save(null, $supplier, $this->admin, [['product_id' => $product->id, 'quantity' => 2, 'unit_cost' => 10]], ['expected_on' => now()->subDays(3)->toDateString()]);
+        $orders->save(null, $supplier, $this->admin, [['product_id' => $product->id, 'quantity' => 2, 'unit_cost' => 10]], ['expected_on' => now()->addDays(3)->toDateString()]);
+
+        $this->assertSame(1, $this->card('Purchase orders overdue'));
+    }
+
+    /* A listing never bought in is not "low"; one that ran down is. */
+    public function test_low_stock_counts_only_what_the_shop_stocks(): void
+    {
+        $stocked = $this->product(khulna: 2, dhaka: 0);
+        $this->assertSame(1, $this->card('Low stock'));
+
+        Product::create(['category_id' => $stocked->category_id, 'name' => 'Never bought in', 'slug' => 'never', 'price' => 10, 'stock_quantity' => 0, 'is_active' => true]);
+        $this->assertSame(1, $this->card('Low stock'));
     }
 }

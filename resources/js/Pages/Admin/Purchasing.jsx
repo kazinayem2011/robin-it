@@ -43,11 +43,24 @@ export default function Purchasing({
     stores = [],
     branch = null,
     counts = {},
+    openOrders = [],
 }) {
     const [writing, setWriting] = useState(false);
     const [receiving, setReceiving] = useState(null);
     const [editing, setEditing] = useState(null);
     const [viewing, setViewing] = useState(null);
+    // Receiving goods bought without an order. Opened straight away when
+    // another screen sent someone here to receive stock (?receive=1).
+    const [receivingFree, setReceivingFree] = useState(() => {
+        try {
+            return (
+                new URLSearchParams(window.location.search).get('receive') ===
+                '1'
+            );
+        } catch {
+            return false;
+        }
+    });
 
     const go = (params) =>
         router.get(
@@ -56,7 +69,8 @@ export default function Purchasing({
             { preserveState: true, preserveScroll: true, replace: true },
         );
 
-    const refresh = () => router.reload({ only: ['orders', 'counts'] });
+    const refresh = () =>
+        router.reload({ only: ['orders', 'counts', 'openOrders'] });
 
     const act = async (fn, order) => {
         try {
@@ -217,14 +231,26 @@ export default function Purchasing({
                 title="Purchase orders"
                 subtitle="Click an order number to see its deliveries. An order can be changed until everything has arrived."
                 headerActions={
-                    <Button
-                        variant="primary"
-                        size="sm"
-                        icon={Plus}
-                        onClick={() => setWriting(true)}
-                    >
-                        New order
-                    </Button>
+                    <div className="admin-input-row-flex">
+                        {/* One way in for every delivery: it asks which
+                            order it is for, or none. */}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={PackageCheck}
+                            onClick={() => setReceivingFree(true)}
+                        >
+                            Receive delivery
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            icon={Plus}
+                            onClick={() => setWriting(true)}
+                        >
+                            New order
+                        </Button>
+                    </div>
                 }
                 emptyTitle="Nothing on order"
                 emptyDescription="Write an order when you ask a supplier for stock, and what arrives can be checked against it."
@@ -269,6 +295,19 @@ export default function Purchasing({
                 onReceive={(o) => {
                     setViewing(null);
                     setReceiving(o);
+                }}
+            />
+
+            <ReceiveDeliveryModal
+                isOpen={receivingFree}
+                order={null}
+                stores={stores}
+                suppliers={suppliers}
+                openOrders={openOrders}
+                onClose={() => setReceivingFree(false)}
+                onSaved={() => {
+                    setReceivingFree(false);
+                    refresh();
                 }}
             />
 

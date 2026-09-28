@@ -51,6 +51,9 @@ export default function SearchableSelect({
 
     // Ids for the list and its options, unique on the page.
     const uid = useId().replace(/:/g, '');
+    // Always something, so the label is tied to the trigger even when the
+    // caller names neither (a product picker repeated per line).
+    const triggerId = id || name || `select-${uid}`;
     const listId = `${id || name || 'select'}-${uid}-list`;
     const optionId = (index) => `${listId}-${index}`;
 
@@ -178,7 +181,7 @@ export default function SearchableSelect({
     return (
         <div className="auth-form-group" ref={rootRef}>
             {label && (
-                <label className="auth-label" htmlFor={id || name}>
+                <label className="auth-label" htmlFor={triggerId}>
                     {label}{' '}
                     {required && <span className="required-asterisk">*</span>}
                 </label>
@@ -188,7 +191,7 @@ export default function SearchableSelect({
                 <button
                     ref={triggerRef}
                     type="button"
-                    id={id || name}
+                    id={triggerId}
                     disabled={disabled}
                     aria-haspopup="listbox"
                     aria-expanded={open}

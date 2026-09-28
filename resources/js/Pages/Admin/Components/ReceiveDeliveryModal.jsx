@@ -42,18 +42,65 @@ const primaryOf = (stores) =>
 
 /**
  * @param {object|null} order     a purchase order to receive against, or null
+ *                                 to ask which one (or none) first
  * @param {Array}       stores    the branches this person may receive into
  * @param {Array}       suppliers for a delivery without an order
+ * @param {Array}       openOrders orders still to come, to catch goods that
+ *                                 belong to one being booked in around it
+ * @param {Function}    onUseOrder switch to receiving against one of those
  */
 export default function ReceiveDeliveryModal({
     isOpen,
-    order = null,
+    order: initialOrder = null,
     stores = [],
     suppliers = [],
+    openOrders = [],
+    onUseOrder,
     onClose,
     onSaved,
 }) {
+    /*
+     * Which order this delivery is for. Opened from an order's row, that one;
+     * opened from the Receive delivery button, the person says: one of the
+     * open orders, or "No order — bought directly". There was a separate
+     * screen for each, and goods on an open order were booked in around it.
+     */
+    const [order, setOrder] = useState(initialOrder);
+    const [choice, setChoice] = useState('');
+    const asks = !initialOrder && openOrders.length > 0;
+    const ready = !asks || choice !== '';
     const fromOrder = Boolean(order);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setOrder(initialOrder);
+        setChoice(initialOrder ? String(initialOrder.id) : '');
+        // Opening is the trigger.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, initialOrder?.id]);
+
+    const choose = (value) => {
+        setChoice(value);
+        setOrder(
+            value === 'none'
+                ? null
+                : (openOrders.find((o) => String(o.id) === value) ?? null),
+        );
+    };
+
+    const orderOptions = [
+        ...openOrders.map((o) => {
+            const owed = (o.items ?? []).reduce(
+                (n, i) => n + Math.max(0, i.quantity - i.quantity_received),
+                0,
+            );
+            return {
+                value: String(o.id),
+                label: `${o.reference} · ${o.supplier_name} · ${owed} still to come`,
+            };
+        }),
+        { value: 'none', label: 'No order — bought directly' },
+    ];
 
     const [branch, setBranch] = useState(primaryOf(stores));
     const [supplierId, setSupplierId] = useState('');
@@ -145,6 +192,30 @@ export default function ReceiveDeliveryModal({
         stores.find((s) => String(s.id) === String(id))?.name;
 
     // --- The checks, in words a person at the door understands -------------
+    /* Products on this delivery that an open order is still waiting for. */
+    const onOpenOrder = fromOrder
+        ? []
+        : lines.flatMap((l) => {
+              if (!l.unit) return [];
+              const [productId, variantId] = l.unit.split(':');
+              return openOrders.flatMap((o) =>
+                  (o.items ?? [])
+                      .filter(
+                          (i) =>
+                              String(i.product_id) === productId &&
+                              String(i.product_variant_id ?? '') ===
+                                  (variantId ?? '') &&
+                              i.quantity > i.quantity_received,
+                      )
+                      .map((i) => ({
+                          key: `${l.key}-${o.id}`,
+                          order: o,
+                          name: i.display_name,
+                          owed: i.quantity - i.quantity_received,
+                      })),
+              );
+          });
+
     const problems = lines.flatMap((l) => {
         const arrived = Number(l.arrived) || 0;
         if (arrived <= 0) return [];
@@ -192,6 +263,14 @@ export default function ReceiveDeliveryModal({
         }
         return out;
     });
+
+    // A purchase has a seller. "Opening balance" is in the list for stock
+    // that was already on the shelves.
+    if (ready && !fromOrder && !supplierId) {
+        problems.unshift(
+            'Choose the supplier — or "Opening balance" for stock already on the shelves.',
+        );
+    }
 
     const counted = lines.filter((l) => (Number(l.arrived) || 0) > 0);
     const totals = counted.reduce(
@@ -297,7 +376,11 @@ export default function ReceiveDeliveryModal({
                         <Button variant="secondary" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button onClick={save} loading={saving}>
+                        <Button
+                            onClick={save}
+                            loading={saving}
+                            disabled={!ready}
+                        >
                             Save delivery
                         </Button>
                     </div>
@@ -307,105 +390,149 @@ export default function ReceiveDeliveryModal({
             <p className="admin-field-hint admin-receive-intro">
                 {fromOrder
                     ? `From ${order.supplier_name ?? 'the supplier'}. Enter what actually arrived; anything short stays on the order as still to come.`
-                    : 'For goods that came without a purchase order. If you made an order for them, receive them from that order in Purchases instead.'}
+                    : ready
+                      ? 'Bought directly, without an order: choose who you bought from and add what arrived. It is listed in Purchases like any other purchase.'
+                      : 'Choose the order these goods came for. If you did not order them first, choose "No order — bought directly".'}
             </p>
 
-            <div className="admin-grid-3col">
+            {asks && (
                 <Select
-                    label="Put everything in"
-                    value={branch}
-                    onChange={(e) => setBranch(e.target.value)}
-                    options={stores.map((s) => ({
-                        value: String(s.id),
-                        label: s.fulfils_online
-                            ? `${s.name} (primary)`
-                            : s.name,
-                    }))}
-                    helperText="To send some to another branch, press Split on that product."
+                    label="Which order is this delivery for?"
+                    name="receive_order"
+                    value={choice}
+                    onChange={(e) => choose(e.target.value)}
+                    placeholder="Choose…"
+                    options={orderOptions}
                 />
-
-                {!fromOrder && (
-                    <Select
-                        label="Supplier"
-                        value={supplierId}
-                        onChange={(e) => setSupplierId(e.target.value)}
-                        placeholder="Choose a supplier…"
-                        options={suppliers.map((s) => ({
-                            value: String(s.id),
-                            label:
-                                s.kind === 'opening'
-                                    ? `${s.name} — stock you already had`
-                                    : s.name,
-                        }))}
-                    />
-                )}
-
-                <FormInput
-                    id="receive-invoice"
-                    label="Invoice number (optional)"
-                    value={invoice}
-                    onChange={(e) => setInvoice(e.target.value)}
-                    placeholder="From the supplier's invoice"
-                />
-
-                <FormInput
-                    id="receive-received-on"
-                    label="Received on"
-                    type="date"
-                    value={receivedOn}
-                    max={today()}
-                    onChange={(e) => setReceivedOn(e.target.value)}
-                    helperText="Change it if you are entering a delivery late."
-                />
-            </div>
-
-            <FormInput
-                id="receive-note"
-                label="Note (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Anything worth remembering — a damaged box, who signed for it"
-            />
-
-            <div className="admin-receive-lines">
-                {lines.map((line) => (
-                    <ReceiveLine
-                        key={line.key}
-                        line={line}
-                        fromOrder={fromOrder}
-                        stores={stores}
-                        branch={branch}
-                        nameOf={nameOf}
-                        productOptions={productOptions}
-                        onSearch={loadUnits}
-                        canRemove={!fromOrder && lines.length > 1}
-                        onChange={(patch) => setLine(line.key, patch)}
-                        onRemove={() =>
-                            setLines((all) =>
-                                all.filter((l) => l.key !== line.key),
-                            )
-                        }
-                    />
-                ))}
-            </div>
-
-            {!fromOrder && (
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={Plus}
-                    onClick={() => setLines((all) => [...all, blankLine()])}
-                >
-                    Add another product
-                </Button>
             )}
 
-            {tried && problems.length > 0 && (
-                <ul className="admin-receive-problems" role="alert">
-                    {problems.map((p) => (
-                        <li key={p}>{p}</li>
-                    ))}
-                </ul>
+            {ready && (
+                <>
+                    <div className="admin-grid-3col">
+                        <Select
+                            label="Put everything in"
+                            value={branch}
+                            onChange={(e) => setBranch(e.target.value)}
+                            options={stores.map((s) => ({
+                                value: String(s.id),
+                                label: s.fulfils_online
+                                    ? `${s.name} (primary)`
+                                    : s.name,
+                            }))}
+                            helperText="To send some to another branch, press Split on that product."
+                        />
+
+                        {!fromOrder && (
+                            <Select
+                                label="Supplier"
+                                value={supplierId}
+                                onChange={(e) => setSupplierId(e.target.value)}
+                                placeholder="Choose a supplier…"
+                                options={suppliers.map((s) => ({
+                                    value: String(s.id),
+                                    label:
+                                        s.kind === 'opening'
+                                            ? `${s.name} — stock you already had`
+                                            : s.name,
+                                }))}
+                            />
+                        )}
+
+                        <FormInput
+                            id="receive-invoice"
+                            label="Invoice number (optional)"
+                            value={invoice}
+                            onChange={(e) => setInvoice(e.target.value)}
+                            placeholder="From the supplier's invoice"
+                        />
+
+                        <FormInput
+                            id="receive-received-on"
+                            label="Received on"
+                            type="date"
+                            value={receivedOn}
+                            max={today()}
+                            onChange={(e) => setReceivedOn(e.target.value)}
+                            helperText="Change it if you are entering a delivery late."
+                        />
+                    </div>
+
+                    <FormInput
+                        id="receive-note"
+                        label="Note (optional)"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Anything worth remembering — a damaged box, who signed for it"
+                    />
+
+                    <div className="admin-receive-lines">
+                        {lines.map((line) => (
+                            <ReceiveLine
+                                key={line.key}
+                                line={line}
+                                fromOrder={fromOrder}
+                                stores={stores}
+                                branch={branch}
+                                nameOf={nameOf}
+                                productOptions={productOptions}
+                                onSearch={loadUnits}
+                                canRemove={!fromOrder && lines.length > 1}
+                                onChange={(patch) => setLine(line.key, patch)}
+                                onRemove={() =>
+                                    setLines((all) =>
+                                        all.filter((l) => l.key !== line.key),
+                                    )
+                                }
+                            />
+                        ))}
+                    </div>
+
+                    {!fromOrder && (
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={Plus}
+                            onClick={() =>
+                                setLines((all) => [...all, blankLine()])
+                            }
+                        >
+                            Add another product
+                        </Button>
+                    )}
+
+                    {onOpenOrder.length > 0 && (
+                        <div className="admin-receive-on-order" role="note">
+                            {onOpenOrder.map((w) => (
+                                <p key={w.key}>
+                                    <strong>{w.order.reference}</strong> (
+                                    {w.order.supplier_name}) still has {w.owed}{' '}
+                                    of {w.name} to come.{' '}
+                                    {(onUseOrder || asks) && (
+                                        <button
+                                            type="button"
+                                            className="admin-receive-use-order"
+                                            onClick={() =>
+                                                onUseOrder
+                                                    ? onUseOrder(w.order)
+                                                    : choose(String(w.order.id))
+                                            }
+                                        >
+                                            Receive from that order instead
+                                        </button>
+                                    )}
+                                </p>
+                            ))}
+                        </div>
+                    )}
+
+                    {tried && problems.length > 0 && (
+                        <ul className="admin-receive-problems" role="alert">
+                            {problems.map((p) => (
+                                <li key={p}>{p}</li>
+                            ))}
+                        </ul>
+                    )}
+                </>
             )}
         </Modal>
     );
