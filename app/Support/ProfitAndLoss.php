@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Support\Reports\Sold;
 
 /**
  * What the shop earned and what it spent, over a period.
@@ -14,6 +15,9 @@ use App\Models\ExpenseCategory;
  *   cost when they were sold. Not from what was bought in the period — a
  *   delivery that is still on the shelf has not cost the shop anything yet,
  *   it has only turned cash into stock.
+ *
+ *   Stock that left without being sold — damaged returns, write-offs, a
+ *   stock count that came up short — is a cost of its own, on its own line.
  *
  *   Everything else comes from the expenses table: rent, wages, the courier's
  *   bill, packaging. Money that leaves and does not come back as something
@@ -29,10 +33,11 @@ class ProfitAndLoss
     /**
      * @return array{
      *     from:string|null, to:string|null,
-     *     income:array{goods:float, delivery:float, total:float},
+     *     income:array{goods:float, given_back:float, delivery:float, total:float},
      *     vat_collected:float,
      *     refunded:float,
      *     cost_of_goods:float,
+     *     stock_lost:array{amount:float, units:int, uncosted:int},
      *     gross_profit:float,
      *     gross_margin_percent:float|null,
      *     expenses:array{total:float, by_category:array<int, array{key:string, label:string, amount:float}>},
@@ -46,9 +51,14 @@ class ProfitAndLoss
     {
         $sales = SalesMargin::summary($from, $to);
 
-        $income = round($sales['goods_revenue'] + $sales['delivery_collected'], 2);
+        $income = round($sales['goods_revenue'] - $sales['refunded'] + $sales['delivery_collected'], 2);
+        $lost = Sold::stockLost($from, $to);
         $expenses = self::expenses($from, $to);
-        $net = round($sales['gross_profit'] + $sales['delivery_collected'] - $expenses['total'], 2);
+
+        // Straight down the statement, so the lines on the page add up to it:
+        // income, less what the goods cost, less the stock lost.
+        $gross = round($income - $sales['cost'] - $lost['amount'], 2);
+        $net = round($gross - $expenses['total'], 2);
 
         return [
             'from' => $from,
@@ -56,6 +66,10 @@ class ProfitAndLoss
 
             'income' => [
                 'goods' => $sales['goods_revenue'],
+                // Money given back on top of what came back — a goodwill
+                // refund with nothing returned. Returned goods are already off
+                // the goods figure.
+                'given_back' => $sales['refunded'],
                 // Shown on its own line rather than folded into goods: the shop
                 // collects it for the courier, and what the courier charges
                 // sits in expenses under `delivery`. Both visible, so the
@@ -72,13 +86,12 @@ class ProfitAndLoss
              */
             'vat_collected' => $sales['vat_collected'],
 
-            // Shown on its own line rather than quietly deducted, so a month
-            // with heavy returns explains itself.
             'refunded' => $sales['refunded'],
 
             'cost_of_goods' => $sales['cost'],
-            'gross_profit' => $sales['gross_profit'],
-            'gross_margin_percent' => $sales['margin_percent'],
+            'stock_lost' => $lost,
+            'gross_profit' => $gross,
+            'gross_margin_percent' => $income > 0 ? round($gross / $income * 100, 1) : null,
 
             'expenses' => $expenses,
 

@@ -3,10 +3,7 @@
 namespace App\Support\Reports;
 
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Refund;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /**
  * What sold, when, and whether that is better or worse than before.
@@ -15,13 +12,12 @@ use Illuminate\Support\Facades\DB;
  * question everybody actually asks first — "how did last month go against the
  * one before it" — had no answer anywhere.
  *
- * Cancelled and returned orders are left out throughout. They are not sales,
+ * A sale is what Sold says it is: delivered, on the day it was delivered, and
+ * only what the customer kept. Cancelled and returned orders are not sales,
  * and counting them makes a bad month look like a good one.
  */
 class SalesReport
 {
-    private const NOT_A_SALE = ['cancelled', 'returned'];
-
     /**
      * @return array{
      *     totals: array<string, mixed>,
@@ -62,37 +58,22 @@ class SalesReport
      */
     public static function totals(string $from, string $to): array
     {
-        $orders = Order::query()
-            ->whereNotIn('status', self::NOT_A_SALE)
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->get(['id', 'subtotal', 'discount', 'vat_amount', 'vat_inclusive']);
+        // Sold's rule: delivered, and only what the customer kept. Net of VAT,
+        // matching how the margin and the P&L read revenue: the tax is
+        // collected for the government, not earned.
+        $figures = Sold::load($from, $to)->map(fn ($order) => Sold::figures($order));
 
-        // Net of VAT, matching how the margin and the P&L read revenue: the
-        // tax is collected for the government, not earned.
-        $revenue = round($orders->sum(function ($order) {
-            $goods = (float) $order->subtotal - (float) $order->discount;
+        $revenue = round($figures->sum('goods'), 2);
 
-            return $order->vat_inclusive ? $goods - (float) $order->vat_amount : $goods;
-        }), 2);
-
-        $units = (int) OrderItem::whereIn('order_id', $orders->pluck('id'))->sum('quantity');
-
-        /*
-         * Refunds by the date the money moved, not the date of the sale it
-         * relates to: a refund in September on an August order is September's
-         * problem, which is the month the shop was out of pocket.
-         */
-        $refunded = round((float) Refund::query()
-            ->settled()
-            ->between($from, $to)
-            ->sum('amount'), 2);
+        // Money given back beyond what came back; returned goods are already
+        // off the revenue.
+        $refunded = round($figures->sum('given_back'), 2);
 
         return [
             'revenue' => $revenue,
-            'orders' => $orders->count(),
-            'units' => $units,
-            'average_order' => $orders->count() > 0 ? round($revenue / $orders->count(), 2) : 0.0,
+            'orders' => $figures->count(),
+            'units' => (int) $figures->sum('units'),
+            'average_order' => $figures->count() > 0 ? round($revenue / $figures->count(), 2) : 0.0,
             'refunded' => $refunded,
             'net' => round($revenue - $refunded, 2),
         ];
@@ -108,30 +89,10 @@ class SalesReport
      */
     private static function series(string $from, string $to): array
     {
-        /*
-         * Two queries rather than one join.
-         *
-         * Joining orders to their lines and summing the order total gives the
-         * total once per line, and SUM(DISTINCT) does not fix it — that
-         * collapses two different orders that happen to come to the same
-         * amount into one. Counting units needs the join and counting money
-         * must not have it, so they are asked separately.
-         */
-        $money = Order::query()
-            ->whereNotIn('status', self::NOT_A_SALE)
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->get(['created_at', 'subtotal', 'discount', 'vat_amount', 'vat_inclusive'])
-            ->groupBy(fn ($order) => $order->created_at->toDateString());
-
-        $units = DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereNotIn('orders.status', self::NOT_A_SALE)
-            ->whereDate('orders.created_at', '>=', $from)
-            ->whereDate('orders.created_at', '<=', $to)
-            ->groupBy('on')
-            ->selectRaw('DATE(orders.created_at) as `on`, SUM(order_items.quantity) as units')
-            ->pluck('units', 'on');
+        // By the day each order was delivered.
+        $byDay = Sold::load($from, $to)
+            ->groupBy(fn ($order) => $order->delivered_at->toDateString())
+            ->map(fn ($orders) => $orders->map(fn ($order) => Sold::figures($order)));
 
         $series = [];
 
@@ -139,18 +100,14 @@ class SalesReport
         // in a chart reads as missing data, a zero reads as a quiet Friday.
         for ($day = Carbon::parse($from); $day->lte(Carbon::parse($to)); $day->addDay()) {
             $key = $day->toDateString();
-            $orders = $money->get($key, collect());
+            $figures = $byDay->get($key, collect());
 
             $series[] = [
                 'on' => $key,
                 // Net of VAT, the same way totals() and the P&L read revenue.
-                'revenue' => round($orders->sum(function ($order) {
-                    $goods = (float) $order->subtotal - (float) $order->discount;
-
-                    return $order->vat_inclusive ? $goods - (float) $order->vat_amount : $goods;
-                }), 2),
-                'orders' => $orders->count(),
-                'units' => (int) ($units[$key] ?? 0),
+                'revenue' => round($figures->sum('goods'), 2),
+                'orders' => $figures->count(),
+                'units' => (int) $figures->sum('units'),
             ];
         }
 
@@ -185,19 +142,16 @@ class SalesReport
      */
     private static function byPayment(string $from, string $to): array
     {
-        return Order::query()
-            ->whereNotIn('status', self::NOT_A_SALE)
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->selectRaw('payment_method, COUNT(*) as orders, SUM(total) as revenue')
-            ->groupBy('payment_method')
-            ->orderByDesc('revenue')
-            ->get()
-            ->map(fn ($row) => [
-                'method' => $row->payment_method ?: 'Not recorded',
-                'orders' => (int) $row->orders,
-                'revenue' => round((float) $row->revenue, 2),
+        // What customers ended up paying, by how they paid.
+        return Sold::load($from, $to)
+            ->groupBy(fn ($order) => $order->payment_method ?: 'Not recorded')
+            ->map(fn ($orders, $method) => [
+                'method' => $method,
+                'orders' => $orders->count(),
+                'revenue' => round($orders->sum(fn ($order) => Sold::figures($order)['spent']), 2),
             ])
+            ->sortByDesc('revenue')
+            ->values()
             ->all();
     }
 }

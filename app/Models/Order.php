@@ -11,7 +11,7 @@ class Order extends Model
         'user_id', 'session_id', 'order_number', 'subtotal',
         'shipping_fee', 'discount', 'vat_amount', 'vat_rate', 'vat_inclusive', 'coupon_code',
         'coupon_discount_type', 'coupon_discount_value', 'total', 'status',
-        'courier_id', 'tracking_number', 'dispatched_at',
+        'courier_id', 'tracking_number', 'dispatched_at', 'delivered_at',
         'payment_method', 'payment_status', 'shipping_address',
         'stock_released_at', 'stock_returned_at',
     ];
@@ -27,6 +27,7 @@ class Order extends Model
         'coupon_discount_value' => 'float',
         'total' => 'float',
         'dispatched_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'stock_released_at' => 'datetime',
         'stock_returned_at' => 'datetime',
     ];
@@ -64,6 +65,20 @@ class Order extends Model
      * can immediately cover.
      */
     public const TERMINAL_STATUSES = ['cancelled', 'returned'];
+
+    /*
+     * The day the goods reached the customer, which is the day reports count
+     * the sale. Set here rather than in each place that marks an order
+     * delivered, so none of them can forget it.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Order $order) {
+            if ($order->status === 'delivered' && $order->delivered_at === null) {
+                $order->delivered_at = now();
+            }
+        });
+    }
 
     /** Whether this order has reached a state it cannot leave. */
     public function isTerminal(): bool

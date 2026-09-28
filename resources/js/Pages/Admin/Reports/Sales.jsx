@@ -3,8 +3,16 @@ import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import Tabs from '@/Components/Tabs';
 import { formatBdt } from '@/utils/formatters';
+import { ORDER_STATUS_OPTIONS } from '@/constants/adminConstants';
 import { PeriodPicker, Figure, Bars, Table, Unknown } from './Shared';
 import './Reports.css';
+
+// "Cancelled" rather than the stored "cancelled". Returned is not a status an
+// admin picks, so it is not in the options list.
+const STATUS_LABEL = Object.fromEntries([
+    ...ORDER_STATUS_OPTIONS.map((o) => [o.value, o.label]),
+    ['returned', 'Returned'],
+]);
 
 /**
  * What sold, which products earned, and who bought.
@@ -62,7 +70,7 @@ export default function SalesReport({
                     value={totals.refunded}
                     previous={previous.refunded}
                     money
-                    hint="By the date the money moved"
+                    hint="Money back beyond what was returned"
                 />
                 <Figure
                     label="Net"
@@ -75,7 +83,9 @@ export default function SalesReport({
             <p className="rep-note">
                 Against {sales.previous_period?.from} to{' '}
                 {sales.previous_period?.to} — the same length of time
-                immediately before, so the comparison means something.
+                immediately before, so the comparison means something. Orders
+                count on the day they were delivered, less anything that came
+                back.
             </p>
 
             <Tabs
@@ -133,7 +143,7 @@ export default function SalesReport({
                                 rows={Object.entries(sales.by_status ?? {}).map(
                                     ([status, count]) => ({
                                         key: status,
-                                        status,
+                                        status: STATUS_LABEL[status] ?? status,
                                         count,
                                     }),
                                 )}

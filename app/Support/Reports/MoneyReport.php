@@ -118,24 +118,21 @@ class MoneyReport
      */
     public static function vat(string $from, string $to): array
     {
-        $orders = Order::query()
-            ->whereNotIn('status', ['cancelled', 'returned'])
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->get(['created_at', 'subtotal', 'discount', 'vat_amount', 'vat_inclusive']);
+        // Sold's rule: delivered, by the month it was delivered.
+        $orders = Sold::load($from, $to);
 
         $byMonth = $orders
-            ->groupBy(fn ($order) => $order->created_at->format('Y-m'))
-            ->map(fn ($month, $key) => [
-                'month' => $key,
-                'goods' => round($month->sum(function ($order) {
-                    $goods = (float) $order->subtotal - (float) $order->discount;
+            ->groupBy(fn ($order) => $order->delivered_at->format('Y-m'))
+            ->map(function ($month, $key) {
+                $figures = $month->map(fn ($order) => Sold::figures($order));
 
-                    return $order->vat_inclusive ? $goods - (float) $order->vat_amount : $goods;
-                }), 2),
-                'vat' => round($month->sum(fn ($o) => (float) $o->vat_amount), 2),
-                'orders' => $month->count(),
-            ])
+                return [
+                    'month' => $key,
+                    'goods' => round($figures->sum('goods'), 2),
+                    'vat' => round($figures->sum('vat'), 2),
+                    'orders' => $month->count(),
+                ];
+            })
             ->sortKeys()
             ->values()
             ->all();
@@ -143,38 +140,12 @@ class MoneyReport
         $collected = round($orders->sum(fn ($o) => (float) $o->vat_amount), 2);
 
         /*
-         * VAT on refunded sales is reclaimable, so it comes off what is owed —
-         * but only the VAT that was actually charged on the order being
-         * refunded.
-         *
-         * The obvious version applies the current rate to the refunded amount,
-         * which is wrong twice: it claims tax back on orders that never carried
-         * any, and it uses today's rate on a sale made under a different one.
-         * Locally that produced a bill of minus fifty-eight thousand taka
-         * against nothing collected.
-         *
-         * A partial refund reclaims its share: half the order back is half its
-         * VAT back.
+         * VAT on goods that came back is reclaimable, so it comes off what is
+         * owed: the order's own VAT, in the share of the goods returned.
+         * Refunds on cancelled or fully returned orders are not counted —
+         * those orders were never in the collected figure to begin with.
          */
-        $refundedVat = round(
-            Refund::query()
-                ->settled()
-                ->between($from, $to)
-                ->with('order:id,total,vat_amount')
-                ->get()
-                ->sum(function (Refund $refund) {
-                    $order = $refund->order;
-
-                    if (! $order || (float) $order->total <= 0 || (float) $order->vat_amount <= 0) {
-                        return 0.0;
-                    }
-
-                    $share = min(1.0, (float) $refund->amount / (float) $order->total);
-
-                    return $share * (float) $order->vat_amount;
-                }),
-            2
-        );
+        $refundedVat = round($orders->sum(fn ($order) => Sold::figures($order)['vat_returned']), 2);
 
         return [
             'enabled' => VatRules::enabled(),

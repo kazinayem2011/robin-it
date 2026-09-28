@@ -65,7 +65,11 @@ class SalesReportTest extends TestCase
             'shipping_address' => ['name' => 'Rahim', 'phone' => $phone, 'city' => 'Dhaka'],
         ]);
 
-        $order->forceFill(['created_at' => $on, 'updated_at' => $on])->save();
+        // Reports count a sale on the day it was delivered.
+        $order->forceFill([
+            'created_at' => $on, 'updated_at' => $on,
+            'delivered_at' => $status === 'delivered' ? $on : null,
+        ])->save();
 
         OrderItem::create([
             'order_id' => $order->id, 'product_id' => $product->id,

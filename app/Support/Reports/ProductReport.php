@@ -14,8 +14,6 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductReport
 {
-    private const NOT_A_SALE = ['cancelled', 'returned'];
-
     /**
      * @return array{
      *     lines:array<int, array<string, mixed>>,
@@ -25,24 +23,24 @@ class ProductReport
      */
     public static function for(string $from, string $to, int $limit = 100): array
     {
-        $rows = DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+        // Delivered, and only the units the customer kept: one that came back
+        // was not sold, and went back on the shelf or was written off.
+        $kept = '(order_items.quantity - order_items.returned_quantity)';
+
+        $rows = Sold::lines($from, $to)
             ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
-            ->whereNotIn('orders.status', self::NOT_A_SALE)
-            ->whereDate('orders.created_at', '>=', $from)
-            ->whereDate('orders.created_at', '<=', $to)
             ->groupBy('order_items.product_id', 'order_items.product_name', 'products.stock_quantity')
             ->select([
                 'order_items.product_id',
                 'order_items.product_name',
                 'products.stock_quantity',
             ])
-            ->selectRaw('SUM(order_items.quantity) as units')
-            ->selectRaw('SUM(order_items.total) as revenue')
+            ->selectRaw("SUM($kept) as units")
+            ->selectRaw("SUM($kept * order_items.price) as revenue")
             // Null unit costs make the sum wrong rather than zero, so they are
             // counted separately and the margin is withheld for those lines.
             ->selectRaw('SUM(CASE WHEN order_items.unit_cost IS NULL THEN 1 ELSE 0 END) as uncosted_lines')
-            ->selectRaw('SUM(COALESCE(order_items.unit_cost, 0) * order_items.quantity) as cost')
+            ->selectRaw("SUM(COALESCE(order_items.unit_cost, 0) * $kept) as cost")
             ->selectRaw('COUNT(DISTINCT orders.id) as orders')
             ->get();
 
@@ -104,11 +102,7 @@ class ProductReport
      */
     public static function neverSold(string $from, string $to): array
     {
-        $sold = DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereNotIn('orders.status', self::NOT_A_SALE)
-            ->whereDate('orders.created_at', '>=', $from)
-            ->whereDate('orders.created_at', '<=', $to)
+        $sold = Sold::lines($from, $to)
             ->distinct()
             ->pluck('order_items.product_id');
 

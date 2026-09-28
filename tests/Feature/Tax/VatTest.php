@@ -178,20 +178,22 @@ class VatTest extends TestCase
     public function test_vat_is_not_revenue(): void
     {
         $this->vat(['vat_enabled' => 1, 'vat_rate' => 15, 'vat_inclusive' => 1]);
-        $this->buy(1);
+        $order = $this->buy(1);
+        $order->forceFill(['status' => 'delivered'])->save(); // reports count delivered sales
 
         $s = ProfitAndLoss::statement();
 
         $this->assertSame(869.57, $s['income']['goods'], 'VAT was counted as revenue.');
         $this->assertSame(130.43, $s['vat_collected']);
-        // 869.57 earned less the 600 those units cost.
-        $this->assertSame(269.57, $s['gross_profit']);
+        // 869.57 earned, plus delivery, less the 600 those units cost.
+        $this->assertSame(round(269.57 + (float) $order->shipping_fee, 2), $s['gross_profit']);
     }
 
     public function test_exclusive_vat_is_also_kept_out_of_revenue(): void
     {
         $this->vat(['vat_enabled' => 1, 'vat_rate' => 15, 'vat_inclusive' => 0]);
-        $this->buy(1);
+        $order = $this->buy(1);
+        $order->forceFill(['status' => 'delivered'])->save(); // reports count delivered sales
 
         $s = ProfitAndLoss::statement();
 

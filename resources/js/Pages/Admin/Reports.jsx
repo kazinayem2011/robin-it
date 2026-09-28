@@ -82,6 +82,7 @@ export default function AdminReports({ statement = {}, filters = {} }) {
     const income = statement.income || {};
     const expenses = statement.expenses || { total: 0, by_category: [] };
     const excluded = statement.excluded || { orders: 0, revenue: 0 };
+    const lost = statement.stock_lost || { amount: 0 };
 
     const net = statement.net_profit ?? 0;
     const counted = statement.orders_counted ?? 0;
@@ -227,14 +228,14 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                     </div>
                 </div>
 
-                {counted === 0 && expenses.total === 0 ? (
+                {counted === 0 && expenses.total === 0 && !lost.amount ? (
                     <div className="pl-blank">
                         <Wallet size={26} />
                         <strong>Nothing to report for this period</strong>
                         <span>
-                            No orders with a recorded cost, and no expenses
-                            entered. Pick a wider period, or record the shop's
-                            running costs under Expenses.
+                            No delivered orders with a recorded cost, and no
+                            expenses entered. Pick a wider period, or record the
+                            shop's running costs under Expenses.
                         </span>
                     </div>
                 ) : (
@@ -246,9 +247,29 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                                 </th>
                             </tr>
                             <tr>
-                                <td>Goods sold</td>
+                                <td>
+                                    Goods sold
+                                    <span className="admin-field-hint">
+                                        Delivered orders, less anything that
+                                        came back
+                                    </span>
+                                </td>
                                 <td>{formatBdt(income.goods)}</td>
                             </tr>
+                            {income.given_back > 0 && (
+                                <tr>
+                                    <td>
+                                        Money given back
+                                        <span className="admin-field-hint">
+                                            Refunds with nothing returned for
+                                            them
+                                        </span>
+                                    </td>
+                                    <td className="is-negative">
+                                        ({formatBdt(income.given_back)})
+                                    </td>
+                                </tr>
+                            )}
                             <tr>
                                 <td>
                                     Delivery collected
@@ -297,6 +318,27 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                                     ({formatBdt(statement.cost_of_goods)})
                                 </td>
                             </tr>
+                            {lost.amount !== 0 && (
+                                <tr>
+                                    <td>
+                                        Stock lost
+                                        <span className="admin-field-hint">
+                                            Damaged returns, write-offs and
+                                            stock counts that came up short, at
+                                            what they cost
+                                        </span>
+                                    </td>
+                                    <td
+                                        className={
+                                            lost.amount > 0 ? 'is-negative' : ''
+                                        }
+                                    >
+                                        {lost.amount > 0
+                                            ? `(${formatBdt(lost.amount)})`
+                                            : formatBdt(-lost.amount)}
+                                    </td>
+                                </tr>
+                            )}
                             <tr className="pl-subtotal">
                                 <td>Gross profit</td>
                                 <td>{formatBdt(statement.gross_profit)}</td>

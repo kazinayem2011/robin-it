@@ -71,7 +71,11 @@ class SalesMarginTest extends TestCase
             'coupon_code' => $coupon,
         ]))->assertStatus(201);
 
-        return Order::latest('id')->first();
+        // Reports count a sale once it is delivered.
+        $order = Order::latest('id')->first();
+        $order->forceFill(['status' => 'delivered'])->save();
+
+        return $order;
     }
 
     public function test_nothing_sold_reports_nothing(): void
@@ -118,13 +122,16 @@ class SalesMarginTest extends TestCase
         $this->assertSame(1, $summary['orders_uncosted']);
     }
 
-    public function test_a_cancelled_order_does_not_count(): void
+    public function test_a_returned_order_does_not_count(): void
     {
         $order = $this->buy($this->stocked('ryzen', 20000, 14000), 1);
 
         $this->assertSame(6000.0, SalesMargin::summary()['gross_profit']);
 
-        app(OrderService::class)->updateOrderStatus($order, 'cancelled');
+        // Delivered, so it can only come back now.
+        app(OrderService::class)->returnOrder($order->fresh(), [
+            ['order_item_id' => $order->items()->first()->id, 'resellable' => 1, 'damaged' => 0],
+        ]);
 
         $this->assertSame(0.0, SalesMargin::summary()['gross_profit']);
         $this->assertSame(0, SalesMargin::summary()['orders_counted']);
@@ -170,7 +177,7 @@ class SalesMarginTest extends TestCase
         Order::create([
             'order_number' => 'ORD-EMPTY',
             'session_id' => str_repeat('e', 40),
-            'status' => 'processing',
+            'status' => 'delivered',
             'subtotal' => 245000, 'shipping_fee' => 0, 'discount' => 0, 'total' => 245000,
             'payment_method' => 'COD', 'payment_status' => 'unpaid',
             'shipping_address' => ['name' => 'Rahim', 'phone' => '01712345678', 'city' => 'Dhaka'],

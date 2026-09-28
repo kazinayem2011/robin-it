@@ -268,8 +268,11 @@ class RefundTest extends TestCase
     {
         $order = $this->order(1);              // 1,000 sold, 600 cost
 
+        $order->forceFill(['status' => 'delivered'])->save(); // reports count delivered sales
+        $delivery = (float) $order->shipping_fee;
+
         $before = ProfitAndLoss::statement();
-        $this->assertSame(400.0, $before['gross_profit']);
+        $this->assertSame(400.0 + $delivery, $before['gross_profit']);
 
         $this->actingAs($this->admin())
             ->postJson("/api/admin/orders/{$order->id}/refund", $this->payload(['amount' => 250]))
@@ -278,13 +281,14 @@ class RefundTest extends TestCase
         $after = ProfitAndLoss::statement();
 
         $this->assertSame(250.0, $after['refunded']);
-        $this->assertSame(150.0, $after['gross_profit']);
+        $this->assertSame(150.0 + $delivery, $after['gross_profit']);
     }
 
     /** An old "cash never collected" row: nothing was handed back. */
     public function test_cash_never_collected_does_not_dent_the_profit(): void
     {
         $order = $this->order(1);
+        $order->forceFill(['status' => 'delivered'])->save(); // reports count delivered sales
 
         $order->refunds()->create([
             'amount' => 250, 'method' => 'cod_not_collected', 'reason' => 'returned',
@@ -292,7 +296,7 @@ class RefundTest extends TestCase
         ]);
 
         $this->assertSame(0.0, ProfitAndLoss::statement()['refunded']);
-        $this->assertSame(400.0, ProfitAndLoss::statement()['gross_profit']);
+        $this->assertSame(400.0 + (float) $order->shipping_fee, ProfitAndLoss::statement()['gross_profit']);
     }
 
     /**

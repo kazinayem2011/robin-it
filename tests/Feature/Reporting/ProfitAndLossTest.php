@@ -63,7 +63,11 @@ class ProfitAndLossTest extends TestCase
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ]);
 
-        return Order::latest('id')->first();
+        // Reports count a sale once it is delivered.
+        $order = Order::latest('id')->first();
+        $order->forceFill(['status' => 'delivered'])->save();
+
+        return $order;
     }
 
     private function spend(string $category, float $amount, ?string $on = null): void
@@ -98,10 +102,11 @@ class ProfitAndLossTest extends TestCase
         $this->assertSame(40000.0, $s['income']['goods']);
         $this->assertSame($delivery, $s['income']['delivery']);
         $this->assertSame(28000.0, $s['cost_of_goods']);
-        $this->assertSame(12000.0, $s['gross_profit']);
+        // Gross is total income less cost, so the statement adds up down the page.
+        $this->assertSame(12000.0 + $delivery, $s['gross_profit']);
         $this->assertSame(13000.0, $s['expenses']['total']);
 
-        // 12,000 gross + delivery collected - 13,000 spent
+        // 12,000 on the goods + delivery collected - 13,000 spent
         $this->assertSame(round(12000 + $delivery - 13000, 2), $s['net_profit']);
     }
 
@@ -159,9 +164,12 @@ class ProfitAndLossTest extends TestCase
     public function test_cancelled_orders_are_excluded(): void
     {
         $order = $this->sell($this->stocked('ryzen', 20000, 14000), 1);
-        $this->assertSame(6000.0, ProfitAndLoss::statement()['gross_profit']);
+        $this->assertSame(6000.0 + (float) $order->shipping_fee, ProfitAndLoss::statement()['gross_profit']);
 
-        app(OrderService::class)->updateOrderStatus($order, 'cancelled');
+        // Delivered, so it can only come back now.
+        app(OrderService::class)->returnOrder($order->fresh(), [
+            ['order_item_id' => $order->items()->first()->id, 'resellable' => 1, 'damaged' => 0],
+        ]);
 
         $this->assertSame(0.0, ProfitAndLoss::statement()['gross_profit']);
     }
@@ -169,20 +177,20 @@ class ProfitAndLossTest extends TestCase
     /** Counting revenue without its cost would report the sale price as profit. */
     public function test_an_uncosted_order_is_excluded_from_both_sides_and_flagged(): void
     {
-        $this->sell($this->stocked('costed', 20000, 14000), 1);
+        $order = $this->sell($this->stocked('costed', 20000, 14000), 1);
         $this->sell($this->stocked('mystery', 9000, null), 1);
 
         $s = ProfitAndLoss::statement();
 
         $this->assertSame(20000.0, $s['income']['goods'], 'Uncosted revenue leaked in.');
-        $this->assertSame(6000.0, $s['gross_profit']);
+        $this->assertSame(6000.0 + (float) $order->shipping_fee, $s['gross_profit']);
         $this->assertSame(1, $s['excluded']['orders']);
         $this->assertSame(9000.0, $s['excluded']['revenue'], 'The gap must be visible.');
     }
 
     public function test_the_report_screen_renders_the_statement(): void
     {
-        $this->sell($this->stocked('ryzen', 20000, 14000), 1);
+        $order = $this->sell($this->stocked('ryzen', 20000, 14000), 1);
         $this->spend('rent', 1000);
 
         $props = $this->actingAs(User::factory()->create(['role' => 'admin']))
@@ -190,7 +198,7 @@ class ProfitAndLossTest extends TestCase
             ->assertStatus(200)
             ->viewData('page')['props'];
 
-        $this->assertSame(6000.0, $props['statement']['gross_profit']);
+        $this->assertSame(6000.0 + (float) $order->shipping_fee, $props['statement']['gross_profit']);
         $this->assertSame(1000.0, $props['statement']['expenses']['total']);
     }
 

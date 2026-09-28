@@ -200,6 +200,9 @@
 .rep-bars {
     display: flex;
     align-items: flex-end;
+    /* A short period has few bars; centred and capped, one day reads as one
+       bar rather than a solid block across the card. */
+    justify-content: center;
     gap: 2px;
     height: 180px;
     margin-bottom: 24px;
@@ -214,6 +217,7 @@
     align-items: flex-end;
     height: 100%;
     min-width: 3px;
+    max-width: 48px;
 }
 
 .rep-bar-fill {

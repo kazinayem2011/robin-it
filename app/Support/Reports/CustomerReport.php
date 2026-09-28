@@ -30,17 +30,17 @@ class CustomerReport
      */
     public static function for(string $from, string $to, int $limit = 50): array
     {
-        $orders = Order::query()
-            ->with('user:id,name,email,phone')
-            ->whereNotIn('status', self::NOT_A_SALE)
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
+        // Sold's rule, and what each customer ended up paying: returns and
+        // money given back come off.
+        $orders = Sold::orders($from, $to)
+            ->with(['user:id,name,email,phone', 'items', 'refunds'])
             ->get();
+        $spent = $orders->mapWithKeys(fn (Order $order) => [$order->id => Sold::figures($order)['spent']]);
 
         // One key per person, whether or not they ever made an account.
         $people = $orders->groupBy(fn (Order $order) => self::keyFor($order));
 
-        $top = $people->map(function ($theirs, $key) {
+        $top = $people->map(function ($theirs, $key) use ($spent) {
             $first = $theirs->first();
 
             return [
@@ -50,8 +50,8 @@ class CustomerReport
                 'phone' => $first->notifiablePhone(),
                 'has_account' => $first->user_id !== null,
                 'orders' => $theirs->count(),
-                'spent' => round($theirs->sum(fn ($o) => (float) $o->total), 2),
-                'average' => round($theirs->sum(fn ($o) => (float) $o->total) / $theirs->count(), 2),
+                'spent' => round($theirs->sum(fn ($o) => $spent[$o->id]), 2),
+                'average' => round($theirs->sum(fn ($o) => $spent[$o->id]) / $theirs->count(), 2),
                 'last_order' => $theirs->max('created_at')?->toDateString(),
             ];
         })
@@ -74,7 +74,7 @@ class CustomerReport
             }
         }
 
-        $spend = $orders->sum(fn ($o) => (float) $o->total);
+        $spend = $orders->sum(fn ($o) => $spent[$o->id]);
 
         return [
             'totals' => [

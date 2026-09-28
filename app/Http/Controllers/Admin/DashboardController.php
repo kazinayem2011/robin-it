@@ -36,7 +36,7 @@ class DashboardController extends Controller
         // shop's takings are never computed for someone who cannot see them.
         $seesMoney = $request->user()->can_('finance');
 
-        $totalRevenue = (float) Order::where('status', '!=', 'cancelled')->sum('total');
+        $totalRevenue = (float) Order::whereNotIn('status', Order::TERMINAL_STATUSES)->sum('total');
         $totalOrders = Order::count();
         $pendingOrders = Order::whereIn('status', ['pending', 'processing', 'shipped'])->count();
         $totalCustomers = User::where('role', User::ROLE_CUSTOMER)->count();
