@@ -4,44 +4,37 @@ import { Head } from '@inertiajs/react';
 import AdminLayout from '../../Layouts/AdminLayout';
 import { ROUTES } from '../../constants/endpoints';
 import { AlertTriangle, CheckCircle2, Cpu } from 'lucide-react';
+import PcBuilderParts from './Components/PcBuilderParts';
 import './PcBuilder.css';
 
 /**
- * What the PC Builder is offering, and why.
+ * The PC Builder: its parts, and what is stopping customers.
  *
- * None of the rules behind the builder are visible anywhere else in the admin.
- * A part reaches a slot because of the category it is filed under and its
- * Active tick — not its stock, and not any switch on the builder itself.
- * Compatibility is checked from specifications whose names have to match, and
- * a missing one counts as "unknown" rather than a failure, so a build nobody
- * could check looks exactly like one that passed.
- *
- * This screen writes nothing. Every number on it is changed somewhere that
- * already exists — on the product, or on the category it sits in — so each row
- * says which, rather than offering a second place to edit the same thing.
+ * One table of parts, with what each offers and what its products are
+ * missing, under a line that says whether anything needs doing. The page used
+ * to list the same parts twice — once to manage them and again, in a fold, to
+ * report on them — and the second list only knew each part's first category.
  */
-export default function AdminPcBuilder({ problems = [], slots = [] }) {
-    const trouble = (slot) => slot.starved || slot.missing_specs > 0;
-
+export default function AdminPcBuilder({
+    problems = [],
+    parts = [],
+    icons = [],
+}) {
     return (
         <AdminLayout
             title="PC Builder"
-            subtitle="What customers can choose from, and what is stopping them"
+            subtitle="The parts customers choose from, and what is stopping them"
         >
             <Head title="PC Builder" />
 
             <div className="admin-pcb">
-                {/*
-                 * What needs doing, first and in as few lines as possible.
-                 * Most days this is the all-clear and the rest of the screen
-                 * can stay shut.
-                 */}
+                {/* What needs doing, first. Most days, nothing. */}
                 {problems.length === 0 ? (
                     <p className="admin-pcb-clear">
                         <CheckCircle2 size={16} /> Nothing needs attention.
-                        Every kind of part has products a customer can choose
-                        from, and they carry the details the builder needs to
-                        check a build fits together.
+                        Every required part has products to choose from, and
+                        they carry the details the builder needs to check a
+                        build fits together.
                     </p>
                 ) : (
                     <ul className="admin-pcb-problems">
@@ -61,256 +54,54 @@ export default function AdminPcBuilder({ problems = [], slots = [] }) {
                     </ul>
                 )}
 
-                <details className="admin-pcb-fold">
-                    <summary>
-                        All {slots.length} kinds of part — what a customer can
-                        choose from
-                    </summary>
+                <PcBuilderParts parts={parts} icons={icons} />
 
-                    <table className="admin-pcb-table">
-                        <thead>
-                            <tr>
-                                <th>Kind of part</th>
-                                <th>Category to file it under</th>
-                                <th className="num">Products</th>
-                                <th className="num">In stock</th>
-                                <th className="num">Checkable</th>
-                                <th>Needs these specs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {slots.map((slot) => (
-                                <tr
-                                    key={slot.id}
-                                    className={
-                                        trouble(slot) ? 'has-trouble' : ''
-                                    }
-                                >
-                                    <td>
-                                        <strong>{slot.label}</strong>
-                                        {slot.required && (
-                                            <span className="admin-pcb-required">
-                                                required
-                                            </span>
-                                        )}
-                                    </td>
-
-                                    <td>
-                                        {/* Written as the product form's category
-                                        picker writes it, so the two can be
-                                        matched without translating. The slug
-                                        is the hover, for developers. */}
-                                        <span
-                                            className="admin-pcb-path"
-                                            title={slot.category_slug}
-                                        >
-                                            {slot.category}
-                                        </span>
-                                    </td>
-
-                                    <td className="num">
-                                        {/* A required slot with nothing in it is
-                                        the one state that actually stops a
-                                        customer finishing a build, so it is
-                                        named rather than left a bare zero. */}
-                                        {slot.starved ? (
-                                            <span className="admin-pcb-warn">
-                                                <AlertTriangle size={13} /> none
-                                            </span>
-                                        ) : (
-                                            slot.parts
-                                        )}
-                                        {slot.over_cap && (
-                                            <span
-                                                className="admin-pcb-warn"
-                                                title={`Only the newest ${slot.shown} are offered`}
-                                            >
-                                                {' '}
-                                                showing {slot.shown}
-                                            </span>
-                                        )}
-                                    </td>
-
-                                    <td className="num">
-                                        {/* "none" rather than a zero with a word
-                                        after it, which rendered as "0none". */}
-                                        {slot.parts > 0 &&
-                                        slot.in_stock === 0 ? (
-                                            <span className="admin-pcb-warn">
-                                                none
-                                            </span>
-                                        ) : (
-                                            slot.in_stock
-                                        )}
-                                    </td>
-
-                                    <td className="num">
-                                        {slot.needs_specs.length === 0 ? (
-                                            <span className="admin-pcb-muted">
-                                                n/a
-                                            </span>
-                                        ) : slot.missing_specs === 0 ? (
-                                            <span className="admin-pcb-ok">
-                                                <CheckCircle2 size={13} /> all
-                                            </span>
-                                        ) : (
-                                            <span className="admin-pcb-warn">
-                                                {slot.parts -
-                                                    slot.missing_specs}{' '}
-                                                of {slot.parts}
-                                            </span>
-                                        )}
-                                    </td>
-
-                                    <td>
-                                        {slot.needs_specs.length ? (
-                                            slot.needs_specs.join(', ')
-                                        ) : (
-                                            <span className="admin-pcb-muted">
-                                                not compatibility-checked
-                                            </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </details>
-
-                {/*
-                 * Written for whoever actually keeps the catalogue, who has
-                 * no reason to know what a category slug is. It names the
-                 * exact fields on the product form — Group, Name, Value — and
-                 * gives values that can be copied, because "add a socket
-                 * specification" is not an instruction anyone can follow if
-                 * the check is matching on a field they cannot see.
-                 *
-                 * Closed, and below the problems above. It used to be open
-                 * and first, which put three columns of reference in front of
-                 * somebody whose actual question is "is anything wrong?" —
-                 * answered in a line or two now. This is read once.
-                 */}
                 <details className="admin-pcb-guide">
                     <summary>
                         <Cpu size={16} />
-                        <span>How the PC Builder picks up your products</span>
+                        <span>How products get into the builder</span>
                     </summary>
 
                     <div className="admin-pcb-guide-body">
                         <section>
-                            <h3>To put a product in the builder</h3>
-                            <ol>
-                                <li>
-                                    Open the product in{' '}
-                                    <strong>Products</strong>.
-                                </li>
-                                <li>
-                                    Set its <strong>Category</strong> to the one
-                                    shown in the{' '}
-                                    <em>Category to file it under</em> column of
-                                    the table below. It is written exactly as
-                                    the category box on the product form writes
-                                    it, so a processor reads{' '}
-                                    <code>Component › Processor</code> in both
-                                    places.
-                                </li>
-                                <li>
-                                    Make sure <strong>Active</strong> is ticked.
-                                    That is the only switch involved.
-                                </li>
-                            </ol>
-                            <p className="admin-pcb-note">
-                                Being out of stock does <strong>not</strong>{' '}
-                                hide a part. It still appears, marked out of
-                                stock, so a customer can plan a build around
-                                something you are restocking. To take a part out
-                                of the builder altogether, untick Active or move
-                                it to a different category.
+                            <h3>To put a product in a part</h3>
+                            <p>
+                                On the product, set its{' '}
+                                <strong>Category</strong> to one shown in that
+                                part&rsquo;s <em>Products from</em> column, or a
+                                category under it — a processor, for example,
+                                filed under <code>Component › Processor</code>.
+                                Make sure <strong>Active</strong> is ticked.
+                                Out-of-stock products still appear, marked out
+                                of stock, so a customer can plan around
+                                something you are restocking.
                             </p>
                         </section>
 
                         <section>
-                            <h3>To make the compatibility check work</h3>
+                            <h3>To make the fit check work</h3>
                             <p>
-                                The builder warns a customer when two parts do
-                                not fit — a processor and a motherboard with
-                                different sockets, for instance. It can only do
-                                that when the parts carry the right{' '}
-                                <strong>Specifications</strong>. Without them it
-                                says &ldquo;could not confirm&rdquo; rather than
-                                passing or failing the build.
+                                Parts marked <strong>Checked for fit</strong>{' '}
+                                are compared using the product&rsquo;s{' '}
+                                <strong>Specifications</strong>. The{' '}
+                                <em>Specs</em> column says which names each part
+                                needs — for example a processor needs{' '}
+                                <code>Socket</code> (AM5) and <code>TDP</code>{' '}
+                                (120W). The name must match exactly; write
+                                wattages with the W. A product missing one is
+                                shown to customers as &ldquo;could not
+                                confirm&rdquo;, not as a fit.
                             </p>
                             <p>
-                                On the product form, each specification row has
-                                three boxes. Only the middle one has to match
-                                exactly:
+                                <Link
+                                    href={`${ROUTES.ADMIN_PRODUCTS}?needs_specs=1`}
+                                >
+                                    See every product missing a spec
+                                </Link>
                             </p>
-                            <table className="admin-pcb-example">
-                                <thead>
-                                    <tr>
-                                        <th>Group</th>
-                                        <th>Name — must match</th>
-                                        <th>Value — yours</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Processor</td>
-                                        <td>
-                                            <code>Socket</code>
-                                        </td>
-                                        <td>AM5</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Processor</td>
-                                        <td>
-                                            <code>TDP</code>
-                                        </td>
-                                        <td>120W</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <p className="admin-pcb-note">
-                                The <em>Needs these specs</em> column in the
-                                table below tells you which names each kind of
-                                part wants. Write wattages with the W —{' '}
-                                <code>120W</code>, not <code>120</code> — or the
-                                power estimate cannot read them.
-                            </p>
-                        </section>
-
-                        <section>
-                            <h3>Reading the table</h3>
-                            <ul>
-                                <li>
-                                    <strong>Products</strong> — how many a
-                                    customer can choose from here.{' '}
-                                    <span className="admin-pcb-warn">none</span>{' '}
-                                    on a required row means nobody can finish a
-                                    build.
-                                </li>
-                                <li>
-                                    <strong>Checkable</strong> — how many of
-                                    those carry the specifications the
-                                    compatibility check reads. The rest are
-                                    reported to the customer as unverified.
-                                </li>
-                                <li>
-                                    <strong>n/a</strong> — nothing to check on
-                                    this kind of part. A mouse cannot clash with
-                                    anything.
-                                </li>
-                            </ul>
                         </section>
                     </div>
                 </details>
-
-                <p className="admin-pcb-foot">
-                    Specifications are edited on the product.{' '}
-                    <Link href={ROUTES.ADMIN_PRODUCTS}>Open Products</Link> —
-                    the list flags each one that is missing a spec the builder
-                    needs.
-                </p>
             </div>
         </AdminLayout>
     );

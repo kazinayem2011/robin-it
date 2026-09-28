@@ -72,6 +72,37 @@ export default function Purchasing({
     const refresh = () =>
         router.reload({ only: ['orders', 'counts', 'openOrders'] });
 
+    /*
+     * Opened from the order as it is now, not as the list last drew it. The
+     * list can lag behind a save (or another person's change), and a Receive
+     * screen built from a stale row offered lines already taken off the order.
+     */
+    const openFresh = async (o, open) => {
+        try {
+            const fresh = await adminService.getPurchaseOrder(o.id);
+            open(fresh?.order ?? o);
+        } catch {
+            open(o);
+        }
+        refresh();
+    };
+
+    /*
+     * The open orders as they are now, so an order saved a moment ago is in
+     * the list the Receive screen asks from.
+     */
+    const [loadingOpen, setLoadingOpen] = useState(false);
+    const openReceive = () => {
+        setLoadingOpen(true);
+        router.reload({
+            only: ['openOrders'],
+            onFinish: () => {
+                setLoadingOpen(false);
+                setReceivingFree(true);
+            },
+        });
+    };
+
     const act = async (fn, order) => {
         try {
             const res = await fn(order.id);
@@ -167,7 +198,7 @@ export default function Purchasing({
                                 className="admin-table-icon-btn"
                                 title="Edit — quantities and prices"
                                 aria-label={`Edit ${o.reference}`}
-                                onClick={() => setEditing(o)}
+                                onClick={() => openFresh(o, setEditing)}
                             >
                                 <Pencil size={14} />
                             </button>
@@ -177,7 +208,7 @@ export default function Purchasing({
                                 className="admin-table-icon-btn"
                                 title="Receive delivery"
                                 aria-label={`Receive delivery for ${o.reference}`}
-                                onClick={() => setReceiving(o)}
+                                onClick={() => openFresh(o, setReceiving)}
                             >
                                 <PackageCheck size={14} />
                             </button>
@@ -239,7 +270,8 @@ export default function Purchasing({
                             variant="secondary"
                             size="sm"
                             icon={PackageCheck}
-                            onClick={() => setReceivingFree(true)}
+                            loading={loadingOpen}
+                            onClick={openReceive}
                         >
                             Receive delivery
                         </Button>

@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\CategoryService;
 use App\Support\BrandDetails;
 use App\Support\MailSettings;
+use App\Support\PcBuilderSlots;
 use App\Support\PreorderLedger;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // One per request or job: see PreorderLedger.
         $this->app->scoped(PreorderLedger::class);
+        $this->app->scoped(PcBuilderSlots::class);
     }
 
     /**

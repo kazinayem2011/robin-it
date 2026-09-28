@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { formatBdt } from '../utils/formatters';
+import { unitPrice } from '../utils/pcBuild';
 import siteConfig from '../constants/siteConfig';
 import { Printer, X, FileText, Zap } from 'lucide-react';
 import './PcBuilderQuotationModal.css';
@@ -11,6 +12,12 @@ export const PcBuilderQuotationModal = ({
     components = [],
     totalPrice = 0,
     estimatedWattage = 450,
+    /*
+     * The supply the builder's own check asks for. The sheet worked its own
+     * out at x1.3 while the check used x1.2, so a 600 W build passed with a
+     * 750 W supply and was then quoted an 800 W one.
+     */
+    recommendedPsu = null,
 }) => {
     const [clientName, setClientName] = useState('');
     const [clientPhone, setClientPhone] = useState('');
@@ -228,6 +235,8 @@ export const PcBuilderQuotationModal = ({
                                         </td>
                                         <td>
                                             <p className="quotation-prod-title">
+                                                {Number(entry.quantity) > 1 &&
+                                                    `${entry.quantity} × `}
                                                 {entry.product.name}
                                             </p>
                                             <div className="quotation-prod-warranty">
@@ -236,8 +245,13 @@ export const PcBuilderQuotationModal = ({
                                         </td>
                                         <td className="quotation-price-cell">
                                             {formatBdt(
-                                                entry.product.discount_price ||
-                                                    entry.product.price,
+                                                unitPrice(entry.product) *
+                                                    Math.max(
+                                                        1,
+                                                        Number(
+                                                            entry.quantity,
+                                                        ) || 1,
+                                                    ),
                                             )}
                                         </td>
                                     </tr>
@@ -274,8 +288,10 @@ export const PcBuilderQuotationModal = ({
                             >
                                 Recommended PSU:{' '}
                                 <strong>
-                                    {Math.ceil((estimatedWattage * 1.3) / 50) *
-                                        50}
+                                    {recommendedPsu ??
+                                        Math.ceil(
+                                            (estimatedWattage * 1.2) / 50,
+                                        ) * 50}
                                     W 80+ Certified
                                 </strong>
                             </div>

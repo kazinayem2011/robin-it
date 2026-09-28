@@ -357,3 +357,157 @@
         white-space: nowrap;
     }
 }
+
+/* --- Parts in the builder: add, change, order ---------------------------- */
+
+.admin-pcb-parts .admin-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.admin-pcb-parts-scroll {
+    overflow-x: auto;
+}
+
+.admin-pcb-parts-table tr.is-hidden td {
+    opacity: 0.55;
+}
+
+.admin-pcb-order {
+    width: 72px;
+    white-space: nowrap;
+}
+
+.admin-pcb-part-name {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.admin-pcb-hidden-tag {
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+    background: var(--bg-muted);
+    color: var(--text-subtle);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.admin-pcb-compat {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 3px;
+    color: var(--success-ink);
+    font-size: 0.75rem;
+}
+
+.admin-pcb-part-actions {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.admin-pcb-icon-field,
+.admin-pcb-kind {
+    margin: 0 0 16px;
+    padding: 0;
+    border: 0;
+}
+
+.admin-pcb-icon-field legend,
+.admin-pcb-kind legend {
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.admin-pcb-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 6px;
+}
+
+.admin-pcb-icon-grid button {
+    display: grid;
+    place-items: center;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    color: var(--text-body);
+    cursor: pointer;
+}
+
+.admin-pcb-icon-grid button.is-on {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-ink);
+}
+
+.admin-pcb-kind label {
+    display: block;
+    margin: 4px 0;
+    cursor: pointer;
+}
+
+.admin-pcb-kind label span {
+    color: var(--text-subtle);
+}
+
+.admin-pcb-checks {
+    display: grid;
+    gap: 8px;
+}
+
+/* Room between the icon buttons in a row: up/down, and hide/edit/remove. */
+.admin-pcb-icon-row {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.admin-pcb-part-actions .admin-pcb-icon-row {
+    justify-content: flex-end;
+}
+
+/* Main part or Extra, and whether it is checked for fit, under the name. */
+.admin-pcb-part-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-items: center;
+    margin-top: 3px;
+    color: var(--text-subtle);
+    font-size: 0.75rem;
+}
+
+.admin-pcb-part-meta .admin-pcb-compat {
+    margin-top: 0;
+}
+
+/* The heading and its text take the room; Add a part sits on the right. */
+.admin-pcb-parts .admin-card-header {
+    flex-wrap: nowrap;
+}
+
+.admin-pcb-parts .admin-card-header > div {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.admin-pcb-parts .admin-card-header > button {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* On a phone, under the text but still on the right. */
+@media (max-width: 640px) {
+    .admin-pcb-parts .admin-card-header {
+        flex-wrap: wrap;
+    }
+}

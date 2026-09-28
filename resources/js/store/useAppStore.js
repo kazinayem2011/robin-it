@@ -146,14 +146,28 @@ const useAppStore = create((set, get) => ({
      * PcBuilder/Index called this when opening a shared build; it was never
      * defined, so loading a shared link threw instead of restoring the rig.
      */
-    setPcBuilderItem: (componentId, product) =>
+    setPcBuilderItem: (componentId, product, quantity = 1) =>
         set((state) => ({
             pcBuilderItems: [
                 ...state.pcBuilderItems.filter(
                     (item) => item.componentId !== componentId,
                 ),
-                { id: product.id, componentId, product },
+                {
+                    id: product.id,
+                    componentId,
+                    product,
+                    quantity: Math.max(1, Number(quantity) || 1),
+                },
             ],
+        })),
+    /** How many of one part: two RAM sticks, a second drive. */
+    setPcBuilderQuantity: (componentId, quantity) =>
+        set((state) => ({
+            pcBuilderItems: state.pcBuilderItems.map((item) =>
+                item.componentId === componentId
+                    ? { ...item, quantity: Math.max(1, Number(quantity) || 1) }
+                    : item,
+            ),
         })),
     /**
      * Empty one slot. Keyed by componentId, not by product id: the builder has

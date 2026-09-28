@@ -76,3 +76,26 @@ export const stockLabel = (product) => {
         ? { text: 'Pre-order', tone: ' is-preorder' }
         : { text: 'Out of Stock', tone: ' is-out' };
 };
+
+/**
+ * One unit's price as a number.
+ *
+ * The builder's product carries `price` as display text ("৳1,000") and the
+ * number as `raw_price`. Multiplying the text by a quantity gave ৳0 on the
+ * line while the total, which read `raw_price`, was right.
+ */
+export const unitPrice = (product) => {
+    for (const value of [
+        product?.raw_price,
+        product?.effective_price,
+        product?.discount_price,
+        product?.price,
+    ]) {
+        const n =
+            typeof value === 'number'
+                ? value
+                : Number(String(value ?? '').replace(/[^\d.]/g, ''));
+        if (Number.isFinite(n) && n > 0) return n;
+    }
+    return 0;
+};

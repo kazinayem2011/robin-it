@@ -206,7 +206,12 @@ class PcBuilderHealth
     private function describe(array $slot): array
     {
         $id = (string) ($slot['id'] ?? '');
-        $categoryIds = $this->categories->getDescendantIds($id);
+        // Every shelf the part draws from: Storage is SSD and Hard Disk, and
+        // a part added in the admin is not named after any one shelf.
+        $part = app(PcBuilderSlots::class)->find($id);
+        $categoryIds = $part && $part['categories']->isNotEmpty()
+            ? $part['categories']->flatMap(fn ($c) => $this->categories->getDescendantIds($c->slug))->unique()->values()->all()
+            : $this->categories->getDescendantIds($id);
 
         $parts = empty($categoryIds)
             ? collect()

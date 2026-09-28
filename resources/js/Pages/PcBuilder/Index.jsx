@@ -11,19 +11,10 @@ import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
-import { essentialsStatus, stockLabel } from '../../utils/pcBuild';
+import { essentialsStatus, stockLabel, unitPrice } from '../../utils/pcBuild';
 import { scrollBehavior } from '../../utils/scroll';
 import IncompleteBuildModal from './IncompleteBuildModal';
 import {
-    Cpu,
-    Server,
-    Layers,
-    HardDrive,
-    Monitor,
-    Zap,
-    Box,
-    Wind,
-    Tv,
     Plus,
     X,
     ShoppingCart,
@@ -35,19 +26,11 @@ import {
     AlertTriangle,
     CheckCircle2,
 } from 'lucide-react';
+import { pcBuilderIcon } from '@/utils/pcBuilderIcons';
 import './PcBuilder.css';
 
-const ICON_MAP = {
-    Cpu,
-    Server,
-    Layers,
-    HardDrive,
-    Monitor,
-    Zap,
-    Box,
-    Wind,
-    Tv,
-};
+/** How many of one part this line holds. */
+const qtyOf = (item) => Math.max(1, Number(item?.quantity) || 1);
 
 export default function PcBuilderIndex() {
     const [categories, setCategories] = useState([]);
@@ -61,6 +44,9 @@ export default function PcBuilderIndex() {
 
     const pcBuilderItems = useAppStore((state) => state.pcBuilderItems);
     const setPcBuilderItem = useAppStore((state) => state.setPcBuilderItem);
+    const setPcBuilderQuantity = useAppStore(
+        (state) => state.setPcBuilderQuantity,
+    );
     const removePcBuilderItem = useAppStore(
         (state) => state.removePcBuilderItem,
     );
@@ -186,6 +172,7 @@ export default function PcBuilderIndex() {
                                 setPcBuilderItem(
                                     comp.componentId,
                                     comp.product,
+                                    comp.quantity,
                                 );
                             }
                         });
@@ -256,7 +243,7 @@ export default function PcBuilderIndex() {
         const price = Number(
             item.product.raw_price ?? item.product.effective_price ?? 0,
         );
-        return sum + (Number.isFinite(price) ? price : 0);
+        return sum + (Number.isFinite(price) ? price * qtyOf(item) : 0);
     }, 0);
 
     // The server computes this from real TDP specs; fall back to the per-card
@@ -308,7 +295,7 @@ export default function PcBuilderIndex() {
             // abandon the rest of the rig.
             for (const item of pcBuilderItems) {
                 try {
-                    await cartService.addToCart(item.product.id, 1);
+                    await cartService.addToCart(item.product.id, qtyOf(item));
                 } catch (error) {
                     failures.push(
                         error?.message || `Could not add ${item.product.name}.`,
@@ -349,7 +336,7 @@ export default function PcBuilderIndex() {
                 components: pcBuilderItems.map((item) => ({
                     componentId: item.componentId,
                     product_id: item.product.id,
-                    quantity: 1,
+                    quantity: qtyOf(item),
                 })),
                 build_name: 'Custom Rig',
             });
@@ -483,7 +470,11 @@ export default function PcBuilderIndex() {
                 ) : (
                     <div className="pc-builder-components-table">
                         {categories.map((cat, index) => {
-                            const IconComponent = ICON_MAP[cat.icon] || Cpu;
+                            const IconComponent = pcBuilderIcon(cat.icon);
+                            const most = Math.max(
+                                1,
+                                Number(cat.max_quantity) || 1,
+                            );
                             const selectedEntry = pcBuilderItems.find(
                                 (item) => item.componentId === cat.id,
                             );
@@ -608,14 +599,69 @@ export default function PcBuilderIndex() {
                                         {/* Price Column */}
                                         <div className="component-price-col">
                                             {selectedEntry ? (
-                                                <span className="component-live-price">
-                                                    {formatBdt(
-                                                        selectedEntry.product
-                                                            .discount_price ||
-                                                            selectedEntry
-                                                                .product.price,
+                                                <>
+                                                    {most > 1 && (
+                                                        <div
+                                                            className="component-qty"
+                                                            role="group"
+                                                            aria-label={`How many ${cat.name}`}
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                aria-label={`One fewer ${cat.name}`}
+                                                                disabled={
+                                                                    qtyOf(
+                                                                        selectedEntry,
+                                                                    ) <= 1
+                                                                }
+                                                                onClick={() =>
+                                                                    setPcBuilderQuantity(
+                                                                        cat.id,
+                                                                        qtyOf(
+                                                                            selectedEntry,
+                                                                        ) - 1,
+                                                                    )
+                                                                }
+                                                            >
+                                                                −
+                                                            </button>
+                                                            <span aria-live="polite">
+                                                                {qtyOf(
+                                                                    selectedEntry,
+                                                                )}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                aria-label={`One more ${cat.name}`}
+                                                                disabled={
+                                                                    qtyOf(
+                                                                        selectedEntry,
+                                                                    ) >= most
+                                                                }
+                                                                onClick={() =>
+                                                                    setPcBuilderQuantity(
+                                                                        cat.id,
+                                                                        qtyOf(
+                                                                            selectedEntry,
+                                                                        ) + 1,
+                                                                    )
+                                                                }
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
                                                     )}
-                                                </span>
+                                                    <span className="component-live-price">
+                                                        {formatBdt(
+                                                            unitPrice(
+                                                                selectedEntry.product,
+                                                            ) *
+                                                                qtyOf(
+                                                                    selectedEntry,
+                                                                ),
+                                                        )}
+                                                    </span>
+                                                </>
                                             ) : (
                                                 <span className="price-dash">
                                                     —
@@ -641,7 +687,7 @@ export default function PcBuilderIndex() {
                                             ) : (
                                                 <Link
                                                     href={ROUTES.PC_BUILDER_CHOOSE(
-                                                        cat.category_slug,
+                                                        cat.id,
                                                     )}
                                                     className="btn-choose-component"
                                                 >
@@ -672,12 +718,14 @@ export default function PcBuilderIndex() {
                     <div className="pc-builder-floating-right">
                         {pcBuilderItems.length > 0 && (
                             <>
+                                {/* Outlined in white: the bar is dark in
+                                    both themes, and a ghost button made for
+                                    a light page showed as a faint grey block. */}
                                 <Button
-                                    variant="ghost"
+                                    variant="outline-white"
                                     size="md"
                                     icon={RotateCcw}
                                     onClick={clearPcBuilder}
-                                    className="btn-text-light"
                                 >
                                     Clear
                                 </Button>
@@ -700,9 +748,11 @@ export default function PcBuilderIndex() {
                                 </Button>
                             </>
                         )}
+                        {/* The same height as the rest of the bar; its
+                            colour is what makes it the main action. */}
                         <Button
                             variant="primary"
-                            size="lg"
+                            size="md"
                             icon={ShoppingCart}
                             loading={addingToCart}
                             disabled={pcBuilderItems.length === 0}
@@ -754,6 +804,7 @@ export default function PcBuilderIndex() {
                 }))}
                 totalPrice={totalCost}
                 estimatedWattage={estimatedWattage}
+                recommendedPsu={compat?.power?.recommended ?? null}
             />
 
             {/* Share PC Build Modal */}

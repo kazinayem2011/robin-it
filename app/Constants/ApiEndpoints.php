@@ -340,6 +340,12 @@ class ApiEndpoints
 
     public const ADMIN_STOCK_TRANSFER = 'stock/transfer';
 
+    public const ADMIN_PC_BUILDER_PARTS = 'pc-builder/parts';
+
+    public const ADMIN_PC_BUILDER_PART = 'pc-builder/parts/{id}';
+
+    public const ADMIN_PC_BUILDER_PART_MOVE = 'pc-builder/parts/{id}/move';
+
     public const ADMIN_STOCK_BRANCHES = 'stock/products/{id}/branches';
 
     // Suppliers are their own section, not part of the stock screen.

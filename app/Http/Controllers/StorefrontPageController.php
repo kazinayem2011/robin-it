@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\AddressBook;
 use App\Services\OtpService;
 use App\Services\ProductService;
+use App\Support\PcBuilderSlots;
 use App\Support\Seo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -298,6 +299,9 @@ class StorefrontPageController extends Controller
     {
         return Inertia::render('PcBuilder/SelectComponent', [
             'categorySlug' => $categorySlug,
+            // The part's own name, so the heading reads "Choose Anti Virus"
+            // rather than the shelf's slug with its dashes taken out.
+            'partName' => app(PcBuilderSlots::class)->find($categorySlug)['name'] ?? null,
             'seo' => Seo::for(['title' => 'Choose a part', 'noindex' => true]),
         ]);
     }

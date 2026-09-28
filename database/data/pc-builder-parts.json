@@ -1,0 +1,251 @@
+[
+    {
+        "key": "component-cpu-cooler",
+        "name": "CPU Cooler",
+        "icon": "Wind",
+        "group": "core",
+        "is_required": true,
+        "hint": "Some processors include one",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-cpu-cooler",
+            "cpu-cooler"
+        ],
+        "compat_role": "cpu-cooler",
+        "categories": [
+            "component-cpu-cooler"
+        ]
+    },
+    {
+        "key": "component-processor",
+        "name": "Processor",
+        "icon": "Cpu",
+        "group": "core",
+        "is_required": false,
+        "hint": "Sets the socket your motherboard must match",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-processor",
+            "cpu"
+        ],
+        "compat_role": "cpu",
+        "categories": [
+            "component-processor"
+        ]
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Server",
+        "group": "core",
+        "is_required": true,
+        "hint": "Must match the processor socket and memory type",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-motherboard",
+            "motherboard"
+        ],
+        "compat_role": "motherboard",
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Layers",
+        "group": "core",
+        "is_required": true,
+        "hint": "DDR4 and DDR5 are not interchangeable",
+        "max_quantity": 4,
+        "is_active": true,
+        "default_slugs": [
+            "component-ram-desktop",
+            "ram"
+        ],
+        "compat_role": "ram",
+        "categories": []
+    },
+    {
+        "key": "component-ssd",
+        "name": "Storage",
+        "icon": "HardDrive",
+        "group": "core",
+        "is_required": true,
+        "hint": "Where Windows and your games live",
+        "max_quantity": 4,
+        "is_active": true,
+        "default_slugs": [
+            "component-ssd",
+            "storage"
+        ],
+        "compat_role": null,
+        "categories": [
+            "component-ssd",
+            "component-hard-disk-drive"
+        ]
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Monitor",
+        "group": "core",
+        "is_required": false,
+        "hint": "Not needed if the processor has graphics built in",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-graphics-card",
+            "graphics-card"
+        ],
+        "compat_role": "graphics-card",
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Zap",
+        "group": "core",
+        "is_required": true,
+        "hint": "Sized against the wattage shown above",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-power-supply",
+            "power-supply"
+        ],
+        "compat_role": "power-supply",
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Box",
+        "group": "core",
+        "is_required": true,
+        "hint": "Must fit the motherboard form factor",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "component-casing",
+            "pc-case"
+        ],
+        "compat_role": "pc-case",
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Tv",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 2,
+        "is_active": true,
+        "default_slugs": [
+            "monitor",
+            "monitors"
+        ],
+        "compat_role": null,
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Keyboard",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "accessories-keyboard",
+            "keyboards"
+        ],
+        "compat_role": null,
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Mouse",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "accessories-mouse",
+            "mice"
+        ],
+        "compat_role": null,
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Headphones",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "accessories-headphone",
+            "headsets"
+        ],
+        "compat_role": null,
+        "categories": []
+    },
+    {
+        "key": "software-antivirus",
+        "name": "Anti Virus",
+        "icon": "ShieldCheck",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "software-antivirus",
+            "antivirus"
+        ],
+        "compat_role": null,
+        "categories": [
+            "software-antivirus"
+        ]
+    },
+    {
+        "key": null,
+        "name": "UPS",
+        "icon": "BatteryCharging",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": "Keeps the PC running through a power cut",
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "power-ups",
+            "ups"
+        ],
+        "compat_role": null,
+        "categories": []
+    },
+    {
+        "key": null,
+        "name": null,
+        "icon": "Wifi",
+        "group": "peripherals",
+        "is_required": false,
+        "hint": null,
+        "max_quantity": 1,
+        "is_active": true,
+        "default_slugs": [
+            "networking-router",
+            "wifi-routers"
+        ],
+        "compat_role": null,
+        "categories": []
+    }
+]

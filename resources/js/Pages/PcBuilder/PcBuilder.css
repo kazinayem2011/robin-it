@@ -463,10 +463,6 @@
     gap: 12px;
 }
 
-.btn-text-light {
-    color: var(--text-faint) !important;
-}
-
 /* Select Component Page */
 .component-select-back-bar {
     margin-bottom: 20px;
@@ -769,4 +765,73 @@
  */
 .pc-builder-components-table {
     margin-bottom: 96px;
+}
+
+/* How many of one part: two RAM sticks, a second drive. */
+.component-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.component-qty button {
+    width: 28px;
+    height: 26px;
+    border: 0;
+    background: var(--bg-muted);
+    color: var(--text-primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.component-qty button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.component-qty span {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* The quantity and the price it makes sit apart, not touching. */
+.component-qty {
+    margin-right: 8px;
+}
+
+/*
+ * On a phone the bar's four buttons sat on one line and ran past the edge of
+ * the screen. The page then grew to fit them, the phone zoomed out to show it
+ * all, and taps landed beside what they were aimed at — the quantity + did
+ * nothing. They wrap now, with Add All to Cart across the full width.
+ */
+@media (max-width: 768px) {
+    .pc-builder-floating-bar {
+        padding: 14px 16px;
+    }
+
+    .pc-builder-floating-right {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .pc-builder-floating-right > * {
+        flex: 1 1 auto;
+    }
+
+    .pc-builder-floating-right > *:last-child {
+        flex-basis: 100%;
+    }
+}
+
+/* One height for every button in the bar, bordered or not. */
+.pc-builder-floating-right .btn {
+    min-height: 42px;
 }

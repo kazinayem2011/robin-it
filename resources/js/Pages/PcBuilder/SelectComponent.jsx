@@ -14,7 +14,7 @@ import { ROUTES } from '../../constants/endpoints';
 import { ArrowLeft, Search, Plus, Check } from 'lucide-react';
 import './PcBuilder.css';
 
-export default function SelectComponent({ categorySlug }) {
+export default function SelectComponent({ categorySlug, partName = null }) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -140,7 +140,7 @@ export default function SelectComponent({ categorySlug }) {
                 <div className="component-select-header">
                     <div>
                         <h2 className="component-select-title">
-                            Choose {categorySlug.replace(/-/g, ' ')}
+                            Choose {partName ?? categorySlug.replace(/-/g, ' ')}
                         </h2>
                         <span className="component-select-count">
                             {incompatibleCount > 0

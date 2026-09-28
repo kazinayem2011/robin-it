@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\MessageTemplateController as AdminMessageTemplateController;
 use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PcBuilderPartController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductQuestionController as AdminProductQuestionController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
@@ -331,6 +332,10 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->middleware('can:stock');
+        Route::post(ApiEndpoints::ADMIN_PC_BUILDER_PARTS, [PcBuilderPartController::class, 'store'])->middleware('can:catalogue');
+        Route::put(ApiEndpoints::ADMIN_PC_BUILDER_PART, [PcBuilderPartController::class, 'update'])->middleware('can:catalogue');
+        Route::delete(ApiEndpoints::ADMIN_PC_BUILDER_PART, [PcBuilderPartController::class, 'destroy'])->middleware('can:catalogue');
+        Route::post(ApiEndpoints::ADMIN_PC_BUILDER_PART_MOVE, [PcBuilderPartController::class, 'move'])->middleware('can:catalogue');
         // Counting the shelves: many corrections, applied as one count.
         Route::post(ApiEndpoints::ADMIN_STOCK_COUNT, [AdminStockTakeController::class, 'store'])->middleware('can:stock');
 

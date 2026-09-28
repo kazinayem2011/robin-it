@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Support\PcBuilderSlots;
 use App\Support\SearchTerm;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -928,72 +929,21 @@ class ProductService
     public function getPcBuilderCategories(): array
     {
         /*
-         * Each slot names the shelves it might live on, best first.
-         *
-         * A single hard-coded slug tied the builder to one catalogue: these
-         * were `cpu`, `motherboard`, `pc-case`, `mice` — the tree the shop had
-         * when this was written. Reorganising the catalogue renamed every one
-         * of them, and because a missing category is simply skipped, the
-         * builder answered with an empty blueprint and no error anywhere. A
-         * feature that silently becomes nothing is worse than one that breaks.
-         *
-         * Listing candidates means a rename is survivable and both trees work,
-         * and a slot with no shelf at all is left out rather than offered as an
-         * empty picker.
+         * The parts come from the database now (see PcBuilderSlots), so the
+         * shop can add one — Anti Virus, UPS — or change which shelves a part
+         * draws from. A built-in part keeps answering to the shelf names it
+         * always did, so a catalogue rename is still survivable and saved
+         * builds still land in the right place.
          */
-        $slots = [
-            // Core: the parts that have to be compatible with each other.
-            ['slugs' => ['component-processor', 'cpu'], 'icon' => 'Cpu', 'group' => 'core', 'required' => true,
-                'hint' => 'Sets the socket your motherboard must match'],
-            ['slugs' => ['component-cpu-cooler', 'cpu-cooler'], 'icon' => 'Wind', 'group' => 'core', 'required' => false,
-                'hint' => 'Some processors include one'],
-            ['slugs' => ['component-motherboard', 'motherboard'], 'icon' => 'Server', 'group' => 'core', 'required' => true,
-                'hint' => 'Must match the processor socket and memory type'],
-            ['slugs' => ['component-ram-desktop', 'ram'], 'icon' => 'Layers', 'group' => 'core', 'required' => true,
-                'hint' => 'DDR4 and DDR5 are not interchangeable'],
-            ['slugs' => ['component-ssd', 'storage'], 'icon' => 'HardDrive', 'group' => 'core', 'required' => true,
-                'hint' => 'Where Windows and your games live'],
-            ['slugs' => ['component-graphics-card', 'graphics-card'], 'icon' => 'Monitor', 'group' => 'core', 'required' => false,
-                'hint' => 'Not needed if the processor has graphics built in'],
-            ['slugs' => ['component-power-supply', 'power-supply'], 'icon' => 'Zap', 'group' => 'core', 'required' => true,
-                'hint' => 'Sized against the wattage shown above'],
-            ['slugs' => ['component-casing', 'pc-case'], 'icon' => 'Box', 'group' => 'core', 'required' => true,
-                'hint' => 'Must fit the motherboard form factor'],
+        $parts = app(PcBuilderSlots::class)->all();
 
-            // Peripherals: chosen freely, nothing here has to fit anything.
-            ['slugs' => ['monitor', 'monitors'], 'icon' => 'Tv', 'group' => 'peripherals', 'required' => false],
-            ['slugs' => ['accessories-keyboard', 'keyboards'], 'icon' => 'Keyboard', 'group' => 'peripherals', 'required' => false],
-            ['slugs' => ['accessories-mouse', 'mice'], 'icon' => 'Mouse', 'group' => 'peripherals', 'required' => false],
-            ['slugs' => ['accessories-headphone', 'headsets'], 'icon' => 'Headphones', 'group' => 'peripherals', 'required' => false],
-            ['slugs' => ['networking-router', 'wifi-routers'], 'icon' => 'Wifi', 'group' => 'peripherals', 'required' => false],
-        ];
-
-        $found = Category::where('is_active', true)
-            ->whereIn('slug', array_merge(...array_column($slots, 'slugs')))
-            ->get()
-            ->keyBy('slug');
-
-        // Resolve each slot to the first of its candidates that exists, and
-        // key the result by that slug so everything below is unchanged.
-        $categories = collect($slots)
-            ->map(fn (array $slot) => collect($slot['slugs'])
-                ->map(fn (string $slug) => $found->get($slug))
-                ->first(fn ($category) => $category !== null))
-            ->filter()
-            ->keyBy('slug');
-
-        $slots = array_map(function (array $slot) use ($found) {
-            $slot['slug'] = collect($slot['slugs'])
-                ->first(fn (string $slug) => $found->has($slug)) ?? $slot['slugs'][0];
-
-            return $slot;
-        }, $slots);
+        $rootIds = $parts->flatMap(fn ($part) => $part['categories']->pluck('id'))->unique()->values()->all();
 
         // Resolving descendants and counting stock per slot used to be done
         // inside the loop, which was 53 queries for 13 slots — each one walking
         // the category tree again and running its own count. Both are done once
         // here and read from memory below.
-        $descendants = $this->descendantMap($categories->pluck('id')->all());
+        $descendants = $this->descendantMap($rootIds);
 
         /*
          * Which products sit under each category, through the pivot.
@@ -1008,7 +958,7 @@ class ProductService
          */
         $slotCategoryIds = collect($descendants)
             ->flatten()
-            ->merge($categories->pluck('id'))
+            ->merge($rootIds)
             ->unique()
             ->values();
 
@@ -1021,16 +971,22 @@ class ProductService
             ->groupBy('category_id')
             ->map(fn ($rows) => $rows->pluck('product_id')->all());
 
-        return collect($slots)
-            ->map(function (array $slot) use ($categories, $descendants, $membership) {
-                $category = $categories->get($slot['slug']);
+        return $parts
+            ->map(function (array $part) use ($descendants, $membership) {
+                $slot = $part['slot'];
+                $first = $part['categories']->first();
 
-                if (! $category) {
+                // A part with no shelf at all is left out rather than offered
+                // as an empty picker.
+                if (! $first) {
                     return null;
                 }
 
-                $ids = $descendants[$category->id] ?? [$category->id];
-                $available = collect($ids)
+                // Across every shelf the part draws from: an SSD and a hard
+                // disk are both storage.
+                $available = $part['categories']
+                    ->flatMap(fn ($category) => $descendants[$category->id] ?? [$category->id])
+                    ->unique()
                     ->flatMap(fn ($id) => $membership[$id] ?? [])
                     ->unique()
                     ->count();
@@ -1038,22 +994,25 @@ class ProductService
                 // An optional slot with nothing behind it is a dead end and is
                 // dropped. A required one is kept and marked unavailable —
                 // hiding it would make a build look completable when it is not.
-                if ($available === 0 && ! $slot['required']) {
+                if ($available === 0 && ! $slot->is_required) {
                     return null;
                 }
 
                 return [
-                    'id' => $slot['slug'],
-                    'category_id' => $category->id,
-                    'name' => $category->name,
-                    'category_slug' => $slot['slug'],
-                    'required' => $slot['required'],
-                    'group' => $slot['group'],
-                    'icon' => $slot['icon'],
+                    'id' => $part['id'],
+                    'category_id' => $first->id,
+                    'name' => $part['name'],
+                    'category_slug' => $first->slug,
+                    'required' => $slot->is_required,
+                    'group' => $slot->group,
+                    'icon' => $slot->icon,
                     // A short reason this slot matters, rather than the same
                     // "genuine product with warranty" line on every row.
-                    'hint' => $slot['hint'] ?? null,
+                    'hint' => $slot->hint,
                     'available' => $available,
+                    // How many of this part one build can take: RAM sticks,
+                    // drives, a second monitor.
+                    'max_quantity' => max(1, (int) $slot->max_quantity),
                 ];
             })
             ->filter()
@@ -1112,7 +1071,17 @@ class ProductService
         ?string $search = null,
         array $selection = []
     ): Collection {
-        $categoryIds = $this->categoryService->getDescendantIds($componentSlug);
+        /*
+         * A part may draw from several shelves (SSD and hard disk for Storage),
+         * and one added in the admin is named for itself, not for a shelf. The
+         * slug is read as a category only when no part answers to it.
+         */
+        $part = app(PcBuilderSlots::class)->find($componentSlug);
+        $categoryIds = $part && $part['categories']->isNotEmpty()
+            ? $part['categories']
+                ->flatMap(fn ($category) => $this->categoryService->getDescendantIds($category->slug))
+                ->unique()->values()->all()
+            : $this->categoryService->getDescendantIds($componentSlug);
 
         $query = Product::active()
             ->with(['brand', 'images', 'specifications', 'category', 'activeVariants'])

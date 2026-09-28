@@ -101,3 +101,28 @@ describe('PcBuilderQuotationModal', () => {
         expect(rule).toMatch(/gap:/);
     });
 });
+
+describe('PcBuilderQuotationModal — recommended power supply', () => {
+    const sheet = (props) =>
+        render(
+            <PcBuilderQuotationModal
+                isOpen
+                onClose={() => {}}
+                components={[]}
+                totalPrice={0}
+                estimatedWattage={600}
+                {...props}
+            />,
+        );
+
+    /* The same figure the builder's check uses, not a stricter one of its own. */
+    it('quotes the supply the check asks for', () => {
+        sheet({ recommendedPsu: 750 });
+        expect(screen.getByText(/750W 80\+ Certified/)).toBeInTheDocument();
+    });
+
+    it('works it out the same way when not told (600 W × 1.2 → 750 W)', () => {
+        sheet();
+        expect(screen.getByText(/750W 80\+ Certified/)).toBeInTheDocument();
+    });
+});
