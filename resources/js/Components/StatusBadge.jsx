@@ -1,5 +1,12 @@
 import React from 'react';
-import { Clock, CheckCircle2, Truck, RefreshCw, XCircle } from 'lucide-react';
+import {
+    Clock,
+    CheckCircle2,
+    Truck,
+    RefreshCw,
+    XCircle,
+    Undo2,
+} from 'lucide-react';
 
 /**
  * Reusable StatusBadge component (SSOT & DRY).
@@ -31,6 +38,12 @@ export const StatusBadge = ({
         cancelled: {
             label: 'Cancelled',
             icon: XCircle,
+        },
+        // Came back after delivery. It fell through to "Pending", so a
+        // finished order looked like one still to be sent.
+        returned: {
+            label: 'Returned',
+            icon: Undo2,
         },
     };
 

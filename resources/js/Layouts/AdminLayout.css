@@ -2637,6 +2637,8 @@ a.admin-card:hover,
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--text-subtle);
+        overflow-wrap: normal;
+        word-break: normal;
     }
 
     /*
@@ -2868,6 +2870,10 @@ a.admin-card:hover,
 
 .admin-receive-split label {
     display: grid;
+    /* The box sits at the bottom, so a long branch name wrapping onto two
+       lines does not push its box out of line with the others. */
+    grid-template-rows: 1fr auto;
+    align-items: end;
     gap: 4px;
     font-size: 0.8rem;
     font-weight: 600;
@@ -5799,4 +5805,12 @@ a.admin-card:hover,
     font-weight: 700;
     text-decoration: underline;
     cursor: pointer;
+}
+
+/* A link inside a sentence of hint text. */
+.admin-inline-link {
+    color: var(--primary-ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }

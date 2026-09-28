@@ -3,7 +3,7 @@ import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import { adminService } from '@/services';
 import { formatBdt } from '@/utils/formatters';
-import { localToday } from '@/utils/localToday';
+import { formatDate } from '@/utils/formatters';
 
 /**
  * Everything about one purchase order.
@@ -99,14 +99,14 @@ export default function PurchaseOrderDetailsModal({
                             <dd>
                                 {order.ordered_by_name || '—'}
                                 {order.created_at &&
-                                    `, ${localToday(new Date(order.created_at))}`}
+                                    `, ${formatDate(order.created_at)}`}
                             </dd>
                         </div>
                         <div>
                             <dt>Expected on</dt>
                             <dd>
                                 {order.expected_on
-                                    ? String(order.expected_on).slice(0, 10)
+                                    ? formatDate(order.expected_on)
                                     : '—'}
                             </dd>
                         </div>
@@ -199,7 +199,7 @@ export default function PurchaseOrderDetailsModal({
                     {deliveries.map((d) => (
                         <section key={d.id} className="po-delivery">
                             <header className="po-delivery-head">
-                                <strong>{d.received_on}</strong>
+                                <strong>{formatDate(d.received_on)}</strong>
                                 <span>{d.total_quantity} units</span>
                                 {d.invoice_number && (
                                     <span>Invoice {d.invoice_number}</span>

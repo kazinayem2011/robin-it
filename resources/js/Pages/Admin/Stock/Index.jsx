@@ -315,7 +315,10 @@ export default function AdminStock({
                     <p className="admin-field-hint admin-stock-intro">
                         How many of each product every branch has. Stock goes up
                         when you receive a delivery in{' '}
-                        <Link href={`${ROUTES.ADMIN_PURCHASING}?receive=1`}>
+                        <Link
+                            href={`${ROUTES.ADMIN_PURCHASING}?receive=1`}
+                            className="admin-inline-link"
+                        >
                             Purchases
                         </Link>{' '}
                         and down when a customer orders — by itself. Use{' '}

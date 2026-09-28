@@ -230,7 +230,9 @@ class StockController extends Controller
             'lines.*.product_id' => 'required|exists:products,id',
             'lines.*.product_variant_id' => 'nullable|exists:product_variants,id',
             'lines.*.quantity' => 'required|integer|min:1|max:100000',
-            'lines.*.unit_cost' => 'nullable|numeric|min:0',
+            // Bought from someone, so it cost something: without it the stock
+            // cannot be valued and its sales show no margin.
+            'lines.*.unit_cost' => 'required_with:supplier_id|nullable|numeric|min:0',
             // Optional, and one per line. Most of a computer shop's stock —
             // cables, paste, a bag of screws — has no serial worth keeping,
             // and demanding one would make receiving a chore nobody finishes.
@@ -241,6 +243,7 @@ class StockController extends Controller
             'store_id' => 'nullable|exists:stores,id',
         ], [
             'lines.required' => 'Add at least one product to this delivery.',
+            'lines.*.unit_cost.required_with' => 'Enter what each one cost.',
             'received_on.before_or_equal' => 'A delivery cannot be dated in the future.',
         ]);
 
@@ -287,7 +290,7 @@ class StockController extends Controller
         // Listed in Purchases like any other purchase.
         $order = app(PurchaseOrderService::class)->recordBoughtWithoutOrder($receipt, $request->user());
 
-        $message = "Received {$receipt->total_quantity} unit(s) into stock as {$receipt->reference}."
+        $message = "Received {$receipt->total_quantity} into stock."
             .($order ? " Listed in Purchases as {$order->reference}." : '');
 
         if ($serials['added'] > 0) {

@@ -129,7 +129,8 @@ export default function Purchasing({
         {
             key: 'quantity',
             header: 'Ordered',
-            render: (o) => `${o.total_quantity} units`,
+            render: (o) =>
+                `${o.total_quantity} ${o.total_quantity === 1 ? 'unit' : 'units'}`,
         },
         {
             /*
@@ -623,7 +624,7 @@ function WriteOrderModal({
                                         step="0.01"
                                         aria-label={`Cost of each ${l.name}`}
                                         value={l.unit_cost}
-                                        placeholder="What they quoted"
+                                        placeholder="Price"
                                         onChange={(e) =>
                                             setLine(
                                                 l.key,

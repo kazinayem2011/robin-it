@@ -1416,6 +1416,13 @@ textarea.has-error:focus,
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+/* Came back after delivery: finished, and neither good nor bad news. */
+.status-returned {
+    background: var(--bg-muted);
+    color: var(--text-body);
+    border: 1px solid var(--border-color);
+}
+
 /* 6. Spinner */
 .loading-spinner-wrapper {
     display: flex;

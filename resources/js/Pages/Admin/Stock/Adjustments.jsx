@@ -6,7 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { SlidersHorizontal } from 'lucide-react';
 import DataTable from '@/Components/DataTable';
 import Pagination from '@/Components/Pagination';
-import { formatBdt } from '@/utils/formatters';
+import { formatBdt, formatDate } from '@/utils/formatters';
 import { ROUTES } from '@/constants/endpoints';
 import './Count.css';
 
@@ -167,7 +167,7 @@ export default function StockAdjustments({
                 columns={columns}
                 data={movements.data ?? []}
                 title="History"
-                subtitle={`${filters.from} to ${filters.to}`}
+                subtitle={`${formatDate(filters.from)} to ${formatDate(filters.to)}`}
                 headerActions={
                     <div className="admin-input-row-flex">
                         <input

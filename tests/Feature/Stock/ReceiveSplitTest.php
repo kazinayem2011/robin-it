@@ -329,4 +329,15 @@ class ReceiveSplitTest extends TestCase
         $this->assertSame([$order->id], array_column($props['openOrders'], 'id'));
         $this->assertContains('opening', array_column($props['suppliers'], 'kind'));
     }
+
+    /* Bought from someone, so it has a price: without one it cannot be valued. */
+    public function test_a_purchase_without_a_price_is_refused(): void
+    {
+        $this->actingAs($this->admin)->postJson('/api/admin/stock/receipts', [
+            'supplier_id' => Supplier::create(['name' => 'Local Market'])->id,
+            'lines' => [['product_id' => $this->laptop->id, 'quantity' => 1]],
+        ])->assertStatus(422)->assertJsonPath('message', 'Enter what each one cost.');
+
+        $this->assertSame(0, $this->laptop->fresh()->stock_quantity);
+    }
 }

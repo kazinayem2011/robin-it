@@ -230,7 +230,7 @@ export default function ReceiveDeliveryModal({
                 `${label}: only ${l.ordered - l.received} still to come on this order.`,
             );
         }
-        if (fromOrder && l.cost === '') {
+        if (l.cost === '') {
             out.push(`${label}: enter what each one cost.`);
         }
         const typedSerials = String(l.serials || '')
@@ -627,7 +627,7 @@ function ReceiveLine({
 
             <FormInput
                 id={`receive-cost-${line.key}`}
-                label={fromOrder ? 'Cost each (৳)' : 'Cost each (৳, optional)'}
+                label="Cost each (৳)"
                 type="number"
                 min="0"
                 step="0.01"
