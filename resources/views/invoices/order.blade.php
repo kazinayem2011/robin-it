@@ -150,7 +150,9 @@
                 <h3>Payment</h3>
                 <p>
                     <strong>{{ $order->payment_method === 'COD' ? 'Cash on delivery' : $order->payment_method }}</strong>
-                    {{ ucfirst($order->payment_status) }}
+                    {{-- From the amounts, not the stored flag: "Partial" and
+                         "Unpaid" were raw words, and could disagree with them. --}}
+                    {{ ['paid' => 'Paid', 'partial' => 'Part paid', 'unpaid' => 'Unpaid'][$order->payment_state] ?? ucfirst($order->payment_state) }}
                 </p>
             </div>
         </div>
@@ -225,6 +227,32 @@
                 <td>Total</td>
                 <td class="num">৳{{ number_format($order->total, 2) }}</td>
             </tr>
+            {{-- What happened to the money since. The invoice showed only the
+                 total, so a part-paid customer was told to have all of it ready. --}}
+            @if ($order->returned_value > 0)
+                <tr>
+                    <td>Came back</td>
+                    <td class="num">−৳{{ number_format($order->returned_value, 2) }}</td>
+                </tr>
+            @endif
+            @if ($order->amount_paid > 0)
+                <tr>
+                    <td>Paid</td>
+                    <td class="num">৳{{ number_format($order->amount_paid, 2) }}</td>
+                </tr>
+            @endif
+            @if ($order->refunded_total > 0)
+                <tr>
+                    <td>Given back</td>
+                    <td class="num">−৳{{ number_format($order->refunded_total, 2) }}</td>
+                </tr>
+            @endif
+            @if ($order->amount_paid > 0 || $order->returned_value > 0)
+                <tr>
+                    <td><strong>Balance due</strong></td>
+                    <td class="num"><strong>৳{{ number_format($order->amount_due, 2) }}</strong></td>
+                </tr>
+            @endif
             @if ($order->vat_amount > 0 && $order->vat_inclusive)
                 <tr class="vat-note">
                     <td colspan="2" class="num">
@@ -234,9 +262,9 @@
             @endif
         </table>
 
-        @if ($order->payment_method === 'COD' && $order->payment_status !== 'paid')
+        @if ($order->payment_method === 'COD' && $order->amount_due > 0 && ! in_array($order->status, ['cancelled', 'returned', 'delivered'], true))
             <div class="payment">
-                <strong>Please have ৳{{ number_format($order->total, 2) }} ready for the delivery rider.</strong>
+                <strong>Please have ৳{{ number_format($order->amount_due, 2) }} ready for the delivery rider.</strong>
                 Payment is collected on delivery.
             </div>
         @endif

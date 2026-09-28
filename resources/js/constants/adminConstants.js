@@ -63,8 +63,13 @@ export const orderStatusOptionsFor = (current) => {
     if (TERMINAL_ORDER_STATUSES.includes(current)) return [];
 
     const canCancel = CANCELLABLE_ORDER_STATUSES.includes(current);
+    // Forward only: a shipped order could be moved back to Pending.
+    const steps = ['pending', 'processing', 'shipped', 'delivered'];
+    const at = steps.indexOf(current);
 
-    return ORDER_STATUS_OPTIONS.filter(
-        (option) => option.value !== 'cancelled' || canCancel,
+    return ORDER_STATUS_OPTIONS.filter((option) =>
+        option.value === 'cancelled'
+            ? canCancel
+            : steps.indexOf(option.value) >= at,
     );
 };

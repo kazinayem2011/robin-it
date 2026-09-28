@@ -40,7 +40,11 @@ export default function RecordPaymentModal({
             ),
         [order],
     );
-    const due = Math.max(0, Number(order?.total || 0) - (paid - refunded));
+    // The server's figure, which knows about returns and cancellations.
+    const due =
+        order?.amount_due !== undefined
+            ? Number(order.amount_due)
+            : Math.max(0, Number(order?.total || 0) - (paid - refunded));
 
     const formik = useFormik({
         enableReinitialize: true,

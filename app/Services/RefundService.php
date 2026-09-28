@@ -36,14 +36,17 @@ class RefundService
             // both be allowed through.
             $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
             $alreadyGiven = round((float) $fresh->refunds()->sum('amount'), 2);
-            $left = round((float) $fresh->total - $alreadyGiven, 2);
+            $received = $fresh->amount_paid;
+            // Only money that came in can go back out.
+            $left = round($received - $alreadyGiven, 2);
 
             if ($amount > $left) {
                 throw new StorefrontException(
-                    $left <= 0
-                        ? 'This order has already been refunded in full.'
-                        : 'That is more than is left to refund on this order — ৳'
-                            .number_format($left, 2).' remains.',
+                    $received <= 0
+                        ? 'Nothing has been received on this order, so there is nothing to give back.'
+                        : ($left <= 0
+                            ? 'Everything received on this order has already been given back.'
+                            : 'That is more than was received — ৳'.number_format($left, 2).' can still be given back.'),
                     422,
                     ApiCode::VALIDATION_ERROR,
                     ['refundable' => $left, 'already_refunded' => $alreadyGiven]

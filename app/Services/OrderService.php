@@ -407,6 +407,8 @@ class OrderService
             'shipped' => ['step' => 3, 'label' => 'Out for Delivery', 'desc' => 'Package has been handed to courier for express dispatch.'],
             'delivered' => ['step' => 4, 'label' => 'Delivered', 'desc' => 'Package successfully delivered to recipient.'],
             'cancelled' => ['step' => 0, 'label' => 'Cancelled', 'desc' => 'This order was cancelled.'],
+            // It fell through to "Order Placed" before.
+            'returned' => ['step' => 4, 'label' => 'Returned', 'desc' => 'The items on this order came back to us.'],
         ];
 
         $currentStepInfo = $statusSteps[$order->status] ?? $statusSteps['pending'];
@@ -581,6 +583,21 @@ class OrderService
                         ? 'This order has been returned and can no longer change status.'
                         : 'This order was cancelled and cannot be reopened. Place a new order instead — '
                             .'its stock is already back on the shelf.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            /*
+             * Forward only. A shipped order could be moved back to Pending,
+             * which the stock, the courier and the customer's messages all
+             * disagree with.
+             */
+            $order_steps = ['pending' => 1, 'processing' => 2, 'shipped' => 3, 'delivered' => 4];
+            if (isset($order_steps[$status], $order_steps[$fresh->status]) && $order_steps[$status] < $order_steps[$fresh->status]) {
+                throw new StorefrontException(
+                    'An order cannot go back from '.ucfirst($fresh->status).' to '.ucfirst($status).'. '
+                        .'If something went wrong, record a return or cancel and place it again.',
                     422,
                     ApiCode::VALIDATION_ERROR
                 );
@@ -975,10 +992,20 @@ class OrderService
 
             // Written through the locked row, then mirrored onto the caller's
             // instance so it does not hand back a stale status.
-            $fresh->forceFill([
-                'status' => 'returned',
-                'stock_returned_at' => now(),
-            ])->save();
+            /*
+             * Returned only when everything has come back. A partial return
+             * used to mark the whole order Returned and close it, so the rest
+             * could never come back on a later day.
+             */
+            $fresh->load('items');
+            $allBack = $fresh->items->every(fn ($i) => (int) $i->returned_quantity >= (int) $i->quantity);
+
+            if ($allBack) {
+                $fresh->forceFill([
+                    'status' => 'returned',
+                    'stock_returned_at' => now(),
+                ])->save();
+            }
 
             $order->setRawAttributes($fresh->getAttributes(), true);
 

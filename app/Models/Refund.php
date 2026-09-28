@@ -46,6 +46,9 @@ class Refund extends Model
     ];
 
     /** Why it was given back — what a report is grouped by. */
+    // Shown as words on the order, not as the keys stored.
+    protected $appends = ['method_label', 'reason_label'];
+
     public const REASONS = [
         'returned' => 'Goods returned',
         'damaged' => 'Arrived damaged',

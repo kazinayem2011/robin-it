@@ -51,11 +51,29 @@ const paidOn = (order) =>
 const refundedOn = (order) =>
     (order?.refunds ?? []).reduce((sum, r) => sum + Number(r.amount || 0), 0);
 
+/*
+ * The server's answer, which knows about returns and cancellations. This
+ * screen worked it out again from the total, so a returned-and-refunded mouse
+ * still read "৳1,500 owed" here.
+ */
 const dueOn = (order) =>
-    Math.max(
-        0,
-        Number(order?.total || 0) - (paidOn(order) - refundedOn(order)),
-    );
+    order?.amount_due !== undefined
+        ? Number(order.amount_due)
+        : Math.max(
+              0,
+              Number(order?.total || 0) - (paidOn(order) - refundedOn(order)),
+          );
+
+/** Money received that can still be given back. */
+const refundableOn = (order) =>
+    order?.refundable_amount !== undefined
+        ? Number(order.refundable_amount)
+        : Math.max(0, paidOn(order) - refundedOn(order));
+
+/** Some units came back, but not all: the order stays open for more. */
+const partReturned = (order) =>
+    order?.status !== 'returned' &&
+    (order?.items ?? []).some((i) => Number(i.returned_quantity) > 0);
 
 export default function Orders({
     orders = { data: [] },
@@ -106,8 +124,13 @@ export default function Orders({
     const handleStatusChange = async (orderId, newStatus) => {
         try {
             await adminService.updateOrderStatus(orderId, newStatus);
+            // The order number a person can find, not the database id.
+            const number =
+                selectedOrder?.id === orderId
+                    ? selectedOrder.order_number
+                    : `#${orderId}`;
             toast.success(
-                `Order #${orderId} status updated to ${newStatus.toUpperCase()}`,
+                `${number} is now ${newStatus.charAt(0).toUpperCase()}${newStatus.slice(1)}.`,
                 'Status Updated',
             );
             /* The order on screen came from the list, so it is stale the
@@ -224,7 +247,14 @@ export default function Orders({
             /* The badge alone. The dropdown that sat beside it moved into the
                order, where changing a status is a decision rather than
                something done in passing while scanning a list. */
-            render: (order) => <StatusBadge status={order.status} />,
+            render: (order) => (
+                <>
+                    <StatusBadge status={order.status} />
+                    {partReturned(order) && (
+                        <div className="admin-part-returned">Part returned</div>
+                    )}
+                </>
+            ),
         },
         {
             key: 'actions',
@@ -299,6 +329,7 @@ export default function Orders({
                                 'processing',
                                 'shipped',
                                 'delivered',
+                                'returned',
                                 'cancelled',
                             ].map((st) => (
                                 <button
@@ -397,17 +428,20 @@ export default function Orders({
                                 exchange returns goods without refunding. They
                                 shared an icon in the row, which said the
                                 opposite. */}
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                icon={CircleDollarSign}
-                                onClick={() => {
-                                    setRefundingOrder(selectedOrder);
-                                    setSelectedOrder(null);
-                                }}
-                            >
-                                Money back
-                            </Button>
+                            {/* Only money that came in can go back. */}
+                            {refundableOn(selectedOrder) > 0 && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={CircleDollarSign}
+                                    onClick={() => {
+                                        setRefundingOrder(selectedOrder);
+                                        setSelectedOrder(null);
+                                    }}
+                                >
+                                    Money back
+                                </Button>
+                            )}
 
                             {['pending', 'processing'].includes(
                                 selectedOrder?.status,
@@ -476,6 +510,11 @@ export default function Orders({
                              */}
                             <div className="admin-order-status-control">
                                 <StatusBadge status={selectedOrder.status} />
+                                {partReturned(selectedOrder) && (
+                                    <div className="admin-part-returned">
+                                        Part returned
+                                    </div>
+                                )}
 
                                 {TERMINAL_ORDER_STATUSES.includes(
                                     selectedOrder.status,
@@ -652,6 +691,17 @@ export default function Orders({
                                         {formatBdt(refundedOn(selectedOrder))}
                                     </dd>
                                 </div>
+                                {Number(selectedOrder.returned_value) > 0 && (
+                                    <div>
+                                        <dt>Came back</dt>
+                                        <dd>
+                                            −
+                                            {formatBdt(
+                                                selectedOrder.returned_value,
+                                            )}
+                                        </dd>
+                                    </div>
+                                )}
                                 <div>
                                     <dt>Outstanding</dt>
                                     <dd>
@@ -670,13 +720,25 @@ export default function Orders({
                                 </div>
                             </dl>
 
-                            {(selectedOrder.payments ?? []).length > 0 && (
+                            {((selectedOrder.payments ?? []).length > 0 ||
+                                (selectedOrder.refunds ?? []).length > 0) && (
                                 <ul className="admin-money-log">
-                                    {selectedOrder.payments.map((p) => (
+                                    {(selectedOrder.payments ?? []).map((p) => (
                                         <li key={`p-${p.id}`}>
                                             <span>
-                                                {formatDate(p.created_at)} ·{' '}
-                                                {p.method ?? 'Payment'}
+                                                {/* The day the money came in,
+                                                    and how, in words. */}
+                                                {formatDate(
+                                                    p.received_on ??
+                                                        p.created_at,
+                                                )}{' '}
+                                                ·{' '}
+                                                {p.method_label ??
+                                                    p.method ??
+                                                    'Payment'}
+                                                {p.reference
+                                                    ? ` · ${p.reference}`
+                                                    : ''}
                                             </span>
                                             <span className="admin-money-in">
                                                 +{formatBdt(p.amount)}
@@ -686,8 +748,17 @@ export default function Orders({
                                     {(selectedOrder.refunds ?? []).map((r) => (
                                         <li key={`r-${r.id}`}>
                                             <span>
-                                                {formatDate(r.created_at)} ·{' '}
-                                                {r.reason ?? 'Refund'}
+                                                {formatDate(
+                                                    r.refunded_on ??
+                                                        r.created_at,
+                                                )}{' '}
+                                                · Given back —{' '}
+                                                {r.reason_label ??
+                                                    r.reason ??
+                                                    'Refund'}
+                                                {r.method_label
+                                                    ? ` (${r.method_label})`
+                                                    : ''}
                                             </span>
                                             <span className="admin-money-out">
                                                 −{formatBdt(r.amount)}

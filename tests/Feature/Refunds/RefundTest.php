@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Refund;
 use App\Models\User;
+use App\Services\OrderService;
 use App\Services\StockService;
 use App\Support\ProfitAndLoss;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,7 +55,14 @@ class RefundTest extends TestCase
             'street_address' => 'House 45', 'city' => 'Dhaka',
         ])->assertStatus(201);
 
-        return Order::latest('id')->first();
+        $order = Order::latest('id')->first();
+
+        // Paid in full: only money that came in can go back.
+        $order->payments()->create([
+            'amount' => $order->total, 'method' => 'cash', 'received_on' => now()->toDateString(), 'received_by_name' => 'Till',
+        ]);
+
+        return $order;
     }
 
     private function admin(): User
@@ -168,7 +176,7 @@ class RefundTest extends TestCase
         $response = $this->actingAs($admin)->postJson("/api/admin/orders/{$order->id}/refund",
             $this->payload(['amount' => 1]))->assertStatus(422);
 
-        $this->assertStringContainsString('already been refunded in full', $response->json('message'));
+        $this->assertStringContainsString('already been given back', $response->json('message'));
         $this->assertSame(1, Refund::count());
     }
 
@@ -191,26 +199,45 @@ class RefundTest extends TestCase
         $this->assertNotSame('refunded', $order->payment_status);
     }
 
-    /**
-     * On a cash-on-delivery shop the common case: the parcel came back before
-     * the rider took any money, so nothing is actually refunded — but the
-     * order still has to say the customer owes nothing.
+    /*
+     * "Cash never collected" is no longer a refund: nothing came in, so
+     * nothing goes back. It doubled what a cancelled order owed.
      */
-    public function test_cash_never_collected_is_recorded_without_money_moving(): void
+    public function test_cash_never_collected_is_not_recorded_as_a_refund(): void
     {
         $order = $this->order();
 
         $this->actingAs($this->admin())
             ->postJson("/api/admin/orders/{$order->id}/refund", $this->payload([
-                'amount' => $order->total,
-                'method' => 'cod_not_collected',
-                'reason' => 'undelivered',
-            ]))->assertStatus(201);
+                'amount' => $order->total, 'method' => 'cod_not_collected', 'reason' => 'undelivered',
+            ]))->assertStatus(422)
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'Nothing was collected'));
 
-        $this->assertSame('refunded', $order->fresh()->payment_status);
-        // Recorded, but it is not a payout.
-        $this->assertSame(0, Refund::settled()->count());
-        $this->assertSame(1, Refund::count());
+        $this->assertSame(0, Refund::count());
+    }
+
+    public function test_an_order_nobody_paid_for_cannot_be_refunded(): void
+    {
+        $order = $this->order();
+        $order->payments()->delete();
+
+        $this->actingAs($this->admin())
+            ->postJson("/api/admin/orders/{$order->id}/refund", $this->payload(['amount' => 100]))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Nothing has been received on this order, so there is nothing to give back.');
+    }
+
+    /* The cancelled, unpaid order: nothing owed, without a refund on paper. */
+    public function test_a_cancelled_unpaid_order_owes_nothing(): void
+    {
+        $order = $this->order();
+        $order->payments()->delete();
+
+        app(OrderService::class)->updateOrderStatus($order->fresh(), 'cancelled');
+
+        $order = $order->fresh();
+        $this->assertSame(0.0, $order->amount_due);
+        $this->assertSame(0.0, $order->refundable_amount);
     }
 
     public function test_a_refund_cannot_be_dated_in_the_future(): void
@@ -254,15 +281,15 @@ class RefundTest extends TestCase
         $this->assertSame(150.0, $after['gross_profit']);
     }
 
-    /** Nothing was ever collected, so nothing was handed back. */
+    /** An old "cash never collected" row: nothing was handed back. */
     public function test_cash_never_collected_does_not_dent_the_profit(): void
     {
         $order = $this->order(1);
 
-        $this->actingAs($this->admin())
-            ->postJson("/api/admin/orders/{$order->id}/refund", $this->payload([
-                'amount' => 250, 'method' => 'cod_not_collected',
-            ]))->assertStatus(201);
+        $order->refunds()->create([
+            'amount' => 250, 'method' => 'cod_not_collected', 'reason' => 'returned',
+            'refunded_on' => now()->toDateString(),
+        ]);
 
         $this->assertSame(0.0, ProfitAndLoss::statement()['refunded']);
         $this->assertSame(400.0, ProfitAndLoss::statement()['gross_profit']);
@@ -294,8 +321,11 @@ class RefundTest extends TestCase
 
         $this->actingAs($admin)->postJson("/api/admin/orders/{$order->id}/refund",
             $this->payload(['amount' => 500, 'method' => 'bkash']))->assertStatus(201);
-        $this->actingAs($admin)->postJson("/api/admin/orders/{$order->id}/refund",
-            $this->payload(['amount' => 500, 'method' => 'cod_not_collected']))->assertStatus(201);
+        // An old "cash never collected" row, from before it stopped being one.
+        $order->refunds()->create([
+            'amount' => 500, 'method' => 'cod_not_collected', 'reason' => 'returned',
+            'refunded_on' => now()->toDateString(),
+        ]);
 
         $props = $this->actingAs($admin)->get('/admin/refunds')
             ->assertStatus(200)->viewData('page')['props'];

@@ -27,12 +27,23 @@ export default function RefundOrderModal({
     onClose,
     onDone,
 }) {
-    // What is left, so the form can offer it and refuse more.
+    // What is left, so the form can offer it and refuse more: the money
+    // received, less what has gone back. It was the order total, so an order
+    // nobody had paid for could be "refunded".
     const alreadyGiven = (order?.refunds || []).reduce(
         (sum, r) => sum + Number(r.amount || 0),
         0,
     );
-    const remaining = Math.max(0, Number(order?.total || 0) - alreadyGiven);
+    const received = (order?.payments || []).reduce(
+        (sum, p) => sum + Number(p.amount || 0),
+        0,
+    );
+    const remaining =
+        order?.refundable_amount !== undefined
+            ? Number(order.refundable_amount)
+            : Math.max(0, received - alreadyGiven);
+    // "Cash never collected" is not a refund: nothing came in to give back.
+    const choices = methods.filter((m) => m.value !== 'cod_not_collected');
 
     const formik = useFormik({
         initialValues: {
@@ -101,8 +112,8 @@ export default function RefundOrderModal({
         >
             <div className="refund-summary">
                 <div>
-                    <span>Order total</span>
-                    <strong>{formatBdt(order.total)}</strong>
+                    <span>Received</span>
+                    <strong>{formatBdt(received)}</strong>
                 </div>
                 {alreadyGiven > 0 && (
                     <div>
@@ -111,14 +122,16 @@ export default function RefundOrderModal({
                     </div>
                 )}
                 <div className="is-remaining">
-                    <span>Left to refund</span>
+                    <span>Can give back</span>
                     <strong>{formatBdt(remaining)}</strong>
                 </div>
             </div>
 
             {remaining <= 0 ? (
                 <p className="admin-field-hint">
-                    This order has already been refunded in full.
+                    {received > 0
+                        ? 'Everything received on this order has already been given back.'
+                        : 'Nothing has been received on this order, so there is nothing to give back.'}
                 </p>
             ) : (
                 <form onSubmit={formik.handleSubmit} noValidate>
@@ -145,7 +158,7 @@ export default function RefundOrderModal({
                             name="method"
                             formik={formik}
                             required
-                            options={methods}
+                            options={choices}
                         />
                         <Select
                             label="Why"

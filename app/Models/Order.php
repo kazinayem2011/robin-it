@@ -35,7 +35,7 @@ class Order extends Model
      * Derived from the courier and the consignment number, so it travels with
      * the order rather than every screen having to build it.
      */
-    protected $appends = ['tracking_url', 'amount_paid', 'amount_due', 'payment_state'];
+    protected $appends = ['tracking_url', 'amount_paid', 'amount_due', 'payment_state', 'returned_value', 'refundable_amount'];
 
     /** Order lifecycle states, in the order the customer sees them. */
     /**
@@ -131,20 +131,57 @@ class Order extends Model
     }
 
     /**
-     * What is still left to give back.
+     * What can still be given back: the money actually received, less what
+     * has been refunded.
      *
-     * Never negative: over-refunding is refused when it is attempted, and a
-     * historic overshoot should read as nothing left rather than as a debt the
-     * customer owes.
+     * It was the order total, so an order nobody had paid for could be
+     * "refunded" — and the refund was then counted against the payments,
+     * leaving a cancelled ৳1,420 order owing ৳2,840.
      */
     public function getRefundableAmountAttribute(): float
     {
-        return round(max(0, (float) $this->total - $this->refunded_total), 2);
+        return round(max(0, $this->amount_paid - $this->refunded_total), 2);
     }
 
     public function isFullyRefunded(): bool
     {
-        return (float) $this->total > 0 && $this->refundable_amount <= 0;
+        return $this->amount_paid > 0 && $this->refundable_amount <= 0;
+    }
+
+    /**
+     * What the goods that came back were worth, as the customer paid for
+     * them: each unit's price with its share of any discount (and VAT), not
+     * the delivery charge.
+     *
+     * An order kept its full value after a return, so a mouse sent back and
+     * refunded still read "৳1,500 owed".
+     */
+    public function getReturnedValueAttribute(): float
+    {
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
+        $returned = $items->sum(fn ($i) => (int) $i->returned_quantity * (float) $i->price);
+
+        if ($returned <= 0 || (float) $this->subtotal <= 0) {
+            return 0.0;
+        }
+
+        // The goods' share of the total, per taka of list price.
+        $share = max(0, (float) $this->total - (float) $this->shipping_fee) / (float) $this->subtotal;
+
+        return round($returned * $share, 2);
+    }
+
+    /**
+     * What the order is worth now: its total, less what came back. A
+     * cancelled order is worth nothing — nobody owes for it.
+     */
+    public function getNetValueAttribute(): float
+    {
+        if ($this->status === 'cancelled') {
+            return 0.0;
+        }
+
+        return round(max(0, (float) $this->total - $this->returned_value), 2);
     }
 
     public function payments(): HasMany
@@ -180,9 +217,9 @@ class Order extends Model
      */
     public function getAmountDueAttribute(): float
     {
-        $net = $this->amount_paid - $this->refunded_total;
+        $kept = $this->amount_paid - $this->refunded_total;
 
-        return round(max(0, (float) $this->total - $net), 2);
+        return round(max(0, $this->net_value - $kept), 2);
     }
 
     /**
@@ -196,6 +233,12 @@ class Order extends Model
     {
         if ((float) $this->total <= 0) {
             return 'paid';
+        }
+
+        // Cancelled, or everything came back, with nothing taken: nothing
+        // was paid, and nothing is owed either.
+        if ($this->net_value <= 0 && $this->amount_paid <= 0) {
+            return 'unpaid';
         }
 
         if ($this->amount_due <= 0) {
@@ -451,6 +494,14 @@ class Order extends Model
     public function holdsReservedStock(): bool
     {
         return $this->stock_released_at === null && $this->stock_returned_at === null;
+    }
+
+    /** Units that came back, across every line. */
+    public function returnedUnits(): int
+    {
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
+
+        return (int) $items->sum('returned_quantity');
     }
 
     public function isReturnable(): bool

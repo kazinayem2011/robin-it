@@ -5814,3 +5814,11 @@ a.admin-card:hover,
     text-decoration: underline;
     text-underline-offset: 2px;
 }
+
+/* Some units came back, the order stays open for more. */
+.admin-part-returned {
+    margin-top: 4px;
+    color: var(--warning-ink);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
