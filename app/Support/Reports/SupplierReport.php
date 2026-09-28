@@ -47,7 +47,9 @@ class SupplierReport
                     'orders' => $theirs->count(),
                     'units_ordered' => (int) $ordered,
                     'units_received' => (int) $received,
-                    'still_owed' => (int) max(0, $ordered - $received),
+                    // What is actually still coming: a cancelled order owes
+                    // nothing more, whatever never arrived on it.
+                    'still_owed' => (int) $theirs->sum('outstanding'),
                     /*
                      * How much of what was asked for actually arrived. The
                      * single number worth comparing suppliers on, and the one

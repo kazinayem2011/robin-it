@@ -45,7 +45,7 @@ class MoneyReport
                 'id' => $order->id,
                 'order_number' => $order->order_number,
                 'customer' => $order->recipient_name,
-                'status' => $order->status,
+                'status' => ucfirst($order->status),
                 'total' => (float) $order->total,
                 'paid' => $order->amount_paid,
                 'due' => $order->amount_due,
@@ -178,8 +178,9 @@ class MoneyReport
             ->latest('refunded_on')
             ->get();
 
+        // Grouped by the words a person reads, not the keys stored.
         $group = fn (string $field, string $fallback) => $refunds
-            ->groupBy(fn ($refund) => $refund->{$field} ?: $fallback)
+            ->groupBy(fn ($refund) => $refund->{$field} ? $refund->{$field.'_label'} : $fallback)
             ->map(fn ($rows, $key) => [
                 'label' => $key,
                 'count' => $rows->count(),
@@ -198,8 +199,8 @@ class MoneyReport
                 'id' => $refund->id,
                 'order_number' => $refund->order?->order_number ?? 'Removed order',
                 'amount' => (float) $refund->amount,
-                'reason' => $refund->reason,
-                'method' => $refund->method,
+                'reason' => $refund->reason_label,
+                'method' => $refund->method_label,
                 'on' => $refund->refunded_on
                     ? Carbon::parse($refund->refunded_on)->toDateString()
                     : $refund->created_at->toDateString(),

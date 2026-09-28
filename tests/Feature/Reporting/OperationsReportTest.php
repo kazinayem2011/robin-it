@@ -302,6 +302,69 @@ class OperationsReportTest extends TestCase
         $this->assertSame(10, $outstanding[0]['outstanding']);
     }
 
+    /** Timed to the day it arrived, not to the last time the order changed. */
+    public function test_a_couriers_speed_is_measured_to_delivery(): void
+    {
+        $order = $this->carried(Courier::where('slug', 'pathao')->first(), 'delivered');
+        $order->forceFill(['delivered_at' => now()->subDay()])->save(); // two days on the road
+        $order->touch(); // a payment recorded today
+
+        $report = DeliveryReport::for(now()->startOfMonth()->toDateString(), now()->toDateString());
+
+        $this->assertSame(2.0, $report['couriers'][0]['average_days']);
+    }
+
+    /** The customer sending it back later is not the courier failing to deliver. */
+    public function test_a_return_after_delivery_is_not_held_against_the_courier(): void
+    {
+        $pathao = Courier::where('slug', 'pathao')->first();
+
+        $kept = $this->carried($pathao, 'returned');
+        $kept->forceFill(['delivered_at' => now()->subDay()])->save(); // delivered, then sent back
+        $this->carried($pathao, 'returned'); // refused at the door
+
+        $row = DeliveryReport::for(now()->startOfMonth()->toDateString(), now()->toDateString())['couriers'][0];
+
+        $this->assertSame(1, $row['delivered']);
+        $this->assertSame(1, $row['returned']);
+        $this->assertSame(50.0, $row['delivery_rate']);
+    }
+
+    public function test_a_cancelled_purchase_order_owes_nothing_more(): void
+    {
+        $buyer = User::factory()->create(['role' => 'admin']);
+        $supplier = Supplier::create(['name' => 'Smart Tech', 'phone' => '01711000000', 'is_active' => true]);
+        $orders = app(PurchaseOrderService::class);
+
+        $po = $orders->save(null, $supplier, $buyer, [
+            ['product_id' => $this->gpu->id, 'quantity' => 10, 'unit_cost' => 6000],
+        ]);
+        $orders->receive($po, $buyer, [
+            ['purchase_order_item_id' => $po->items()->first()->id, 'quantity' => 6],
+        ]);
+        $orders->cancel($po->fresh());
+
+        $row = SupplierReport::for(now()->startOfMonth()->toDateString(), now()->toDateString())['suppliers'][0];
+
+        $this->assertSame(0, $row['still_owed']);
+        $this->assertSame(60.0, $row['fill_rate'], 'the four that never came still count against them');
+    }
+
+    public function test_refunds_are_grouped_by_their_names_not_their_keys(): void
+    {
+        $order = $this->owing(5000, 'delivered');
+        Refund::create([
+            'order_id' => $order->id, 'amount' => 500, 'method' => 'bkash',
+            'reason' => 'damaged', 'refunded_on' => now()->toDateString(),
+        ]);
+
+        $report = MoneyReport::refunds(now()->startOfMonth()->toDateString(), now()->toDateString());
+
+        $this->assertSame('Arrived damaged', $report['by_reason'][0]['label']);
+        $this->assertSame('bKash', $report['by_method'][0]['label']);
+        $this->assertSame('bKash', $report['lines'][0]['method']);
+    }
+
     // --- helpers -----------------------------------------------------------------
 
     private function owing(float $total, string $status): Order

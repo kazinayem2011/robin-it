@@ -248,7 +248,9 @@ class DashboardController extends Controller
             'from' => $statement['from'],
             'to' => $statement['to'],
             'revenue' => $statement['income']['total'] ?? 0,
-            'cost_of_goods' => $statement['cost_of_goods'],
+            // Stock lost goes in with the cost of goods, so the four figures on
+            // the card still add up to the profit beneath them.
+            'cost_of_goods' => round($statement['cost_of_goods'] + $statement['stock_lost']['amount'], 2),
             'expenses' => $statement['expenses']['total'] ?? 0,
             'gross_profit' => $statement['gross_profit'],
             'net_profit' => $statement['net_profit'],

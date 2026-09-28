@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * Reports count a sale once it is delivered, on the day it was delivered.
  * Nothing recorded that day, so orders already delivered take the last time
- * they changed — the closest thing to it there is.
+ * they changed — the closest thing to it there is. Returned orders are left
+ * empty: whether one reached the customer first cannot be told now.
  */
 return new class extends Migration
 {
@@ -21,7 +22,7 @@ return new class extends Migration
         });
 
         DB::table('orders')
-            ->whereIn('status', ['delivered', 'returned'])
+            ->where('status', 'delivered')
             ->update(['delivered_at' => DB::raw('updated_at')]);
     }
 
