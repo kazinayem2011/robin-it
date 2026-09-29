@@ -104,9 +104,11 @@ class Sold
     /**
      * Stock that left without being sold, at what it cost.
      *
-     * Damaged returns, write-offs and stock-count corrections. A count that
-     * found more than expected counts against the losses. Stock sent back to
-     * a supplier is not a loss — it goes back for credit — so it is left out.
+     * Damaged returns, write-offs and stock counts that came up short. Only
+     * what went out: a count that finds more than the books say usually means
+     * a delivery was never recorded, not money earned — counting it as a gain
+     * showed ৳2,00,000 profit on a month with no sales. Stock sent back to a
+     * supplier is not a loss either — it goes back for credit.
      *
      * Movements carry no cost of their own. A damaged return is priced at the
      * cost on its order line; anything else at the last price paid for that
@@ -117,6 +119,7 @@ class Sold
     public static function stockLost(?string $from, ?string $to): array
     {
         $movements = StockMovement::query()
+            ->where('quantity', '<', 0)
             ->where(fn ($q) => $q->where('type', StockMovement::WRITE_OFF)
                 ->orWhere(fn ($q) => $q->where('type', StockMovement::ADJUSTMENT)
                     ->where(fn ($q) => $q->whereNull('reason')->orWhere('reason', '!=', 'supplier_return'))))

@@ -174,4 +174,24 @@ class ReportsCountWhatWasKeptTest extends TestCase
         $this->assertSame(1200.0, $lost['amount'], 'two mice at ৳600; the one sent back is not a loss');
         $this->assertSame(2, $lost['units']);
     }
+
+    /*
+     * Live showed ৳2,00,000 profit on a month with no sales: a count found four
+     * laptops more than the books said, and that was counted as a gain. Extra
+     * stock usually means a delivery nobody recorded, not money earned.
+     */
+    public function test_a_stock_count_that_finds_more_is_not_profit(): void
+    {
+        $stock = app(StockService::class);
+        $stock->adjust($this->mouse, null, 4, 'stock_take', 'Counted 54 against 50');
+
+        $pl = $this->statement();
+        $this->assertSame(0.0, $pl['stock_lost']['amount']);
+        $this->assertSame(0.0, $pl['gross_profit']);
+        $this->assertSame(0.0, $pl['net_profit']);
+
+        // Found stock does not hide a loss beside it either.
+        $stock->adjust($this->mouse, null, -1, 'damaged', 'Dropped');
+        $this->assertSame(600.0, $this->statement()['stock_lost']['amount']);
+    }
 }

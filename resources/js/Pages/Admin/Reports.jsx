@@ -318,7 +318,7 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                                     ({formatBdt(statement.cost_of_goods)})
                                 </td>
                             </tr>
-                            {lost.amount !== 0 && (
+                            {lost.amount > 0 && (
                                 <tr>
                                     <td>
                                         Stock lost
@@ -328,14 +328,8 @@ export default function AdminReports({ statement = {}, filters = {} }) {
                                             what they cost
                                         </span>
                                     </td>
-                                    <td
-                                        className={
-                                            lost.amount > 0 ? 'is-negative' : ''
-                                        }
-                                    >
-                                        {lost.amount > 0
-                                            ? `(${formatBdt(lost.amount)})`
-                                            : formatBdt(-lost.amount)}
+                                    <td className="is-negative">
+                                        ({formatBdt(lost.amount)})
                                     </td>
                                 </tr>
                             )}
