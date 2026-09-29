@@ -260,16 +260,16 @@ class StockController extends Controller
             }
         }
 
-        // Serials checked before a unit lands, so a bad one stops the delivery.
+        // Serials checked before a unit lands, so a bad one stops the delivery
+        // — and a missing one, on anything with a warranty.
         foreach ($validated['lines'] as $line) {
-            if (filled($line['serials'] ?? null)) {
-                [$product, $variant] = $this->stock->resolveUnit((int) $line['product_id'], $line['product_variant_id'] ?? null);
-                $this->serials->checkDelivery(
-                    $variant ? "{$product->name} ({$variant->name})" : $product->name,
-                    $line['serials'],
-                    (int) $line['quantity']
-                );
-            }
+            [$product, $variant] = $this->stock->resolveUnit((int) $line['product_id'], $line['product_variant_id'] ?? null);
+            $this->serials->checkDelivery(
+                $variant ? "{$product->name} ({$variant->name})" : $product->name,
+                $line['serials'] ?? null,
+                (int) $line['quantity'],
+                (int) $product->warranty_months > 0,
+            );
         }
 
         $receipt = $this->stock->receive(
@@ -576,7 +576,7 @@ class StockController extends Controller
              * order — and without it each showed a running total of zero while
              * the server quietly worked out the real one.
              */
-            ->select('id', 'name', 'category_id', 'stock_quantity', 'has_variants', 'price', 'discount_price')
+            ->select('id', 'name', 'category_id', 'stock_quantity', 'has_variants', 'price', 'discount_price', 'warranty_months')
             /*
              * And the shelf it sits on. A placeholder catalogue has four
              * products called "Sample AJAZZ" — one per AJAZZ shelf — and a

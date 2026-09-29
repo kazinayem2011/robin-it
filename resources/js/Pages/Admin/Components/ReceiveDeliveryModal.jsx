@@ -142,6 +142,7 @@ export default function ReceiveDeliveryModal({
                           split: null,
                           serials: '',
                           showSerials: false,
+                          needsSerials: Boolean(i.needs_serials),
                       }))
                       .filter((l) => l.ordered > l.received)
                 : [blankLine()],
@@ -182,6 +183,21 @@ export default function ReceiveDeliveryModal({
             ),
         [units],
     );
+
+    // Products with a warranty, by id: their units need a serial each.
+    const withWarranty = useMemo(
+        () =>
+            new Set(
+                units
+                    .filter((p) => Number(p.warranty_months) > 0)
+                    .map((p) => String(p.id)),
+            ),
+        [units],
+    );
+    const needsSerials = (l) =>
+        fromOrder
+            ? Boolean(l.needsSerials)
+            : Boolean(l.unit) && withWarranty.has(l.unit.split(':')[0]);
 
     const setLine = (key, patch) =>
         setLines((all) =>
@@ -237,6 +253,11 @@ export default function ReceiveDeliveryModal({
             .split(/[\r\n,]+/)
             .map((s) => s.replace(/\s+/g, '').toUpperCase())
             .filter(Boolean);
+        if (needsSerials(l) && typedSerials.length < arrived) {
+            out.push(
+                `${label} has a warranty: type the serial number of each of the ${arrived} (${typedSerials.length} so far). They are on the box labels.`,
+            );
+        }
         if (typedSerials.length > arrived) {
             out.push(
                 `${label}: ${arrived} arrived but ${typedSerials.length} serial numbers typed.`,
@@ -470,6 +491,7 @@ export default function ReceiveDeliveryModal({
                             <ReceiveLine
                                 key={line.key}
                                 line={line}
+                                needsSerials={needsSerials(line)}
                                 fromOrder={fromOrder}
                                 stores={stores}
                                 branch={branch}
@@ -554,6 +576,7 @@ function blankLine() {
 /** One product: how many arrived, what each cost, and where they go. */
 function ReceiveLine({
     line,
+    needsSerials = false,
     fromOrder,
     stores,
     branch,
@@ -650,9 +673,18 @@ function ReceiveLine({
                     type="button"
                     className={`admin-receive-chip${serialCount ? ' is-on' : ''}`}
                     onClick={() => onChange({ showSerials: !line.showSerials })}
-                    title="Serial numbers (optional)"
+                    title={
+                        needsSerials
+                            ? 'Serial numbers (required: this product has a warranty)'
+                            : 'Serial numbers (optional)'
+                    }
                 >
-                    <Hash size={13} /> {serialCount ? serialCount : 'Serials'}
+                    <Hash size={13} />{' '}
+                    {serialCount
+                        ? `${serialCount}${needsSerials ? ` of ${arrived}` : ''}`
+                        : needsSerials
+                          ? 'Serials needed'
+                          : 'Serials'}
                 </button>
                 {canRemove && (
                     <button
@@ -713,9 +745,11 @@ function ReceiveLine({
                 </span>
             )}
 
-            {line.showSerials && (
+            {(line.showSerials || needsSerials) && (
                 <label className="admin-receive-serials">
-                    Serial numbers — one per line (optional)
+                    {needsSerials
+                        ? `Serial numbers — one per line, all ${arrived} (this product has a warranty)`
+                        : 'Serial numbers — one per line (optional)'}
                     <textarea
                         rows={4}
                         value={line.serials}

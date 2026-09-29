@@ -12,6 +12,7 @@ use App\Support\Reports\ProductReport;
 use App\Support\Reports\SalesReport;
 use App\Support\Reports\StockReport;
 use App\Support\Reports\SupplierReport;
+use App\Support\Reports\WarrantyReport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,25 +29,53 @@ use Inertia\Response;
  */
 class ReportController extends Controller
 {
-    /** Where each report lives, for the index and the sidebar. */
+    /**
+     * Where each report lives, and who may open it.
+     *
+     * The abilities match the routes. The index was finance-only, so a
+     * storekeeper allowed the stock report had no way to it.
+     */
     public const REPORTS = [
-        ['key' => 'sales', 'title' => 'Sales', 'route' => '/admin/reports/sales',
+        ['key' => 'sales', 'title' => 'Sales', 'route' => '/admin/reports/sales', 'abilities' => ['finance'],
             'blurb' => 'What sold and when, against the period before it. Products, and who bought them.'],
-        ['key' => 'stock', 'title' => 'Stock', 'route' => '/admin/reports/stock',
+        ['key' => 'stock', 'title' => 'Stock', 'route' => '/admin/reports/stock', 'abilities' => ['stock'],
             'blurb' => 'What is on the shelves, what it is worth, and how long it has sat there.'],
-        ['key' => 'money', 'title' => 'Money', 'route' => '/admin/reports/money',
+        ['key' => 'money', 'title' => 'Money', 'route' => '/admin/reports/money', 'abilities' => ['finance'],
             'blurb' => 'What customers still owe, VAT for the return, and what went back.'],
-        ['key' => 'delivery', 'title' => 'Delivery', 'route' => '/admin/reports/delivery',
+        ['key' => 'delivery', 'title' => 'Delivery', 'route' => '/admin/reports/delivery', 'abilities' => ['orders'],
             'blurb' => 'Which courier actually delivers, how often, and how fast.'],
-        ['key' => 'suppliers', 'title' => 'Suppliers', 'route' => '/admin/reports/suppliers',
+        ['key' => 'suppliers', 'title' => 'Suppliers', 'route' => '/admin/reports/suppliers', 'abilities' => ['stock'],
             'blurb' => 'Who sends what they promised, when they promised it.'],
-        ['key' => 'profit', 'title' => 'Profit & loss', 'route' => '/admin/reports/profit-loss',
+        ['key' => 'warranty', 'title' => 'Warranty', 'route' => '/admin/reports/warranty', 'abilities' => ['support', 'finance'],
+            'blurb' => 'Claims filed, how fast repairs come back, which products fail, and what replacements cost.'],
+        ['key' => 'profit', 'title' => 'Profit & loss', 'route' => '/admin/reports/profit-loss', 'abilities' => ['finance'],
             'blurb' => 'Income less cost of goods and expenses, for a period.'],
     ];
 
-    public function index(): Response
+    /** Anyone who may open at least one report may open the list. */
+    public const INDEX_ABILITIES = 'finance,stock,orders,support';
+
+    public function index(Request $request): Response
     {
-        return Inertia::render('Admin/Reports/Index', ['reports' => self::REPORTS]);
+        // Only the ones this person may open; the rest would lead nowhere.
+        $mine = array_values(array_filter(
+            self::REPORTS,
+            fn ($report) => collect($report['abilities'])->contains(fn ($a) => $request->user()->can_($a))
+        ));
+
+        return Inertia::render('Admin/Reports/Index', ['reports' => $mine]);
+    }
+
+    public function warranty(Request $request): Response
+    {
+        [$from, $to] = $this->period($request);
+
+        return Inertia::render('Admin/Reports/Warranty', [
+            'warranty' => WarrantyReport::for($from, $to),
+            // Money is shown to those who see the accounts.
+            'seesMoney' => $request->user()->can_('finance'),
+            'filters' => ['from' => $from, 'to' => $to],
+        ]);
     }
 
     public function sales(Request $request): Response

@@ -7,6 +7,7 @@ import {
     Wallet,
     Truck,
     Factory,
+    ShieldCheck,
     TrendingUp,
     ArrowRight,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ const ICONS = {
     money: Wallet,
     delivery: Truck,
     suppliers: Factory,
+    warranty: ShieldCheck,
     profit: LineChart,
 };
 

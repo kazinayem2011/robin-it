@@ -258,7 +258,9 @@ const NAV_GROUPS = [
                 label: 'Reports',
                 href: ROUTES.ADMIN_REPORTS,
                 icon: LineChart,
-                ability: 'finance',
+                // Every report has its own; the list shows the ones a person
+                // may open, so anyone with one of them sees the link.
+                ability: ['finance', 'stock', 'orders', 'support'],
             },
         ],
     },
@@ -450,7 +452,9 @@ export default function AdminLayout({
     const visibleGroups = NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items.filter(
-            (item) => item.ability === null || abilities.includes(item.ability),
+            (item) =>
+                item.ability === null ||
+                [item.ability].flat().some((a) => abilities.includes(a)),
         ),
     })).filter((group) => group.items.length > 0);
 

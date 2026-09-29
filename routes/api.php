@@ -330,7 +330,9 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
         Route::get(ApiEndpoints::ADMIN_STOCK_RECEIPTS, [StockController::class, 'receipts'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_STOCK_ADJUST, [StockController::class, 'adjust'])->middleware('can:stock');
         Route::get(ApiEndpoints::ADMIN_STOCK_MOVEMENTS, [StockController::class, 'movements'])->middleware('can:stock');
-        Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->middleware('can:stock');
+        // Orders too: taking or editing an order means finding a product to
+        // put on it. Names, prices and what is on the shelf — no costs.
+        Route::get(ApiEndpoints::ADMIN_STOCK_UNITS, [StockController::class, 'units'])->middleware('can:stock,orders');
         Route::post(ApiEndpoints::ADMIN_STOCK_TRANSFER, [StockController::class, 'transfer'])->middleware('can:stock');
         Route::post(ApiEndpoints::ADMIN_PC_BUILDER_PARTS, [PcBuilderPartController::class, 'store'])->middleware('can:catalogue');
         Route::put(ApiEndpoints::ADMIN_PC_BUILDER_PART, [PcBuilderPartController::class, 'update'])->middleware('can:catalogue');

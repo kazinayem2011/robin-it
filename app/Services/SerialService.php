@@ -74,16 +74,30 @@ class SerialService
      * five serials and nobody knowing which box was missing one. More serials
      * than units put numbers on the books for boxes that never arrived. Both
      * are stopped at the door now, and nothing is received until they are put
-     * right. Fewer serials than units is fine: they are optional.
+     * right.
+     *
+     * Fewer serials than units is fine for most things, but not for a product
+     * with a warranty: a claim on one of its units can only be checked against
+     * a serial the shop wrote down, and the box at the door is the one moment
+     * somebody can read it.
      *
      * @throws StorefrontException
      */
-    public function checkDelivery(string $name, ?string $typed, int $units): void
+    public function checkDelivery(string $name, ?string $typed, int $units, bool $required = false): void
     {
         $list = collect(preg_split('/[\r\n,]+/', (string) $typed) ?: [])
             ->map(fn ($s) => ProductSerial::normalise($s))
             ->filter()
             ->values();
+
+        if ($required && $units > 0 && $list->count() < $units) {
+            throw new StorefrontException(
+                "{$name} has a warranty, so each unit needs its serial number: {$units} arrived, "
+                    ."{$list->count()} typed. They are on the label of each box.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
 
         if ($list->isEmpty()) {
             return;

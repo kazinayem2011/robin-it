@@ -281,7 +281,12 @@ class PurchaseOrderService
                 }
 
                 // Before anything lands; the transaction undoes nothing yet.
-                app(SerialService::class)->checkDelivery($item->display_name, $line['serials'] ?? null, $quantity);
+                app(SerialService::class)->checkDelivery(
+                    $item->display_name,
+                    $line['serials'] ?? null,
+                    $quantity,
+                    $item->needs_serials,
+                );
 
                 $receiptLines[] = [
                     'product_id' => $item->product_id,

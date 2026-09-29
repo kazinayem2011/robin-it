@@ -431,6 +431,8 @@ class ApiEndpoints
 
     public const ADMIN_REPORTS_PROFIT = 'reports/profit-loss';
 
+    public const ADMIN_REPORTS_WARRANTY = 'reports/warranty';
+
     public const ADMIN_OFFERS = 'offers';
 
     public const ADMIN_OFFERS_ITEM = 'offers/{id}';

@@ -26,11 +26,15 @@ class WarrantyClaim extends Model
         'issue_description',
         'dropoff_branch',
         'status',
+        'ready_at',
+        'closed_at',
         'diagnostic_notes',
     ];
 
     protected $casts = [
         'purchase_date' => 'date',
+        'ready_at' => 'datetime',
+        'closed_at' => 'datetime',
     ];
 
     protected $appends = ['status_label'];
@@ -65,6 +69,23 @@ class WarrantyClaim extends Model
 
     /** Nothing moves a claim on from these. */
     public const FINAL = ['completed', 'rejected'];
+
+    /*
+     * When it was ready to collect, and when it was finished — what the
+     * warranty report times a repair by. Set here, so no way of moving a
+     * claim can forget them.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (WarrantyClaim $claim) {
+            if (in_array($claim->status, ['ready_for_pickup', 'completed'], true) && $claim->ready_at === null) {
+                $claim->ready_at = now();
+            }
+            if (in_array($claim->status, self::FINAL, true) && $claim->closed_at === null) {
+                $claim->closed_at = now();
+            }
+        });
+    }
 
     public function user(): BelongsTo
     {

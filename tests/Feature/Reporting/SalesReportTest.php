@@ -294,7 +294,7 @@ class SalesReportTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => 'admin']))
             ->get('/admin/reports')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Admin/Reports/Index')->has('reports', 6));
+            ->assertInertia(fn ($page) => $page->component('Admin/Reports/Index')->has('reports', 7)); // with Warranty
     }
 
     public function test_a_period_that_ends_before_it_starts_is_refused(): void

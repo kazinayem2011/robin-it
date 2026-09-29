@@ -23,7 +23,7 @@ class PurchaseOrderItem extends Model
      * back to "#1308" without it. Load `product` (and `variant`) with the
      * lines where many are listed, so this is not a query per line.
      */
-    protected $appends = ['outstanding', 'display_name'];
+    protected $appends = ['outstanding', 'display_name', 'needs_serials'];
 
     public function purchaseOrder(): BelongsTo
     {
@@ -45,6 +45,12 @@ class PurchaseOrderItem extends Model
     public function getOutstandingAttribute(): int
     {
         return max(0, $this->quantity - $this->quantity_received);
+    }
+
+    /** A product with a warranty is received with a serial for every unit. */
+    public function getNeedsSerialsAttribute(): bool
+    {
+        return (int) $this->product?->warranty_months > 0;
     }
 
     public function getDisplayNameAttribute(): string

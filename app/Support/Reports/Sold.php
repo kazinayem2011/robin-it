@@ -116,10 +116,12 @@ class Sold
      *
      * @return array{amount:float, units:int, uncosted:int}
      */
-    public static function stockLost(?string $from, ?string $to): array
+    public static function stockLost(?string $from, ?string $to, ?string $reason = null): array
     {
         $movements = StockMovement::query()
             ->where('quantity', '<', 0)
+            // One kind only, when asked — the warranty report's replacements.
+            ->when($reason, fn ($q) => $q->where('reason', $reason))
             ->where(fn ($q) => $q->where('type', StockMovement::WRITE_OFF)
                 ->orWhere(fn ($q) => $q->where('type', StockMovement::ADJUSTMENT)
                     ->where(fn ($q) => $q->whereNull('reason')->orWhere('reason', '!=', 'supplier_return'))))

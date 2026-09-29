@@ -1,6 +1,6 @@
 import Select from '@/Components/Select';
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import {
     CircleDollarSign,
@@ -87,6 +87,11 @@ export default function Orders({
 }) {
     const [searchTerm, setSearchTerm] = useState(search);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    // Money in and out is the refunds ability. A storekeeper was shown both
+    // buttons, filled in the form, and was refused on Save.
+    const handlesMoney = (usePage().props.auth?.user?.abilities ?? []).includes(
+        'refunds',
+    );
     const [returningOrder, setReturningOrder] = useState(null);
     const [dispatchingOrder, setDispatchingOrder] = useState(null);
     const [refundingOrder, setRefundingOrder] = useState(null);
@@ -410,17 +415,19 @@ export default function Orders({
                                 </Button>
                             )}
 
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                icon={Wallet}
-                                onClick={() => {
-                                    setPayingOrder(selectedOrder);
-                                    setSelectedOrder(null);
-                                }}
-                            >
-                                Payment in
-                            </Button>
+                            {handlesMoney && (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    icon={Wallet}
+                                    onClick={() => {
+                                        setPayingOrder(selectedOrder);
+                                        setSelectedOrder(null);
+                                    }}
+                                >
+                                    Payment in
+                                </Button>
+                            )}
 
                             {/* Money going back is a different event from
                                 goods coming back: a damaged item may be
@@ -429,19 +436,20 @@ export default function Orders({
                                 shared an icon in the row, which said the
                                 opposite. */}
                             {/* Only money that came in can go back. */}
-                            {refundableOn(selectedOrder) > 0 && (
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    icon={CircleDollarSign}
-                                    onClick={() => {
-                                        setRefundingOrder(selectedOrder);
-                                        setSelectedOrder(null);
-                                    }}
-                                >
-                                    Money back
-                                </Button>
-                            )}
+                            {handlesMoney &&
+                                refundableOn(selectedOrder) > 0 && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        icon={CircleDollarSign}
+                                        onClick={() => {
+                                            setRefundingOrder(selectedOrder);
+                                            setSelectedOrder(null);
+                                        }}
+                                    >
+                                        Money back
+                                    </Button>
+                                )}
 
                             {['pending', 'processing'].includes(
                                 selectedOrder?.status,
