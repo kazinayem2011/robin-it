@@ -46,6 +46,9 @@ class SmsService
         'sms_on_refund',
         'sms_on_payment_due',
         'sms_on_back_in_stock',
+        'sms_on_warranty_received',
+        'sms_on_warranty_ready',
+        'sms_on_warranty_rejected',
     ];
 
     public const PROVIDER_GREENWEB = 'greenweb';
@@ -114,6 +117,12 @@ class SmsService
             'hint' => 'Rarely worth the cost; the refund message covers what the customer cares about.'],
         'back_in_stock' => ['label' => 'Back in stock', 'default' => true,
             'hint' => 'For someone who pressed Notify me and left a mobile number rather than an email: the only way they hear.'],
+        'warranty_received' => ['label' => 'Warranty claim received', 'default' => true,
+            'hint' => 'With the RMA number the customer tracks the claim by.'],
+        'warranty_ready' => ['label' => 'Warranty unit ready', 'default' => true,
+            'hint' => 'When a repaired or replaced unit is ready to collect.'],
+        'warranty_rejected' => ['label' => 'Warranty claim rejected', 'default' => true,
+            'hint' => 'So the customer hears it from the shop rather than finding out at the counter.'],
     ];
 
     /**

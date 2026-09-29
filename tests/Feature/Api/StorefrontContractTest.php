@@ -289,11 +289,14 @@ class StorefrontContractTest extends TestCase
             'status' => 'diagnosing',
         ]);
 
+        // The claim is found. Its cover is not stated: the serial is not a unit
+        // the shop knows, so there is no product to take a period from — a
+        // flat 36 months for everything used to be assumed here.
         $this->getJson('/api/'.ApiEndpoints::WARRANTY_CHECK.'?query=SN-ABC-123')
             ->assertStatus(200)
             ->assertJsonPath('data.existing_claim.claim_number', 'RMA-123456')
-            ->assertJsonPath('data.warranty_known', true)
-            ->assertJsonPath('data.is_under_warranty', true);
+            ->assertJsonPath('data.existing_claim.status_label', 'Checking')
+            ->assertJsonPath('data.warranty_known', false);
     }
 
     public function test_a_pc_build_can_be_saved_and_reloaded_with_live_prices(): void

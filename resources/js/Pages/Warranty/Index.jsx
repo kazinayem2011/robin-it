@@ -26,11 +26,11 @@ import {
 import './Warranty.css';
 
 const RMA_STEPS = [
-    { key: 'received', label: '1. Received' },
-    { key: 'diagnosing', label: '2. Diagnosing' },
-    { key: 'repairing', label: '3. Repairing / OEM Claim' },
-    { key: 'ready_for_pickup', label: '4. Ready for Pickup' },
-    { key: 'completed', label: '5. Completed' },
+    { key: 'received', label: 'Received' },
+    { key: 'diagnosing', label: 'Checking' },
+    { key: 'repairing', label: 'Repairing' },
+    { key: 'ready_for_pickup', label: 'Ready for pickup' },
+    { key: 'completed', label: 'Completed' },
 ];
 
 const ISSUE_TYPES = [
@@ -308,7 +308,9 @@ export default function WarrantyIndex() {
                                                 textTransform: 'uppercase',
                                             }}
                                         >
-                                            Query Ref: {warrantyData.query}
+                                            Query Ref:{' '}
+                                            {warrantyData.query ||
+                                                warrantyData.serial_number}
                                         </span>
                                         <h3
                                             style={{
@@ -325,8 +327,12 @@ export default function WarrantyIndex() {
                                                 where the shop has no record of
                                                 what it is. The reference above
                                                 identifies it. */}
-                                            {warrantyData.existing_claim
-                                                ?.product_name || 'This unit'}
+                                            {/* A serial the shop sold names
+                                                its own product. */}
+                                            {warrantyData.product_name ||
+                                                warrantyData.existing_claim
+                                                    ?.product_name ||
+                                                'This unit'}
                                         </h3>
                                     </div>
                                     <div>
@@ -437,7 +443,36 @@ export default function WarrantyIndex() {
                                             </span>
                                         </div>
 
-                                        <div className="rma-stepper">
+                                        {/* A rejected claim has no step to be
+                                            on; the stepper read "Received". */}
+                                        {warrantyData.existing_claim.status ===
+                                            'rejected' && (
+                                            <p className="auth-field-error">
+                                                This claim was not accepted. The
+                                                note below says why; call us if
+                                                anything is unclear.
+                                            </p>
+                                        )}
+
+                                        {warrantyData.existing_claim
+                                            .replacement_serial && (
+                                            <p className="auth-field-hint">
+                                                Replaced with a new unit, serial{' '}
+                                                {
+                                                    warrantyData.existing_claim
+                                                        .replacement_serial
+                                                }
+                                                . Your warranty continues on it.
+                                            </p>
+                                        )}
+
+                                        <div
+                                            className="rma-stepper"
+                                            hidden={
+                                                warrantyData.existing_claim
+                                                    .status === 'rejected'
+                                            }
+                                        >
                                             {RMA_STEPS.map((step, idx) => {
                                                 const currentIdx = getStepIndex(
                                                     warrantyData.existing_claim

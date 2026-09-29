@@ -9,16 +9,13 @@ use App\Models\Order;
 use App\Models\ProductSerial;
 use App\Models\WarrantyClaim;
 use App\Services\SerialService;
-use App\Support\BrandDetails;
+use App\Services\WarrantyService;
 use App\Support\ShopDate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class WarrantyController extends Controller
 {
-    /** Standard cover on genuine hardware sold through the store. */
-    private const WARRANTY_MONTHS = 36;
-
     /**
      * Check Warranty Status by Serial Number, Invoice Number, or RMA Claim ID.
      *
@@ -45,7 +42,17 @@ class WarrantyController extends Controller
          * tracked.
          */
         if ($unit = $serials->lookup($query)) {
-            return $this->successResponse($this->fromSerial($unit), 'Warranty details found.');
+            // With any claim on it: a customer who filed one and came back
+            // with the serial was shown the warranty and not the repair.
+            $claim = WarrantyClaim::where('product_serial_id', $unit->id)
+                ->orWhere('serial_number', $unit->serial)
+                ->latest()
+                ->first();
+
+            return $this->successResponse(
+                ['existing_claim' => $claim ? $this->claimView($claim) : null] + $this->fromSerial($unit),
+                'Warranty details found.'
+            );
         }
 
         $claim = WarrantyClaim::where('claim_number', $query)
@@ -65,17 +72,27 @@ class WarrantyController extends Controller
             );
         }
 
-        $purchaseDate = $claim?->purchase_date ?? $order?->created_at;
+        $purchaseDate = $claim?->purchase_date ?? $order?->delivered_at ?? $order?->created_at;
 
-        // Only state a warranty window when there is a real purchase date behind it.
-        if ($purchaseDate) {
-            $expiryDate = $purchaseDate->copy()->addMonths(self::WARRANTY_MONTHS);
+        /*
+         * The product's own cover, not a flat 36 months for everything. An
+         * order of several things answers with the longest of them; a claim
+         * alone says nothing about which product, so it has none.
+         */
+        $months = $order
+            ? $order->items()->with('product:id,warranty_months')->get()->max(fn ($i) => (int) $i->product?->warranty_months)
+            : ($claim?->unit?->product?->warranty_months);
+
+        // Only state a warranty window when there is a real purchase date and
+        // a real period behind it.
+        if ($purchaseDate && $months) {
+            $expiryDate = $purchaseDate->copy()->addMonths($months);
             $isUnderWarranty = now()->lessThanOrEqualTo($expiryDate);
 
             $warranty = [
                 'warranty_known' => true,
                 'is_under_warranty' => $isUnderWarranty,
-                'warranty_period' => self::WARRANTY_MONTHS.' Months Official Genuine Brand Warranty',
+                'warranty_period' => "{$months} months from the date of purchase",
                 'purchase_date' => $purchaseDate->format('d M Y'),
                 'warranty_expiry' => $expiryDate->format('d M Y'),
                 'days_remaining' => $isUnderWarranty ? (int) now()->diffInDays($expiryDate, false) : 0,
@@ -84,7 +101,7 @@ class WarrantyController extends Controller
             $warranty = [
                 'warranty_known' => false,
                 'is_under_warranty' => false,
-                'warranty_period' => 'Purchase date not on record — our service desk can confirm your cover.',
+                'warranty_period' => 'Not on record here — our service desk can confirm your cover.',
                 'purchase_date' => null,
                 'warranty_expiry' => null,
                 'days_remaining' => 0,
@@ -93,21 +110,14 @@ class WarrantyController extends Controller
 
         return $this->successResponse(array_merge([
             'query' => $query,
-            'existing_claim' => $claim ? [
-                'claim_number' => $claim->claim_number,
-                'product_name' => $claim->product_name,
-                'status' => $claim->status,
-                'issue_type' => $claim->issue_type,
-                'diagnostic_notes' => $claim->diagnostic_notes,
-                'updated_at' => ShopDate::show($claim->updated_at, 'd M Y, h:i A'),
-            ] : null,
+            'existing_claim' => $claim ? $this->claimView($claim) : null,
         ], $warranty), 'Warranty status retrieved successfully.');
     }
 
     /**
      * Submit a New Warranty / RMA Claim Request.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, WarrantyService $warranty): JsonResponse
     {
         // The rules judge the number, not its punctuation.
         PhoneHelper::canonicalise($request, 'customer_phone');
@@ -129,14 +139,7 @@ class WarrantyController extends Controller
             'purchase_date.before_or_equal' => 'Purchase date cannot be in the future.',
         ]);
 
-        $claim = new WarrantyClaim;
-        $claim->fill($validated);
-        $claim->claim_number = $this->generateClaimNumber();
-        $claim->user_id = auth('sanctum')->id() ?? auth()->id();
-        $claim->status = 'received';
-        $claim->diagnostic_notes = 'Claim logged. Hardware awaiting intake diagnosis at the '
-            .BrandDetails::name().' service lab.';
-        $claim->save();
+        $claim = $warranty->submit($validated, auth('sanctum')->id() ?? auth()->id());
 
         return $this->successResponse([
             'claim_number' => $claim->claim_number,
@@ -151,20 +154,22 @@ class WarrantyController extends Controller
     }
 
     /**
-     * Sequentially-safe RMA reference. Falls back to a wider range if the small
-     * space is contended, rather than looping forever.
+     * A claim as the customer sees it.
+     *
+     * @return array<string, mixed>
      */
-    private function generateClaimNumber(): string
+    private function claimView(WarrantyClaim $claim): array
     {
-        for ($attempt = 0; $attempt < 10; $attempt++) {
-            $candidate = 'RMA-'.random_int(100000, 999999);
-
-            if (! WarrantyClaim::where('claim_number', $candidate)->exists()) {
-                return $candidate;
-            }
-        }
-
-        return 'RMA-'.now()->format('ymdHis').random_int(10, 99);
+        return [
+            'claim_number' => $claim->claim_number,
+            'product_name' => $claim->product_name,
+            'status' => $claim->status,
+            'status_label' => $claim->status_label,
+            'issue_type' => $claim->issue_type,
+            'diagnostic_notes' => $claim->diagnostic_notes,
+            'replacement_serial' => $claim->replacement?->serial,
+            'updated_at' => ShopDate::show($claim->updated_at, 'd M Y, h:i A'),
+        ];
     }
 
     /**
@@ -205,7 +210,6 @@ class WarrantyController extends Controller
              * somebody arguing about a warranty that has not started.
              */
             'not_yet_sold' => $unit->status === ProductSerial::IN_STOCK,
-            'existing_claim' => null,
         ];
     }
 }

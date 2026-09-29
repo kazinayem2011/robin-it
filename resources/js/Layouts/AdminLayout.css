@@ -5822,3 +5822,10 @@ a.admin-card:hover,
     font-size: 0.72rem;
     font-weight: 700;
 }
+
+/* What the shop knows about a warranty claim's unit. It is a sentence —
+   "Sold by us on 29 Sep 2026 · under warranty until …" — and the pill's
+   capitalise made every word a title. */
+.admin-claim-check {
+    text-transform: none;
+}

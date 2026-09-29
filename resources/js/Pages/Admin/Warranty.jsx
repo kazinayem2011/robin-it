@@ -8,37 +8,45 @@ import Modal from '../../Components/Modal';
 import { toast } from '../../Components/Toast';
 import { API_ENDPOINTS } from '../../constants/endpoints';
 import axiosInstance from '../../services/axiosInstance';
-import { ShieldCheck, Edit3 } from 'lucide-react';
+import { ShieldCheck, Edit3, RefreshCw } from 'lucide-react';
 
-const STATUS_OPTIONS = [
-    { value: 'received', label: 'Received at Lab' },
-    { value: 'diagnosing', label: 'Under Diagnostic Bench Test' },
-    { value: 'repairing', label: 'Repairing / Sent to OEM Vendor' },
-    {
-        value: 'ready_for_pickup',
-        label: 'Ready for Customer Pickup / Dispatch',
-    },
-    { value: 'completed', label: 'Service Completed' },
-    { value: 'rejected', label: 'Claim Rejected (Physical Damage / Void)' },
-];
+// What the shop knows about the unit, as a coloured pill.
+const TONE = { ok: 'active', warn: 'pending', bad: 'inactive' };
 
-export default function AdminWarranty({ claims = [] }) {
+function CheckTag({ check }) {
+    if (!check) return null;
+
+    return (
+        <span
+            className={`status-pill admin-claim-check ${TONE[check.tone] ?? 'pending'}`}
+        >
+            {check.label}
+        </span>
+    );
+}
+
+export default function AdminWarranty({ claims = [], statusLabels = {} }) {
     const [selectedClaim, setSelectedClaim] = useState(null);
     const [updatingStatus, setUpdatingStatus] = useState('');
     const [diagnosticNotes, setDiagnosticNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [replacementId, setReplacementId] = useState('');
+    const [isReplacing, setIsReplacing] = useState(false);
+
+    const label = (status) => statusLabels[status] ?? status;
 
     const handleOpenEdit = (claim) => {
         setSelectedClaim(claim);
         setUpdatingStatus(claim.status);
         setDiagnosticNotes(claim.diagnostic_notes || '');
+        setReplacementId('');
     };
 
     const handleSaveStatus = async () => {
         if (!selectedClaim) return;
         setIsSaving(true);
         try {
-            await axiosInstance.patch(
+            const res = await axiosInstance.patch(
                 API_ENDPOINTS.ADMIN.WARRANTY_STATUS(selectedClaim.id),
                 {
                     status: updatingStatus,
@@ -46,7 +54,8 @@ export default function AdminWarranty({ claims = [] }) {
                 },
             );
             toast.success(
-                `RMA #${selectedClaim.claim_number} updated to ${updatingStatus.toUpperCase()}!`,
+                res?.message ||
+                    `${selectedClaim.claim_number} is now ${label(updatingStatus)}.`,
             );
             setSelectedClaim(null);
             router.reload({ only: ['claims'] });
@@ -54,6 +63,24 @@ export default function AdminWarranty({ claims = [] }) {
             toast.error(err?.message || 'Failed to update claim status.');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleReplace = async () => {
+        if (!selectedClaim || !replacementId) return;
+        setIsReplacing(true);
+        try {
+            const res = await axiosInstance.post(
+                API_ENDPOINTS.ADMIN.WARRANTY_REPLACE(selectedClaim.id),
+                { serial_id: Number(replacementId) },
+            );
+            toast.success(res?.message || 'Replacement recorded.');
+            setSelectedClaim(null);
+            router.reload({ only: ['claims'] });
+        } catch (err) {
+            toast.error(err?.message || 'Could not record the replacement.');
+        } finally {
+            setIsReplacing(false);
         }
     };
 
@@ -82,6 +109,21 @@ export default function AdminWarranty({ claims = [] }) {
             ),
         },
         {
+            key: 'check',
+            header: 'Our record',
+            render: (claim) => (
+                <div>
+                    <CheckTag check={claim.check} />
+                    {claim.check?.order_number && (
+                        <small className="text-muted text-xs">
+                            {' '}
+                            {claim.check.order_number}
+                        </small>
+                    )}
+                </div>
+            ),
+        },
+        {
             key: 'customer',
             header: 'Customer Details',
             render: (claim) => (
@@ -104,7 +146,7 @@ export default function AdminWarranty({ claims = [] }) {
         },
         {
             key: 'status',
-            header: 'Service Status',
+            header: 'Stage',
             render: (claim) => (
                 <span
                     className={`status-pill ${
@@ -115,7 +157,7 @@ export default function AdminWarranty({ claims = [] }) {
                               : 'pending'
                     }`}
                 >
-                    {claim.status.replace(/_/g, ' ').toUpperCase()}
+                    {label(claim.status)}
                 </span>
             ),
         },
@@ -145,6 +187,12 @@ export default function AdminWarranty({ claims = [] }) {
         },
     ];
 
+    const stageOptions = (selectedClaim?.next_statuses ?? []).map((s) => ({
+        value: s,
+        label: label(s),
+    }));
+    const isFinal = ['completed', 'rejected'].includes(selectedClaim?.status);
+
     return (
         <AdminLayout
             title="Warranty & RMA Service Center"
@@ -153,20 +201,18 @@ export default function AdminWarranty({ claims = [] }) {
             <Head title="Admin Warranty & RMA" />
 
             <div>
-                {/* Standard Reusable DataTable Component */}
                 <DataTable
-                    title="Active Warranty Claims & RMA Tickets"
-                    subtitle="Track diagnostic bench tests, vendor RMA transfers, and customer pickup handovers."
+                    title="Warranty Claims & RMA Tickets"
+                    subtitle="Checked against the units the shop sold. Stages only move forward."
                     columns={columns}
                     data={claims}
                     searchable
                     searchPlaceholder="Search by RMA code, S/N, customer, or product..."
                     emptyTitle="No Warranty Claims Found"
-                    emptyDescription="There are currently no active repair or RMA tickets registered."
+                    emptyDescription="There are currently no repair or RMA tickets registered."
                     emptyIcon={ShieldCheck}
                 />
 
-                {/* Standard Reusable Modal Component */}
                 <Modal
                     isOpen={Boolean(selectedClaim)}
                     onClose={() => setSelectedClaim(null)}
@@ -190,6 +236,20 @@ export default function AdminWarranty({ claims = [] }) {
                                         {selectedClaim.serial_number}
                                     </code>
                                 </div>
+                                <div className="admin-summary-box-row">
+                                    <strong>Our record:</strong>{' '}
+                                    <CheckTag check={selectedClaim.check} />
+                                    {selectedClaim.check?.order_number &&
+                                        ` · ${selectedClaim.check.order_number}`}
+                                </div>
+                                {selectedClaim.replacement_serial && (
+                                    <div className="admin-summary-box-row">
+                                        <strong>Replaced with:</strong>{' '}
+                                        <code className="text-primary">
+                                            {selectedClaim.replacement_serial}
+                                        </code>
+                                    </div>
+                                )}
                                 <div className="admin-summary-box-row text-muted">
                                     <strong>Reported Defect:</strong>{' '}
                                     {selectedClaim.issue_description}
@@ -198,17 +258,23 @@ export default function AdminWarranty({ claims = [] }) {
 
                             <div className="admin-form-stack">
                                 <Select
-                                    label="Service / Repair Stage"
+                                    label="Stage"
                                     value={updatingStatus}
                                     onChange={(e) =>
                                         setUpdatingStatus(e.target.value)
                                     }
-                                    options={STATUS_OPTIONS}
+                                    options={stageOptions}
+                                    disabled={isFinal}
+                                    helperText={
+                                        isFinal
+                                            ? `This claim is ${label(selectedClaim.status)}; it cannot move again.`
+                                            : 'Stages only move forward. Rejected is possible until the claim is completed.'
+                                    }
                                 />
 
                                 <div>
                                     <label className="admin-form-field-label">
-                                        Technician Diagnostic Log / Repair Notes
+                                        Notes for the customer
                                     </label>
                                     <textarea
                                         value={diagnosticNotes}
@@ -217,7 +283,7 @@ export default function AdminWarranty({ claims = [] }) {
                                         }
                                         rows={4}
                                         className="auth-text-input"
-                                        placeholder="e.g. Diagnostic complete. Replaced blown VRM capacitor on power stage. Unit passed 24h FurMark burn-in test at 68°C."
+                                        placeholder="What was found and what was done. The customer sees this on the Warranty page."
                                     />
                                 </div>
 
@@ -235,9 +301,68 @@ export default function AdminWarranty({ claims = [] }) {
                                         onClick={handleSaveStatus}
                                         loading={isSaving}
                                     >
-                                        Save RMA Status
+                                        Save
                                     </Button>
                                 </div>
+
+                                {selectedClaim.can_replace && (
+                                    <div className="admin-summary-box">
+                                        <div className="admin-summary-box-row">
+                                            <strong>
+                                                Replace with a new unit
+                                            </strong>
+                                        </div>
+                                        {selectedClaim.replacement_options
+                                            ?.length ? (
+                                            <>
+                                                <Select
+                                                    label="Serial of the new unit"
+                                                    value={replacementId}
+                                                    onChange={(e) =>
+                                                        setReplacementId(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    options={[
+                                                        {
+                                                            value: '',
+                                                            label: 'Pick a unit on the shelf…',
+                                                        },
+                                                        ...selectedClaim.replacement_options.map(
+                                                            (o) => ({
+                                                                value: String(
+                                                                    o.value,
+                                                                ),
+                                                                label: o.label,
+                                                            }),
+                                                        ),
+                                                    ]}
+                                                    helperText="It leaves stock and goes to the customer with the same warranty end date. The faulty unit is marked faulty."
+                                                />
+                                                <div className="admin-modal-action-row">
+                                                    <Button
+                                                        type="button"
+                                                        variant="primary"
+                                                        icon={RefreshCw}
+                                                        onClick={handleReplace}
+                                                        loading={isReplacing}
+                                                        disabled={
+                                                            !replacementId
+                                                        }
+                                                    >
+                                                        Give replacement
+                                                    </Button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="admin-summary-box-row text-muted">
+                                                No unit of this product is on
+                                                the shelf to replace it with.
+                                                Receive one first.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

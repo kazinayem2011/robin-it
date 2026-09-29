@@ -425,6 +425,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
 
         // Warranty
         Route::patch(ApiEndpoints::ADMIN_WARRANTY_STATUS, [AdminWarrantyController::class, 'updateStatus'])->middleware('can:support');
+        Route::post(ApiEndpoints::ADMIN_WARRANTY_REPLACE, [AdminWarrantyController::class, 'replace'])->middleware('can:support');
 
         // The contact inbox: answer, and mark done.
         Route::post(ApiEndpoints::ADMIN_MESSAGE_REPLY, [AdminContactMessageController::class, 'reply'])->middleware('can:support');

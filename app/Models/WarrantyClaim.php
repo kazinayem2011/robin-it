@@ -18,6 +18,8 @@ class WarrantyClaim extends Model
         'customer_email',
         'product_name',
         'serial_number',
+        'product_serial_id',
+        'replacement_serial_id',
         'invoice_number',
         'purchase_date',
         'issue_type',
@@ -30,6 +32,8 @@ class WarrantyClaim extends Model
     protected $casts = [
         'purchase_date' => 'date',
     ];
+
+    protected $appends = ['status_label'];
 
     /**
      * RMA lifecycle states, in the order a claim moves through them.
@@ -46,8 +50,67 @@ class WarrantyClaim extends Model
         'rejected',
     ];
 
+    /*
+     * What people read. The screens said "Under Diagnostic Bench Test" and
+     * "READY_FOR_PICKUP"; the stored keys are unchanged.
+     */
+    public const LABELS = [
+        'received' => 'Received',
+        'diagnosing' => 'Checking',
+        'repairing' => 'Repairing',
+        'ready_for_pickup' => 'Ready for pickup',
+        'completed' => 'Completed',
+        'rejected' => 'Rejected',
+    ];
+
+    /** Nothing moves a claim on from these. */
+    public const FINAL = ['completed', 'rejected'];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** The shop's own unit this claim is about, when the serial is one it knows. */
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(ProductSerial::class, 'product_serial_id');
+    }
+
+    /** The unit handed over in its place, if it was replaced. */
+    public function replacement(): BelongsTo
+    {
+        return $this->belongsTo(ProductSerial::class, 'replacement_serial_id');
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::LABELS[$this->status] ?? ucfirst(str_replace('_', ' ', (string) $this->status));
+    }
+
+    public function isFinal(): bool
+    {
+        return in_array($this->status, self::FINAL, true);
+    }
+
+    /**
+     * Where a claim may go from here: onward, never back.
+     *
+     * Rejected is open until the claim is finished — a unit can turn out to be
+     * physically damaged at any stage — and nothing leaves Completed or
+     * Rejected.
+     *
+     * @return list<string>
+     */
+    public function nextStatuses(): array
+    {
+        if ($this->isFinal()) {
+            return [$this->status];
+        }
+
+        $at = array_search($this->status, self::STATUSES, true);
+        $onward = array_slice(array_diff(self::STATUSES, ['rejected']), (int) $at);
+
+        return [...array_values($onward), 'rejected'];
     }
 }

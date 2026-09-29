@@ -154,6 +154,9 @@ class SiteSetting extends Model
             'sms_on_refund',
             'sms_on_payment_due',
             'sms_on_back_in_stock',
+            'sms_on_warranty_received',
+            'sms_on_warranty_ready',
+            'sms_on_warranty_rejected',
         ],
     ];
 

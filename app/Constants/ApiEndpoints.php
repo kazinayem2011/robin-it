@@ -485,6 +485,8 @@ class ApiEndpoints
 
     public const ADMIN_WARRANTY_STATUS = 'warranty/{id}/status';
 
+    public const ADMIN_WARRANTY_REPLACE = 'warranty/{id}/replace';
+
     // Laravel Auth Profile
     public const WEB_PROFILE = '/profile';
 }

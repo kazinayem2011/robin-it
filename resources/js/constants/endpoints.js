@@ -212,6 +212,7 @@ export const API_ENDPOINTS = {
         REVIEW_ITEM: (id) => `/admin/reviews/${id}`,
         REVIEW_STATUS: (id) => `/admin/reviews/${id}/status`,
         WARRANTY_STATUS: (id) => `/admin/warranty/${id}/status`,
+        WARRANTY_REPLACE: (id) => `/admin/warranty/${id}/replace`,
 
         // Inventory. Stock enters only through a receipt and is corrected only
         // by an audited adjustment — there is no "set the quantity" endpoint.

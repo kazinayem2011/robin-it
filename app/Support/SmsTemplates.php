@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\SmsTemplate;
+use App\Models\WarrantyClaim;
 use App\Services\OtpService;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\Log;
@@ -245,6 +246,33 @@ class SmsTemplates
             'amount' => $sum,
         ], "({$shop}) অর্ডার {$order->order_number}-এ Tk {$sum} রিফান্ড হয়েছে। "
             .'অ্যাকাউন্টে আসতে কয়েক দিন লাগতে পারে।');
+    }
+
+    /**
+     * A warranty claim, at the three moments a customer needs to hear about.
+     *
+     * Received, with the number to track it by; ready to collect; and turned
+     * down. The stages in between are on the Warranty page for anyone who
+     * looks, and a text for each would cost more than it tells.
+     */
+    public static function warranty(string $event, WarrantyClaim $claim, string $shop): ?string
+    {
+        $defaults = [
+            'warranty_received' => "({$shop}) ওয়ারেন্টি ক্লেইম {$claim->claim_number} গ্রহণ করা হয়েছে। "
+                .'অগ্রগতি দেখুন Warranty পেজে।',
+            'warranty_ready' => "({$shop}) ক্লেইম {$claim->claim_number}: আপনার পণ্য প্রস্তুত, সংগ্রহ করুন।",
+            'warranty_rejected' => "({$shop}) ক্লেইম {$claim->claim_number} গ্রহণযোগ্য হয়নি। "
+                .'বিস্তারিত Warranty পেজে।',
+        ];
+
+        if (! isset($defaults[$event])) {
+            return null;
+        }
+
+        return self::stored($event, [
+            'shop_name' => $shop,
+            'claim_number' => $claim->claim_number,
+        ], $defaults[$event]);
     }
 
     /**
