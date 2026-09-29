@@ -31,6 +31,16 @@ class TemplateSamples
             'shop_url' => url('/'),
             'customer_name' => 'Rahim Uddin',
 
+            /*
+             * An account checkout made is sent the password generated for it.
+             * Eight characters, as the real one is, so the preview counts the
+             * SMS parts it will actually cost.
+             */
+            'password' => 'x7Kp4mQa',
+            'sign_in_details' => '<p><strong>Your sign-in details</strong><br>'
+                .'Mobile: 01712345678<br>Email: rahim@example.com<br>Password: x7Kp4mQa<br>'
+                .'You can change this password from your profile.</p>',
+
             'order_number' => 'ORD-24081',
             'order_total' => 'Tk 84,500',
             'order_status' => 'Dispatched',

@@ -10,8 +10,9 @@ import PreorderTag from '../../Components/PreorderTag';
  *                 placed it, so "Track Order" opens the order for a guest too.
  * @param accountIsNew Checkout made them an account and signed them in. Saying
  *                 so here is the one moment they are certain to be looking;
- *                 the welcome email and the text say it again, and none of
- *                 them carries a password, because the account has none.
+ *                 the text and the welcome email say it again, and carry the
+ *                 password generated for it. The password itself is never on
+ *                 this page.
  */
 export default function Success({
     orderNumber,
@@ -75,11 +76,13 @@ export default function Success({
                             We have created an account for{' '}
                             {customer?.phone || 'you'}.
                         </strong>{' '}
-                        You are signed in on this device. Set a password to sign
-                        in on another one — we never send passwords by text or
-                        email.{' '}
+                        You are signed in on this device. We have texted your
+                        password to this number
+                        {customer?.email ? ' and emailed it to you' : ''} — sign
+                        in with your mobile number and that password next time.
+                        You can change it from your profile.{' '}
                         <Link href={ROUTES.DASHBOARD_PROFILE}>
-                            Set a password
+                            Change password
                         </Link>
                     </div>
                 )}

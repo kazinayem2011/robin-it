@@ -200,7 +200,7 @@ Route::middleware(['web', 'throttle:api'])->group(function () {
     // retype their name to ask a question.
     Route::get(ApiEndpoints::PRODUCT_QUESTIONS, [ProductQuestionController::class, 'index']);
     Route::post(ApiEndpoints::PRODUCT_QUESTIONS, [ProductQuestionController::class, 'store'])
-        ->middleware('throttle:6,1');
+        ->middleware('throttle:6,1,post-product-questions');
 });
 
 /*

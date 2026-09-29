@@ -100,7 +100,7 @@ class SmsService
         'contact_reply' => ['label' => 'Answer to a message', 'default' => true,
             'hint' => 'When somebody writes in leaving only a mobile number, this is the only way the answer reaches them.'],
         'account_created' => ['label' => 'Account created', 'default' => true,
-            'hint' => 'Checkout makes an account for a guest who confirms their number. Without this they are never told they have one.'],
+            'hint' => 'Checkout makes an account for a guest who confirms their number, and this carries its password. Off, it is still sent to a customer who gave no email — it is then the only way their password reaches them.'],
         'processing' => ['label' => 'Order confirmed', 'default' => true,
             'hint' => 'When the order moves to processing: the shop has accepted it and is getting it ready.'],
         'payment_due' => ['label' => 'Amount due on delivery', 'default' => true,

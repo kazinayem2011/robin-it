@@ -160,7 +160,16 @@ class AuthHardeningTest extends TestCase
         $this->assertFalse($victim->fresh()->hasVerifiedEmail());
     }
 
-    /** And somebody else's untouched link verifies neither of them. */
+    /**
+     * And somebody else's untouched link verifies only its owner, and never
+     * swaps who is signed in.
+     *
+     * It used to verify neither, because the link needed its owner signed in.
+     * It now works signed out — the signed link is the proof, whoever holds it
+     * (see VerifyEmailController) — so opened on a browser where another
+     * account is signed in, the owner's address is confirmed and that other
+     * account stays exactly as it was: unverified, and still the one signed in.
+     */
     public function test_one_account_cannot_open_another_verification_link(): void
     {
         $owner = User::factory()->unverified()->create(['email' => 'owner@example.test']);
@@ -170,8 +179,9 @@ class AuthHardeningTest extends TestCase
             'id' => $owner->id, 'hash' => sha1($owner->email),
         ]));
 
-        $this->assertFalse($owner->fresh()->hasVerifiedEmail());
+        $this->assertTrue($owner->fresh()->hasVerifiedEmail());
         $this->assertFalse($other->fresh()->hasVerifiedEmail());
+        $this->assertAuthenticatedAs($other);
     }
 
     // ── who may go where ─────────────────────────────────────────────────────

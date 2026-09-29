@@ -50,7 +50,12 @@ export default function Register({
              * depends on whether one was sent, which yup has no way of knowing.
              * A round trip to be told the field is empty is a wasted second.
              */
-            if (verifyPhone && !/^\d{6}$/.test(values.code)) {
+            // Only when there is a number: an email-only sign-up has no code.
+            if (
+                verifyPhone &&
+                String(values.phone || '').trim() &&
+                !/^\d{6}$/.test(values.code)
+            ) {
                 setErrors({ code: 'Enter the six-digit code we sent you.' });
                 setSubmitting(false);
                 return;
@@ -282,7 +287,16 @@ export default function Register({
                          * buttons: at any moment there is exactly one thing to
                          * press, and it says what it does.
                          */}
-                        {verifyPhone && !awaitingCode ? (
+                        {/*
+                         * A code only when there is a number to send it to.
+                         * With texts switched on, an email-only sign-up was
+                         * shown "Send me a code", which asked the server to
+                         * text nobody and stopped at an error on the empty
+                         * phone field — the account could not be made.
+                         */}
+                        {verifyPhone &&
+                        String(formik.values.phone || '').trim() &&
+                        !awaitingCode ? (
                             <Button
                                 type="button"
                                 variant="primary"

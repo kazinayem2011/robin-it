@@ -207,7 +207,7 @@ class EveryKeyIsSuppliedTest extends TestCase
 
         $built = [
             'order_placed' => SmsTemplates::orderPlaced($order, $shop),
-            'account_created' => SmsTemplates::accountCreated($shop),
+            'account_created' => SmsTemplates::accountCreated($shop, 'x7Kp4mQa'),
             'contact_reply' => SmsTemplates::contactReply('তিনটি আছে।', $shop, '01720000000'),
             // The same builder, given an answer too long to text.
             'contact_reply_call' => SmsTemplates::contactReply(str_repeat('অনেক লম্বা উত্তর। ', 20), $shop, '01720000000'),

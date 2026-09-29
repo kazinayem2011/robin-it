@@ -16,6 +16,29 @@
         Your account is ready. Here's what you can do with it.
     </p>
 
+    @if (! empty($password))
+        {{-- An account checkout made: its sign-in details, including the
+             password generated for it. Customers always sign in with a
+             password, and without this one they had no way back in. --}}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-panel"
+               style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin:0 0 28px;">
+            <tr>
+                <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:24px; color:#475569;">
+                    <strong style="color:#0f172a;">Your sign-in details</strong><br>
+                    @if ($user->phone)
+                        Mobile: <strong style="color:#0f172a;">{{ $user->phone }}</strong><br>
+                    @endif
+                    @if ($user->email)
+                        Email: <strong style="color:#0f172a;">{{ $user->email }}</strong><br>
+                    @endif
+                    Password: <strong style="color:#0f172a; font-family:'Courier New',Courier,monospace; font-size:16px; letter-spacing:1px;">{{ $password }}</strong><br>
+                    Sign in with your mobile number or email and this password.
+                    You can change it from your profile.
+                </td>
+            </tr>
+        </table>
+    @endif
+
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="eml-panel"
            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; margin:0 0 28px;">
         <tr>

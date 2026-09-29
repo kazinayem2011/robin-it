@@ -29,6 +29,9 @@ use Illuminate\Validation\ValidationException;
  */
 class CheckoutAccount
 {
+    /** The account this request generated a password for, if any. */
+    private ?int $issuedTo = null;
+
     /**
      * Refuse an email that belongs to an account other than the one the order
      * is joining.
@@ -133,10 +136,39 @@ class CheckoutAccount
                 $user->email = $email;
             }
 
+            /*
+             * An account checkout made before passwords were generated has
+             * none, and its owner has just proved the number — so it gets one
+             * now, sent the same way as a new account's. An account that has
+             * a password keeps it: that is the customer's, and never changed
+             * here.
+             */
+            $password = $user->hasPassword() ? null : self::generatePassword();
+
+            if ($password !== null) {
+                $user->password = $password;
+            }
+
             $user->save();
+
+            if ($password !== null) {
+                $this->issuedTo = $user->id;
+                $this->welcome($user, $password);
+            }
 
             return $user;
         }
+
+        /*
+         * A password, generated here and sent to the customer.
+         *
+         * The shop's decision: customers always sign in with a password. An
+         * account checkout made used to have none, so once the session ended
+         * its owner had no way back in but a reset for a password they had
+         * never chosen. Sent by text to the number just proved with a code,
+         * and by email if they gave one; they can change it from their profile.
+         */
+        $password = self::generatePassword();
 
         $user = new User;
         $user->fill([
@@ -145,55 +177,91 @@ class CheckoutAccount
             // address; this only covers one registered in the meantime.
             'email' => $email && ! $this->emailTaken($email) ? $email : null,
             'phone' => $phone,
-            /*
-             * None yet. The customer is signed in by the code and stays signed
-             * in for the shopper window; they set a password from their
-             * profile, or through "Forgot password" by this same number, when
-             * they want to sign in somewhere else. Null rather than a random
-             * one nobody knows, so checkout can tell this account from one
-             * that has a password to ask for.
-             */
-            'password' => null,
+            // Hashed by the model's cast; the plain one lives only in the two
+            // messages below.
+            'password' => $password,
         ]);
         $user->phone_verified_at = now();
         $user->assignRole(User::ROLE_CUSTOMER)->save();
 
-        $this->welcome($user);
+        $this->issuedTo = $user->id;
+        $this->welcome($user, $password);
 
         return $user;
     }
 
     /**
-     * Tell somebody the shop has just made them an account.
+     * Whether resolve() just gave this account its password — which is what
+     * the order confirmation page says an account was made by.
+     */
+    public function issuedPasswordTo(?User $user): bool
+    {
+        return $user !== null && $this->issuedTo === $user->id;
+    }
+
+    /**
+     * Eight characters somebody can read off a phone and type.
+     *
+     * Letters and digits without the ones that look alike — 0 and O, 1, l and
+     * I — since this is copied by eye from a text message, often onto another
+     * device. At least one letter and one digit, so it reads as a password
+     * rather than a word or a number. random_int, because a predictable
+     * generator makes the password a formality: 55 characters to the eighth
+     * power is plenty for something the login form limits to five tries.
+     */
+    public static function generatePassword(int $length = 8): string
+    {
+        $alphabet = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $last = strlen($alphabet) - 1;
+
+        do {
+            $password = '';
+
+            for ($i = 0; $i < $length; $i++) {
+                $password .= $alphabet[random_int(0, $last)];
+            }
+        } while (! preg_match('/\d/', $password) || ! preg_match('/[a-zA-Z]/', $password));
+
+        return $password;
+    }
+
+    /**
+     * Tell somebody the shop has made them an account, and how to get into it.
      *
      * They came to buy something, not to register, and nothing said an account
      * now exists — so they would only find out by coming back to the site.
      *
-     * No password is sent, here or anywhere: there is none to send, and one
-     * sent by text or email is a password left lying in an inbox and a
-     * gateway's logs. Both messages say where to set one instead.
+     * Both messages carry the password. It is never written anywhere else:
+     * not logged, not returned to the page, hashed on the account. The one
+     * exception is the local log-only SMS fallback, which records every text
+     * body for a developer without a gateway and is never on in production.
+     *
+     * The text goes even with "Account created" switched off in Settings when
+     * there is no email to carry the password instead — otherwise the switch
+     * would leave a customer with an account and no way into it.
      *
      * Best-effort, both of them: an order must not fail because a gateway or a
      * mail server is down.
      */
-    private function welcome(User $user): void
+    private function welcome(User $user, string $password): void
     {
         try {
             if ($user->email) {
-                Mail::to($user->email)->send(new WelcomeCustomerMail($user));
+                Mail::to($user->email)->send(new WelcomeCustomerMail($user, $password));
             }
         } catch (\Throwable $e) {
-            Log::warning("Could not send the welcome email to {$user->email}: {$e->getMessage()}");
+            Log::warning("Could not send the welcome email to {$user->email}.");
         }
 
         try {
-            app(SmsService::class)->sendEvent(
-                'account_created',
-                $user->phone,
-                SmsTemplates::accountCreated(BrandDetails::name())
-            );
+            $sms = app(SmsService::class);
+            $text = SmsTemplates::accountCreated(BrandDetails::name(), $password);
+
+            $user->email
+                ? $sms->sendEvent('account_created', $user->phone, $text)
+                : $sms->send($user->phone, $text);
         } catch (\Throwable $e) {
-            Log::warning("Could not send the account-created SMS to {$user->phone}: {$e->getMessage()}");
+            Log::warning("Could not send the account-created SMS to {$user->phone}.");
         }
     }
 

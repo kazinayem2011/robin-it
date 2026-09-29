@@ -226,23 +226,44 @@ class DashboardController extends Controller
         // The rules judge the number, not its punctuation.
         PhoneHelper::canonicalise($request, 'phone');
 
+        /*
+         * One way to reach them, as at sign-up — not both. Both were required
+         * here, so someone who signed up with a mobile alone could not change
+         * their name without making up an email address.
+         */
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'email' => 'nullable|required_without:phone|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => [
-                'required',
+                'nullable',
+                'required_without:email',
                 'string',
                 PhoneHelper::RULE,
                 'unique:users,phone,'.$user->id,
             ],
         ], [
+            'email.required_without' => 'Keep an email address or a mobile number so we can reach you.',
+            'phone.required_without' => 'Keep a mobile number or an email address so we can reach you.',
             'phone.regex' => 'Please enter a valid 11-digit Bangladeshi mobile number.',
             'phone.unique' => 'This phone number is already registered by another account.',
         ]);
 
-        $validated['phone'] = PhoneHelper::normalizeBdPhone($validated['phone']);
+        $validated['phone'] = PhoneHelper::normalizeBdPhone($validated['phone'] ?? null);
+        // Absent rather than empty: '' would take the unique slot.
+        $validated['email'] = filled($validated['email'] ?? null) ? strtolower(trim($validated['email'])) : null;
 
-        $user->update($validated);
+        /*
+         * A new number or address has not been confirmed. It kept the old
+         * one's "verified", so a number typed in here read as proved.
+         */
+        if ($validated['phone'] !== $user->phone) {
+            $user->phone_verified_at = null;
+        }
+        if ($validated['email'] !== $user->email) {
+            $user->email_verified_at = null;
+        }
+
+        $user->fill($validated)->save();
 
         return back()->with('success', 'Profile updated successfully.');
     }

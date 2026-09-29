@@ -19,7 +19,7 @@ describe('The order confirmation page', () => {
      * Checkout makes a guest an account and signs them in. Nothing said so,
      * and this is the one moment they are certain to be looking.
      */
-    it('says an account was made, and where to set a password', () => {
+    it('says an account was made, and where to change its password', () => {
         render(<Success orderNumber="ORD-NEW0000001" accountIsNew />);
 
         expect(
@@ -29,17 +29,21 @@ describe('The order confirmation page', () => {
             screen.getByText('01712345678', { exact: false }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('link', { name: 'Set a password' }),
+            screen.getByRole('link', { name: 'Change password' }),
         ).toHaveAttribute('href', '/dashboard/profile');
     });
 
-    /** No password is ever sent, so the page says that too. */
-    it('promises no password by text or email', () => {
+    /*
+     * The password was generated and texted to the number. The page says
+     * where it went, and never shows it.
+     */
+    it('says the password was texted, without showing it', () => {
         render(<Success orderNumber="ORD-NEW0000001" accountIsNew />);
 
         expect(
-            screen.getByText(/never send passwords by\s+text or email/),
+            screen.getByText(/texted your\s+password to this number/),
         ).toBeInTheDocument();
+        expect(screen.queryByText(/Password:/)).toBeNull();
     });
 
     it('says nothing to a customer who already had an account', () => {
@@ -47,7 +51,7 @@ describe('The order confirmation page', () => {
 
         expect(screen.queryByText(/We have created an account/)).toBeNull();
         expect(
-            screen.queryByRole('link', { name: 'Set a password' }),
+            screen.queryByRole('link', { name: 'Change password' }),
         ).toBeNull();
     });
 });

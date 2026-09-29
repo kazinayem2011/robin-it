@@ -185,6 +185,16 @@ class CheckoutController extends Controller
 
             $this->signInAfterCheckout($request, $customer);
 
+            /*
+             * Whether this order's confirmation page should say an account
+             * was made and a password sent. The account has a password now,
+             * so the page can no longer tell by its absence; this order
+             * number is remembered instead, and only in this session.
+             */
+            if ($this->accounts->issuedPasswordTo($customer)) {
+                $request->session()->put('account_made_for_order', $order->order_number);
+            }
+
             return $this->successResponse([
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,

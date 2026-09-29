@@ -23,7 +23,7 @@ Route::middleware('guest')->group(function () {
     // throttled per email and IP inside LoginRequest; these three were not
     // limited at all.
     Route::post('register', [RegisteredUserController::class, 'store'])
-        ->middleware('throttle:6,1');
+        ->middleware('throttle:6,1,post-register');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -36,14 +36,14 @@ Route::middleware('guest')->group(function () {
     // Reset requests are how an address list gets enumerated — the response
     // differs for an account that exists — and how a mailbox gets flooded.
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:6,1,post-forgot-password')
         ->name('password.email');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:6,1,post-reset-password')
         ->name('password.store');
 
     /*
@@ -55,40 +55,46 @@ Route::middleware('guest')->group(function () {
      * every one of those attempts would be a text the shop paid for.
      */
     Route::post('otp/register', [PhoneOtpController::class, 'forRegistration'])
-        ->middleware('throttle:8,10')
+        ->middleware('throttle:8,10,post-otp-register')
         ->name('otp.register');
 
     Route::post('otp/password', [PhoneOtpController::class, 'forPasswordReset'])
-        ->middleware('throttle:8,10')
+        ->middleware('throttle:8,10,post-otp-password')
         ->name('otp.password');
 
     Route::post('otp/checkout', [PhoneOtpController::class, 'forCheckout'])
-        ->middleware('throttle:8,10')
+        ->middleware('throttle:8,10,post-otp-checkout')
         ->name('otp.checkout');
 
     // Signing in from checkout's "which account?" step, answered in JSON.
     Route::post('checkout/sign-in', [CheckoutSignInController::class, 'store'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,post-checkout-sign-in')
         ->name('checkout.sign-in');
 
     Route::get('forgot-password/mobile', [PhonePasswordResetController::class, 'create'])
         ->name('password.phone');
 
     Route::post('forgot-password/mobile', [PhonePasswordResetController::class, 'store'])
-        ->middleware('throttle:10,10')
+        ->middleware('throttle:10,10,post-forgot-password-mobile')
         ->name('password.phone.store');
 });
+
+/*
+ * Outside both groups: the link confirms the address whoever opens it, signs
+ * in a visitor who is signed out, and leaves a different signed-in account
+ * where it is. The signature is what makes it safe to open signed out — see
+ * VerifyEmailController.
+ */
+Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+    ->middleware(['signed', 'throttle:6,1,get-verify-email-id-hash'])
+    ->name('verification.verify');
 
 Route::middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
         ->name('verification.notice');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
-
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1')
+        ->middleware('throttle:6,1,post-email-verification-notification')
         ->name('verification.send');
 
     /*
@@ -99,11 +105,11 @@ Route::middleware('auth')->group(function () {
      * tight because each send is a text the shop pays for.
      */
     Route::post('account/phone/verification', [PhoneVerificationController::class, 'send'])
-        ->middleware('throttle:6,10')
+        ->middleware('throttle:6,10,post-account-phone-verification')
         ->name('phone.verification.send');
 
     Route::post('account/phone/verify', [PhoneVerificationController::class, 'verify'])
-        ->middleware('throttle:10,10')
+        ->middleware('throttle:10,10,post-account-phone-verify')
         ->name('phone.verification.verify');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])

@@ -95,19 +95,42 @@ class SmsTemplates
     /**
      * Checkout made this customer an account.
      *
-     * No password in it, and none anywhere else either: the account has none
-     * until they choose one, and a password sent by text is a password sitting
-     * on a handset, in an inbox and in a gateway's logs. This says the account
-     * exists and where to set one, which is all a text needs to do.
+     * With the password in it. The shop's decision is that customers always
+     * sign in with a password, and an account checkout made had none — so once
+     * the session ended its owner had no way back in short of a reset for a
+     * password they never chose. CheckoutAccount generates one, and this is
+     * where it reaches them: the number it goes to is the one they have just
+     * proved with a code, and it says to change it from the profile.
      *
-     * One part, so telling somebody costs the shop the least it can. The link
-     * is in the welcome email and on the confirmation page, where there is
-     * room for it.
+     * "এই নম্বর ও পাসওয়ার্ড … দিয়ে লগইন করুন। প্রোফাইলে বদলে নিন।" — sign in
+     * with this number and this password; change it in your profile. Two
+     * parts, 109 characters with the default shop name: "এই মোবাইল নম্বর"
+     * and a longer closing line took it to 132, too close to the 134 two
+     * unicode parts allow for a shop with a longer name.
+     *
+     * A shop's own wording without {password} still gets the password, on the
+     * end — a customer told they have an account and not how to get into it
+     * is the fault this exists to fix. If that makes it longer than two parts,
+     * the default is sent instead.
      */
-    public static function accountCreated(string $shop): string
+    public static function accountCreated(string $shop, string $password): string
     {
-        return self::stored('account_created', ['shop_name' => $shop],
-            "({$shop}) অ্যাকাউন্ট তৈরি হয়েছে। প্রোফাইলে পাসওয়ার্ড দিন।");
+        $default = "({$shop}) অ্যাকাউন্ট তৈরি হয়েছে। এই নম্বর ও পাসওয়ার্ড {$password} দিয়ে লগইন করুন। প্রোফাইলে বদলে নিন।";
+
+        $message = self::stored('account_created', [
+            'shop_name' => $shop,
+            'password' => $password,
+        ], $default);
+
+        if (! str_contains($message, $password)) {
+            $message = rtrim($message)." পাসওয়ার্ড: {$password}";
+
+            if (SmsService::parts($message) > 2) {
+                return $default;
+            }
+        }
+
+        return $message;
     }
 
     /**

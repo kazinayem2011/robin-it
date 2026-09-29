@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
@@ -137,15 +138,95 @@ class GuestCheckoutAccountTest extends TestCase
         $this->assertSame('karim@example.com', $customer->email);
         $this->assertSame(User::ROLE_CUSTOMER, $customer->role);
         $this->assertNotNull($customer->phone_verified_at);
-        // None yet, rather than one nobody knows — so checkout sends this
-        // number a code next time, instead of asking for a password.
-        $this->assertFalse($customer->hasPassword());
+        /*
+         * A generated one, texted to the number just proved — customers always
+         * sign in with a password, so next time checkout asks for it. Stored
+         * hashed, and never in what the page is sent back.
+         */
+        $this->assertTrue($customer->hasPassword());
+        $password = $this->passwordFromTheText();
+        $this->assertTrue(Hash::check($password, $customer->password));
+        $this->assertNotSame($password, $customer->password);
+        $this->assertStringNotContainsString($password, $response->getContent());
 
         $order = Order::where('order_number', $response->json('data.order_number'))->firstOrFail();
         $this->assertSame($customer->id, $order->user_id);
         $this->assertSame('karim@example.com', $order->shipping_address['email']);
 
         $this->assertAuthenticatedAs($customer);
+    }
+
+    /** The password in the account-created text, as the customer would read it. */
+    private function passwordFromTheText(): string
+    {
+        $text = collect(Http::recorded())
+            ->map(fn ($pair) => $pair[0]->data()['message'] ?? '')
+            ->first(fn ($message) => str_contains($message, 'অ্যাকাউন্ট'));
+
+        $this->assertNotNull($text, 'No account-created text was sent.');
+        preg_match('/পাসওয়ার্ড\s+([A-Za-z0-9]{8})\b/u', $text, $m);
+        $this->assertNotEmpty($m, "No password in: {$text}");
+
+        return $m[1];
+    }
+
+    /**
+     * An account checkout made before passwords were generated has none. Its
+     * owner proves the number again at checkout, and it is given one now.
+     */
+    public function test_a_returning_account_with_no_password_is_given_one(): void
+    {
+        $customer = User::factory()->create(['phone' => self::PHONE, 'email' => null, 'password' => null]);
+
+        $this->guestCart();
+        $this->askForCode()->assertSuccessful();
+        $this->checkout(['code' => $this->codeFromTheText()])->assertCreated();
+
+        $this->assertSame(1, User::count());
+        $this->assertTrue(Hash::check($this->passwordFromTheText(), $customer->fresh()->password));
+    }
+
+    /** The password a customer chose is theirs, and checkout never touches it. */
+    public function test_an_account_with_a_password_keeps_it(): void
+    {
+        $customer = User::factory()->create(['phone' => self::PHONE, 'password' => Hash::make('chosen-pass-1')]);
+        $before = $customer->password;
+
+        // Signed in by its password, as checkout asks; the order then goes
+        // through with no code and no new password.
+        $this->guestCart();
+        $this->postJson('/checkout/sign-in', ['login' => self::PHONE, 'password' => 'chosen-pass-1'])->assertOk();
+        $this->checkout()->assertCreated();
+
+        $this->assertSame($before, $customer->fresh()->password);
+        $this->assertNull(
+            collect(Http::recorded())->first(fn ($pair) => str_contains($pair[0]->data()['message'] ?? '', 'অ্যাকাউন্ট')),
+            'An account that had a password was sent a new one.'
+        );
+    }
+
+    /**
+     * The texted password works on the sign-in form, with the mobile number
+     * and with the email.
+     */
+    public function test_the_texted_password_signs_in_with_the_mobile_or_the_email(): void
+    {
+        $this->guestCart();
+        $this->askForCode()->assertSuccessful();
+        $this->checkout(['code' => $this->codeFromTheText(), 'email' => 'karim@example.com'])->assertCreated();
+
+        $password = $this->passwordFromTheText();
+        $customer = User::where('phone', self::PHONE)->firstOrFail();
+
+        foreach ([self::PHONE, 'karim@example.com'] as $login) {
+            $this->post('/logout');
+            $this->assertGuest();
+
+            $this->post('/login', ['login' => $login, 'password' => $password])
+                ->assertRedirect(route('dashboard', absolute: false));
+
+            $this->assertAuthenticatedAs($customer);
+        }
     }
 
     /**

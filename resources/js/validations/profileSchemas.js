@@ -6,24 +6,40 @@ export const updateProfileSchema = Yup.object().shape({
         .required('Name is required')
         .min(2, 'Name must be at least 2 characters')
         .max(100, 'Name cannot exceed 100 characters'),
-    email: Yup.string()
-        .required('Email address is required')
-        .email('Please enter a valid email address'),
     /*
-     * Required, and required to be a real Bangladeshi mobile — matching what
-     * DashboardController::updateProfile enforces. A schema that is laxer than
-     * the server just moves the rejection later.
+     * One of the two, as at sign-up — matching DashboardController::
+     * updateProfile. Both were required, so an account made with a mobile alone
+     * could not save a new name without making up an email address.
      *
      * Uniqueness is the server's alone to judge; the browser cannot know which
      * numbers other accounts already hold, and that error comes back through
      * onError.
      */
+    email: Yup.string()
+        .email('Please enter a valid email address')
+        .test(
+            'one-of-two',
+            'Keep an email address or a mobile number so we can reach you',
+            function (value) {
+                return Boolean(
+                    (value || '').trim() || (this.parent.phone || '').trim(),
+                );
+            },
+        ),
     phone: Yup.string()
-        .required('A mobile number is required')
         .test(
             'bd-phone',
             'Enter a valid 11-digit BD mobile number (e.g. 01711223344)',
-            (value) => isBDPhone(value || ''),
+            (value) => !(value || '').trim() || isBDPhone(value),
+        )
+        .test(
+            'one-of-two',
+            'Keep a mobile number or an email address so we can reach you',
+            function (value) {
+                return Boolean(
+                    (value || '').trim() || (this.parent.email || '').trim(),
+                );
+            },
         ),
 });
 

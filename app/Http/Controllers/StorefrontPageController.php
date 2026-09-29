@@ -281,13 +281,14 @@ class StorefrontPageController extends Controller
             /*
              * Checkout made this customer an account and signed them in, and
              * nothing said so — they would have found out by coming back to
-             * the shop one day. True for their own order while the account has
-             * no password, which is exactly the account checkout makes.
+             * the shop one day. True for their own order when placing it gave
+             * the account its password, which checkout notes in the session:
+             * the account has a password now, so its absence says nothing.
              */
             'accountIsNew' => (bool) $order
                 && $request->user()
                 && $order->user_id === $request->user()->id
-                && ! $request->user()->hasPassword(),
+                && $request->session()->get('account_made_for_order') === $order->order_number,
             'suggestions' => StorefrontStock::hide($suggestions->values()),
             'seo' => Seo::for(['title' => 'Order Placed', 'noindex' => true]),
         ]);

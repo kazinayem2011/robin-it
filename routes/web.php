@@ -162,7 +162,7 @@ Route::middleware(['auth'])->group(function () {
      * in can type into, and the shop reads every line of it.
      */
     Route::post(ApiEndpoints::ACCOUNT_MESSAGE_REPLY, [DashboardController::class, 'replyToMessage'])
-        ->middleware('throttle:20,10')
+        ->middleware('throttle:20,10,post-account-message-reply')
         ->name('account.messages.reply');
 
     Route::get(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'edit'])->name('profile.edit');

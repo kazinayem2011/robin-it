@@ -48,11 +48,12 @@ class MessageTemplateSeeder extends Seeder
                 'name' => 'Welcome',
                 'group' => 'Account',
                 'subject' => 'Welcome to {shop_name}',
-                'hint' => 'Sent once, when somebody first creates an account.',
+                'hint' => 'Sent once, when somebody first creates an account. {sign_in_details} is the mobile, email and generated password of an account checkout made, and empty for somebody who registered — keep it in, or it is added on the end.',
                 'body' => '<h1>Welcome to {shop_name}</h1>'
                     .'<p>Hi {customer_name},</p>'
                     .'<p>Your account is ready. You can track orders, save PC builds '
                     .'and manage warranties in one place.</p>'
+                    .'{sign_in_details}'
                     .'<p><a href="{shop_url}">Start shopping</a></p>',
             ],
             [
@@ -174,8 +175,8 @@ class MessageTemplateSeeder extends Seeder
                 'key' => 'account_created',
                 'name' => 'Account created',
                 'group' => 'Account',
-                'hint' => 'Checkout makes an account for a guest who confirms their number. Never send a password here.',
-                'body' => '({shop_name}) অ্যাকাউন্ট তৈরি হয়েছে। প্রোফাইলে পাসওয়ার্ড দিন।',
+                'hint' => 'Checkout makes an account for a guest who confirms their number, with a password generated for it. {password} is that password — keep it in, or it is added on the end, because this text is how the customer signs in next time.',
+                'body' => '({shop_name}) অ্যাকাউন্ট তৈরি হয়েছে। এই নম্বর ও পাসওয়ার্ড {password} দিয়ে লগইন করুন। প্রোফাইলে বদলে নিন।',
             ],
             [
                 'key' => 'processing',

@@ -12,6 +12,20 @@ Your account is ready. Here's what you can do with it:
 - Track deliveries from packing to your door
 - Raise and follow warranty (RMA) claims online
 - Save addresses for faster checkout
+@if (! empty($password))
+
+YOUR SIGN-IN DETAILS
+@if ($user->phone)
+Mobile: {{ $user->phone }}
+@endif
+@if ($user->email)
+Email: {{ $user->email }}
+@endif
+Password: {{ $password }}
+
+Sign in with your mobile number or email and this password.
+You can change it from your profile.
+@endif
 
 Start shopping: {{ $brand['url'] }}/shop
 

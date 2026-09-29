@@ -37,12 +37,24 @@ describe('updateProfileSchema', () => {
         ).toContain('Please enter a valid email address');
     });
 
-    /* The server requires this, so the browser has to as well — a laxer schema
-     * only moves the rejection later. */
-    it('requires a mobile number, matching the server', async () => {
+    /* One way to reach them, as at sign-up, matching the server: an account
+     * made with an email alone need not add a mobile to change its name, and
+     * one made with a mobile alone need not invent an email. */
+    it('takes an email or a mobile, not necessarily both', async () => {
         expect(
             await check(updateProfileSchema, { ...base, phone: '' }),
-        ).toContain('A mobile number is required');
+        ).toBeNull();
+        expect(
+            await check(updateProfileSchema, { ...base, email: '' }),
+        ).toBeNull();
+    });
+
+    it('needs at least one of the two', async () => {
+        expect(
+            await check(updateProfileSchema, { ...base, email: '', phone: '' }),
+        ).toContain(
+            'Keep a mobile number or an email address so we can reach you',
+        );
     });
 
     it('refuses a number that is not a BD mobile', async () => {

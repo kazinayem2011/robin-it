@@ -41,7 +41,7 @@ class MessageKeys
      * @var array<string, list<string>>
      */
     public const EMAIL = [
-        'welcome' => ['shop_name', 'customer_name', 'shop_url'],
+        'welcome' => ['shop_name', 'customer_name', 'shop_url', 'sign_in_details'],
         'order_placed' => ['shop_name', 'customer_name', 'order_number', 'order_total', 'order_items', 'order_url'],
         'order_status' => ['shop_name', 'customer_name', 'order_number', 'order_status', 'order_url'],
         'back_in_stock' => ['shop_name', 'product_name', 'product_url'],
@@ -57,7 +57,7 @@ class MessageKeys
         'order_placed' => ['shop_name', 'order_number', 'order_total', 'track_url'],
         'order_updated' => ['shop_name', 'order_number', 'order_total', 'track_url'],
         'processing' => ['shop_name', 'order_number', 'track_url'],
-        'account_created' => ['shop_name'],
+        'account_created' => ['shop_name', 'password'],
         'contact_reply' => ['shop_name', 'reply'],
         'contact_reply_call' => ['shop_name', 'hotline'],
         'payment_due' => ['shop_name', 'order_number', 'amount_due'],
