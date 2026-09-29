@@ -1,7 +1,7 @@
 @php($brand = \App\Support\BrandDetails::all())
 @extends('emails.layouts.master', [
     'title' => 'Back in stock: '.$displayName,
-    'preheader' => $displayName.' is available again — '.$available.' in stock at ৳'.number_format($price, 2).'.',
+    'preheader' => $displayName.' is available again at ৳'.number_format($price, 2).'.',
 ])
 
 @section('content')
@@ -19,7 +19,8 @@
             <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:15px; line-height:24px; color:#334155;">
                 <strong class="eml-text" style="color:#0f172a; font-size:16px;">{{ $displayName }}</strong><br>
                 <span class="eml-accent" style="color:#d12127; font-weight:bold; font-size:18px;">৳{{ number_format($price, 2) }}</span>
-                <span class="eml-muted" style="color:#64748b;">&nbsp;·&nbsp; {{ $available }} available</span>
+                {{-- No count: the shop does not tell customers how many it holds. --}}
+                <span class="eml-muted" style="color:#64748b;">&nbsp;·&nbsp; In stock</span>
             </td>
         </tr>
     </table>

@@ -5,8 +5,8 @@ describe('stockStatusFor', () => {
     it('reads in stock, and reads as good news', () => {
         expect(
             stockStatusFor(
-                { stock_status_label: 'In Stock', stock_quantity: 4 },
-                { availableStock: 4 },
+                { stock_status_label: 'In Stock', in_stock: true },
+                { inStock: true },
             ),
         ).toEqual({ label: 'In Stock', tone: 'in' });
     });
@@ -14,8 +14,8 @@ describe('stockStatusFor', () => {
     it('reads out of stock, and reads as bad news', () => {
         expect(
             stockStatusFor(
-                { stock_status_label: 'Out of Stock', stock_quantity: 0 },
-                { availableStock: 0 },
+                { stock_status_label: 'Out of Stock', in_stock: false },
+                { inStock: false },
             ),
         ).toEqual({ label: 'Out of Stock', tone: 'out' });
     });
@@ -29,13 +29,13 @@ describe('stockStatusFor', () => {
         const product = {
             has_variants: true,
             stock_status_label: 'In Stock',
-            stock_quantity: 5,
+            in_stock: true,
         };
 
         expect(
             stockStatusFor(product, {
-                selectedVariant: { id: 1, stock_quantity: 0 },
-                availableStock: 0,
+                selectedVariant: { id: 1, in_stock: false },
+                inStock: false,
             }),
         ).toEqual({ label: 'Sold Out', tone: 'out' });
     });
@@ -44,13 +44,13 @@ describe('stockStatusFor', () => {
         const product = {
             has_variants: true,
             stock_status_label: 'In Stock',
-            stock_quantity: 5,
+            in_stock: true,
         };
 
         expect(
             stockStatusFor(product, {
-                selectedVariant: { id: 2, stock_quantity: 3 },
-                availableStock: 3,
+                selectedVariant: { id: 2, in_stock: true },
+                inStock: true,
             }),
         ).toEqual({ label: 'In Stock', tone: 'in' });
     });
@@ -59,7 +59,7 @@ describe('stockStatusFor', () => {
         expect(
             stockStatusFor(
                 { has_variants: true, stock_status_label: 'In Stock' },
-                { selectedVariant: null, availableStock: 0 },
+                { selectedVariant: null, inStock: false },
             ),
         ).toEqual({ label: 'Choose an option', tone: 'unknown' });
     });
@@ -68,7 +68,7 @@ describe('stockStatusFor', () => {
         expect(
             stockStatusFor(
                 { allow_preorder: true, stock_status_label: 'Pre-Order' },
-                { availableStock: 0 },
+                { inStock: false },
             ),
         ).toEqual({ label: 'Pre-Order', tone: 'waiting' });
     });
@@ -78,7 +78,7 @@ describe('stockStatusFor', () => {
         expect(
             stockStatusFor(
                 { stock_status_label: '2-3 Days' },
-                { availableStock: 0 },
+                { inStock: false },
             ),
         ).toEqual({ label: '2-3 Days', tone: 'waiting' });
     });
@@ -87,7 +87,7 @@ describe('stockStatusFor', () => {
         expect(
             stockStatusFor(
                 { stock_status_label: 'Unavailable' },
-                { availableStock: 0 },
+                { inStock: false },
             ).tone,
         ).toBe('out');
     });

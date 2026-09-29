@@ -7,6 +7,7 @@ use App\Exceptions\StorefrontException;
 use App\Http\Controllers\Controller;
 use App\Services\CartService;
 use App\Services\ProductService;
+use App\Support\StorefrontStock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,8 @@ class CartController extends Controller
 
         return $this->successResponse([
             'id' => $cart->id,
-            'items' => $cart->items,
+            // Each line's product and option, without the shop's stock figures.
+            'items' => StorefrontStock::hide($cart->items),
             'totals' => $totals,
             // Anything that sold out or was delisted while sitting in the cart,
             // so the cart page can warn before the customer reaches checkout.
@@ -71,7 +73,7 @@ class CartController extends Controller
         }
 
         return $this->successResponse(
-            $suggestions->values(),
+            StorefrontStock::hide($suggestions->values()),
             'Suggestions fetched successfully'
         );
     }
@@ -102,7 +104,7 @@ class CartController extends Controller
             );
 
             return $this->successResponse(
-                $cartItem->load('product', 'variant'),
+                StorefrontStock::hide($cartItem->load('product', 'variant')),
                 'Added to your cart.'
             );
         } catch (StorefrontException $e) {
@@ -134,7 +136,10 @@ class CartController extends Controller
                 (int) $validated['quantity']
             );
 
-            return $this->successResponse($cartItem->load('product', 'variant'), 'Cart updated.');
+            return $this->successResponse(
+                StorefrontStock::hide($cartItem->load('product', 'variant')),
+                'Cart updated.'
+            );
         } catch (StorefrontException $e) {
             return $this->storefrontErrorResponse($e);
         } catch (ModelNotFoundException) {

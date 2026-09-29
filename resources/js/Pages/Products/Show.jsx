@@ -36,7 +36,7 @@ import useAppStore from '../../store/useAppStore';
 import { useWishlist } from '../../hooks';
 import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
-import { orderableCeiling, waitsForStock } from '../../utils/orderable';
+import { orderableCeiling } from '../../utils/orderable';
 import { photosOf } from '../../utils/productPhotos';
 import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
@@ -54,6 +54,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import './Show.css';
+import { MAX_PER_ITEM } from '../../utils/cartBounds';
 
 export default function ProductDetails(props) {
     /* Shared by Inertia on every page, so a signed-in shopper is not asked
@@ -116,17 +117,26 @@ export default function ProductDetails(props) {
         [variants, selectedVariantId],
     );
 
-    const availableStock = product?.has_variants
-        ? (selectedVariant?.stock_quantity ?? 0)
-        : (product?.stock_quantity ?? 0);
+    /*
+     * Whether the thing being bought is on the shelf — a yes/no, never a
+     * count: the shop does not tell its customers how many units it has, and
+     * the storefront is not sent the figure.
+     */
+    const unitInStock = product?.has_variants
+        ? Boolean(selectedVariant?.in_stock)
+        : Boolean(product?.in_stock);
 
     /*
-     * The most the quantity stepper goes to: the shelf, or beyond it by the
-     * pre-order limit. It stopped at the shelf, which on a pre-order product is
-     * nothing, so a customer allowed three could only ever take one. 99 stands
-     * in for "no limit set", as it did before for an unknown stock figure.
+     * The most the quantity stepper goes to: the per-item limit the cart takes
+     * whenever this can be ordered (on the shelf, or on pre-order), nothing
+     * when it is sold out. It went to 99 while the cart took 20, so picking 21
+     * and pressing Add to Cart was refused. The server refuses anything it
+     * cannot supply, and says so without a number.
      */
-    const maxQuantity = Math.min(orderableCeiling(product, availableStock), 99);
+    const maxQuantity = Math.min(
+        orderableCeiling(product, unitInStock),
+        MAX_PER_ITEM,
+    );
 
     /*
      * The two figures the page quotes: what this costs paid outright, and the
@@ -154,7 +164,7 @@ export default function ProductDetails(props) {
      */
     const stockStatus = stockStatusFor(product, {
         selectedVariant,
-        availableStock,
+        inStock: unitInStock,
     });
 
     /*
@@ -419,7 +429,7 @@ export default function ProductDetails(props) {
     // A variant product with nothing chosen yet cannot be bought.
     const needsVariantChoice =
         Boolean(product?.has_variants) && !selectedVariant;
-    const outOfStock = !needsVariantChoice && availableStock <= 0;
+    const outOfStock = !needsVariantChoice && !unitInStock;
 
     /*
      * Pre-order is set on the product, so it covers every option of a variant
@@ -506,9 +516,7 @@ export default function ProductDetails(props) {
                     // discover which options are sold out by clicking each one.
                     if (prodData?.has_variants) {
                         const options = prodData.active_variants || [];
-                        const firstInStock = options.find(
-                            (v) => v.stock_quantity > 0,
-                        );
+                        const firstInStock = options.find((v) => v.in_stock);
                         setSelectedVariantId(
                             (firstInStock || options[0])?.id ?? null,
                         );
@@ -573,7 +581,7 @@ export default function ProductDetails(props) {
             setTimeout(() => setAddedToCart(false), 2500);
         } catch (err) {
             console.error('Failed to add to cart', err);
-            // e.g. "Only 2 left in stock for ..." — far more useful than "Failed".
+            // e.g. "We can't supply that many of ..." — far more useful than "Failed".
             toast.error(
                 err?.message || 'Failed to add product to cart.',
                 'Could Not Add To Cart',
@@ -987,8 +995,11 @@ export default function ProductDetails(props) {
                                 </span>
                                 <div className="pdp-variant-options">
                                     {variants.map((variant) => {
+                                        // Pre-order covers every option, so
+                                        // an empty one can still be chosen.
                                         const out =
-                                            variant.stock_quantity === 0;
+                                            !variant.in_stock &&
+                                            !product.allow_preorder;
 
                                         return (
                                             <button
@@ -1015,7 +1026,9 @@ export default function ProductDetails(props) {
                                                 title={
                                                     out
                                                         ? 'Sold Out'
-                                                        : `${variant.stock_quantity} available`
+                                                        : variant.in_stock
+                                                          ? 'Available'
+                                                          : 'Pre-order'
                                                 }
                                             >
                                                 <span>{variant.name}</span>
@@ -1328,29 +1341,6 @@ export default function ProductDetails(props) {
                                 </div>
                             </div>
                         )}
-
-                        {/* More than is in stock: said before they buy, as
-                            a pre-order is. The order is taken; the rest is
-                            owed until the next delivery. */}
-                        {!isPreorder &&
-                            waitsForStock(
-                                product,
-                                availableStock,
-                                quantity,
-                            ) && (
-                                <div
-                                    className="pdp-preorder-notice"
-                                    role="status"
-                                >
-                                    <Clock size={18} />
-                                    <div>
-                                        <strong>Waiting for stock</strong>
-                                        <p>
-                                            {`Only ${availableStock} in stock right now. We'll send those and the other ${quantity - availableStock} as soon as the next delivery arrives.`}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
 
                         {/* Only when the thing being looked at is actually
                             unavailable — on a variant product that means

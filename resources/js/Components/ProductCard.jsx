@@ -48,11 +48,9 @@ export const ProductCard = ({
     const imageSrc = getProductImageUrl(product);
 
     // `|| true` used to make this unconditionally true, so sold-out products
-    // still rendered an enabled "Buy Now" button.
-    const inStock =
-        product.inStock !== undefined
-            ? Boolean(product.inStock)
-            : Number(product.stock_quantity ?? 0) > 0;
+    // still rendered an enabled "Buy Now" button. A yes/no only: the
+    // storefront is never sent a stock figure.
+    const inStock = Boolean(product.inStock ?? product.in_stock);
 
     const handleAddToCart = (e) => {
         e.preventDefault();

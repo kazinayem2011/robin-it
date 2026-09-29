@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comparison;
+use App\Support\StorefrontStock;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,8 @@ class ComparisonController extends Controller
 
         $comparisons = $query->get();
 
-        return $this->successResponse($comparisons, 'Comparison list fetched successfully');
+        // Availability is compared as In Stock / Sold Out, never as a count.
+        return $this->successResponse(StorefrontStock::hide($comparisons), 'Comparison list fetched successfully');
     }
 
     public function store(Request $request): JsonResponse

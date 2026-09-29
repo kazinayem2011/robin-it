@@ -78,7 +78,7 @@ class OrderService
                 // here, under a row lock, rather than only in the controller
                 // before the transaction opened — where two checkouts fired at
                 // once both read "not used yet" and both went through.
-                if (! $coupon->redeem($userId)) {
+                if (! $coupon->redeem($userId, $addressData['phone'] ?? null, $addressData['email'] ?? null)) {
                     throw new StorefrontException(
                         'This coupon has just reached its usage limit. Please remove it and try again.',
                         422,
@@ -313,7 +313,8 @@ class OrderService
                 && ! $product->allowsBalance($available - $item->quantity)
                 // Some in stock: the order is taken, the rest owed and flagged.
                 && ! $product->takesOrdersBeyondStock($available)) {
-                // Past a pre-order limit is not "out of stock": say the number.
+                // Past a pre-order limit is not "out of stock", though neither
+                // says a number: the customer is never told how many there are.
                 $ceiling = $product->allowsPreorder() ? $product->sellableCeiling($available) : null;
 
                 throw $ceiling !== null
@@ -443,6 +444,9 @@ class OrderService
                     // name it too — otherwise a customer who chose the 32GB
                     // cannot tell which one is on its way.
                     'variant_name' => $item->variant_name,
+                    // A genuine pre-order only: a line that ran past the shelf
+                    // is never flagged to the customer.
+                    'is_preorder' => $item->isCustomerPreorder(),
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
                     'total' => (float) $item->total,

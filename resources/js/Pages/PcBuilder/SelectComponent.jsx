@@ -251,7 +251,7 @@ export default function SelectComponent({ categorySlug, partName = null }) {
                                                     }
                                                 >
                                                     {product.inStock
-                                                        ? `In Stock (${product.stockQuantity})`
+                                                        ? 'In Stock'
                                                         : 'Out of Stock'}
                                                 </span>
                                             </div>

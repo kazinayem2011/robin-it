@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\StockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -60,7 +61,7 @@ class PerUserLimitTest extends TestCase
         ]);
     }
 
-    private function checkout(User $user, string $code): TestResponse
+    private function checkout(User $user, string $code, string $phone = '01712345678'): TestResponse
     {
         $this->actingAs($user)->postJson('/api/cart', [
             'product_id' => $this->product->id,
@@ -69,7 +70,7 @@ class PerUserLimitTest extends TestCase
 
         return $this->actingAs($user)->postJson('/api/checkout', [
             'name' => 'Rahim',
-            'phone' => '01712345678',
+            'phone' => $phone,
             'street_address' => 'House 45',
             'city' => 'Dhaka',
             'coupon_code' => $code,
@@ -101,10 +102,79 @@ class PerUserLimitTest extends TestCase
     {
         $coupon = $this->coupon();
 
-        $this->checkout(User::factory()->create(), $coupon->code)->assertStatus(201);
-        $this->checkout(User::factory()->create(), $coupon->code)->assertStatus(201);
+        // Different people: different accounts and different numbers.
+        $this->checkout(User::factory()->create(), $coupon->code, '01712345678')->assertStatus(201);
+        $this->checkout(User::factory()->create(), $coupon->code, '01812345678')->assertStatus(201);
 
         $this->assertSame(2, Order::where('coupon_code', 'ONEPERPERSON')->count());
+    }
+
+    /** A guest checking out with no account at all. */
+    private function guestCheckout(string $code, string $phone, ?string $email = null): TestResponse
+    {
+        // A fresh visitor each time: no account, a new session and cart.
+        $this->app['auth']->forgetGuards();
+        app('session.store')->flush();
+        app('session.store')->setId(Str::random(40));
+        $this->postJson('/api/cart', ['product_id' => $this->product->id, 'quantity' => 1])->assertStatus(200);
+        $this->withCredentials()->withCookie(config('session.cookie'), app('session.store')->getId());
+
+        return $this->postJson('/api/checkout', [
+            'name' => 'Guest', 'phone' => $phone, 'street_address' => 'House 9', 'city' => 'Dhaka',
+            'coupon_code' => $code, 'email' => $email,
+        ]);
+    }
+
+    /* A new number with the same email is still the same person. */
+    public function test_a_guest_changing_number_but_not_email_is_refused(): void
+    {
+        $coupon = $this->coupon();
+        $this->guestCheckout($coupon->code, '01799000444', 'rahim@example.com')->assertStatus(201);
+
+        $this->guestCheckout($coupon->code, '01899000444', ' Rahim@Example.com ')
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'This email address has already used this coupon.');
+    }
+
+    public function test_a_different_number_and_email_is_a_different_customer(): void
+    {
+        $coupon = $this->coupon();
+        $this->guestCheckout($coupon->code, '01799000444', 'rahim@example.com')->assertStatus(201);
+        $this->guestCheckout($coupon->code, '01899000444', 'karim@example.com')->assertStatus(201);
+    }
+
+    /*
+     * "Once per customer" meant nothing to a guest: with no account, the same
+     * number could use the code on every order. The number is the customer.
+     */
+    public function test_a_guest_is_held_to_the_limit_by_their_number(): void
+    {
+        $coupon = $this->coupon();
+
+        $this->guestCheckout($coupon->code, '01799000444')->assertStatus(201);
+        $this->guestCheckout($coupon->code, '+880 1799-000444')
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'This mobile number has already used this coupon.');
+
+        $this->guestCheckout($coupon->code, '01899000444')->assertStatus(201);
+        $this->assertSame(2, Order::where('coupon_code', 'ONEPERPERSON')->count());
+    }
+
+    public function test_a_number_that_used_it_as_a_guest_is_refused_when_signed_in(): void
+    {
+        $coupon = $this->coupon();
+        $this->guestCheckout($coupon->code, '01799000444')->assertStatus(201);
+
+        $this->checkout(User::factory()->create(), $coupon->code, '01799000444')->assertStatus(422);
+    }
+
+    public function test_a_cancelled_order_does_not_use_it_up_for_a_guest(): void
+    {
+        $coupon = $this->coupon();
+        $this->guestCheckout($coupon->code, '01799000444')->assertStatus(201);
+        Order::latest('id')->first()->forceFill(['status' => 'cancelled'])->save();
+
+        $this->guestCheckout($coupon->code, '01799000444')->assertStatus(201);
     }
 
     /**

@@ -45,7 +45,6 @@ describe('components that render before their data arrives', () => {
         slug: 'rtx-4070-super',
         price: 82000,
         discount_price: null,
-        stock_quantity: 5,
         in_stock: true,
         images: [],
     };

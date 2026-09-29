@@ -68,12 +68,15 @@ class VariantStorefrontContractTest extends TestCase
 
         $first = $data['active_variants'][0];
 
-        foreach (['id', 'name', 'stock_quantity', 'effective_price', 'in_stock'] as $key) {
+        foreach (['id', 'name', 'effective_price', 'in_stock'] as $key) {
             $this->assertArrayHasKey($key, $first, "option is missing {$key}");
         }
 
+        // Whether it can be bought, never how many: a customer is not told.
+        $this->assertArrayNotHasKey('stock_quantity', $first);
+
         $this->assertSame('16GB', $first['name']);
-        $this->assertSame(6, $first['stock_quantity']);
+        $this->assertTrue($first['in_stock']);
         $this->assertEqualsWithDelta(4200.0, $first['effective_price'], 0.01);
     }
 
@@ -87,7 +90,7 @@ class VariantStorefrontContractTest extends TestCase
         $soldOut = collect($data['active_variants'])->firstWhere('name', '32GB');
 
         $this->assertNotNull($soldOut, 'a sold-out option disappeared from the page');
-        $this->assertSame(0, $soldOut['stock_quantity']);
+        $this->assertArrayNotHasKey('stock_quantity', $soldOut);
         $this->assertFalse($soldOut['in_stock']);
     }
 
@@ -125,7 +128,7 @@ class VariantStorefrontContractTest extends TestCase
         $data = $this->getJson('/api/products/plain-product')->json('data');
 
         $this->assertFalse($data['has_variants']);
-        $this->assertSame(3, $data['stock_quantity']);
+        $this->assertArrayNotHasKey('stock_quantity', $data);
         $this->assertTrue($data['in_stock']);
     }
 }

@@ -100,6 +100,8 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
     );
 
     const [products, setProducts] = useState([]);
+    // The nearest real words, when a search found nothing.
+    const [didYouMean, setDidYouMean] = useState(null);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(initial.page);
     const [totalPages, setTotalPages] = useState(1);
@@ -185,6 +187,7 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
 
                 setProducts(data.items);
                 setTotalPages(data.meta.last_page || 1);
+                setDidYouMean(data.meta.did_you_mean || null);
                 setLoadError(null);
             })
             .catch((error) => {
@@ -502,20 +505,43 @@ export default function ProductListing({ categorySlug, onSaleOnly = false }) {
                                     </div>
                                 ) : products.length === 0 ? (
                                     <div className="plp-full-span">
+                                        {didYouMean && (
+                                            <p className="plp-did-you-mean">
+                                                Did you mean{' '}
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFilters((prev) => ({
+                                                            ...prev,
+                                                            search: didYouMean,
+                                                        }))
+                                                    }
+                                                >
+                                                    {didYouMean}
+                                                </button>
+                                                ?
+                                            </p>
+                                        )}
                                         <EmptyState
                                             title={
                                                 onSaleOnly
                                                     ? 'Nothing is on offer right now'
-                                                    : categorySlug
-                                                      ? `No products in ${readableCategory} yet`
-                                                      : 'No products match those filters'
+                                                    : activeFilters.search
+                                                      ? `No products found for “${activeFilters.search}”`
+                                                      : categorySlug
+                                                        ? `No products in ${readableCategory} yet`
+                                                        : 'No products match those filters'
                                             }
                                             description={
                                                 onSaleOnly
                                                     ? 'Check back soon — discounts change regularly.'
-                                                    : categorySlug
-                                                      ? 'This part of the catalogue is still being stocked. Everything else is a click away.'
-                                                      : 'Try clearing a filter or two to widen the search.'
+                                                    : activeFilters.search
+                                                      ? didYouMean
+                                                          ? 'Or clear a filter or two to widen the search.'
+                                                          : 'Check the spelling, or try fewer or more general words.'
+                                                      : categorySlug
+                                                        ? 'This part of the catalogue is still being stocked. Everything else is a click away.'
+                                                        : 'Try clearing a filter or two to widen the search.'
                                             }
                                             actionLabel="Browse All Hardware"
                                             actionHref={ROUTES.SHOP}

@@ -383,6 +383,13 @@
 
 .search-text-input {
     flex: 1;
+    /*
+     * At every width, not only on phones. An input will not shrink below its
+     * own default width unless told to, so typing — which brings in the ×
+     * button — made the row wider than the bar and pushed the search button
+     * out past its edge, where it was clipped.
+     */
+    min-width: 0;
     height: 100%;
     border: none;
     outline: none;
@@ -398,6 +405,11 @@
 }
 
 .search-clear-btn {
+    /* Its own fixed room, centred, so it neither squeezes nor is squeezed. */
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     color: var(--text-subtle);
@@ -694,6 +706,13 @@
     text-align: center;
     color: var(--text-muted);
     font-size: 0.85rem;
+}
+
+/* The corrected search offered under "No products found". */
+.search-did-you-mean {
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: underline;
 }
 
 /*
@@ -1651,6 +1670,19 @@
 @media (max-width: 1200px) {
     .footer-main-body {
         grid-template-columns: 1.5fr 1fr 1fr;
+    }
+
+    /*
+     * A laptop screen squeezes the search bar between the logo and the PC
+     * Builder and Offers buttons, and the full-width picker left room for
+     * three typed letters. The compact one, as on a phone.
+     */
+    .search-category-select {
+        width: 116px;
+    }
+
+    .search-category-select .ui-select-icon {
+        display: none;
     }
 }
 

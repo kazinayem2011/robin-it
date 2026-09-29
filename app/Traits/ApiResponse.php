@@ -47,7 +47,8 @@ trait ApiResponse
     protected function paginatedResponse(
         LengthAwarePaginator $paginator,
         string $message = 'Operation successful',
-        ?callable $transform = null
+        ?callable $transform = null,
+        array $extraMeta = []
     ): JsonResponse {
         $items = collect($paginator->items());
 
@@ -63,7 +64,7 @@ trait ApiResponse
             'from' => $paginator->firstItem(),
             'to' => $paginator->lastItem(),
             'has_more' => $paginator->hasMorePages(),
-        ]);
+        ] + $extraMeta);
     }
 
     /**

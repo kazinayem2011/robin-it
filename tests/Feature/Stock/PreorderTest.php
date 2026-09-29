@@ -140,10 +140,11 @@ class PreorderTest extends TestCase
 
     /**
      * Refused in words that fit. It said the product "just went out of stock",
-     * true of every pre-order and no help to the customer: the number is what
-     * stopped them, so the number is what it says.
+     * true of every pre-order and no help to the customer. Nor does it name a
+     * figure: the limit less what is owed is a stock count, and a customer is
+     * never told one.
      */
-    public function test_going_past_the_limit_says_how_many_can_be_ordered(): void
+    public function test_going_past_the_limit_says_so_without_a_number(): void
     {
         $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 2]);
 
@@ -152,23 +153,25 @@ class PreorderTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $this->assertStringContainsString('Only 2 of', $response->json('message'));
-        $this->assertStringContainsString('before the delivery arrives', $response->json('message'));
+        $this->assertStringContainsString("can't take that many pre-orders", $response->json('message'));
+        $this->assertStringNotContainsString('Only', $response->json('message'));
         $this->assertStringNotContainsString('went out of stock', $response->json('message'));
+        $response->assertJsonMissingPath('data.available');
     }
 
-    /** Stock on hand counts towards the figure it quotes. */
-    public function test_the_figure_includes_what_is_on_the_shelf(): void
+    /** Stock on hand counts towards what may be pre-ordered. */
+    public function test_what_is_on_the_shelf_counts_towards_the_limit(): void
     {
         $product = $this->product(['allow_preorder' => true, 'preorder_limit' => 2]);
         app(StockService::class)->receive([], [['product_id' => $product->id, 'quantity' => 1]]);
 
-        $response = $this->actingAs(User::factory()->create())->postJson('/api/cart', [
+        $this->actingAs(User::factory()->create())->postJson('/api/cart', [
             'product_id' => $product->fresh()->id, 'quantity' => 4,
-        ]);
+        ])->assertStatus(422);
 
-        $response->assertStatus(422);
-        $this->assertStringContainsString('Only 3 of', $response->json('message'));
+        $this->actingAs(User::factory()->create())->postJson('/api/cart', [
+            'product_id' => $product->fresh()->id, 'quantity' => 3,
+        ])->assertStatus(200);
     }
 
     public function test_stock_on_hand_counts_towards_the_limit(): void

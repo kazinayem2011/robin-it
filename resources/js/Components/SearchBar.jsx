@@ -138,6 +138,7 @@ export const SearchBar = ({ onSearch }) => {
                         products: data?.products || [],
                         categories: data?.categories || [],
                         brands: data?.brands || [],
+                        didYouMean: data?.did_you_mean || null,
                     });
                 })
                 .catch(() => {
@@ -533,9 +534,25 @@ export const SearchBar = ({ onSearch }) => {
                     ) : (
                         <div className="search-empty-row">
                             <span>
-                                No hardware found matching "
-                                <strong>{searchQuery}</strong>". Try checking
-                                keywords.
+                                No products found for “
+                                <strong>{searchQuery}</strong>”.{' '}
+                                {suggestions.didYouMean ? (
+                                    <>
+                                        Did you mean{' '}
+                                        <Link
+                                            href={destination(
+                                                selectedScope,
+                                                suggestions.didYouMean,
+                                            )}
+                                            className="search-did-you-mean"
+                                        >
+                                            {suggestions.didYouMean}
+                                        </Link>
+                                        ?
+                                    </>
+                                ) : (
+                                    'Check the spelling, or try fewer or more general words.'
+                                )}
                             </span>
                         </div>
                     )}

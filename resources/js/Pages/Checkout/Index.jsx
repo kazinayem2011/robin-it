@@ -23,7 +23,7 @@ import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
 import { ShoppingCart, Tag, X, AlertTriangle } from 'lucide-react';
 import PreorderTag from '../../Components/PreorderTag';
-import { preordersBeyondShelf, waitsForStock } from '../../utils/orderable';
+import { isPreorderLine, lineInStock } from '../../utils/orderable';
 import './Checkout.css';
 
 /**
@@ -951,13 +951,15 @@ export default function Checkout({
                                                         ? ` (${item.variant.name})`
                                                         : ''}
                                                 </span>
-                                                {preordersBeyondShelf(
+                                                {/* A pre-order is a product
+                                                    setting, so it is marked.
+                                                    More than the shelf of an
+                                                    ordinary product is not:
+                                                    the customer is never told
+                                                    how much stock there is. */}
+                                                {isPreorderLine(
                                                     item.product,
-                                                    item.variant
-                                                        ?.stock_quantity ??
-                                                        item.product
-                                                            .stock_quantity,
-                                                    item.quantity,
+                                                    lineInStock(item),
                                                 ) && (
                                                     <PreorderTag
                                                         expected={
@@ -966,14 +968,6 @@ export default function Checkout({
                                                         }
                                                     />
                                                 )}
-                                                {waitsForStock(
-                                                    item.product,
-                                                    item.variant
-                                                        ?.stock_quantity ??
-                                                        item.product
-                                                            .stock_quantity,
-                                                    item.quantity,
-                                                ) && <PreorderTag waiting />}
 
                                                 {/*
                                                  * Changeable here. It used to
@@ -1023,7 +1017,7 @@ export default function Checkout({
                                                         title={
                                                             item.quantity >=
                                                             boundsFor(item).max
-                                                                ? `Only ${boundsFor(item).max} available`
+                                                                ? 'Maximum reached'
                                                                 : undefined
                                                         }
                                                         aria-label={`More of ${item.product.name}`}

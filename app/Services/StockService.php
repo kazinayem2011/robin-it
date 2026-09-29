@@ -103,10 +103,7 @@ class StockService
                 && ! $owed
                 && ! ($mayGoNegative && $product->allowsBalance($branchBefore + $delta))
             ) {
-                throw StorefrontException::outOfStock(
-                    $this->unitName($product, $variant),
-                    max(0, $branchBefore)
-                );
+                throw $this->shortfall($type, $this->unitName($product, $variant), max(0, $branchBefore));
             }
 
             $balanceAfter = $current + $delta;
@@ -115,10 +112,7 @@ class StockService
                 && ! $owed
                 && ! ($mayGoNegative && $product->allowsBalance($balanceAfter))
             ) {
-                throw StorefrontException::outOfStock(
-                    $this->unitName($product, $variant),
-                    max(0, $current)
-                );
+                throw $this->shortfall($type, $this->unitName($product, $variant), max(0, $current));
             }
 
             $reference = $meta['reference'] ?? null;
@@ -1045,6 +1039,20 @@ class StockService
         if ($variant && ! $variant->is_active) {
             throw StorefrontException::unavailable($this->unitName($product, $variant));
         }
+    }
+
+    /**
+     * What to say when a movement would take more than is there.
+     *
+     * A sale can be a customer's checkout, and a customer is never told how
+     * many units there are; any other movement is staff at the stock screens,
+     * who are.
+     */
+    private function shortfall(string $type, string $name, int $available): StorefrontException
+    {
+        return $type === StockMovement::SALE
+            ? StorefrontException::outOfStock($name, $available)
+            : StorefrontException::notEnoughOnHand($name, $available);
     }
 
     private function unitName(Product $product, ?ProductVariant $variant): string

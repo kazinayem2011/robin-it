@@ -17,6 +17,7 @@ use App\Services\OtpService;
 use App\Services\ProductService;
 use App\Support\PcBuilderSlots;
 use App\Support\Seo;
+use App\Support\StorefrontStock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -266,9 +267,16 @@ class StorefrontPageController extends Controller
              * The lines that ship later, said on the page that confirms the
              * order: "your order is placed" read as "it is all on its way".
              * Only to whoever placed it, by the same test as the link above.
+             *
+             * Pre-orders only: a line taken beyond the shelf on an ordinary
+             * product is not mentioned. The shop's rule is that a customer is
+             * never told how much stock there is, and "part of this ships
+             * later" says it was short.
              */
             'preorderItems' => $order && Gate::allows('print', [$order, $request])
-                ? $order->items->filter->wasPreordered()->map->display_name->values()
+                ? $order->items
+                    ->filter(fn ($item) => $item->wasPreordered() && ! $item->waitingForStock())
+                    ->map->display_name->values()
                 : [],
             /*
              * Checkout made this customer an account and signed them in, and
@@ -280,7 +288,7 @@ class StorefrontPageController extends Controller
                 && $request->user()
                 && $order->user_id === $request->user()->id
                 && ! $request->user()->hasPassword(),
-            'suggestions' => $suggestions->values(),
+            'suggestions' => StorefrontStock::hide($suggestions->values()),
             'seo' => Seo::for(['title' => 'Order Placed', 'noindex' => true]),
         ]);
     }

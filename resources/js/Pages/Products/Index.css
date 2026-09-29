@@ -781,3 +781,23 @@
         display: none;
     }
 }
+
+/* "Did you mean Vivobook?" above an empty search: the corrected words are the
+   way forward, so they read as a link and search again when pressed. */
+.plp-did-you-mean {
+    margin: 0 0 12px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.plp-did-you-mean button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: underline;
+    cursor: pointer;
+}

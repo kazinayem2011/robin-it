@@ -121,12 +121,8 @@ export default function Index({
                                                             ? ` (${item.variant_name})`
                                                             : ''}
                                                     </div>
-                                                    {item.was_preordered && (
-                                                        <PreorderTag
-                                                            waiting={
-                                                                item.waiting_for_stock
-                                                            }
-                                                        />
+                                                    {item.is_preorder && (
+                                                        <PreorderTag />
                                                     )}
                                                     <div className="order-item-sub">
                                                         Qty: {item.quantity} ×{' '}

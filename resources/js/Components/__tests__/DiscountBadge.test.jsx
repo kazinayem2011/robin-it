@@ -34,7 +34,6 @@ describe('the discount badge', () => {
         raw_price: 46200,
         raw_old_price: 47400,
         inStock: true,
-        stockQuantity: 5,
         specs: [],
         ...overrides,
     });

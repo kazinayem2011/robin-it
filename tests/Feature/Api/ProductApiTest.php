@@ -33,10 +33,13 @@ class ProductApiTest extends TestCase
                 'error',
                 'message',
                 'data' => [
-                    '*' => ['id', 'name', 'slug', 'price', 'inStock', 'stockQuantity'],
+                    '*' => ['id', 'name', 'slug', 'price', 'inStock'],
                 ],
                 'meta' => ['current_page', 'last_page', 'per_page', 'total'],
             ])
+            // Whether it can be bought, never how many.
+            ->assertJsonPath('data.0.inStock', true)
+            ->assertJsonMissingPath('data.0.stockQuantity')
             ->assertJsonPath('data.0.name', 'MacBook Pro M3 Max')
             ->assertJsonPath('meta.total', 1);
     }

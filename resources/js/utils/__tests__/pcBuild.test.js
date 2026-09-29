@@ -95,21 +95,24 @@ describe('listNames', () => {
 });
 
 describe('isInStock', () => {
-    /* The builder's payload spells it inStock; the catalogue spells it
-     * stock_quantity. Reading one and not the other is what labelled every
-     * chosen component "Out of Stock". */
+    /* The builder's payload spells it inStock; a product model spells it
+     * in_stock. Reading one and not the other is what labelled every chosen
+     * component "Out of Stock". */
     it('reads the builder payload', () => {
-        expect(isInStock({ inStock: true, stockQuantity: 23 })).toBe(true);
-        expect(isInStock({ inStock: false, stockQuantity: 0 })).toBe(false);
+        expect(isInStock({ inStock: true })).toBe(true);
+        expect(isInStock({ inStock: false })).toBe(false);
     });
 
-    it('reads the catalogue payload', () => {
-        expect(isInStock({ stock_quantity: 5 })).toBe(true);
-        expect(isInStock({ stock_quantity: 0 })).toBe(false);
+    it('reads a product model', () => {
+        expect(isInStock({ in_stock: true })).toBe(true);
+        expect(isInStock({ in_stock: false })).toBe(false);
     });
 
-    it('falls back to the camelCase quantity', () => {
-        expect(isInStock({ stockQuantity: 2 })).toBe(true);
+    /* The storefront is never sent a stock figure; one that slipped through
+     * must not be what decides. */
+    it('ignores any stock figure', () => {
+        expect(isInStock({ stock_quantity: 5 })).toBe(false);
+        expect(isInStock({ stockQuantity: 2 })).toBe(false);
     });
 
     it('does not claim stock it was never told about', () => {

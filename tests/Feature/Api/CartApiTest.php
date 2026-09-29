@@ -62,8 +62,9 @@ class CartApiTest extends TestCase
      *
      * The "+" button used to be disabled only while a request was in flight, so
      * it would happily ask for a unit past the last one in stock and rely on
-     * the server to refuse. These three are what let it stop instead: the stock
-     * on the line, the product's minimum, and the per-item cap.
+     * the server to refuse. These three are what let it stop instead: whether
+     * the line is in stock (never how many — a customer is not told), the
+     * product's minimum, and the per-item cap.
      */
     public function test_the_cart_payload_carries_the_quantity_bounds(): void
     {
@@ -88,7 +89,8 @@ class CartApiTest extends TestCase
 
         $cart->assertStatus(200)
             ->assertJsonPath('data.max_quantity_per_item', CartService::MAX_QUANTITY_PER_ITEM)
-            ->assertJsonPath('data.items.0.product.stock_quantity', 3)
+            ->assertJsonPath('data.items.0.product.in_stock', true)
+            ->assertJsonMissingPath('data.items.0.product.stock_quantity')
             ->assertJsonPath('data.items.0.product.min_order_quantity', 2);
     }
 

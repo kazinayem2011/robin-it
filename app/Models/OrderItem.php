@@ -120,6 +120,31 @@ class OrderItem extends Model
         return $this->waitingForStock();
     }
 
+    /**
+     * A pre-order, as the customer is allowed to know it.
+     *
+     * The customer is never told that part of an order ran past the shelf —
+     * to them the product was simply available — so a line waiting for stock
+     * reads as an ordinary line. Only a genuine pre-order, which they chose
+     * knowingly, is marked. The staff screens use wasPreordered() and
+     * waitingForStock() as before.
+     */
+    public function isCustomerPreorder(): bool
+    {
+        return $this->wasPreordered() && ! $this->waitingForStock();
+    }
+
+    public function getIsPreorderAttribute(): bool
+    {
+        return $this->isCustomerPreorder();
+    }
+
+    /** What a customer's email or invoice says about a line: pre-orders only. */
+    public function customerOwedLabel(): ?string
+    {
+        return $this->isCustomerPreorder() ? 'Pre-order — ships when the delivery arrives' : null;
+    }
+
     /** What an email or invoice says about a line that ships later. */
     public function owedLabel(): ?string
     {

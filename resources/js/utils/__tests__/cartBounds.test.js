@@ -5,46 +5,48 @@ import { boundsFor } from '../cartBounds';
  * How many of one line a customer may have.
  *
  * The cart page and the checkout summary both draw "+" and "−" from this, and
- * the server enforces the same three rules in
- * CartService::updateItemQuantity(). A disagreement here is a button that asks
- * for a quantity the next request refuses — which, now the number updates on
- * the spot, shows as it going up and snapping back.
+ * the server enforces the same rules in CartService::updateItemQuantity(). The
+ * storefront is never told how many are in stock, so stock only decides
+ * whether the line can be ordered at all; the server refuses the rest.
  */
 describe('boundsFor', () => {
-    const line = (product = {}, variant = null, cart = {}) => ({
+    const line = (product = {}, variant = null) => ({
         id: 1,
         quantity: 1,
-        product: { stock_quantity: 10, min_order_quantity: 1, ...product },
+        product: { in_stock: true, min_order_quantity: 1, ...product },
         variant,
     });
 
     const cartWith = (cap) => ({ max_quantity_per_item: cap });
 
-    /* Some in stock: more is taken and owed, up to the per-item cap. */
-    it('goes past the stock on the line, to the cap', () => {
-        expect(boundsFor(line({ stock_quantity: 3 }), cartWith(20)).max).toBe(
-            20,
-        );
+    it('goes to the per-item cap when the line is in stock', () => {
+        expect(boundsFor(line(), cartWith(20)).max).toBe(20);
     });
 
-    it('stops at nothing when there is nothing', () => {
-        expect(boundsFor(line({ stock_quantity: 0 }), cartWith(20)).max).toBe(
-            0,
-        );
+    it('stops at nothing when it is sold out and not on pre-order', () => {
+        expect(boundsFor(line({ in_stock: false }), cartWith(20)).max).toBe(0);
     });
 
-    it('stops at the per-item cap when stock is deeper than it', () => {
-        expect(boundsFor(line({ stock_quantity: 500 }), cartWith(20)).max).toBe(
-            20,
-        );
+    it('goes to the cap on a pre-order product with an empty shelf', () => {
+        expect(
+            boundsFor(
+                line({ in_stock: false, allow_preorder: true }),
+                cartWith(20),
+            ).max,
+        ).toBe(20);
     });
 
-    /* Stock and price live on the option for a variant product, so the
-       option's shelf is the one that counts. */
-    it('prefers the option’s stock over the product’s', () => {
-        const item = line({ stock_quantity: 99 }, { stock_quantity: 0 });
+    /* The option is what is being bought, so its answer is the one that counts. */
+    it('prefers the option’s answer over the product’s', () => {
+        const item = line({ in_stock: true }, { in_stock: false });
 
         expect(boundsFor(item, cartWith(20)).max).toBe(0);
+    });
+
+    it('does not depend on any stock figure', () => {
+        const item = line({ in_stock: true, stock_quantity: 2 });
+
+        expect(boundsFor(item, cartWith(20)).max).toBe(20);
     });
 
     it('honours a minimum order quantity', () => {
@@ -65,24 +67,18 @@ describe('boundsFor', () => {
      * which is 20 — a larger guess would offer quantities that get refused.
      */
     it('falls back to the server’s cap of 20 when the cart does not say', () => {
-        expect(boundsFor(line({ stock_quantity: 500 }), {}).max).toBe(20);
-        expect(boundsFor(line({ stock_quantity: 500 }), null).max).toBe(20);
+        expect(boundsFor(line(), {}).max).toBe(20);
+        expect(boundsFor(line(), null).max).toBe(20);
     });
 
-    /* An unknown stock is not the same as no stock: some lines arrive without
-       the column, and refusing to let them move at all would be worse. */
-    it('allows up to the cap when stock is unknown', () => {
-        const item = line({ stock_quantity: null });
+    it('returns min 1, max 0 for a sold-out line', () => {
+        const { min, max } = boundsFor(
+            line({ in_stock: false, min_order_quantity: 1 }),
+            cartWith(20),
+        );
 
-        expect(boundsFor(item, cartWith(20)).max).toBe(20);
-    });
-
-    it('never returns a max below the min it also returns', () => {
-        const item = line({ stock_quantity: 0, min_order_quantity: 1 });
-        const { min, max } = boundsFor(item, cartWith(20));
-
-        // Out of stock: min 1, max 0. The page must not offer "+" — and it
-        // does not, because quantity >= max on the first unit.
+        // The page must not offer "+" — and it does not, because
+        // quantity >= max on the first unit.
         expect(min).toBe(1);
         expect(max).toBe(0);
     });

@@ -53,11 +53,9 @@ export default function OrderInvoiceModal({ selectedOrder, setSelectedOrder }) {
                             <div key={item.id} className="dash-modal-item-row">
                                 <div className="dash-modal-item-info">
                                     <strong>{item.product_name}</strong>
-                                    {item.was_preordered && (
+                                    {item.is_preorder && (
                                         <div>
-                                            <PreorderTag
-                                                waiting={item.waiting_for_stock}
-                                            />
+                                            <PreorderTag />
                                         </div>
                                     )}
                                     <div className="dash-modal-item-meta">

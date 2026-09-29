@@ -1,52 +1,40 @@
 /**
- * How many units of a product can be ordered, pre-order included.
+ * Whether a product can be ordered at all, and so how far its "+" may go.
  *
- * The client's copy of Product::sellableCeiling(). The product page and the
- * cart both capped their "+" at the stock on the shelf, which for a pre-order
- * product is nothing — so a customer allowed to pre-order three could only
- * ever take one, from either place. A pre-order product may go below the
- * shelf by its limit; with no limit set there is no ceiling at all.
+ * The storefront is never sent a stock figure — the shop does not tell its
+ * customers how many units it has — so this works from yes/no answers only:
+ * the unit is in stock, or the product is sold ahead of a delivery. Either
+ * way there is no ceiling here; the caller caps it with the shop's per-item
+ * limit, and the server refuses anything it cannot supply with a message that
+ * names no number. Sold out and not on pre-order, nothing can be ordered.
  *
- * @param {object|null} product  carries allow_preorder and preorder_limit
- * @param {number|null} stock    on hand for this unit: the option's when there is one
- * Not on pre-order, the shop's rule (Product::takesOrdersBeyondStock): with
- * some in stock, more is taken and owed, so there is no ceiling; with none it
- * is Sold Out.
- *
- * @returns {number} the most that may be ordered; Infinity when uncapped
+ * @param {object|null} product  carries allow_preorder
+ * @param {boolean} inStock      whether this unit (the option, when there is
+ *                               one) is in stock
+ * @returns {number} Infinity when orderable, 0 when not
  */
-export const orderableCeiling = (product, stock) => {
-    const onHand = Number(stock ?? 0);
-
-    if (!product?.allow_preorder) {
-        return onHand > 0 ? Number.POSITIVE_INFINITY : 0;
-    }
-
-    const limit = product.preorder_limit;
-
-    if (limit === null || limit === undefined || limit === '') {
-        return Number.POSITIVE_INFINITY;
-    }
-
-    return Math.max(0, onHand + Number(limit));
-};
+export const orderableCeiling = (product, inStock) =>
+    inStock || product?.allow_preorder ? Number.POSITIVE_INFINITY : 0;
 
 /**
- * Whether this many would be sold ahead of the delivery rather than off the
- * shelf — the line the cart marks, since those units ship later.
+ * Whether a line is a pre-order: sold ahead of the delivery because the shelf
+ * is empty and the product is set up for it. A product setting and a yes/no,
+ * never a count — so the cart and checkout can mark the line without knowing
+ * how many are on the shelf.
  */
-export const preordersBeyondShelf = (product, stock, quantity) =>
-    Boolean(product?.allow_preorder) && Number(quantity) > Number(stock ?? 0);
+export const isPreorderLine = (product, inStock) =>
+    Boolean(product?.allow_preorder) && !inStock;
 
 /**
- * Whether this many would outrun the stock on a product that is not on
- * pre-order: taken, and the rest owed until the next delivery — "waiting for
- * stock" on the line, not "pre-order".
+ * Whether a cart line's unit is in stock: the option's answer when there is
+ * one. A product arrives as a model (`in_stock`) or as a card (`inStock`).
  */
-export const waitsForStock = (product, stock, quantity) =>
-    !product?.allow_preorder &&
-    Number(stock ?? 0) > 0 &&
-    Number(quantity) > Number(stock ?? 0);
+export const lineInStock = (item) =>
+    Boolean(
+        item?.product_variant_id || item?.variant
+            ? item?.variant?.in_stock
+            : (item?.product?.in_stock ?? item?.product?.inStock),
+    );
 
 /** "3 October 2026", as the product page words the expected date; null when unset. */
 export const preorderDate = (value) =>

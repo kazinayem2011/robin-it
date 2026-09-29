@@ -119,11 +119,9 @@ export default function QuickViewModal({ show, onClose, product }) {
 
     /* Read exactly as ProductCard reads it. The card is what was clicked to
        get here, and a card offering "Add to cart" over a panel saying "Out of
-       stock" is worse than either answer on its own. */
-    const inStock =
-        product.inStock !== undefined
-            ? Boolean(product.inStock)
-            : Number(product.stock_quantity ?? 0) > 0;
+       stock" is worse than either answer on its own. A yes/no only: the
+       storefront is never sent a stock figure. */
+    const inStock = Boolean(product.inStock ?? product.in_stock);
     const isPreorder = Boolean(
         product.preorder ?? product.is_preorder ?? false,
     );
@@ -137,10 +135,22 @@ export default function QuickViewModal({ show, onClose, product }) {
     else if (!inStock && !hasOptions)
         status = { label: soldOutLabel, tone: 'out' };
 
-    /* The same ceiling the cart and checkout use, so this cannot offer a
-       quantity the next request refuses. An option product is bounded by the
-       option, which is not known until one is picked. */
-    const { min, max } = boundsFor({ product, variant: null }, null);
+    /* The same bounds the cart and checkout use: the per-item cap when this
+       can be ordered, nothing when it cannot. The card spells its fields in
+       camelCase, so they are handed over in the model's spelling. */
+    const { min, max } = boundsFor(
+        {
+            product: {
+                ...product,
+                in_stock: inStock,
+                allow_preorder: Boolean(
+                    product.allow_preorder ?? product.allowsPreorder,
+                ),
+            },
+            variant: null,
+        },
+        null,
+    );
 
     const handleAddToCart = async () => {
         /*
@@ -318,7 +328,7 @@ export default function QuickViewModal({ show, onClose, product }) {
                                         disabled={quantity >= max}
                                         title={
                                             quantity >= max
-                                                ? `Only ${max} available`
+                                                ? 'Maximum reached'
                                                 : undefined
                                         }
                                         className="quick-view-qty-btn"

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\PhoneHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -158,7 +159,7 @@ class Coupon extends Model
      * min_spend is measured against the same amount the discount applies to:
      * for an unscoped coupon that is the whole subtotal, unchanged.
      */
-    public function isValidForCart(Cart $cart, ?int $userId = null): array
+    public function isValidForCart(Cart $cart, ?int $userId = null, ?string $phone = null, ?string $email = null): array
     {
         $eligible = $this->eligibleSubtotal($cart);
 
@@ -169,7 +170,7 @@ class Coupon extends Model
             ];
         }
 
-        return $this->isValidForAmount($eligible, $userId);
+        return $this->isValidForAmount($eligible, $userId, $phone, $email);
     }
 
     /** A short line the storefront can show explaining what a code covers. */
@@ -199,8 +200,10 @@ class Coupon extends Model
 
     /**
      * @param  int|null  $userId  when given, the per-customer cap is enforced too
+     * @param  string|null  $phone  and against this mobile number, for a guest
+     * @param  string|null  $email  and this email address, when one was given
      */
-    public function isValidForAmount(float $subtotal, ?int $userId = null): array
+    public function isValidForAmount(float $subtotal, ?int $userId = null, ?string $phone = null, ?string $email = null): array
     {
         if (! $this->is_active) {
             return ['valid' => false, 'message' => 'This coupon is no longer active.'];
@@ -214,12 +217,21 @@ class Coupon extends Model
             return ['valid' => false, 'message' => 'This coupon usage limit has been reached.'];
         }
 
-        if ($userId && $this->per_user_limit !== null && $this->redemptionsBy($userId) >= $this->per_user_limit) {
+        if (($userId || $phone || $email) && $this->per_user_limit !== null
+            && $this->redemptionsBy($userId, $phone, $email) >= $this->per_user_limit) {
+            // A guest is known by their number or their email, so the message
+            // names the one that matched.
+            $who = match (true) {
+                (bool) $userId => 'You have',
+                $this->redemptionsBy(null, $phone) >= $this->per_user_limit => 'This mobile number has',
+                default => 'This email address has',
+            };
+
             return [
                 'valid' => false,
                 'message' => $this->per_user_limit === 1
-                    ? 'You have already used this coupon.'
-                    : "You have already used this coupon {$this->per_user_limit} times.",
+                    ? "{$who} already used this coupon."
+                    : "{$who} already used this coupon {$this->per_user_limit} times.",
             ];
         }
 
@@ -266,12 +278,29 @@ class Coupon extends Model
     /**
      * How many times one customer has already redeemed this code, counted from
      * the orders that carry it. Cancelled orders do not count against them.
+     *
+     * By the account, and by the mobile number too. A guest has no account, so
+     * "once per customer" meant nothing to one: the same number could use the
+     * code on every order. The number is who the courier rings, which makes it
+     * the customer as far as the shop can tell — and the email, when one was
+     * given, so a new number with the same email is still the same person.
      */
-    public function redemptionsBy(int $userId): int
+    public function redemptionsBy(?int $userId, ?string $phone = null, ?string $email = null): int
     {
+        $phone = PhoneHelper::normalizeBdPhone($phone);
+        // Orders keep it lower-cased and trimmed; compared the same way.
+        $email = filled($email) ? strtolower(trim($email)) : null;
+
+        if (! $userId && ! $phone && ! $email) {
+            return 0;
+        }
+
         return Order::where('coupon_code', $this->code)
-            ->where('user_id', $userId)
             ->where('status', '!=', 'cancelled')
+            ->where(fn ($q) => $q
+                ->when($userId, fn ($q) => $q->orWhere('user_id', $userId))
+                ->when($phone, fn ($q) => $q->orWhere('shipping_address->phone', $phone))
+                ->when($email, fn ($q) => $q->orWhere('shipping_address->email', $email)))
             ->count();
     }
 
@@ -293,14 +322,14 @@ class Coupon extends Model
      *
      * Must be called inside a transaction; placeOrder() provides one.
      */
-    public function redeem(?int $userId = null): bool
+    public function redeem(?int $userId = null, ?string $phone = null, ?string $email = null): bool
     {
         // Serialise redemptions of this coupon against each other. Without the
         // lock the per-user re-count below is the same race, one step later.
         static::whereKey($this->getKey())->lockForUpdate()->first();
 
-        if ($userId && $this->per_user_limit !== null
-            && $this->redemptionsBy($userId) >= $this->per_user_limit) {
+        if (($userId || $phone || $email) && $this->per_user_limit !== null
+            && $this->redemptionsBy($userId, $phone, $email) >= $this->per_user_limit) {
             return false;
         }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Wishlist;
 use App\Services\ProductService;
+use App\Support\StorefrontStock;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class WishlistController extends Controller
             ->with(['product.images'])
             ->get();
 
-        return $this->successResponse($wishlists, 'Wishlist fetched successfully');
+        return $this->successResponse(StorefrontStock::hide($wishlists), 'Wishlist fetched successfully');
     }
 
     public function store(Request $request): JsonResponse
@@ -63,6 +64,6 @@ class WishlistController extends Controller
             $suggestions = $products->getFeaturedProducts('all', 4);
         }
 
-        return $this->successResponse($suggestions->values(), 'Suggestions fetched successfully');
+        return $this->successResponse(StorefrontStock::hide($suggestions->values()), 'Suggestions fetched successfully');
     }
 }

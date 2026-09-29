@@ -42,12 +42,11 @@ describe.each(['standard', 'flash'])('a %s card', (variant) => {
         raw_price: 78000,
         raw_old_price: 81500,
         inStock: true,
-        stockQuantity: 5,
         specs: ['Processor: AMD Ryzen 3 7320U'],
         ...overrides,
     });
 
-    const soldOut = { inStock: false, stockQuantity: 0 };
+    const soldOut = { inStock: false };
 
     const card = (overrides) =>
         render(<ProductCard product={product(overrides)} variant={variant} />);

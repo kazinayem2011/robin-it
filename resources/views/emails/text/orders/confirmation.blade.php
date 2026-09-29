@@ -18,7 +18,7 @@ Payment:      Cash on Delivery
 ITEMS
 -----
 @foreach ($order->items as $item)
-- {{ $item->display_name }}@if ($item->wasPreordered()) ({{ mb_strtolower($item->owedLabel()) }})@endif
+- {{ $item->display_name }}@if ($item->isCustomerPreorder()) ({{ mb_strtolower($item->customerOwedLabel()) }})@endif
   {{ $item->quantity }} x ৳{{ number_format($item->price, 2) }} = ৳{{ number_format($item->total, 2) }}
 @endforeach
 

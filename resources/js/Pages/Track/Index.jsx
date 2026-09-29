@@ -488,12 +488,8 @@ export default function TrackOrder({ orderNumber = null, accessKey = null }) {
                                                     ? ` (${item.variant_name})`
                                                     : ''}
                                             </span>
-                                            {item.was_preordered && (
-                                                <PreorderTag
-                                                    waiting={
-                                                        item.waiting_for_stock
-                                                    }
-                                                />
+                                            {item.is_preorder && (
+                                                <PreorderTag />
                                             )}
                                             <span className="tracking-item-qty">
                                                 Qty: {item.quantity} ×{' '}

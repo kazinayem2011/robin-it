@@ -143,8 +143,10 @@ class PaymentAndCouponPolicyTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->checkout(User::factory()->create(), ['coupon_code' => 'WELCOME10'])->assertStatus(201);
-        $this->checkout(User::factory()->create(), ['coupon_code' => 'WELCOME10'])->assertStatus(201);
+        // Different people: different accounts and different numbers. The
+        // limit is also kept by number, so one number is one customer.
+        $this->checkout(User::factory()->create(), ['coupon_code' => 'WELCOME10', 'phone' => '01712345678'])->assertStatus(201);
+        $this->checkout(User::factory()->create(), ['coupon_code' => 'WELCOME10', 'phone' => '01812345678'])->assertStatus(201);
 
         $this->assertDatabaseCount('orders', 2);
     }

@@ -1,83 +1,52 @@
 import { describe, it, expect } from 'vitest';
-import {
-    orderableCeiling,
-    preordersBeyondShelf,
-    waitsForStock,
-} from '../orderable';
+import { isPreorderLine, lineInStock, orderableCeiling } from '../orderable';
 import { boundsFor } from '../cartBounds';
 
 /**
- * How many can be ordered, pre-order included.
+ * Whether something can be ordered, from yes/no answers only.
  *
- * The product page and the cart both capped at the shelf, which for a
- * pre-order product is nothing: a customer allowed three could take one.
+ * The storefront is never sent a stock figure, so these cannot — and must
+ * not — depend on one: the server refuses what it cannot supply.
  */
 describe('orderableCeiling', () => {
-    /* The shop's rule: some in stock, more is taken and owed; none, Sold Out. */
-    it('has no ceiling for an ordinary product with some in stock', () => {
-        expect(orderableCeiling({ allow_preorder: false }, 4)).toBe(
+    it('has no ceiling for an ordinary product in stock', () => {
+        expect(orderableCeiling({ allow_preorder: false }, true)).toBe(
             Number.POSITIVE_INFINITY,
         );
-        expect(orderableCeiling({ allow_preorder: false }, 0)).toBe(0);
     });
 
-    it('goes beyond the shelf by the pre-order limit', () => {
-        expect(
-            orderableCeiling({ allow_preorder: true, preorder_limit: 3 }, 0),
-        ).toBe(3);
-        expect(
-            orderableCeiling({ allow_preorder: true, preorder_limit: 3 }, 2),
-        ).toBe(5);
+    it('is nothing for an ordinary product that is sold out', () => {
+        expect(orderableCeiling({ allow_preorder: false }, false)).toBe(0);
     });
 
-    /* Already owed units count against the limit, as on the server. */
-    it('counts what is already owed', () => {
-        expect(
-            orderableCeiling({ allow_preorder: true, preorder_limit: 3 }, -2),
-        ).toBe(1);
-        expect(
-            orderableCeiling({ allow_preorder: true, preorder_limit: 3 }, -5),
-        ).toBe(0);
+    it('has no ceiling for a pre-order product, in stock or not', () => {
+        expect(orderableCeiling({ allow_preorder: true }, false)).toBe(
+            Number.POSITIVE_INFINITY,
+        );
+        expect(orderableCeiling({ allow_preorder: true }, true)).toBe(
+            Number.POSITIVE_INFINITY,
+        );
     });
 
-    it('has no ceiling when no limit is set', () => {
-        expect(
-            orderableCeiling({ allow_preorder: true, preorder_limit: null }, 0),
-        ).toBe(Number.POSITIVE_INFINITY);
+    it('is nothing when there is no product', () => {
+        expect(orderableCeiling(null, false)).toBe(0);
     });
 });
 
 describe('the cart line bounds', () => {
     const line = (product, quantity = 1) => ({ quantity, product });
 
-    it('lets a pre-order line go up to the limit', () => {
+    it('lets a pre-order line go to the per-item cap', () => {
         const { max } = boundsFor(
-            line({
-                allow_preorder: true,
-                preorder_limit: 3,
-                stock_quantity: 0,
-            }),
-            { max_quantity_per_item: 20 },
-        );
-
-        expect(max).toBe(3);
-    });
-
-    it('still stops at the per-item cap when no limit is set', () => {
-        const { max } = boundsFor(
-            line({
-                allow_preorder: true,
-                preorder_limit: null,
-                stock_quantity: 0,
-            }),
+            line({ allow_preorder: true, in_stock: false }),
             { max_quantity_per_item: 20 },
         );
 
         expect(max).toBe(20);
     });
 
-    it('lets an ordinary product with some in stock go to the per-item cap', () => {
-        const { max } = boundsFor(line({ stock_quantity: 4 }), {
+    it('lets an ordinary product in stock go to the per-item cap', () => {
+        const { max } = boundsFor(line({ in_stock: true }), {
             max_quantity_per_item: 20,
         });
 
@@ -85,26 +54,40 @@ describe('the cart line bounds', () => {
     });
 });
 
-describe('waitsForStock', () => {
-    it('marks more than is in stock on an ordinary product', () => {
-        expect(waitsForStock({ allow_preorder: false }, 2, 3)).toBe(true);
-        expect(waitsForStock({ allow_preorder: false }, 2, 2)).toBe(false);
+describe('isPreorderLine', () => {
+    it('marks a pre-order product whose shelf is empty', () => {
+        expect(isPreorderLine({ allow_preorder: true }, false)).toBe(true);
     });
 
-    it('is not a pre-order, and not something sold out', () => {
-        expect(waitsForStock({ allow_preorder: true }, 2, 3)).toBe(false);
-        expect(waitsForStock({ allow_preorder: false }, 0, 1)).toBe(false);
+    it('does not mark one on the shelf, or an ordinary product', () => {
+        expect(isPreorderLine({ allow_preorder: true }, true)).toBe(false);
+        expect(isPreorderLine({ allow_preorder: false }, false)).toBe(false);
     });
 });
 
-describe('preordersBeyondShelf', () => {
-    it('marks a line that asks for more than the shelf holds', () => {
-        expect(preordersBeyondShelf({ allow_preorder: true }, 0, 1)).toBe(true);
-        expect(preordersBeyondShelf({ allow_preorder: true }, 5, 2)).toBe(
-            false,
-        );
-        expect(preordersBeyondShelf({ allow_preorder: false }, 0, 1)).toBe(
-            false,
-        );
+describe('lineInStock', () => {
+    it('reads the option when the line has one', () => {
+        expect(
+            lineInStock({
+                product: { in_stock: true },
+                variant: { in_stock: false },
+            }),
+        ).toBe(false);
+    });
+
+    it('reads the product otherwise, in either spelling', () => {
+        expect(lineInStock({ product: { in_stock: true } })).toBe(true);
+        expect(lineInStock({ product: { inStock: true } })).toBe(true);
+        expect(lineInStock({ product: {} })).toBe(false);
+    });
+
+    it('treats an option that has gone as not in stock', () => {
+        expect(
+            lineInStock({
+                product_variant_id: 3,
+                variant: null,
+                product: { in_stock: true },
+            }),
+        ).toBe(false);
     });
 });

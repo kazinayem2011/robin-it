@@ -42,7 +42,7 @@ const line = (productId, quantity = 1) => ({
         name: `Part ${productId}`,
         price: 30000,
         effective_price: 30000,
-        stock_quantity: 5,
+        in_stock: true,
     },
 });
 

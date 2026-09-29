@@ -11,6 +11,7 @@ use App\Models\Wishlist;
 use App\Services\ContactService;
 use App\Services\OrderService;
 use App\Support\ShippingRates;
+use App\Support\StorefrontStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -94,11 +95,11 @@ class DashboardController extends Controller
         ];
 
         return Inertia::render('Dashboard/Index', array_merge($this->shell($user), [
-            'recentOrders' => Order::where('user_id', $user->id)
+            'recentOrders' => StorefrontStock::hide(Order::where('user_id', $user->id)
                 ->with(['items.product.images', 'items.variant:id,image_url'])
                 ->latest()
                 ->take(3)
-                ->get(),
+                ->get()),
             'stats' => $stats,
         ]));
     }
@@ -121,7 +122,7 @@ class DashboardController extends Controller
             ->withQueryString();
 
         return Inertia::render('Dashboard/Orders', array_merge($this->shell($user), [
-            'orders' => $orders,
+            'orders' => StorefrontStock::hide($orders),
             // The overview deep-links here with ?order=<id>. That order may sit
             // on any page of the history, so it is resolved here rather than
             // being looked for among the rows this page happens to hold.
@@ -140,10 +141,10 @@ class DashboardController extends Controller
             return null;
         }
 
-        return Order::where('id', $wanted)
+        return StorefrontStock::hide(Order::where('id', $wanted)
             ->where('user_id', $userId)
             ->with(['items.product.images', 'items.variant:id,image_url', 'courier:id,name,phone,tracking_url_template'])
-            ->first();
+            ->first());
     }
 
     public function wishlist(Request $request): Response
@@ -151,9 +152,9 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         return Inertia::render('Dashboard/Wishlist', array_merge($this->shell($user), [
-            'wishlistItems' => Wishlist::where('user_id', $user->id)
+            'wishlistItems' => StorefrontStock::hide(Wishlist::where('user_id', $user->id)
                 ->with(['product.brand', 'product.images'])
-                ->get(),
+                ->get()),
         ]));
     }
 

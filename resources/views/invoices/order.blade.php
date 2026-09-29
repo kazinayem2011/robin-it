@@ -182,8 +182,8 @@
                             {{-- An order mixing stock and pre-order lines is not
                                  one shipment, and the paperwork has to say which
                                  line is waiting on a delivery. --}}
-                            @if ($item->wasPreordered())
-                                <span class="option preorder">{{ mb_strtolower($item->owedLabel()) }}</span>
+                            @if ($item->isCustomerPreorder())
+                                <span class="option preorder">{{ mb_strtolower($item->customerOwedLabel()) }}</span>
                             @endif
                         </td>
                         <td class="num">৳{{ number_format($item->price, 2) }}</td>

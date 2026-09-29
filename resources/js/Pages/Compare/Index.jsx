@@ -401,16 +401,23 @@ export default function Compare() {
                                             key={p.id}
                                             className="compare-td-val compare-stock-val"
                                         >
-                                            <CheckCircle2
-                                                size={13}
-                                                style={{
-                                                    display: 'inline',
-                                                    marginRight: 4,
-                                                }}
-                                            />
-                                            {p.stock_quantity > 0
-                                                ? `${p.stock_quantity} Units in Stock`
-                                                : 'In Stock'}
+                                            {/* Whether it can be bought, never
+                                                how many: the shop does not
+                                                tell its customers. It said
+                                                "In Stock" at zero, too. */}
+                                            {p.in_stock && (
+                                                <CheckCircle2
+                                                    size={13}
+                                                    style={{
+                                                        display: 'inline',
+                                                        marginRight: 4,
+                                                    }}
+                                                />
+                                            )}
+                                            {p.stock_status_label ||
+                                                (p.in_stock
+                                                    ? 'In Stock'
+                                                    : 'Sold Out')}
                                         </td>
                                     ))}
                                     {Array.from({

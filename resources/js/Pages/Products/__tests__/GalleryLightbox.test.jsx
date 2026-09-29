@@ -67,7 +67,6 @@ describe('the product gallery', () => {
         name: 'A Laptop',
         slug: 'a-laptop',
         price: 1000,
-        stock_quantity: 5,
         in_stock: true,
         images: [
             { image_path: '/one.jpg' },

@@ -6,6 +6,8 @@ use App\Enums\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\ProductService;
+use App\Support\SearchSpelling;
+use App\Support\StorefrontStock;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,7 +60,15 @@ class ProductController extends Controller
         return $this->paginatedResponse(
             $products,
             'Products fetched successfully.',
-            fn ($product) => $this->productService->formatProductCardData($product)
+            fn ($product) => $this->productService->formatProductCardData($product),
+            // A search that found nothing gets the nearest real words, if
+            // they would find something with the same filters.
+            $products->total() === 0 && filled($validated['search'] ?? null)
+                ? ['did_you_mean' => SearchSpelling::suggest(
+                    $validated['search'],
+                    fn ($better) => $this->productService->getFilteredProducts(['search' => $better] + $validated, 1)->total() > 0
+                )]
+                : []
         );
     }
 
@@ -188,11 +198,17 @@ class ProductController extends Controller
     public function suggestions(Request $request): JsonResponse
     {
         $query = (string) $request->input('q', '');
+        $found = $this->productService->getSearchSuggestions($query);
 
-        return $this->successResponse(
-            $this->productService->getSearchSuggestions($query),
-            'Search suggestions retrieved successfully.'
-        );
+        // Nothing for what was typed: offer the nearest real words.
+        if (mb_strlen(trim($query)) >= 4 && collect($found['products'] ?? [])->isEmpty()) {
+            $found['did_you_mean'] = SearchSpelling::suggest(
+                $query,
+                fn ($better) => collect($this->productService->getSearchSuggestions($better)['products'] ?? [])->isNotEmpty()
+            );
+        }
+
+        return $this->successResponse($found, 'Search suggestions retrieved successfully.');
     }
 
     /**
@@ -209,6 +225,8 @@ class ProductController extends Controller
             return $this->errorResponse('Product not found.', 404, ApiCode::NOT_FOUND);
         }
 
-        return $this->successResponse($product, 'Product details fetched successfully.');
+        // The options, the picks and the similar products all carry the
+        // shop's stock figures; the page only needs in_stock.
+        return $this->successResponse(StorefrontStock::hide($product), 'Product details fetched successfully.');
     }
 }

@@ -419,7 +419,6 @@ class ProductService
         $saving = $product->saving;
         $discountPct = $hasDiscount && $product->price > 0 ? (int) round(($saving / $product->price) * 100) : 0;
 
-        $stock = max(0, (int) $product->stock_quantity);
         $sold = (int) ($product->sold_count ?? 0);
         $reviewCount = (int) ($product->approved_reviews_count ?? 0);
         $rating = $product->approved_rating_avg !== null
@@ -453,9 +452,13 @@ class ProductService
             'rating' => $rating,
             'reviews' => $reviewCount,
             'sold' => $sold,
-            'totalStock' => $stock + $sold,
+            /*
+             * Whether it can be bought, never how many. The card sent the
+             * shelf count and a "total" of shelf plus sold, which put the
+             * shop's stock in every browser that opened a listing; a customer
+             * is never told how many units there are.
+             */
             'inStock' => $product->isInStock(),
-            'stockQuantity' => $stock,
             /*
              * Sold by option, and which one to reach for.
              *

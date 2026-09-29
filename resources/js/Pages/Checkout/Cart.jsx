@@ -11,9 +11,9 @@ import { toast } from '../../Components/Toast';
 import { formatBdt } from '../../utils/formatters';
 import { boundsFor as cartBounds } from '../../utils/cartBounds';
 import {
-    preordersBeyondShelf,
+    isPreorderLine,
+    lineInStock,
     preorderDate,
-    waitsForStock,
 } from '../../utils/orderable';
 import siteConfig from '../../constants/siteConfig';
 import { ROUTES } from '../../constants/endpoints';
@@ -195,9 +195,14 @@ export default function Cart() {
                             {notice && <p>{notice}</p>}
                             {issues.map((issue) => (
                                 <p key={issue.item_id}>
+                                    {/* Never a stock figure: the shop does
+                                        not tell its customers how many
+                                        units there are. */}
                                     {issue.reason === 'unavailable'
                                         ? `"${issue.product_name}" is no longer available — please remove it to continue.`
-                                        : `Only ${issue.available} left of "${issue.product_name}" (you have ${issue.requested}). Please reduce the quantity.`}
+                                        : issue.reason === 'out_of_stock'
+                                          ? `"${issue.product_name}" just went out of stock — please remove it to continue.`
+                                          : `We can't supply that many of "${issue.product_name}" right now. Please reduce the quantity.`}
                                 </p>
                             ))}
                         </div>
@@ -254,13 +259,9 @@ export default function Cart() {
                                                     notice when it was added is
                                                     gone by now, and nothing here
                                                     said this line ships later. */}
-                                                {preordersBeyondShelf(
+                                                {isPreorderLine(
                                                     item.product,
-                                                    item.variant
-                                                        ?.stock_quantity ??
-                                                        item.product
-                                                            .stock_quantity,
-                                                    item.quantity,
+                                                    lineInStock(item),
                                                 ) && (
                                                     <div className="cart-item-preorder">
                                                         Pre-order — ships when
@@ -271,27 +272,6 @@ export default function Cart() {
                                                         )
                                                             ? `, expected ${preorderDate(item.product.preorder_release_at)}`
                                                             : ''}
-                                                    </div>
-                                                )}
-                                                {/* More than is in stock: taken,
-                                                    and the rest ships later. */}
-                                                {waitsForStock(
-                                                    item.product,
-                                                    item.variant
-                                                        ?.stock_quantity ??
-                                                        item.product
-                                                            .stock_quantity,
-                                                    item.quantity,
-                                                ) && (
-                                                    <div className="cart-item-preorder">
-                                                        Waiting for stock —{' '}
-                                                        {item.variant
-                                                            ?.stock_quantity ??
-                                                            item.product
-                                                                .stock_quantity}{' '}
-                                                        in stock now, the rest
-                                                        ship when the next
-                                                        delivery arrives
                                                     </div>
                                                 )}
                                                 <div className="cart-item-price">
@@ -341,7 +321,7 @@ export default function Cart() {
                                                     title={
                                                         item.quantity >=
                                                         boundsFor(item).max
-                                                            ? `Only ${boundsFor(item).max} available`
+                                                            ? 'Maximum reached'
                                                             : undefined
                                                     }
                                                 >

@@ -15,14 +15,16 @@
  * would tell a customer to go elsewhere for something arriving on Tuesday.
  *
  * @param {object|null} product
- * @param {{selectedVariant?: object|null, availableStock?: number}} [state]
+ * @param {{selectedVariant?: object|null, inStock?: boolean}} [state]  inStock
+ *        answers for the chosen option on a variant product. A yes/no: the
+ *        storefront is never sent a stock figure.
  * @returns {{label: string, tone: 'in'|'out'|'waiting'|'unknown'}}
  */
 // 'out of stock' too: a shop may still type the old wording itself.
 const PLAINLY_OUT = ['sold out', 'out of stock', 'unavailable'];
 
 export const stockStatusFor = (product, state = {}) => {
-    const { selectedVariant = null, availableStock = 0 } = state;
+    const { selectedVariant = null, inStock = false } = state;
 
     if (!product) {
         return { label: '', tone: 'unknown' };
@@ -30,12 +32,12 @@ export const stockStatusFor = (product, state = {}) => {
 
     const hasVariants = Boolean(product.has_variants);
 
-    // Nothing chosen yet, so there is no stock figure to report.
+    // Nothing chosen yet, so there is nothing to report.
     if (hasVariants && !selectedVariant) {
         return { label: 'Choose an option', tone: 'unknown' };
     }
 
-    if (availableStock > 0) {
+    if (inStock) {
         // The product-level label would be describing a different option.
         return {
             label: hasVariants

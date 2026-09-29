@@ -2182,6 +2182,14 @@ textarea.has-error:focus,
     white-space: nowrap;
 }
 
+/* Sold out: a link standing where Buy Now would be. It takes the same room,
+   with the bell spaced from its words as the button's icon is. */
+.quick-view-notify-btn {
+    flex: 1;
+    gap: 8px;
+    justify-content: center;
+}
+
 /* ==========================================================================
    12. CENTRALIZED PRODUCT CARD & GRID SYSTEM (SSOT)
    ========================================================================== */

@@ -57,9 +57,7 @@ export default function VariantPickerModal() {
                  * by pressing a disabled button.
                  */
                 const options = data?.active_variants || [];
-                const firstInStock = options.find(
-                    (v) => Number(v.stock_quantity) > 0,
-                );
+                const firstInStock = options.find((v) => v.in_stock);
 
                 setChosenId((firstInStock || options[0])?.id ?? null);
             })
@@ -177,8 +175,11 @@ export default function VariantPickerModal() {
                     <>
                         <ul className="variant-picker-list">
                             {variants.map((variant) => {
+                                // A yes/no, never a count; pre-order
+                                // covers every option of the product.
                                 const out =
-                                    Number(variant.stock_quantity) === 0;
+                                    !variant.in_stock &&
+                                    !product?.allow_preorder;
 
                                 return (
                                     <li key={variant.id}>

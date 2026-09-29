@@ -19,7 +19,7 @@ describe('ProductImage when loading fails', () => {
     };
 
     it('tries the placeholder when the photo fails', () => {
-        render(<ProductImage product={product} className="card-img" />);
+        render(<ProductImage product={product} className="quick-view-img" />);
 
         const img = screen.getByRole('img', { name: 'ASUS Vivobook Go 15' });
         fireEvent.error(img);
@@ -31,7 +31,7 @@ describe('ProductImage when loading fails', () => {
 
     it('draws an empty named box when the placeholder fails too', () => {
         const { container } = render(
-            <ProductImage product={product} className="card-img" />,
+            <ProductImage product={product} className="quick-view-img" />,
         );
 
         fireEvent.error(screen.getByRole('img'));
@@ -39,7 +39,7 @@ describe('ProductImage when loading fails', () => {
 
         const box = screen.getByRole('img', { name: 'ASUS Vivobook Go 15' });
         expect(box.tagName).toBe('SPAN');
-        expect(box).toHaveClass('card-img', 'product-image-failed');
+        expect(box).toHaveClass('quick-view-img', 'product-image-failed');
         expect(box).toBeEmptyDOMElement();
         expect(container.querySelector('img')).toBeNull();
     });

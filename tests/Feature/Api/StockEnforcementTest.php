@@ -232,13 +232,55 @@ class StockEnforcementTest extends TestCase
             'product_id' => $product->id, 'quantity' => 4,
         ])->assertStatus(200);
 
-        $product->update(['stock_quantity' => 1]);
+        $product->update(['stock_quantity' => 0]);
 
         $response = $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART);
 
+        // What to do about it, never how many are left.
         $response->assertStatus(200)
+            ->assertJsonPath('data.issues.0.reason', 'out_of_stock')
+            ->assertJsonPath('data.issues.0.requested', 4)
+            ->assertJsonMissingPath('data.issues.0.available');
+    }
+
+    /*
+     * Fewer on the shelf than the line asks for, on an ordinary product: the
+     * cart and checkout take it and owe the rest, so the cart must not call it
+     * a problem. It did, and the customer was told to reduce a quantity the
+     * shop would have accepted.
+     */
+    public function test_cart_does_not_flag_a_line_the_shop_would_take(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->makeProduct(5);
+
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
+            'product_id' => $product->id, 'quantity' => 4,
+        ])->assertStatus(200);
+
+        $product->update(['stock_quantity' => 1]);
+
+        $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART)
+            ->assertStatus(200)
+            ->assertJsonPath('data.issues', []);
+    }
+
+    /* Past a pre-order limit: fewer will do, and it says so without a number. */
+    public function test_cart_flags_a_pre_order_line_past_its_limit(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->makeProduct(0);
+        $product->update(['allow_preorder' => true, 'preorder_limit' => 5]);
+
+        $this->actingAs($user)->postJson('/api/'.ApiEndpoints::CART, [
+            'product_id' => $product->id, 'quantity' => 4,
+        ])->assertStatus(200);
+
+        $product->update(['preorder_limit' => 2]);
+
+        $this->actingAs($user)->getJson('/api/'.ApiEndpoints::CART)
+            ->assertStatus(200)
             ->assertJsonPath('data.issues.0.reason', 'insufficient_stock')
-            ->assertJsonPath('data.issues.0.available', 1)
-            ->assertJsonPath('data.issues.0.requested', 4);
+            ->assertJsonMissingPath('data.issues.0.available');
     }
 }

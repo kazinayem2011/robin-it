@@ -56,7 +56,7 @@ describe('QuickViewModal', () => {
         name: 'Logitech MX Master',
         slug: 'mx-master',
         price: 9500,
-        stock_quantity: 8,
+        in_stock: true,
     };
 
     it('adds a plain product with the chosen quantity', async () => {
@@ -90,11 +90,13 @@ describe('QuickViewModal', () => {
         expect(addToCart).not.toHaveBeenCalled();
     });
 
-    /* The server says which option is needed, or how many are left. Replacing
-       that with one generic sentence is what made this unfixable by the
-       shopper. */
+    /* The server says which option is needed, or that it cannot supply that
+       many. Replacing that with one generic sentence is what made this
+       unfixable by the shopper. */
     it('shows the server’s reason when the add is refused', async () => {
-        addToCart.mockRejectedValueOnce({ message: 'Only 2 left in stock.' });
+        addToCart.mockRejectedValueOnce({
+            message: "We can't supply that many right now.",
+        });
 
         const person = userEvent.setup();
         open(plain);
@@ -104,15 +106,16 @@ describe('QuickViewModal', () => {
         );
 
         expect(toastError).toHaveBeenCalledWith(
-            'Only 2 left in stock.',
+            "We can't supply that many right now.",
             'Error',
         );
     });
 
-    /* Some in stock: more is taken and owed, so the stepper goes on. */
-    it('offers more than is in stock, to be owed', async () => {
+    /* In stock: the stepper goes on to the cap, with no stock figure to stop
+       it — the storefront is never told one, and more is taken and owed. */
+    it('offers more than is on the shelf, without knowing how much that is', async () => {
         const person = userEvent.setup();
-        open({ ...plain, stock_quantity: 2 });
+        open(plain);
 
         const more = screen.getByRole('button', { name: /increase quantity/i });
 
@@ -128,7 +131,7 @@ describe('QuickViewModal', () => {
     });
 
     it('does not offer to sell something that is out of stock', () => {
-        open({ ...plain, stock_quantity: 0 });
+        open({ ...plain, in_stock: false });
 
         // Nothing to add: the next step is the back-in-stock form.
         expect(
@@ -140,7 +143,7 @@ describe('QuickViewModal', () => {
 
     /* The card was what was clicked to get here; the two must agree. */
     it('trusts an explicit inStock flag, the way the card does', () => {
-        open({ ...plain, stock_quantity: 0, inStock: true });
+        open({ ...plain, in_stock: false, inStock: true });
 
         expect(
             screen.getByRole('button', { name: /add to cart/i }),

@@ -31,13 +31,59 @@ class StorefrontException extends RuntimeException
         return $this->errorCode;
     }
 
-    /** Extra detail the UI can use, e.g. how many units are actually left. */
+    /**
+     * Extra detail the UI can use, e.g. which product it was. Never a stock
+     * figure: this is sent to the customer's browser.
+     */
     public function context(): array
     {
         return $this->context;
     }
 
+    /**
+     * More than the shop can supply.
+     *
+     * The shop's rule is that a customer is never told how many units there
+     * are, so this says "that many" and not a number — it used to read "Only 3
+     * left in stock", and carried the figure in its context too. $available
+     * only decides between "reduce it" and "remove it"; with none at all the
+     * product is Sold Out on every page anyway, so saying so gives nothing away.
+     */
     public static function outOfStock(string $productName, int $available): self
+    {
+        $message = $available > 0
+            ? "We can't supply that many of \"{$productName}\" right now. Please reduce the quantity."
+            : "\"{$productName}\" just went out of stock. Please remove it from your cart to continue.";
+
+        return new self($message, 422, ApiCode::OUT_OF_STOCK, [
+            'product_name' => $productName,
+        ]);
+    }
+
+    /**
+     * Past a pre-order product's limit.
+     *
+     * No number, for the same reason as outOfStock(): the limit less what is
+     * owed is a stock figure. Same code as out-of-stock, so a client handling
+     * that handles this.
+     */
+    public static function preorderLimit(string $productName, int $ceiling): self
+    {
+        $message = $ceiling > 0
+            ? "We can't take that many pre-orders for \"{$productName}\" right now. Please reduce the quantity."
+            : "\"{$productName}\" has reached its pre-order limit. Please remove it from your cart to continue.";
+
+        return new self($message, 422, ApiCode::OUT_OF_STOCK, [
+            'product_name' => $productName,
+        ]);
+    }
+
+    /**
+     * Staff moving stock that is not there — an adjustment, a transfer, a
+     * write-off. Staff see the stock anyway, so this keeps the number and the
+     * wording the stock screens always had. Never thrown on a customer's path.
+     */
+    public static function notEnoughOnHand(string $productName, int $available): self
     {
         $message = $available > 0
             ? "Only {$available} left in stock for \"{$productName}\". Please reduce the quantity."
@@ -46,26 +92,6 @@ class StorefrontException extends RuntimeException
         return new self($message, 422, ApiCode::OUT_OF_STOCK, [
             'product_name' => $productName,
             'available' => $available,
-        ]);
-    }
-
-    /**
-     * Past a pre-order product's limit.
-     *
-     * It said the product "just went out of stock", which is true of every
-     * pre-order and tells the customer nothing: the shelf was empty when they
-     * chose it. What stopped them is the number, so that is what this says.
-     * Same code as out-of-stock, so a client handling that handles this.
-     */
-    public static function preorderLimit(string $productName, int $ceiling): self
-    {
-        $message = $ceiling > 0
-            ? "Only {$ceiling} of \"{$productName}\" can be ordered before the delivery arrives. Please reduce the quantity."
-            : "\"{$productName}\" has reached its pre-order limit. Please remove it from your cart to continue.";
-
-        return new self($message, 422, ApiCode::OUT_OF_STOCK, [
-            'product_name' => $productName,
-            'available' => $ceiling,
         ]);
     }
 

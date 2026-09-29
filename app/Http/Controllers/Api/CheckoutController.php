@@ -153,7 +153,7 @@ class CheckoutController extends Controller
             // the account the order will join, so a guest proving their number
             // is held to the same per-customer limit as a signed-in customer.
             $check = $coupon
-                ? $coupon->isValidForCart($cart, $customer?->id)
+                ? $coupon->isValidForCart($cart, $customer?->id, $validated['phone'], $validated['email'] ?? null)
                 : ['valid' => false, 'message' => 'That promo code is not valid. Remove it to continue.'];
 
             if (! $check['valid']) {

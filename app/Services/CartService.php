@@ -315,7 +315,16 @@ class CartService
      * Cart lines whose product went inactive or short on stock since it was added.
      * The cart page uses this to warn the customer before they reach checkout.
      *
-     * @return array<int, array{item_id:int, product_name:string, requested:int, available:int, reason:string}>
+     * Only lines the server would actually refuse — the same rule as adding to
+     * the cart and checking out (stockCovers). It flagged every line past the
+     * shelf, so a normal product ordered beyond stock, which checkout takes and
+     * owes, was shown as a problem the customer could not get past.
+     *
+     * No stock figure: a customer is never told how many units there are. The
+     * reason says what to do — "unavailable" and "out_of_stock" mean remove it,
+     * "insufficient_stock" means ask for fewer.
+     *
+     * @return array<int, array{item_id:int, product_name:string, requested:int, reason:string}>
      */
     public function findUnavailableItems(Cart $cart): array
     {
@@ -334,7 +343,6 @@ class CartService
                     'item_id' => $item->id,
                     'product_name' => $product ? $item->displayName() : 'Removed product',
                     'requested' => $item->quantity,
-                    'available' => 0,
                     'reason' => 'unavailable',
                 ];
 
@@ -342,18 +350,18 @@ class CartService
             }
 
             // Stock lives on the option when the product has them.
-            $available = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
+            $onHand = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
 
-            // A pre-ordered line is not an unavailable one; the customer has
-            // already been told it ships when the delivery lands.
-            if ($available < $item->quantity
-                && ! $product->allowsBalance($available - $item->quantity)) {
+            // A pre-ordered line, or one taken past the shelf and owed, is not
+            // an unavailable one.
+            if (! $this->stockCovers($product, $item->quantity, $onHand)) {
                 $issues[] = [
                     'item_id' => $item->id,
                     'product_name' => $item->displayName(),
                     'requested' => $item->quantity,
-                    'available' => max(0, $available),
-                    'reason' => 'insufficient_stock',
+                    'reason' => $this->stockCovers($product, 1, $onHand)
+                        ? 'insufficient_stock'
+                        : 'out_of_stock',
                 ];
             }
         }
@@ -374,6 +382,17 @@ class CartService
     }
 
     /**
+     * Whether this many can be sold: within stock or a pre-order's limit, or
+     * more than is in stock on a product that takes the order and owes the
+     * rest. The one rule the cart asks, whether adding, changing or warning.
+     */
+    private function stockCovers(Product $product, int $quantity, int $onHand): bool
+    {
+        return $product->allowsBalance($onHand - $quantity)
+            || $product->takesOrdersBeyondStock($onHand);
+    }
+
+    /**
      * @throws StorefrontException
      */
     private function assertStockCovers(Product $product, int $quantity, ?ProductVariant $variant = null): void
@@ -390,15 +409,14 @@ class CartService
          */
         $onHand = (int) ($variant?->stock_quantity ?? $product->stock_quantity);
 
-        // Within stock or a pre-order's limit — or more than is in stock on a
-        // product that takes the order and owes the rest.
-        if ($product->allowsBalance($onHand - $quantity) || $product->takesOrdersBeyondStock($onHand)) {
+        if ($this->stockCovers($product, $quantity, $onHand)) {
             return;
         }
 
         $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
 
-        // Past a pre-order limit is not "out of stock": say the number.
+        // Past a pre-order limit is not "out of stock", though neither says
+        // a number: the customer is never told how many there are.
         $ceiling = $product->allowsPreorder() ? $product->sellableCeiling($onHand) : null;
 
         if ($ceiling !== null) {
