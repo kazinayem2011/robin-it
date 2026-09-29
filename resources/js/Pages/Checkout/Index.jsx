@@ -735,10 +735,14 @@ export default function Checkout({
                                         )}
                                     {verifyPhone && (
                                         <span className="checkout-field-hint">
-                                            We will text a code to this number
-                                            to confirm it. Already shopped with
-                                            us? The order joins your account and
-                                            you are signed in.
+                                            {/* What actually happens: a code
+                                                for a new number, the password
+                                                for one that has an account. */}
+                                            New here? We text a code to confirm
+                                            this number, then text you a
+                                            password for next time. Already have
+                                            an account? You will be asked for
+                                            your password.
                                         </span>
                                     )}
                                 </div>
