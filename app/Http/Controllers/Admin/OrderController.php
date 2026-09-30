@@ -55,7 +55,7 @@ class OrderController extends Controller
              */
             // With how and when: a refund line read "Given back" with no word
             // on whether it went out as cash, bKash or a bank transfer.
-            'refunds:id,order_id,amount,method,reason,refunded_on,created_at',
+            'refunds:id,order_id,amount,method,reason,includes_delivery,refunded_on,created_at',
             // And the payment form what is still owed.
             'payments',
         ])->latest();

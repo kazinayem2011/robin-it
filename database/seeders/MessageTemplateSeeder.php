@@ -224,8 +224,8 @@ class MessageTemplateSeeder extends Seeder
                 'key' => 'refund',
                 'name' => 'Refund issued',
                 'group' => 'Money',
-                'hint' => 'A bank transfer takes days to appear; without this the customer chases it.',
-                'body' => '({shop_name}) অর্ডার {order_number}-এর Tk {amount} রিফান্ড হয়েছে। ব্যাংকে আসতে কয়েক দিন লাগতে পারে।',
+                'hint' => 'Without this the customer chases the money. {refund_how} says how it went back — cash in hand, sent to bKash/Nagad/Rocket, or to the bank (which takes days).',
+                'body' => '({shop_name}) অর্ডার {order_number}-এর Tk {amount} {refund_how}',
             ],
             [
                 'key' => 'back_in_stock',

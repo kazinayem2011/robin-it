@@ -259,16 +259,38 @@ class SmsTemplates
         ], "({$shop}) অর্ডার {$order->order_number} পাঠানো হয়েছে{$carrier}। {$follow}");
     }
 
-    public static function refundIssued(Order $order, float $amount, string $shop): string
+    /**
+     * Money given back, said the way it actually went.
+     *
+     * It told every customer the refund "may take a few days to reach the
+     * bank" — including one handed the cash at the counter. {refund_how} is
+     * the half that changes with the method.
+     */
+    public static function refundIssued(Order $order, float $amount, string $shop, ?string $method = null): string
     {
         $sum = number_format($amount, 0);
+        $how = self::refundHow($method);
 
         return self::stored('refund', [
             'shop_name' => $shop,
             'order_number' => $order->order_number,
             'amount' => $sum,
-        ], "({$shop}) অর্ডার {$order->order_number}-এ Tk {$sum} রিফান্ড হয়েছে। "
-            .'অ্যাকাউন্টে আসতে কয়েক দিন লাগতে পারে।');
+            'refund_how' => $how,
+        ], "({$shop}) অর্ডার {$order->order_number}-এর Tk {$sum} {$how}");
+    }
+
+    /** How a refund went back, in the customer's words. */
+    private static function refundHow(?string $method): string
+    {
+        return match ($method) {
+            'cash' => 'নগদ ফেরত দেওয়া হয়েছে।',
+            'bkash' => 'bKash-এ ফেরত পাঠানো হয়েছে।',
+            'nagad' => 'Nagad-এ ফেরত পাঠানো হয়েছে।',
+            'rocket' => 'Rocket-এ ফেরত পাঠানো হয়েছে।',
+            'bank' => 'ব্যাংকে পাঠানো হয়েছে, আসতে কয়েক দিন লাগতে পারে।',
+            'store_credit' => 'স্টোর ক্রেডিট হিসেবে যোগ হয়েছে।',
+            default => 'ফেরত দেওয়া হয়েছে।',
+        };
     }
 
     /**

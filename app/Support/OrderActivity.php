@@ -28,6 +28,7 @@ class OrderActivity
         $order->loadMissing([
             'user:id,name',
             'statusChanges',
+            'courier:id,name',
             'payments',
             'refunds.processedBy:id,name',
             'edits',
@@ -60,12 +61,15 @@ class OrderActivity
             $order->user?->name ?? (($order->shipping_address['name'] ?? null) ? $order->shipping_address['name'].' (guest)' : 'Guest'),
         );
 
+        // Which courier took it, on the line where it went out.
+        $carrier = collect([$order->courier?->name, $order->tracking_number])->filter()->implode(' · ') ?: null;
+
         foreach ($order->statusChanges as $change) {
             $add(
                 $change->created_at,
                 'status',
                 'Status: '.$label($change->from_status).' → '.$label($change->to_status),
-                null,
+                $change->to_status === 'shipped' ? $carrier : null,
                 $change->by_name ?? 'the system',
             );
         }
@@ -75,7 +79,7 @@ class OrderActivity
          * dispatched, delivered or taken back; only the name is missing.
          */
         if ($order->statusChanges->isEmpty()) {
-            $add($order->dispatched_at, 'status', 'Dispatched', null, 'not recorded');
+            $add($order->dispatched_at, 'status', 'Dispatched', $carrier, 'not recorded');
             $add($order->delivered_at, 'status', 'Delivered', null, 'not recorded');
 
             if ($order->status === 'returned') {

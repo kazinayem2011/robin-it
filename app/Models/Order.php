@@ -36,7 +36,7 @@ class Order extends Model
      * Derived from the courier and the consignment number, so it travels with
      * the order rather than every screen having to build it.
      */
-    protected $appends = ['tracking_url', 'amount_paid', 'amount_due', 'payment_state', 'returned_value', 'refundable_amount'];
+    protected $appends = ['tracking_url', 'amount_paid', 'amount_due', 'payment_state', 'returned_value', 'refundable_amount', 'delivery_refunded'];
 
     /** Order lifecycle states, in the order the customer sees them. */
     /**
@@ -218,7 +218,23 @@ class Order extends Model
             return 0.0;
         }
 
-        return round(max(0, (float) $this->total - $this->returned_value), 2);
+        $delivery = $this->delivery_refunded ? (float) $this->shipping_fee : 0.0;
+
+        return round(max(0, (float) $this->total - $this->returned_value - $delivery), 2);
+    }
+
+    /**
+     * Whether a refund gave the delivery charge back.
+     *
+     * A return takes the goods off the order and leaves delivery owing, which
+     * is right for a change of mind. When the shop was at fault the refund
+     * says so, and from then on the delivery charge is not owed either.
+     */
+    public function getDeliveryRefundedAttribute(): bool
+    {
+        $refunds = $this->relationLoaded('refunds') ? $this->refunds : $this->refunds()->get();
+
+        return (bool) $refunds->contains(fn ($r) => (bool) $r->includes_delivery);
     }
 
     public function payments(): HasMany

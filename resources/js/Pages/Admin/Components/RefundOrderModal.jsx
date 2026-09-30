@@ -5,13 +5,25 @@ import { Undo2 } from 'lucide-react';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
 import Select from '@/Components/Select';
+import Checkbox from '@/Components/Checkbox';
 import Modal from '@/Components/Modal';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { adminRefundSchema } from '@/validations';
 import { formatBdt } from '@/utils/formatters';
+// Its own styles: opened from an order, the Refunds page's sheet was never
+// loaded and the summary read "Received৳1,570" in one run.
+import '../Refunds.css';
 
 const today = localToday;
+
+/* The shop's fault, so the delivery charge goes back too. Refund::DELIVERY_BACK_REASONS. */
+const DELIVERY_BACK_REASONS = [
+    'damaged',
+    'wrong_item',
+    'undelivered',
+    'cancelled',
+];
 
 /**
  * Money given back on an order.
@@ -45,11 +57,42 @@ export default function RefundOrderModal({
     // "Cash never collected" is not a refund: nothing came in to give back.
     const choices = methods.filter((m) => m.value !== 'cod_not_collected');
 
+    /*
+     * The delivery charge, the way other shops handle it: it goes back with
+     * the goods when the shop was at fault — damaged, wrong item, never
+     * delivered, cancelled — and is kept when the customer changed their mind.
+     * A return used to leave it owing while this form let it be refunded
+     * anyway, and the order then read "৳70 owed" after a full refund.
+     */
+    const delivery = Number(order?.shipping_fee || 0);
+    const canGiveDelivery = delivery > 0 && !order?.delivery_refunded;
+    const kept = received - alreadyGiven;
+    const goodsOwed =
+        order?.status === 'cancelled'
+            ? 0
+            : Math.max(
+                  0,
+                  Number(order?.total || 0) -
+                      Number(order?.returned_value || 0) -
+                      (order?.delivery_refunded ? delivery : 0),
+              );
+    // What was paid beyond what the order is now worth — the usual refund.
+    const suggest = (withDelivery) => {
+        const owed = Math.max(
+            0,
+            goodsOwed - (withDelivery && canGiveDelivery ? delivery : 0),
+        );
+        const back = Math.min(remaining, Math.max(0, kept - owed));
+        return back > 0 ? Math.round(back * 100) / 100 : '';
+    };
+    const deliveryBackFor = (reason) => DELIVERY_BACK_REASONS.includes(reason);
+
     const formik = useFormik({
         initialValues: {
             amount: '',
             method: 'bkash',
             reason: 'returned',
+            includes_delivery: false,
             reference: '',
             note: '',
             refunded_on: today(),
@@ -75,9 +118,10 @@ export default function RefundOrderModal({
 
         formik.resetForm({
             values: {
-                amount: remaining || '',
+                amount: suggest(false),
                 method: 'bkash',
                 reason: 'returned',
+                includes_delivery: false,
                 reference: '',
                 note: '',
                 refunded_on: today(),
@@ -86,6 +130,24 @@ export default function RefundOrderModal({
         // Only when the order being refunded changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [order?.id]);
+
+    // The reason sets the usual answer for delivery; the tick sets the sum.
+    const setReason = (reason) => {
+        const withDelivery = canGiveDelivery && deliveryBackFor(reason);
+        formik.setValues({
+            ...formik.values,
+            reason,
+            includes_delivery: withDelivery,
+            amount: suggest(withDelivery),
+        });
+    };
+
+    const setDelivery = (withDelivery) =>
+        formik.setValues({
+            ...formik.values,
+            includes_delivery: withDelivery,
+            amount: suggest(withDelivery),
+        });
 
     if (!order) return null;
 
@@ -164,11 +226,29 @@ export default function RefundOrderModal({
                         <Select
                             label="Why"
                             name="reason"
-                            formik={formik}
+                            value={formik.values.reason}
+                            onChange={(e) => setReason(e.target.value)}
                             required
                             options={reasons}
                         />
                     </div>
+
+                    {canGiveDelivery && (
+                        <>
+                            <Checkbox
+                                name="includes_delivery"
+                                label={`Give back the ${formatBdt(delivery)} delivery charge too`}
+                                checked={formik.values.includes_delivery}
+                                onChange={(e) => setDelivery(e.target.checked)}
+                            />
+                            <span className="admin-field-hint refund-delivery-hint">
+                                Ticked when it was the shop&apos;s fault —
+                                damaged, wrong item, not delivered, cancelled.
+                                Left clear when the customer changed their mind;
+                                the delivery charge is then kept.
+                            </span>
+                        </>
+                    )}
                     {/*
                      * The common case on a cash-on-delivery shop, and easy to
                      * get wrong: the parcel came back before the rider took

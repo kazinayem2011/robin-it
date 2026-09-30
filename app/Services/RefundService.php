@@ -57,6 +57,10 @@ class RefundService
                 'amount' => $amount,
                 'method' => $data['method'],
                 'reason' => $data['reason'],
+                // Once per order, and only where there was a charge to give back.
+                'includes_delivery' => ! empty($data['includes_delivery'])
+                    && (float) $fresh->shipping_fee > 0
+                    && ! $fresh->delivery_refunded,
                 'reference' => $data['reference'] ?? null,
                 'note' => $data['note'] ?? null,
                 'refunded_on' => $data['refunded_on'],
@@ -67,7 +71,7 @@ class RefundService
 
             $order->setRawAttributes($fresh->fresh()->getAttributes(), true);
 
-            $this->tellTheCustomer($fresh, $amount);
+            $this->tellTheCustomer($fresh, $amount, $data['method']);
 
             return $refund;
         });
@@ -83,7 +87,7 @@ class RefundService
      * Best-effort: the refund is recorded and must stand whether or not a
      * gateway is reachable.
      */
-    private function tellTheCustomer(Order $order, float $amount): void
+    private function tellTheCustomer(Order $order, float $amount, ?string $method = null): void
     {
         $phone = $order->notifiablePhone();
 
@@ -95,7 +99,7 @@ class RefundService
             app(SmsService::class)->sendEvent(
                 'refund',
                 $phone,
-                SmsTemplates::refundIssued($order, $amount, BrandDetails::name())
+                SmsTemplates::refundIssued($order, $amount, BrandDetails::name(), $method)
             );
         } catch (\Throwable $e) {
             Log::warning("Could not send the refund SMS for {$order->order_number}: {$e->getMessage()}");

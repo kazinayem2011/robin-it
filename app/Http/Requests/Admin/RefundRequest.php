@@ -23,6 +23,7 @@ class RefundRequest extends AdminRequest
              */
             'method' => 'required|string|not_in:cod_not_collected|in:'.implode(',', array_keys(Refund::METHODS)),
             'reason' => 'required|string|in:'.implode(',', array_keys(Refund::REASONS)),
+            'includes_delivery' => 'nullable|boolean',
             'reference' => 'nullable|string|max:120',
             'note' => 'nullable|string|max:1000',
             'refunded_on' => 'required|date|'.ShopDate::notInFuture(),

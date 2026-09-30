@@ -138,6 +138,7 @@ class OrderActivityTest extends TestCase
         ], $titles);
 
         $this->assertSame('Rahim Chowdhury', $rows[0]['by']);
+        $this->assertNull($rows[3]['detail'], 'no courier was set on this order');
         $this->assertSame('Kazi Nayem', $rows[3]['by']);
         $this->assertSame('Kazi Nayem', $rows[4]['by']);
         $this->assertSame('Goods returned', $rows[4]['detail']);

@@ -18,13 +18,20 @@ class Refund extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_id', 'amount', 'method', 'reference', 'reason', 'note', 'user_id', 'refunded_on',
+        'order_id', 'amount', 'method', 'reference', 'reason', 'includes_delivery', 'note', 'user_id', 'refunded_on',
     ];
 
     protected $casts = [
         'amount' => 'float',
         'refunded_on' => 'date',
+        'includes_delivery' => 'boolean',
     ];
+
+    /**
+     * Reasons that are the shop's doing, where the delivery charge goes back
+     * with the goods — the default other shops use. A change of mind keeps it.
+     */
+    public const DELIVERY_BACK_REASONS = ['damaged', 'wrong_item', 'undelivered', 'cancelled'];
 
     /**
      * How the money went back.

@@ -65,7 +65,7 @@ class MessageKeys
         'delivered' => ['shop_name', 'order_number'],
         'cancelled' => ['shop_name', 'order_number'],
         'returned' => ['shop_name', 'order_number'],
-        'refund' => ['shop_name', 'order_number', 'amount'],
+        'refund' => ['shop_name', 'order_number', 'amount', 'refund_how'],
         'back_in_stock' => ['shop_name', 'product_name', 'product_url'],
         'staff_signin_changed' => ['shop_name', 'staff_name', 'changed', 'changed_at', 'changed_by'],
     ];

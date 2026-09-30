@@ -63,6 +63,12 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* The note under "give back the delivery charge", clear of the next field. */
+.refund-delivery-hint {
+    display: block;
+    margin: 4px 0 14px;
+}
+
 .refund-summary .is-remaining strong {
     color: var(--primary-ink);
 }
