@@ -274,6 +274,29 @@ class ScopedCouponTest extends TestCase
         $this->assertEqualsWithDelta(1000.0, Order::latest()->first()->discount, 0.01);
     }
 
+    /*
+     * Left empty in the form, the minimum and the cap mean none. An empty
+     * minimum was a server error: the column does not take null.
+     */
+    public function test_a_coupon_saves_with_no_minimum_and_no_cap(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->postJson('/api/admin/coupons', [
+            'code' => 'NOLIMIT', 'discount_type' => 'percent', 'discount_value' => 10,
+            'min_spend' => null, 'max_discount' => null, 'scope' => Coupon::SCOPE_ALL,
+        ])->assertStatus(201);
+
+        $coupon = Coupon::findByCode('NOLIMIT');
+        $this->assertEqualsWithDelta(0.0, (float) $coupon->min_spend, 0.001);
+        $this->assertNull($coupon->max_discount);
+
+        $this->actingAs($admin)->patchJson("/api/admin/coupons/{$coupon->id}", [
+            'code' => 'NOLIMIT', 'discount_type' => 'percent', 'discount_value' => 12,
+            'min_spend' => null, 'max_discount' => null, 'scope' => Coupon::SCOPE_ALL,
+        ])->assertStatus(200);
+    }
+
     public function test_switching_a_coupon_back_to_the_whole_order_clears_its_restriction(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

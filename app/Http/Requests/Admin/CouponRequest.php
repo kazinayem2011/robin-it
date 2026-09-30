@@ -46,8 +46,19 @@ class CouponRequest extends AdminRequest
      */
     public function couponAttributes(): array
     {
-        return collect($this->validated())
+        $attributes = collect($this->validated())
             ->except(['product_ids', 'category_ids'])
             ->all();
+
+        /*
+         * No minimum is a minimum of nothing. The rule allows it empty but the
+         * column does not, so a coupon saved without one was a server error —
+         * hidden while the form always sent ৳1,000.
+         */
+        if (array_key_exists('min_spend', $attributes) && $attributes['min_spend'] === null) {
+            $attributes['min_spend'] = 0;
+        }
+
+        return $attributes;
     }
 }

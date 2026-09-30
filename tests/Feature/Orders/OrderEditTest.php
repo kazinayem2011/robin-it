@@ -4,6 +4,7 @@ namespace Tests\Feature\Orders;
 
 use App\Exceptions\StorefrontException;
 use App\Models\Category;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderEdit;
 use App\Models\Product;
@@ -189,6 +190,40 @@ class OrderEditTest extends TestCase
     }
 
     // --- the bill ----------------------------------------------------------
+
+    /*
+     * A coupon for some products only discounts those lines after an edit, as
+     * at checkout. "10% off" the graphics card took 10% of the RAM as well
+     * once the order was edited.
+     */
+    public function test_a_scoped_coupon_still_discounts_only_its_lines_after_an_edit(): void
+    {
+        $coupon = Coupon::create([
+            'code' => 'GPU10', 'discount_type' => 'percent', 'discount_value' => 10,
+            'scope' => Coupon::SCOPE_PRODUCTS, 'min_spend' => 0, 'is_active' => true,
+        ]);
+        $coupon->products()->sync([$this->gpu->id]);
+
+        $user = User::factory()->create();
+        foreach ([$this->gpu, $this->ram] as $product) {
+            $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
+        }
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'name' => 'Rahim', 'phone' => '01712345678', 'street_address' => 'House 45', 'city' => 'Dhaka',
+            'coupon_code' => 'GPU10',
+        ])->assertStatus(201);
+
+        $order = Order::latest('id')->first()->load('items');
+        $this->assertEqualsWithDelta(1000.0, (float) $order->discount, 0.01);
+
+        $gpuLine = $order->items->firstWhere('product_id', $this->gpu->id);
+        $this->edits->apply($order, $this->staff, [
+            ['order_item_id' => $gpuLine->id, 'quantity' => 2],
+        ]);
+
+        // 10% of the two cards (৳20,000), not of the cards and the RAM.
+        $this->assertEqualsWithDelta(2000.0, (float) $order->fresh()->discount, 0.01);
+    }
 
     public function test_the_total_is_worked_out_again(): void
     {

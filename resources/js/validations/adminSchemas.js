@@ -92,8 +92,15 @@ export const adminCouponSchema = Yup.object().shape({
     discount_value: Yup.number()
         .positive('Discount must be greater than zero')
         .required('Discount value is required'),
-    min_spend: Yup.number().min(0).nullable(),
-    max_discount: Yup.number().min(0).nullable(),
+    // Left empty means none: no minimum, no cap.
+    min_spend: Yup.number()
+        .transform((value, raw) => (raw === '' ? null : value))
+        .min(0)
+        .nullable(),
+    max_discount: Yup.number()
+        .transform((value, raw) => (raw === '' ? null : value))
+        .min(0)
+        .nullable(),
     usage_limit: Yup.number().integer().min(1).nullable(),
     is_active: Yup.boolean().default(true),
 });

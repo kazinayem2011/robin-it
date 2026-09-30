@@ -29,8 +29,10 @@ export default function AdminCoupons({
             description: '',
             discount_type: 'percent',
             discount_value: 10,
-            min_spend: 1000,
-            max_discount: 2000,
+            // Empty: no minimum, no cap. They were 1,000 and 2,000, so a
+            // "10% off" coupon on a ৳90,000 phone quietly gave ৳2,000.
+            min_spend: '',
+            max_discount: '',
             usage_limit: 500,
             per_user_limit: 1,
             is_active: true,
@@ -68,8 +70,8 @@ export default function AdminCoupons({
                 description: '',
                 discount_type: 'percent',
                 discount_value: 10,
-                min_spend: 1000,
-                max_discount: 2000,
+                min_spend: '',
+                max_discount: '',
                 usage_limit: 500,
                 per_user_limit: 1,
                 is_active: true,
@@ -293,14 +295,14 @@ export default function AdminCoupons({
 
                             <div className="admin-form-grid-2">
                                 <FormInput
-                                    placeholder="e.g. 5000"
+                                    placeholder="No minimum"
                                     label="Minimum Spend (৳)"
                                     name="min_spend"
                                     type="number"
                                     formik={formik}
                                 />
                                 <FormInput
-                                    placeholder="e.g. 1000"
+                                    placeholder="No cap"
                                     label="Max Discount Cap (৳)"
                                     name="max_discount"
                                     type="number"

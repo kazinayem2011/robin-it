@@ -370,8 +370,22 @@ class OrderEditService
             ? Coupon::where('code', $order->coupon_code)->first()
             : null;
 
+        /*
+         * Only the lines the coupon covers, as at checkout. "10% off phones"
+         * on an order edited to two phones and a case took 10% of the case
+         * too: ৳18,100 where checkout would have given ৳18,000.
+         */
+        $base = $subtotal;
+
+        if ($coupon && $coupon->scope !== Coupon::SCOPE_ALL) {
+            $order->items->loadMissing('product.categories');
+            $base = round($order->items
+                ->filter(fn ($i) => $coupon->appliesTo($i->product))
+                ->sum(fn ($i) => (float) $i->price * $i->quantity), 2);
+        }
+
         $discount = $coupon
-            ? $coupon->discountFor($subtotal)
+            ? $coupon->discountFor($base)
             : match ($order->coupon_discount_type) {
                 'percent' => round($subtotal * ((float) $order->coupon_discount_value) / 100, 2),
                 'fixed' => (float) $order->coupon_discount_value,

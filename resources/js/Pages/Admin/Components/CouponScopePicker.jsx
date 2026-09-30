@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import FormInput from '../../../Components/FormInput';
 import Select from '../../../Components/Select';
 
 const SCOPE_LABELS = {
@@ -33,9 +34,26 @@ export default function CouponScopePicker({
         );
     };
 
-    const list = scope === 'products' ? products : categories;
+    const all = scope === 'products' ? products : categories;
     const field = scope === 'products' ? 'product_ids' : 'category_ids';
     const chosen = formik.values[field] || [];
+
+    /*
+     * Found by typing. Every active product was laid out as a chip, so
+     * finding one meant scrolling through the whole catalogue. The chosen
+     * ones stay at the top whatever is typed, so nothing ticked goes out of
+     * sight.
+     */
+    const [find, setFind] = useState('');
+    const needle = find.trim().toLowerCase();
+    const list = [
+        ...all.filter((entry) => chosen.includes(entry.id)),
+        ...all.filter(
+            (entry) =>
+                !chosen.includes(entry.id) &&
+                (!needle || entry.name.toLowerCase().includes(needle)),
+        ),
+    ].slice(0, chosen.length + 60);
 
     return (
         <div className="admin-coupon-scope">
@@ -65,10 +83,27 @@ export default function CouponScopePicker({
                             ' Sub-categories are included automatically.'}
                     </span>
 
+                    <FormInput
+                        label={
+                            scope === 'products'
+                                ? 'Find a product'
+                                : 'Find a category'
+                        }
+                        value={find}
+                        onChange={(e) => setFind(e.target.value)}
+                        placeholder={
+                            scope === 'products'
+                                ? 'Type part of its name, e.g. iPhone'
+                                : 'Type part of its name, e.g. Laptop'
+                        }
+                    />
+
                     <div className="admin-coupon-scope-list">
                         {list.length === 0 ? (
                             <span className="admin-field-hint">
-                                Nothing to choose from yet.
+                                {needle
+                                    ? `Nothing matches “${find.trim()}”.`
+                                    : 'Nothing to choose from yet.'}
                             </span>
                         ) : (
                             list.map((entry) => (
