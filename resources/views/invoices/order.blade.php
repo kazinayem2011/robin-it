@@ -179,6 +179,13 @@
                             @if ($item->returned_quantity > 0)
                                 <span class="option">{{ $item->returned_quantity }} returned</span>
                             @endif
+                            {{-- The units handed over, by serial: what a
+                                 warranty claim is checked against. A returned
+                                 unit's serial leaves the line, so this lists
+                                 only what the customer still has. --}}
+                            @if ($item->serials->isNotEmpty())
+                                <span class="option">S/N: {{ $item->serials->pluck('serial')->implode(', ') }}</span>
+                            @endif
                             {{-- An order mixing stock and pre-order lines is not
                                  one shipment, and the paperwork has to say which
                                  line is waiting on a delivery. --}}

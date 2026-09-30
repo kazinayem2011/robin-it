@@ -81,6 +81,8 @@ export default function ProductDetails(props) {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // Pressing Try again loads the product once more.
+    const [attempt, setAttempt] = useState(0);
     const [activeSection, setActiveSection] = useState('specification');
 
     /*
@@ -546,7 +548,16 @@ export default function ProductDetails(props) {
                         );
                     }
                 } else {
-                    setError('Product not found or unavailable.');
+                    /*
+                     * Only a 404 means there is no such product. A timeout or
+                     * a dropped connection said so too, which on a slow line
+                     * told a shopper a product in stock did not exist.
+                     */
+                    setError(
+                        prodRes.reason?.status === 404
+                            ? 'Product not found or unavailable.'
+                            : 'We couldn’t load this product. Check your connection and try again.',
+                    );
                 }
 
                 if (revsRes.status === 'fulfilled') {
@@ -560,7 +571,7 @@ export default function ProductDetails(props) {
         };
 
         fetchProductAndReviews();
-    }, [productSlug]);
+    }, [productSlug, attempt]);
 
     const handleReviewSubmit = async (reviewFormData) => {
         setSubmittingReview(true);
@@ -674,9 +685,21 @@ export default function ProductDetails(props) {
             <>
                 <div className="pdp-error-container">
                     <h2>{error || 'Something went wrong'}</h2>
-                    <Link href={ROUTES.SHOP} className="btn btn-primary mt-3">
-                        Back to Store
-                    </Link>
+                    {error?.startsWith('We couldn’t load') ? (
+                        <Button
+                            className="mt-3"
+                            onClick={() => setAttempt((n) => n + 1)}
+                        >
+                            Try again
+                        </Button>
+                    ) : (
+                        <Link
+                            href={ROUTES.SHOP}
+                            className="btn btn-primary mt-3"
+                        >
+                            Back to Store
+                        </Link>
+                    )}
                 </div>
             </>
         );
@@ -1072,6 +1095,15 @@ export default function ProductDetails(props) {
                             <div className="pdp-variants" key={group.name}>
                                 <span className="pdp-variants-label">
                                     {group.name}
+                                    {selectedVariant?.options?.[group.name] && (
+                                        <span className="pdp-variants-chosen">
+                                            {
+                                                selectedVariant.options[
+                                                    group.name
+                                                ]
+                                            }
+                                        </span>
+                                    )}
                                 </span>
                                 <div className="pdp-variant-options">
                                     {group.values.map((value) => {

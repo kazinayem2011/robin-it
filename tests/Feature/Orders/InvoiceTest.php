@@ -6,6 +6,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductSerial;
 use App\Models\User;
 use App\Services\ProductVariantService;
 use App\Services\StockService;
@@ -70,6 +71,31 @@ class InvoiceTest extends TestCase
         $response->assertSee($order->order_number);
         $response->assertSee('Rahim Chowdhury');
         $response->assertSee('Ryzen 7 7800X3D');
+    }
+
+    /*
+     * The serials handed over go on the invoice, beside their line: a
+     * warranty claim is checked against them. One that came back is no
+     * longer the customer's and is left off.
+     */
+    public function test_the_invoice_lists_the_serials_handed_over(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->product();
+        $order = $this->placeOrder($user, $product);
+        $item = $order->items()->first();
+
+        foreach ([['RYZ-0001', $item->id, 'sold'], ['RYZ-0002', $item->id, 'sold'], ['RYZ-BACK', null, 'in_stock']] as [$serial, $line, $status]) {
+            ProductSerial::create([
+                'product_id' => $product->id, 'serial' => $serial, 'status' => $status,
+                'order_id' => $line ? $order->id : null, 'order_item_id' => $line,
+            ]);
+        }
+
+        $this->actingAs($user)->get("/orders/{$order->id}/invoice")
+            ->assertOk()
+            ->assertSee('S/N: RYZ-0001, RYZ-0002')
+            ->assertDontSee('RYZ-BACK');
     }
 
     /** The failure that would matter: reading somebody else's. */

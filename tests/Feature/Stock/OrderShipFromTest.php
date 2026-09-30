@@ -378,6 +378,28 @@ class OrderShipFromTest extends TestCase
     // --- Nothing leaves while it is still owed --------------------------------
 
     /*
+     * The unit is owed at the online branch; a delivery received into another
+     * one leaves it just as short. "Not in stock yet" alone read as wrong to
+     * whoever had just received it, so the refusal names the branch.
+     */
+    public function test_the_refusal_names_the_branch_the_unit_is_owed_at(): void
+    {
+        $product = $this->product(khulna: 1, dhaka: 0);
+        $order = $this->order($product, 2);
+
+        // The missing one lands at Dhaka, not Khulna, where it is owed.
+        app(StockService::class)->adjust($product, null, 1, 'other', 'QA', null, $this->dhaka->id);
+
+        try {
+            app(OrderService::class)->updateOrderStatus($order->fresh(), 'shipped');
+            $this->fail('A waiting order was marked shipped.');
+        } catch (StorefrontException $e) {
+            $this->assertStringContainsString('ASUS Vivobook', $e->getMessage());
+            $this->assertStringContainsString('owed at Khulna', $e->getMessage());
+        }
+    }
+
+    /*
      * An order waiting for stock has nothing on the shelf to put in the box.
      * It could be marked shipped or delivered anyway, telling the customer it
      * was on its way.

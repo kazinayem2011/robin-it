@@ -673,11 +673,17 @@ class OrderService
             return;
         }
 
-        $names = $owed->map(fn (OrderItem $item) => $item->product_name.($item->variant_name ? " ({$item->variant_name})" : ''))
-            ->implode(', ');
+        // Where each is missing, so a delivery received into another branch
+        // does not leave the person who received it puzzled.
+        $names = $owed->map(function (OrderItem $item) use ($ledger, $order) {
+            $name = $item->product_name.($item->variant_name ? " ({$item->variant_name})" : '');
+            $at = $ledger->shortBranches($order->id, (int) $item->product_id, $item->product_variant_id ? (int) $item->product_variant_id : null);
+
+            return $at === [] ? $name : "{$name}, owed at ".implode(' and ', $at);
+        })->implode('; ');
 
         throw new StorefrontException(
-            "Not in stock yet: {$names}. Receive the delivery first, or ship it from a branch that has it "
+            "Not in stock yet: {$names}. Receive the delivery into that branch, or ship it from a branch that has it "
                 .'(Ships from, on this order). Then mark it shipped — or cancel the order.',
             422,
             ApiCode::VALIDATION_ERROR

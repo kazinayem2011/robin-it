@@ -21,7 +21,7 @@ class InvoiceController extends Controller
 {
     public function show(Request $request, int $orderId)
     {
-        $order = Order::with(['items.product.images', 'items.variant', 'user'])->find($orderId);
+        $order = Order::with(['items.product.images', 'items.variant', 'items.serials', 'user'])->find($orderId);
 
         abort_if(! $order, 404, 'That order could not be found.');
 

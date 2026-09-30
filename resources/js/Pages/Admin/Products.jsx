@@ -384,6 +384,9 @@ export default function Products({
                     );
                 }
                 setModalOpen(false);
+                // The next product opens at the start, not on the tab this
+                // one was saved from (Publishing, step 6).
+                setTab('basics');
                 setEditingProduct(null);
                 resetForm();
                 router.reload({ preserveScroll: true });
@@ -680,6 +683,7 @@ export default function Products({
     };
 
     const handleOpenCreate = () => {
+        setTab('basics');
         setEditingProduct(null);
         setExtraCategoryChips([]);
         setCopiedFrom(null);

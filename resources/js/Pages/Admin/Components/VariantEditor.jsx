@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Button from '../../../Components/Button';
 import ImageGalleryEditor from '../../../Components/ImageGalleryEditor';
 import Checkbox from '../../../Components/Checkbox';
@@ -58,6 +58,12 @@ export const guessSwatch = (value) =>
         .split(/[^a-z]+/)
         .map((word) => COLOUR_GUESSES[word])
         .find(Boolean) || '';
+
+const parseNames = (raw) =>
+    raw
+        .split(',')
+        .map((n) => n.trim())
+        .filter(Boolean);
 
 const sameColour = (a, b) =>
     (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
@@ -186,13 +192,27 @@ export default function VariantEditor({
         );
     };
 
-    const setAttributes = (raw) => {
-        const names = raw
-            .split(',')
-            .map((n) => n.trim())
-            .filter(Boolean);
+    /*
+     * The box keeps what was typed; the names are read from it. It showed
+     * the names joined back up instead, so the comma and space after
+     * "Storage" were dropped before the next key — "Storage, Color" came out
+     * "StorageColor", and a second option name could not be typed at all.
+     */
+    const [namesText, setNamesText] = useState(attributes.join(', '));
+    const attributesKey = JSON.stringify(attributes);
 
-        formik.setFieldValue('variant_attributes', names);
+    // A product loaded or copied into the form brings its own names.
+    useEffect(() => {
+        setNamesText((typed) =>
+            JSON.stringify(parseNames(typed)) === attributesKey
+                ? typed
+                : JSON.parse(attributesKey).join(', '),
+        );
+    }, [attributesKey]);
+
+    const setAttributes = (raw) => {
+        setNamesText(raw);
+        formik.setFieldValue('variant_attributes', parseNames(raw));
     };
 
     const toggle = (checked) => {
@@ -241,7 +261,7 @@ export default function VariantEditor({
                 <>
                     <FormInput
                         label="Option names"
-                        value={attributes.join(', ')}
+                        value={namesText}
                         onChange={(e) => setAttributes(e.target.value)}
                         placeholder="Capacity, Speed"
                         helperText="Comma separated. Every option below is described by these."

@@ -1848,6 +1848,18 @@ a.admin-card:hover,
 }
 
 /*
+ * Six tabs sharing the width. At 24px a side the last one, Publishing — where
+ * Publish Now is — ran past the dialog's edge as "Publ", in a row that scrolls
+ * with its scrollbar hidden, so nothing said it was there.
+ */
+.reusable-tabs-container.variant-line.admin-product-tabs .reusable-tab-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/*
  * Tall enough that switching panels does not resize the dialog under the
  * cursor — and deliberately not a scroller.
  *

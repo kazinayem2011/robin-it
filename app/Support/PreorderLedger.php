@@ -34,6 +34,9 @@ class PreorderLedger
     /** @var array<int, array<string, bool>> order id → "product:variant" → still short now */
     private array $shortNow = [];
 
+    /** @var array<int, array<string, array<int, int>>> order id → "product:variant" → branch ids short now */
+    private array $shortAt = [];
+
     /**
      * Owed because the order took more than was in stock, rather than as a
      * pre-order — and still owed now: "waiting for stock" on the line.
@@ -91,9 +94,28 @@ class PreorderLedger
         return $balance !== null && $balance < 0 && $this->stillShort($orderId, $key);
     }
 
+    /**
+     * The branches a line's units are owed at now, by name.
+     *
+     * So the refusal to ship can say where the unit is missing: a delivery
+     * received into another branch leaves the order just as short, and "not
+     * in stock yet" read as wrong to the person who had just received it.
+     *
+     * @return array<int, string>
+     */
+    public function shortBranches(int $orderId, int $productId, ?int $variantId): array
+    {
+        $key = self::key($productId, $variantId);
+        $this->stillShort($orderId, $key);
+
+        $ids = $this->shortAt[$orderId][$key] ?? [];
+
+        return $ids === [] ? [] : Store::whereIn('id', $ids)->orderBy('id')->pluck('name')->all();
+    }
+
     public function forget(int $orderId): void
     {
-        unset($this->balances[$orderId], $this->backorders[$orderId], $this->shortNow[$orderId]);
+        unset($this->balances[$orderId], $this->backorders[$orderId], $this->shortNow[$orderId], $this->shortAt[$orderId]);
     }
 
     /**
@@ -118,6 +140,7 @@ class PreorderLedger
                 ->get(['product_id', 'product_variant_id', 'store_id', 'quantity']);
 
             $short = [];
+            $at = [];
 
             foreach ($held as $row) {
                 $level = $levels->first(fn ($l) => (int) $l->product_id === (int) $row->product_id
@@ -125,11 +148,14 @@ class PreorderLedger
                     && (int) $l->product_variant_id === (int) $row->product_variant_id);
 
                 if ($level && (int) $level->quantity < 0) {
-                    $short[self::key((int) $row->product_id, $row->product_variant_id ? (int) $row->product_variant_id : null)] = true;
+                    $unit = self::key((int) $row->product_id, $row->product_variant_id ? (int) $row->product_variant_id : null);
+                    $short[$unit] = true;
+                    $at[$unit][] = (int) $row->store_id;
                 }
             }
 
             $this->shortNow[$orderId] = $short;
+            $this->shortAt[$orderId] = $at;
         }
 
         if (isset($this->shortNow[$orderId][$key])) {

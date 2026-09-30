@@ -1162,6 +1162,15 @@
     margin-bottom: 10px;
 }
 
+/* The choice made, after the row's name: "Color: Natural Titanium". */
+.pdp-variants-chosen {
+    margin-left: 6px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-primary);
+}
+
 .pdp-variant-options {
     display: flex;
     flex-wrap: wrap;
@@ -1172,6 +1181,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    /* Chips on a line stretch to the tallest (one with "Sold out" under
+       it); the rest keep their text in the middle, not stuck to the top. */
+    justify-content: center;
     gap: 2px;
     min-width: 118px;
     padding: 10px 14px;
@@ -1209,13 +1221,10 @@
 
 /*
  * Sold out, but still an option to look at: readable and clickable, with the
- * small red "Sold out" under the price saying the rest. It was faded and
- * struck through, which read as "not a choice" — and a shopper could not open
- * the configuration to see what it was.
+ * small red "Sold out" saying the rest. It was faded and struck through, then
+ * greyed, and each read as "not a choice" — so the chip stays white like the
+ * others and only the red note differs.
  */
-.pdp-variant-chip.is-out {
-    background: var(--state-wash);
-}
 
 .pdp-variant-out {
     font-size: 11px;

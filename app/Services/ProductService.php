@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Support\PcBuilderSlots;
 use App\Support\SearchTerm;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -414,10 +415,19 @@ class ProductService
      */
     public function formatProductCardData(Product $product, bool $isFlashSale = false): array
     {
-        $hasDiscount = $product->hasDiscount();
-        $currentPrice = $product->effective_price;
-        $saving = $product->saving;
-        $discountPct = $hasDiscount && $product->price > 0 ? (int) round(($saving / $product->price) * 100) : 0;
+        /*
+         * An option product shows the price of the option its page opens on —
+         * the first that can be bought, else the first — as StarTech's card
+         * does. It showed the product's own price, which on a phone sold at
+         * ৳90,000 and ৳1,00,000 read ৳1,00,000: a figure the page it opens
+         * then contradicts.
+         */
+        $shown = $this->cardVariantFor($product);
+        $hasDiscount = $shown ? $shown->hasDiscount() : $product->hasDiscount();
+        $currentPrice = $shown ? $shown->effective_price : $product->effective_price;
+        $listPrice = $shown ? (float) $shown->list_price : (float) $product->price;
+        $saving = $shown ? max(0.0, $listPrice - $currentPrice) : $product->saving;
+        $discountPct = $hasDiscount && $listPrice > 0 ? (int) round(($saving / $listPrice) * 100) : 0;
 
         $sold = (int) ($product->sold_count ?? 0);
         $reviewCount = (int) ($product->approved_reviews_count ?? 0);
@@ -443,8 +453,8 @@ class ProductService
             'category' => $product->category ? $product->category->name : 'Hardware',
             'price' => '৳'.number_format($currentPrice),
             'raw_price' => (float) $currentPrice,
-            'oldPrice' => $hasDiscount ? '৳'.number_format($product->price) : null,
-            'raw_old_price' => (float) $product->price,
+            'oldPrice' => $hasDiscount ? '৳'.number_format($listPrice) : null,
+            'raw_old_price' => $listPrice,
             'save' => $saving > 0 ? 'SAVE ৳'.number_format($saving) : null,
             'discount' => $hasDiscount ? '-'.$discountPct.'%' : null,
             'isFlashSale' => $isFlashSale,
@@ -622,6 +632,26 @@ class ProductService
             ->first(fn ($variant) => (int) $variant->stock_quantity > 0);
 
         return $buyable?->id;
+    }
+
+    /**
+     * The option whose price a card shows: the one the product page opens on.
+     *
+     * Null for a single product, or when the options were not loaded (a
+     * listing never runs a query per card), which keeps the product's price.
+     */
+    private function cardVariantFor(Product $product): ?ProductVariant
+    {
+        if (! $product->has_variants || ! $product->relationLoaded('activeVariants')) {
+            return null;
+        }
+
+        $options = $product->activeVariants;
+        $shown = $options->first(fn ($variant) => (int) $variant->stock_quantity > 0) ?? $options->first();
+
+        // An option with no price of its own inherits the product's; set the
+        // parent so reading it is not a query per card.
+        return $shown?->setRelation('product', $product);
     }
 
     /**
