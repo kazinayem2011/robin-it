@@ -130,9 +130,9 @@ class OrderActivityTest extends TestCase
         $this->assertSame([
             'Order placed — ৳77,500, cash on delivery',
             'Stock: 1 × ASUS Vivobook out of Khulna Branch',
-            'Payment in: ৳77,500 cash',
+            'Paid: ৳77,500 cash',
             'Status: Pending → Shipped',
-            'Money back: ৳77,500 cash',
+            'Refunded: ৳77,500 cash',
             'Status: Shipped → Returned',
             'Stock: 1 × ASUS Vivobook back to Khulna Branch',
         ], $titles);

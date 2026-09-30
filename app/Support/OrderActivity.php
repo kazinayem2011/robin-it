@@ -95,7 +95,7 @@ class OrderActivity
             $add(
                 $payment->created_at,
                 'payment',
-                'Payment in: '.$money($payment->amount).' '.strtolower($payment->method_label ?? $payment->method),
+                'Paid: '.$money($payment->amount).' '.strtolower($payment->method_label ?? $payment->method),
                 $payment->reference ? 'Ref '.$payment->reference : $payment->note,
                 $payment->received_by_name,
             );
@@ -105,7 +105,7 @@ class OrderActivity
             $add(
                 $refund->created_at,
                 'refund',
-                'Money back: '.$money($refund->amount).($refund->method_label ? ' '.strtolower($refund->method_label) : ''),
+                'Refunded: '.$money($refund->amount).($refund->method_label ? ' '.strtolower($refund->method_label) : ''),
                 $refund->reason_label ?: $refund->reason,
                 $refund->processedBy?->name,
             );

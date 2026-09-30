@@ -448,7 +448,7 @@ export default function Orders({
                                             setSelectedOrder(null);
                                         }}
                                     >
-                                        Money back
+                                        Refund
                                     </Button>
                                 )}
 
