@@ -118,6 +118,27 @@ export default function ProductDetails(props) {
     );
 
     /*
+     * One row per choice — storage, then colour — the way StarTech lays it
+     * out, once a product varies in more than one way. Eight chips reading
+     * "512GB / Natural Titanium" left the shopper hunting for a pairing; two
+     * short rows let them pick each half. A product that varies one way keeps
+     * its single list, with each option's price on it.
+     */
+    const optionGroups = useMemo(() => {
+        const names = product?.variant_attributes || [];
+
+        if (names.length < 2) return null;
+        if (!variants.every((v) => names.every((n) => v.options?.[n]))) {
+            return null;
+        }
+
+        return names.map((name) => ({
+            name,
+            values: [...new Set(variants.map((v) => v.options[name]))],
+        }));
+    }, [product, variants]);
+
+    /*
      * Whether the thing being bought is on the shelf — a yes/no, never a
      * count: the shop does not tell its customers how many units it has, and
      * the storefront is not sent the figure.
@@ -698,6 +719,45 @@ export default function ProductDetails(props) {
         reviews: reviewsData,
     });
 
+    const chooseVariant = (id) => {
+        setSelectedVariantId(id);
+        setQuantity(minQty);
+        // Back to the first shot, so the option's own photo is what shows.
+        setSelectedImageIndex(0);
+    };
+
+    /*
+     * A value in one row, keeping the others. 1TB with Blue chosen goes to
+     * 1TB Blue; when that pairing is not sold at all, to the option sharing
+     * the most of the rest, an in-stock one first.
+     */
+    const chooseValue = (name, value) => {
+        const current = selectedVariant?.options || {};
+        const shared = (v) =>
+            Object.keys(current).filter(
+                (k) => k !== name && v.options?.[k] === current[k],
+            ).length;
+
+        const best = variants
+            .filter((v) => v.options?.[name] === value)
+            .sort(
+                (x, y) =>
+                    shared(y) - shared(x) ||
+                    Number(Boolean(y.in_stock)) - Number(Boolean(x.in_stock)),
+            )[0];
+
+        if (best) chooseVariant(best.id);
+    };
+
+    // The option a value would lead to with the other rows as they are.
+    const pairingFor = (name, value) =>
+        variants.find((v) =>
+            Object.entries({
+                ...(selectedVariant?.options || {}),
+                [name]: value,
+            }).every(([k, val]) => v.options?.[k] === val),
+        ) || null;
+
     return (
         <>
             <SEOHead
@@ -998,69 +1058,45 @@ export default function ProductDetails(props) {
 
                         {/* Option picker. Each option carries its own stock,
                             so one being sold out says nothing about another. */}
-                        {product.has_variants && variants.length > 0 && (
-                            <div className="pdp-variants">
+                        {optionGroups?.map((group) => (
+                            <div className="pdp-variants" key={group.name}>
                                 <span className="pdp-variants-label">
-                                    {(product.variant_attributes || []).join(
-                                        ' / ',
-                                    ) || 'Options'}
+                                    {group.name}
                                 </span>
                                 <div className="pdp-variant-options">
-                                    {variants.map((variant) => {
-                                        // Pre-order covers every option, so
-                                        // an empty one can still be chosen.
-                                        const out =
-                                            !variant.in_stock &&
-                                            !product.allow_preorder;
+                                    {group.values.map((value) => {
+                                        const chosen =
+                                            selectedVariant?.options?.[
+                                                group.name
+                                            ] === value;
+                                        const pairing = pairingFor(
+                                            group.name,
+                                            value,
+                                        );
+                                        // Sold out with the rest as chosen —
+                                        // said, never disabled, as below.
+                                        const out = Boolean(
+                                            pairing &&
+                                            !pairing.in_stock &&
+                                            !product.allow_preorder,
+                                        );
 
                                         return (
-                                            /*
-                                             * Never disabled. A sold-out option
-                                             * still has a price and a spec to
-                                             * read, and the buy area below
-                                             * already turns into "Sold Out" /
-                                             * "Notify me" for it — greying the
-                                             * button out hid the configuration
-                                             * altogether.
-                                             */
                                             <button
-                                                key={variant.id}
+                                                key={value}
                                                 type="button"
-                                                aria-pressed={
-                                                    variant.id ===
-                                                    selectedVariantId
-                                                }
+                                                aria-pressed={chosen}
                                                 className={`pdp-variant-chip ${
-                                                    variant.id ===
-                                                    selectedVariantId
-                                                        ? 'is-selected'
-                                                        : ''
+                                                    chosen ? 'is-selected' : ''
                                                 } ${out ? 'is-out' : ''}`}
-                                                onClick={() => {
-                                                    setSelectedVariantId(
-                                                        variant.id,
-                                                    );
-                                                    setQuantity(minQty);
-                                                    // Jump back to the
-                                                    // first shot so the
-                                                    // option's own image
-                                                    // is what is showing.
-                                                    setSelectedImageIndex(0);
-                                                }}
-                                                title={
-                                                    out
-                                                        ? 'Sold Out'
-                                                        : variant.in_stock
-                                                          ? 'Available'
-                                                          : 'Pre-order'
+                                                onClick={() =>
+                                                    chooseValue(
+                                                        group.name,
+                                                        value,
+                                                    )
                                                 }
                                             >
-                                                <span>{variant.name}</span>
-                                                <span className="pdp-variant-price">
-                                                    {formatBdt(
-                                                        variant.effective_price,
-                                                    )}
-                                                </span>
+                                                <span>{value}</span>
                                                 {out && (
                                                     <span className="pdp-variant-out">
                                                         Sold out
@@ -1071,7 +1107,78 @@ export default function ProductDetails(props) {
                                     })}
                                 </div>
                             </div>
-                        )}
+                        ))}
+
+                        {!optionGroups &&
+                            product.has_variants &&
+                            variants.length > 0 && (
+                                <div className="pdp-variants">
+                                    <span className="pdp-variants-label">
+                                        {(
+                                            product.variant_attributes || []
+                                        ).join(' / ') || 'Options'}
+                                    </span>
+                                    <div className="pdp-variant-options">
+                                        {variants.map((variant) => {
+                                            // Pre-order covers every option, so
+                                            // an empty one can still be chosen.
+                                            const out =
+                                                !variant.in_stock &&
+                                                !product.allow_preorder;
+
+                                            return (
+                                                /*
+                                                 * Never disabled. A sold-out option
+                                                 * still has a price and a spec to
+                                                 * read, and the buy area below
+                                                 * already turns into "Sold Out" /
+                                                 * "Notify me" for it — greying the
+                                                 * button out hid the configuration
+                                                 * altogether.
+                                                 */
+                                                <button
+                                                    key={variant.id}
+                                                    type="button"
+                                                    aria-pressed={
+                                                        variant.id ===
+                                                        selectedVariantId
+                                                    }
+                                                    className={`pdp-variant-chip ${
+                                                        variant.id ===
+                                                        selectedVariantId
+                                                            ? 'is-selected'
+                                                            : ''
+                                                    } ${out ? 'is-out' : ''}`}
+                                                    onClick={() =>
+                                                        chooseVariant(
+                                                            variant.id,
+                                                        )
+                                                    }
+                                                    title={
+                                                        out
+                                                            ? 'Sold Out'
+                                                            : variant.in_stock
+                                                              ? 'Available'
+                                                              : 'Pre-order'
+                                                    }
+                                                >
+                                                    <span>{variant.name}</span>
+                                                    <span className="pdp-variant-price">
+                                                        {formatBdt(
+                                                            variant.effective_price,
+                                                        )}
+                                                    </span>
+                                                    {out && (
+                                                        <span className="pdp-variant-out">
+                                                            Sold out
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                         {/* Key Features is authored markup — a curated list
                             that opens with the model and the part number.
