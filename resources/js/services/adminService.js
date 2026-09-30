@@ -985,6 +985,14 @@ export const adminService = {
         );
         return response;
     },
+
+    /** Everything that happened to an order, oldest first, with who. */
+    async getOrderActivity(id) {
+        const response = await axiosInstance.get(
+            API_ENDPOINTS.ADMIN.ORDER_ACTIVITY(id),
+        );
+        return response;
+    },
 };
 
 export default adminService;

@@ -22,6 +22,7 @@ use App\Services\OrderEditService;
 use App\Services\OrderPaymentService;
 use App\Services\OrderService;
 use App\Services\StockService;
+use App\Support\OrderActivity;
 use App\Support\SearchTerm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -302,6 +303,15 @@ class OrderController extends Controller
      * without recording who took it is what left customers ringing up with a
      * question nobody could answer.
      */
+    /**
+     * What happened to this order, oldest first, and who did each thing.
+     * Fetched when the Activity section is opened, not with the list.
+     */
+    public function activity(int $id): JsonResponse
+    {
+        return $this->successResponse(OrderActivity::for(Order::findOrFail($id)));
+    }
+
     /**
      * The branches this order could ship from, and whether each has it all.
      *

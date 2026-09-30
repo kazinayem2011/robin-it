@@ -1,0 +1,87 @@
+/*
+ * An order's Activity: a thin line down the left, a dot per event coloured by
+ * what kind of thing it was, and the time on the right where the eye scans
+ * for it.
+ */
+.order-activity-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0 0 0 16px;
+    border-left: 2px solid var(--border-color);
+}
+
+.order-activity-item {
+    position: relative;
+    padding: 0 0 12px 12px;
+}
+
+.order-activity-item:last-child {
+    padding-bottom: 0;
+}
+
+.order-activity-item::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    background: var(--text-subtle);
+    border: 2px solid var(--bg-surface);
+}
+
+.order-activity-item.is-placed::before,
+.order-activity-item.is-status::before {
+    background: var(--info);
+}
+
+.order-activity-item.is-payment::before {
+    background: var(--success);
+}
+
+.order-activity-item.is-refund::before {
+    background: var(--danger);
+}
+
+.order-activity-item.is-edit::before {
+    background: var(--warning);
+}
+
+.order-activity-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: baseline;
+}
+
+.order-activity-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.order-activity-when {
+    flex-shrink: 0;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.order-activity-meta {
+    margin-top: 2px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.order-activity-unknown {
+    font-style: italic;
+}
+
+/* On a phone the time goes under the title rather than squeezing it. */
+@media (max-width: 560px) {
+    .order-activity-head {
+        flex-direction: column;
+        gap: 2px;
+    }
+}

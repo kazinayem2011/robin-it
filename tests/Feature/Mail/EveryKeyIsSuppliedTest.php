@@ -219,6 +219,7 @@ class EveryKeyIsSuppliedTest extends TestCase
                 null,
                 $shop,
             ),
+            'staff_signin_changed' => SmsTemplates::staffSignInChanged($shop, 'Nazmul', 'পাসওয়ার্ড', '30 Sep, 3:30 PM', 'নিজে'),
         ];
 
         /* The courier is a declared variable, so the order has to carry one. */

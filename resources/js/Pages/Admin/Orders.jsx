@@ -23,6 +23,7 @@ import OrderReturnModal from './Components/OrderReturnModal';
 import EditOrderModal from './Components/EditOrderModal';
 import NewOrderModal from './Components/NewOrderModal';
 import ShipFromPanel from './Components/ShipFromPanel';
+import OrderActivity from './Components/OrderActivity';
 import PreorderTag from '../../Components/PreorderTag';
 // The edit modal reuses the purchase-order line table.
 import './Purchasing.css';
@@ -776,6 +777,8 @@ export default function Orders({
                                 </ul>
                             )}
                         </div>
+
+                        <OrderActivity orderId={selectedOrder.id} />
                     </div>
                 )}
             </Modal>

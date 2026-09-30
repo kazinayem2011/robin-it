@@ -78,6 +78,28 @@ class Order extends Model
                 $order->delivered_at = now();
             }
         });
+
+        // Who moved it, for the order's Activity. The status never said.
+        static::updated(function (Order $order) {
+            if (! $order->wasChanged('status')) {
+                return;
+            }
+
+            $by = auth()->user();
+
+            OrderStatusChange::create([
+                'order_id' => $order->id,
+                'from_status' => $order->getOriginal('status'),
+                'to_status' => $order->status,
+                'user_id' => $by?->id,
+                'by_name' => $by?->name,
+            ]);
+        });
+    }
+
+    public function statusChanges(): HasMany
+    {
+        return $this->hasMany(OrderStatusChange::class)->orderBy('created_at')->orderBy('id');
     }
 
     /** Whether this order has reached a state it cannot leave. */
