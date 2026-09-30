@@ -473,8 +473,9 @@ export default function ProductDetails(props) {
     }, [loading, soldOut]);
 
     // Reviews & Ratings State
+    // Nothing until the reviews load — a made-up 4.9 is a rating nobody gave.
     const [reviewsData, setReviewsData] = useState({
-        average_rating: 4.9,
+        average_rating: 0,
         total_reviews: 0,
         breakdown: {},
         reviews: [],
@@ -1589,7 +1590,7 @@ export default function ProductDetails(props) {
                                     {/* Reusable Rating Score & Breakdown Component */}
                                     <RatingBreakdown
                                         averageRating={
-                                            reviewsData.average_rating || 5
+                                            reviewsData.average_rating || 0
                                         }
                                         totalReviews={
                                             reviewsData.total_reviews || 0

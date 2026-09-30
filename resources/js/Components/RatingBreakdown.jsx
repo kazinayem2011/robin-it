@@ -13,29 +13,36 @@ import './RatingBreakdown.css';
  * @param {string} [className=''] - Custom container class
  */
 export default function RatingBreakdown({
-    averageRating = 5,
+    averageRating = 0,
     totalReviews = 0,
     breakdown = {},
     showScoreBox = true,
     className = '',
 }) {
-    const roundedRating = Math.round(averageRating || 5);
+    /*
+     * No reviews is no rating. It fell back to 5, so a product nobody had
+     * reviewed showed "5.0" and five gold stars over "Based on 0 reviews" —
+     * a score the shop had given itself.
+     */
+    const rated = Number(totalReviews) > 0;
+    const average = rated ? Number(averageRating) || 0 : 0;
 
     return (
         <div className={`rating-breakdown-container ${className}`}>
             {showScoreBox && (
                 <div className="rating-score-box">
                     <div className="rating-big-number">
-                        {Number(averageRating || 5).toFixed(1)}
+                        {rated ? average.toFixed(1) : '–'}
                     </div>
                     <StarRating
-                        value={roundedRating}
+                        value={Math.round(average)}
                         size={18}
                         className="rating-stars-row"
                     />
                     <div className="rating-total-text">
-                        Based on {totalReviews}{' '}
-                        {totalReviews === 1 ? 'review' : 'reviews'}
+                        {rated
+                            ? `Based on ${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'}`
+                            : 'No reviews yet'}
                     </div>
                 </div>
             )}
