@@ -264,13 +264,14 @@ export default function AdminBrands({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn btn-danger"
+                        className="admin-table-icon-btn btn-danger has-label"
                         disabled={busyId === b.id}
                         onClick={() => remove(b)}
                         title="Delete this brand"
                         aria-label={`Delete ${b.name}`}
                     >
                         <Trash2 size={14} />
+                        <span>Delete</span>
                     </button>
                 </div>
             ),

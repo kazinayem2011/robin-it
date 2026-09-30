@@ -184,21 +184,23 @@ export default function Campaigns({
                     {c.status === 'draft' && (
                         <button
                             type="button"
-                            className="admin-table-icon-btn"
+                            className="admin-table-icon-btn has-label"
                             title="Send it now"
                             onClick={() => send(c)}
                         >
                             <Send size={14} />
+                            <span>Send now</span>
                         </button>
                     )}
                     {c.status !== 'sending' && (
                         <button
                             type="button"
-                            className="admin-table-icon-btn"
+                            className="admin-table-icon-btn has-label"
                             title="Delete"
                             onClick={() => remove(c)}
                         >
                             <Trash2 size={14} />
+                            <span>Delete</span>
                         </button>
                     )}
                 </div>

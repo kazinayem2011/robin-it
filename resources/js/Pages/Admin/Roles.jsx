@@ -173,11 +173,12 @@ export default function AdminRoles({
                                         {!role.is_system && (
                                             <button
                                                 type="button"
-                                                className="admin-table-icon-btn"
+                                                className="admin-table-icon-btn has-label"
                                                 title="Remove"
                                                 onClick={() => remove(role)}
                                             >
                                                 <Trash2 size={14} />
+                                                <span>Remove</span>
                                             </button>
                                         )}
                                     </div>

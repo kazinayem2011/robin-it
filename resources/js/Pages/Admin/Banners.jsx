@@ -319,12 +319,13 @@ export default function AdminBanners({ banners = [] }) {
                                 </button>
                                 <button
                                     type="button"
-                                    className="admin-table-icon-btn btn-danger"
+                                    className="admin-table-icon-btn btn-danger has-label"
                                     onClick={() => handleDelete(b.id)}
                                     title={`Delete this ${type.one}`}
                                     aria-label={`Delete ${b.title || type.one}`}
                                 >
                                     <Trash2 size={14} />
+                                    <span>Delete</span>
                                 </button>
                             </div>
                         </div>

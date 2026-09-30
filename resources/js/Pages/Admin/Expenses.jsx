@@ -204,11 +204,12 @@ export default function AdminExpenses({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn"
+                        className="admin-table-icon-btn has-label"
                         title="Remove expense"
                         onClick={() => remove(e)}
                     >
                         <Trash2 size={14} />
+                        <span>Remove</span>
                     </button>
                 </div>
             ),

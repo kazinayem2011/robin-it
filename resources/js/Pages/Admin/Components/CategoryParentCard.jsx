@@ -196,12 +196,13 @@ const CategoryParentCardInner = ({
 
                     <button
                         type="button"
-                        className="admin-table-icon-btn btn-danger"
+                        className="admin-table-icon-btn btn-danger has-label"
                         onClick={() => onDelete(parent)}
                         title="Delete Category"
                         aria-label={`Delete ${parent.name}`}
                     >
                         <Trash2 size={14} />
+                        <span>Delete</span>
                     </button>
                 </div>
             </div>

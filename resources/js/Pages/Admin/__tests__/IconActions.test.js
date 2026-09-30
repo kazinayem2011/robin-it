@@ -27,12 +27,14 @@ describe('admin table actions', () => {
     const source = (page) =>
         readFileSync(`resources/js/Pages/Admin/${page}.jsx`, 'utf8');
 
-    /** Every icon button in the file, as its own block of attributes. */
+    /** Every icon button (or link) in the file, as its own block. */
     const iconButtons = (text) =>
         text
             .split('className="admin-table-icon-btn')
             .slice(1)
-            .map((chunk) => chunk.slice(0, chunk.indexOf('</button>')));
+            .map((chunk) =>
+                chunk.slice(0, chunk.search(/<\/(button|Link|a)>/)),
+            );
 
     it.each(pages)('%s acts through icon buttons', (page) => {
         expect(iconButtons(source(page)).length).toBeGreaterThan(0);
@@ -57,5 +59,37 @@ describe('admin table actions', () => {
      */
     it.each(pages)('%s keeps no labelled action button', (page) => {
         expect(source(page)).not.toMatch(/icon=\{(Edit2|Edit3|Trash2|Copy)\}/);
+    });
+
+    /*
+     * Except the ones a wrong guess costs. Deleting, removing, suspending,
+     * cancelling, sending and receiving carry their word beside the icon —
+     * a hover title does not exist on a phone.
+     */
+    const RISKY =
+        /(title|aria-label)=\{?\s*["'`](Delete|Remove|Suspend|Cancel|Send it now|Receive)|\? `(Restore|Suspend) /;
+
+    it.each([
+        ...pages,
+        'Customers',
+        'Staff',
+        'Couriers',
+        'Campaigns',
+        'Pages',
+        'Refunds',
+        'Suppliers',
+        'Purchasing',
+        'Expenses',
+        'ExpenseCategories',
+        'Roles',
+        'ProductQuestions',
+    ])('the risky actions on %s say what they do', (page) => {
+        const risky = iconButtons(source(page)).filter((b) => RISKY.test(b));
+
+        expect(risky.length).toBeGreaterThan(0);
+        for (const button of risky) {
+            expect(button).toMatch(/has-label/);
+            expect(button).toMatch(/<span>[A-Z][a-z]+( now)?<\/span>/);
+        }
     });
 });

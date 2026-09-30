@@ -205,12 +205,13 @@ export default function Purchasing({
 
                             <button
                                 type="button"
-                                className="admin-table-icon-btn"
+                                className="admin-table-icon-btn has-label"
                                 title="Receive delivery"
                                 aria-label={`Receive delivery for ${o.reference}`}
                                 onClick={() => openFresh(o, setReceiving)}
                             >
                                 <PackageCheck size={14} />
+                                <span>Receive</span>
                             </button>
                         </>
                     )}
@@ -218,7 +219,7 @@ export default function Purchasing({
                     {o.status !== 'received' && o.status !== 'cancelled' && (
                         <button
                             type="button"
-                            className="admin-table-icon-btn"
+                            className="admin-table-icon-btn has-label"
                             title="Cancel — it is not coming"
                             onClick={() => {
                                 if (
@@ -231,6 +232,7 @@ export default function Purchasing({
                             }}
                         >
                             <XCircle size={14} />
+                            <span>Cancel</span>
                         </button>
                     )}
                 </div>
@@ -671,7 +673,7 @@ function WriteOrderModal({
                                     {l.received > 0 ? null : (
                                         <button
                                             type="button"
-                                            className="admin-table-icon-btn"
+                                            className="admin-table-icon-btn has-label"
                                             title="Take off the order"
                                             aria-label={`Take ${l.name} off the order`}
                                             onClick={() =>
@@ -683,6 +685,7 @@ function WriteOrderModal({
                                             }
                                         >
                                             <Trash2 size={13} />
+                                            <span>Remove</span>
                                         </button>
                                     )}
                                 </td>

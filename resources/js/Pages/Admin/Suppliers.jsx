@@ -176,11 +176,12 @@ export default function AdminSuppliers({ suppliers = {}, filters = {} }) {
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn"
+                        className="admin-table-icon-btn has-label"
                         title="Remove supplier"
                         onClick={() => remove(s)}
                     >
                         <Trash2 size={14} />
+                        <span>Remove</span>
                     </button>
                 </div>
             ),

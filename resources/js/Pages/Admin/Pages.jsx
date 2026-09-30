@@ -167,11 +167,12 @@ export default function AdminPages({ pages = [] }) {
                     {!p.is_system && (
                         <button
                             type="button"
-                            className="admin-table-icon-btn"
+                            className="admin-table-icon-btn has-label"
                             title="Delete"
                             onClick={() => remove(p)}
                         >
                             <Trash2 size={14} />
+                            <span>Delete</span>
                         </button>
                     )}
                 </div>

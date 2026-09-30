@@ -1959,6 +1959,14 @@ a.admin-card:hover,
     max-width: 360px;
 }
 
+/* A branch address runs to a street, an area and a city. On one line it made
+   the showrooms table wider than the page and pushed Delete out of sight. */
+.admin-table-desc-sub.admin-store-address {
+    white-space: normal;
+    min-width: 160px;
+    max-width: 220px;
+}
+
 .admin-table-mono-sub {
     font-size: 0.74rem;
     color: var(--text-muted);
@@ -2092,6 +2100,21 @@ a.admin-card:hover,
 
 .admin-table-icon-btn.btn-danger {
     box-shadow: none;
+}
+
+/*
+ * An icon with its word beside it, for the actions that change something or
+ * are used rarely — delete, remove, suspend, cancel, send, receive. A hover
+ * title does not exist on a phone, and these are the ones a wrong guess costs.
+ * Everyday actions (edit, open, print) stay as bare icons.
+ */
+.admin-table-icon-btn.has-label {
+    width: auto;
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 /* Two or more icon buttons in one cell. The column is right-aligned, so

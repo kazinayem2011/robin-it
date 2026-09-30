@@ -187,11 +187,12 @@ export default function EditOrderModal({ order, onClose, onDone }) {
                             <td>
                                 <button
                                     type="button"
-                                    className="admin-table-icon-btn"
+                                    className="admin-table-icon-btn has-label"
                                     title="Remove this line"
                                     onClick={() => setQuantity(l.key, 0)}
                                 >
                                     <Trash2 size={13} />
+                                    <span>Remove</span>
                                 </button>
                             </td>
                         </tr>

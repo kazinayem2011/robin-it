@@ -1086,12 +1086,13 @@ export default function Products({
                     */}
                     <Link
                         href={`${ROUTES.ADMIN_PURCHASING}?receive=1`}
-                        className="admin-table-icon-btn"
+                        className="admin-table-icon-btn has-label"
                         title="Receive a delivery for this product"
                         aria-label={`Receive a delivery for ${p.name}`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         <PackagePlus size={14} />
+                        <span>Receive</span>
                     </Link>
                     <button
                         type="button"

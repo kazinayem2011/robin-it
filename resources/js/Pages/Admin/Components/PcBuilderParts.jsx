@@ -256,13 +256,14 @@ export default function PcBuilderParts({ parts = [], icons = [] }) {
                                             {!part.checks_compatibility && (
                                                 <button
                                                     type="button"
-                                                    className="admin-table-icon-btn"
+                                                    className="admin-table-icon-btn has-label"
                                                     title="Remove from the builder"
                                                     aria-label={`Remove ${part.name}`}
                                                     disabled={busy === part.id}
                                                     onClick={() => remove(part)}
                                                 >
                                                     <Trash2 size={14} />
+                                                    <span>Remove</span>
                                                 </button>
                                             )}
                                         </div>

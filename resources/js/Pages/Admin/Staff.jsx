@@ -172,11 +172,12 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
                     {!m.is_self && m.is_active && (
                         <button
                             type="button"
-                            className="admin-table-icon-btn"
+                            className="admin-table-icon-btn has-label"
                             title="Suspend access"
                             onClick={() => suspend(m)}
                         >
                             <Ban size={14} />
+                            <span>Suspend</span>
                         </button>
                     )}
                 </div>

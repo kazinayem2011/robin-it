@@ -113,24 +113,32 @@ export default function AdminStores({ stores = [] }) {
                     <span className="admin-table-desc-sub">
                         {row.branch_type}
                     </span>
+                    {/* Only when closed, as Customers marks a suspended
+                        account: a column reading "Active" on every row cost
+                        the width that kept Delete on screen. */}
+                    {!row.is_active && (
+                        <span className="status-pill inactive">Closed</span>
+                    )}
                 </div>
             ),
         },
         {
             key: 'city',
-            header: 'City / Region',
+            header: 'City',
             render: (row) => <span className="font-semibold">{row.city}</span>,
         },
         {
             key: 'address',
             header: 'Address',
             render: (row) => (
-                <span className="admin-table-desc-sub">{row.address}</span>
+                <span className="admin-table-desc-sub admin-store-address">
+                    {row.address}
+                </span>
             ),
         },
         {
             key: 'phone',
-            header: 'Phone Contact',
+            header: 'Phone',
             render: (row) => (
                 <div className="admin-input-row-flex">
                     <Phone size={13} className="text-primary" />
@@ -150,7 +158,7 @@ export default function AdminStores({ stores = [] }) {
         },
         {
             key: 'online',
-            header: 'Online sales',
+            header: 'Online',
             render: (row) =>
                 row.fulfils_online ? (
                     <span className="status-pill active">Primary</span>
@@ -159,19 +167,8 @@ export default function AdminStores({ stores = [] }) {
                 ),
         },
         {
-            key: 'status',
-            header: 'Status',
-            render: (row) => (
-                <span
-                    className={`status-pill ${row.is_active ? 'active' : 'inactive'}`}
-                >
-                    {row.is_active ? 'Active' : 'Closed'}
-                </span>
-            ),
-        },
-        {
             key: 'actions',
-            header: 'Actions',
+            header: '',
             align: 'right',
             render: (row) => (
                 <div className="admin-table-icon-group admin-table-icon-group-end">
@@ -186,12 +183,13 @@ export default function AdminStores({ stores = [] }) {
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn btn-danger"
+                        className="admin-table-icon-btn btn-danger has-label"
                         onClick={() => handleDelete(row.id)}
                         title="Delete this branch"
                         aria-label={`Delete ${row.name}`}
                     >
                         <Trash2 size={14} />
+                        <span>Delete</span>
                     </button>
                 </div>
             ),

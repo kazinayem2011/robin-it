@@ -64,7 +64,7 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
     const columns = [
         {
             key: 'customer',
-            header: 'Customer Name',
+            header: 'Customer',
             render: (c) => (
                 <div className="admin-product-item-flex">
                     <div className="admin-customer-avatar">
@@ -91,14 +91,14 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
         },
         {
             key: 'email',
-            header: 'Email Address',
+            header: 'Email',
             render: (c) => (
                 <span className="admin-customer-email">{c.email}</span>
             ),
         },
         {
             key: 'phone',
-            header: 'Bangladeshi Mobile',
+            header: 'Mobile',
             render: (c) => (
                 <span className="admin-customer-phone">
                     🇧🇩 {formatBdPhone(c.phone)}
@@ -107,7 +107,7 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
         },
         {
             key: 'orders',
-            header: 'Total Orders',
+            header: 'Orders',
             render: (c) => (
                 <span className="admin-customer-orders-count">
                     {c.orders_count || 0} Order(s)
@@ -116,7 +116,7 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
         },
         {
             key: 'spent',
-            header: 'Total Spent (BDT)',
+            header: 'Spent',
             render: (c) => (
                 <strong className="admin-customer-total-spent">
                     {formatBdt(c.orders_sum_total || 0)}
@@ -139,19 +139,30 @@ export default function Customers({ customers = { data: [] }, search = '' }) {
             render: (c) => (
                 <button
                     type="button"
-                    className="admin-table-icon-btn"
+                    className="admin-table-icon-btn has-label"
                     disabled={working === c.id}
                     title={
                         c.is_active === false
                             ? 'Let them sign in again'
                             : 'Suspend this account'
                     }
+                    aria-label={
+                        c.is_active === false
+                            ? `Restore ${c.name}`
+                            : `Suspend ${c.name}`
+                    }
                     onClick={() => setActive(c, c.is_active === false)}
                 >
                     {c.is_active === false ? (
-                        <RotateCcw size={14} />
+                        <>
+                            <RotateCcw size={14} />
+                            <span>Restore</span>
+                        </>
                     ) : (
-                        <Ban size={14} />
+                        <>
+                            <Ban size={14} />
+                            <span>Suspend</span>
+                        </>
                     )}
                 </button>
             ),

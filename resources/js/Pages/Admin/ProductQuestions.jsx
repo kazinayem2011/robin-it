@@ -235,12 +235,13 @@ export default function AdminProductQuestions({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn aq-delete"
+                        className="admin-table-icon-btn aq-delete has-label"
                         title="Delete"
                         disabled={busyId === q.id}
                         onClick={() => remove(q)}
                     >
                         <Trash2 size={14} />
+                        <span>Delete</span>
                     </button>
                 </div>
             ),

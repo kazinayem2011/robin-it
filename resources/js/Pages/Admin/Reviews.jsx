@@ -144,13 +144,14 @@ export default function AdminReviews({
                     </button>
                     <button
                         type="button"
-                        className="admin-table-icon-btn btn-danger"
+                        className="admin-table-icon-btn btn-danger has-label"
                         disabled={busyId === r.id}
                         onClick={() => remove(r)}
                         title="Delete this review"
                         aria-label={`Delete the review by ${r.user?.name || 'a customer'}`}
                     >
                         <Trash2 size={14} />
+                        <span>Delete</span>
                     </button>
                 </div>
             ),

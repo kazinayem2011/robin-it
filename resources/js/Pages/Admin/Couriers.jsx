@@ -225,11 +225,12 @@ export default function AdminCouriers({
                     )}
                     <button
                         type="button"
-                        className="admin-table-icon-btn"
+                        className="admin-table-icon-btn has-label"
                         title="Remove courier"
                         onClick={() => remove(c)}
                     >
                         <Trash2 size={14} />
+                        <span>Remove</span>
                     </button>
                 </div>
             ),
@@ -557,11 +558,12 @@ function ZoneMappingModal({ courier, rows, onClose }) {
                                 <td>
                                     <button
                                         type="button"
-                                        className="admin-table-icon-btn"
+                                        className="admin-table-icon-btn has-label"
                                         title="Remove mapping"
                                         onClick={() => remove(row)}
                                     >
                                         <Trash2 size={13} />
+                                        <span>Remove</span>
                                     </button>
                                 </td>
                             </tr>
