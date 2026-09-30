@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductSerial;
 use App\Models\ProductStock;
 use App\Models\StockReceipt;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -532,6 +533,123 @@ class SerialService
     /**
      * Mark a unit as written off.
      */
+    /**
+     * The serials on one branch's shelf for a unit, id => serial.
+     *
+     * @return Collection<int, string>
+     */
+    public function onShelfAt(Product $product, ?int $variantId, ?int $storeId)
+    {
+        return ProductSerial::available()
+            ->where('product_id', $product->id)
+            ->where('product_variant_id', $variantId)
+            ->where('store_id', $storeId)
+            ->orderBy('serial')
+            ->pluck('serial', 'id');
+    }
+
+    /**
+     * The serials that left a shelf when a count or a correction took units
+     * off it.
+     *
+     * The serials still on the shelf can never outnumber the units still on
+     * it, so as many must be named as the shelf's serials exceed what is left
+     * — and no more than the units that went. A shelf where some units never
+     * had a serial recorded may need none named.
+     *
+     * Damaged units are written off; anything else is Missing, kept on record
+     * so a unit that turns up can be counted back in.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function takeOffShelf(Product $product, ?int $variantId, ?int $storeId, int $removed, int $left, array $ids, string $name, string $note, bool $damaged = false): int
+    {
+        $onShelf = $this->onShelfAt($product, $variantId, $storeId);
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        $needed = max(0, $onShelf->count() - $left);
+
+        if (count($ids) < $needed || count($ids) > $removed) {
+            throw new StorefrontException(
+                $needed === $removed || count($ids) > $removed
+                    ? "{$name}: tick which {$removed} serial number".($removed === 1 ? ' is' : 's are').' no longer on the shelf.'
+                    : "{$name}: tick at least {$needed} serial number".($needed === 1 ? '' : 's').' no longer on the shelf.',
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        $unknown = array_diff($ids, $onShelf->keys()->all());
+
+        if ($unknown !== []) {
+            throw new StorefrontException(
+                "{$name}: a ticked serial number is not on this branch's shelf any more. Reload and try again.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        if ($ids !== []) {
+            ProductSerial::whereIn('id', $ids)->update([
+                'status' => $damaged ? ProductSerial::FAULTY : ProductSerial::MISSING,
+                'note' => $note,
+            ]);
+        }
+
+        return count($ids);
+    }
+
+    /**
+     * The serials of units a count or a correction found on a shelf.
+     *
+     * A serial recorded as Missing for this unit comes back to the shelf; a
+     * new one is recorded; one the shop holds elsewhere is refused, because a
+     * unit cannot be in two places. Required, one each, on a product with a
+     * warranty — the claim is checked against them.
+     *
+     * @param  array<int, string>  $typed
+     */
+    public function putOnShelf(Product $product, ?int $variantId, ?int $storeId, int $added, array $typed, string $name, string $note): int
+    {
+        $clean = collect($typed)->map(fn ($s) => ProductSerial::normalise($s))->filter()->unique()->values();
+
+        if ($clean->count() > $added || ((int) $product->warranty_months > 0 && $clean->count() !== $added)) {
+            throw new StorefrontException(
+                "{$name}: enter the serial number of each of the {$added} found — one per line.",
+                422,
+                ApiCode::VALIDATION_ERROR
+            );
+        }
+
+        foreach ($clean as $serial) {
+            $existing = ProductSerial::where('serial', $serial)->first();
+
+            if ($existing && ! ($existing->status === ProductSerial::MISSING
+                && (int) $existing->product_id === $product->id
+                && (int) $existing->product_variant_id === (int) $variantId)) {
+                throw new StorefrontException(
+                    "{$name}: serial {$serial} is already on record as ".mb_strtolower($existing->status_label).'.',
+                    422,
+                    ApiCode::VALIDATION_ERROR
+                );
+            }
+
+            if ($existing) {
+                $existing->forceFill(['status' => ProductSerial::IN_STOCK, 'store_id' => $storeId, 'note' => $note])->save();
+            } else {
+                ProductSerial::create([
+                    'product_id' => $product->id,
+                    'product_variant_id' => $variantId,
+                    'serial' => $serial,
+                    'store_id' => $storeId,
+                    'status' => ProductSerial::IN_STOCK,
+                    'note' => $note,
+                ]);
+            }
+        }
+
+        return $clean->count();
+    }
+
     public function writeOff(ProductSerial $serial, ?string $note = null): ProductSerial
     {
         if ($serial->status === ProductSerial::SOLD) {

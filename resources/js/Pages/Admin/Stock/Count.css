@@ -90,6 +90,12 @@
     background: var(--warning-light);
 }
 
+/* Under a line that differs: which serials went, or the ones found. */
+.count-serials-row > td {
+    padding-top: 0;
+    background: var(--warning-light);
+}
+
 .count-match {
     font-size: 0.8rem;
     color: var(--success-ink);

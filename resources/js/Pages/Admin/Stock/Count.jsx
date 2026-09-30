@@ -5,6 +5,7 @@ import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { ClipboardList, Save, RotateCcw, ScanLine } from 'lucide-react';
 import Button from '@/Components/Button';
+import { SerialsFound, SerialsGone, serialsToName } from './SerialsMoving';
 import { SearchInput } from '@/Components/SearchInput';
 import EmptyState from '@/Components/EmptyState';
 import { toast } from '@/Components/Toast';
@@ -32,6 +33,9 @@ export default function StockCount({
     const keyOf = (l) => `${l.product_id}:${l.product_variant_id ?? ''}`;
 
     const [counted, setCounted] = useState({});
+    // Serials ticked as gone on a short line, and typed as found on one over.
+    const [gone, setGone] = useState({});
+    const [found, setFound] = useState({});
     const [note, setNote] = useState('');
     const [saving, setSaving] = useState(false);
     const [scanned, setScanned] = useState(null);
@@ -138,10 +142,30 @@ export default function StockCount({
                 product_id: l.product_id,
                 product_variant_id: l.product_variant_id,
                 counted_quantity: Number(typed(l)),
+                missing_serial_ids: gone[keyOf(l)] ?? [],
+                found_serials: found[keyOf(l)] || null,
             }));
 
         if (payload.length === 0) {
             toast.error('Count at least one product before saving.');
+            return;
+        }
+
+        // A short shelf must say which serials left it, before anything moves.
+        const unnamed = lines.find((l) => {
+            const entry = typed(l);
+            if (entry === undefined || entry === '') return false;
+            const needed = serialsToName(l.serials, Number(entry));
+            return (
+                Number(entry) < l.system_quantity &&
+                (gone[keyOf(l)] ?? []).length < needed
+            );
+        });
+
+        if (unnamed) {
+            toast.error(
+                `${unnamed.name}: tick which serial numbers are no longer on the shelf.`,
+            );
             return;
         }
 
@@ -154,6 +178,8 @@ export default function StockCount({
             });
             toast.success(data?.message || 'Count saved.');
             setCounted({});
+            setGone({});
+            setFound({});
             setNote('');
             router.reload();
         } catch (err) {
@@ -291,75 +317,157 @@ export default function StockCount({
                                               line.system_quantity
                                             : null;
 
+                                        const key = keyOf(line);
+                                        const serialsRow =
+                                            has &&
+                                            ((diff < 0 &&
+                                                serialsToName(
+                                                    line.serials,
+                                                    Number(entry),
+                                                ) > 0) ||
+                                                (diff > 0 &&
+                                                    (line.needs_serials ||
+                                                        line.serials?.length >
+                                                            0)));
+
                                         return (
-                                            <tr
-                                                key={keyOf(line)}
-                                                className={
-                                                    diff
-                                                        ? 'count-row-differs'
-                                                        : ''
-                                                }
-                                            >
-                                                <td>
-                                                    <div className="admin-stock-product-name">
-                                                        {line.name}
-                                                    </div>
-                                                    {line.sku && (
-                                                        <div className="admin-field-hint">
-                                                            {line.sku}
+                                            <React.Fragment key={key}>
+                                                <tr
+                                                    className={
+                                                        diff
+                                                            ? 'count-row-differs'
+                                                            : ''
+                                                    }
+                                                >
+                                                    <td>
+                                                        <div className="admin-stock-product-name">
+                                                            {line.name}
                                                         </div>
-                                                    )}
-                                                    {line.owed > 0 && (
-                                                        <div className="admin-field-hint count-owed">
-                                                            {line.owed} owed to
-                                                            customers — count
-                                                            only what is on the
-                                                            shelf
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="count-num count-system">
-                                                    {line.system_quantity}
-                                                </td>
-                                                <td className="count-num">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        inputMode="numeric"
-                                                        className="count-input"
-                                                        value={entry ?? ''}
-                                                        placeholder="—"
-                                                        onChange={(e) =>
-                                                            setCounted((c) => ({
-                                                                ...c,
-                                                                [keyOf(line)]:
-                                                                    e.target
-                                                                        .value,
-                                                            }))
-                                                        }
-                                                    />
-                                                </td>
-                                                <td className="count-num">
-                                                    {diff === null ? (
-                                                        <span className="admin-field-hint">
-                                                            not counted
-                                                        </span>
-                                                    ) : diff === 0 ? (
-                                                        <span className="count-match">
-                                                            matches
-                                                        </span>
-                                                    ) : (
-                                                        <span
-                                                            className={`count-diff ${diff > 0 ? 'is-up' : 'is-down'}`}
-                                                        >
-                                                            {diff > 0
-                                                                ? '+'
-                                                                : ''}
-                                                            {diff}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            </tr>
+                                                        {line.sku && (
+                                                            <div className="admin-field-hint">
+                                                                {line.sku}
+                                                            </div>
+                                                        )}
+                                                        {line.owed > 0 && (
+                                                            <div className="admin-field-hint count-owed">
+                                                                {line.owed} owed
+                                                                to customers —
+                                                                count only what
+                                                                is on the shelf
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="count-num count-system">
+                                                        {line.system_quantity}
+                                                    </td>
+                                                    <td className="count-num">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            inputMode="numeric"
+                                                            className="count-input"
+                                                            value={entry ?? ''}
+                                                            placeholder="—"
+                                                            onChange={(e) =>
+                                                                setCounted(
+                                                                    (c) => ({
+                                                                        ...c,
+                                                                        [keyOf(
+                                                                            line,
+                                                                        )]:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    }),
+                                                                )
+                                                            }
+                                                        />
+                                                    </td>
+                                                    <td className="count-num">
+                                                        {diff === null ? (
+                                                            <span className="admin-field-hint">
+                                                                not counted
+                                                            </span>
+                                                        ) : diff === 0 ? (
+                                                            <span className="count-match">
+                                                                matches
+                                                            </span>
+                                                        ) : (
+                                                            <span
+                                                                className={`count-diff ${diff > 0 ? 'is-up' : 'is-down'}`}
+                                                            >
+                                                                {diff > 0
+                                                                    ? '+'
+                                                                    : ''}
+                                                                {diff}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                                {serialsRow && (
+                                                    <tr className="count-serials-row">
+                                                        <td colSpan={4}>
+                                                            {diff < 0 ? (
+                                                                <SerialsGone
+                                                                    serials={
+                                                                        line.serials
+                                                                    }
+                                                                    needed={serialsToName(
+                                                                        line.serials,
+                                                                        Number(
+                                                                            entry,
+                                                                        ),
+                                                                    )}
+                                                                    removed={
+                                                                        -diff
+                                                                    }
+                                                                    chosen={
+                                                                        gone[
+                                                                            key
+                                                                        ] ?? []
+                                                                    }
+                                                                    onChange={(
+                                                                        ids,
+                                                                    ) =>
+                                                                        setGone(
+                                                                            (
+                                                                                g,
+                                                                            ) => ({
+                                                                                ...g,
+                                                                                [key]: ids,
+                                                                            }),
+                                                                        )
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                <SerialsFound
+                                                                    added={diff}
+                                                                    required={
+                                                                        line.needs_serials
+                                                                    }
+                                                                    value={
+                                                                        found[
+                                                                            key
+                                                                        ] ?? ''
+                                                                    }
+                                                                    onChange={(
+                                                                        text,
+                                                                    ) =>
+                                                                        setFound(
+                                                                            (
+                                                                                x,
+                                                                            ) => ({
+                                                                                ...x,
+                                                                                [key]: text,
+                                                                            }),
+                                                                        )
+                                                                    }
+                                                                />
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
                                         );
                                     })}
                                 </tbody>

@@ -7,6 +7,7 @@ import Modal from '../../../Components/Modal';
 import { toast } from '../../../Components/Toast';
 import { adminService } from '../../../services';
 import { adminStockAdjustmentSchema } from '../../../validations';
+import { SerialsFound, SerialsGone, serialsToName } from './SerialsMoving';
 
 /**
  * Correcting a count: breakage, loss, or a count that disagrees.
@@ -44,12 +45,20 @@ export default function AdjustStockModal({
         return String(held[0][0]);
     };
 
+    /*
+     * Each branch's serials, so units taken off can be named and units found
+     * recorded — see SerialsMoving. Loaded when the window opens.
+     */
+    const [breakdown, setBreakdown] = React.useState([]);
+
     const formik = useFormik({
         initialValues: {
             store_id: '',
             quantity: '',
             reason: 'stock_take',
             note: '',
+            serial_ids: [],
+            serials: '',
         },
         validationSchema: adminStockAdjustmentSchema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
@@ -66,6 +75,22 @@ export default function AdjustStockModal({
                 return;
             }
 
+            const row = breakdown.find(
+                (b) => String(b.store_id) === String(values.store_id),
+            );
+            const needed =
+                delta < 0 ? serialsToName(row?.serials ?? [], here + delta) : 0;
+
+            if (values.serial_ids.length < needed) {
+                setFieldError(
+                    'quantity',
+                    'Tick which serial numbers are no longer on the shelf.',
+                );
+                setSubmitting(false);
+
+                return;
+            }
+
             try {
                 await adminService.adjustStock({
                     product_id: product.id,
@@ -74,6 +99,8 @@ export default function AdjustStockModal({
                     quantity: delta,
                     reason: values.reason,
                     note: values.note || null,
+                    serial_ids: delta < 0 ? values.serial_ids : [],
+                    serials: delta > 0 ? values.serials || null : null,
                 });
                 toast.success(
                     `${branchName} now has ${here + delta}.`,
@@ -100,8 +127,15 @@ export default function AdjustStockModal({
                     quantity: '',
                     reason: 'stock_take',
                     note: '',
+                    serial_ids: [],
+                    serials: '',
                 },
             });
+            setBreakdown([]);
+            adminService
+                .getStockBranches(product.id, variant?.id ?? null)
+                .then((rows) => setBreakdown(Array.isArray(rows) ? rows : []))
+                .catch(() => setBreakdown([]));
         }
 
         if (!target) lastKey.current = null;
@@ -115,6 +149,11 @@ export default function AdjustStockModal({
     const here = Number(levels[formik.values.store_id] ?? 0);
     const delta = Number(formik.values.quantity) || 0;
     const projected = here + delta;
+    const branchRow = breakdown.find(
+        (b) => String(b.store_id) === String(formik.values.store_id),
+    );
+    const branchSerials = branchRow?.serials ?? [];
+    const needsSerials = Boolean(breakdown[0]?.needs_serials);
 
     return (
         <Modal
@@ -195,6 +234,32 @@ export default function AdjustStockModal({
                     formik={formik}
                     placeholder="What happened?"
                 />
+
+                {delta < 0 && projected >= 0 && (
+                    <SerialsGone
+                        serials={branchSerials}
+                        needed={serialsToName(branchSerials, projected)}
+                        removed={-delta}
+                        chosen={formik.values.serial_ids}
+                        onChange={(ids) =>
+                            formik.setFieldValue('serial_ids', ids)
+                        }
+                        writtenOff={['damaged', 'supplier_return'].includes(
+                            formik.values.reason,
+                        )}
+                    />
+                )}
+
+                {delta > 0 && (needsSerials || branchSerials.length > 0) && (
+                    <SerialsFound
+                        added={delta}
+                        required={needsSerials}
+                        value={formik.values.serials}
+                        onChange={(text) =>
+                            formik.setFieldValue('serials', text)
+                        }
+                    />
+                )}
 
                 {Boolean(delta) && (
                     <div

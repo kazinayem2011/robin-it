@@ -21,7 +21,10 @@ use Illuminate\Support\Facades\DB;
  */
 class StockTakeService
 {
-    public function __construct(private readonly StockService $stock) {}
+    public function __construct(
+        private readonly StockService $stock,
+        private readonly SerialService $serials,
+    ) {}
 
     /**
      * What is on the books at this branch, to count against.
@@ -39,7 +42,7 @@ class StockTakeService
         return ProductStock::where('store_id', $store->id)
             ->with([
                 // No sku on products — only variants carry one.
-                'product:id,name,has_variants,is_active',
+                'product:id,name,has_variants,is_active,warranty_months',
                 'variant:id,name,sku',
             ])
             ->get()
@@ -60,6 +63,13 @@ class StockTakeService
                 'owed' => max(0, -(int) $row->quantity),
                 // So the screen can price a discrepancy as it is typed.
                 'unit_cost' => $costs[$row->product_id.':'.($row->product_variant_id ?: '')] ?? null,
+                /*
+                 * The serials on this shelf, so a short count can say which
+                 * units are gone; and whether a found one must be named.
+                 */
+                'serials' => $this->serials->onShelfAt($row->product, $row->product_variant_id, $store->id)
+                    ->map(fn ($serial, $id) => ['id' => $id, 'serial' => $serial])->values()->all(),
+                'needs_serials' => (int) $row->product->warranty_months > 0,
             ])
             ->sortBy('name')
             ->values();
@@ -73,7 +83,10 @@ class StockTakeService
      * the books write nothing — a movement that changes no balance is noise in
      * the ledger, and the count itself records how many were checked.
      *
-     * @param  array<int, array{product_id:int, product_variant_id:?int, counted_quantity:int}>  $lines
+     * A shelf short of the books names the serials that are gone (they become
+     * Missing), and one over names the serials found — see SerialService.
+     *
+     * @param  array<int, array{product_id:int, product_variant_id:?int, counted_quantity:int, missing_serial_ids?:array<int,int>, found_serials?:?string}>  $lines
      */
     public function apply(Store $store, User $user, array $lines, ?string $note = null): StockTake
     {
@@ -121,6 +134,22 @@ class StockTakeService
 
                 if ($delta === 0) {
                     continue;
+                }
+
+                // The serials first, so a count that cannot say which units
+                // went is refused before any stock moves.
+                $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
+
+                if ($delta < 0) {
+                    $this->serials->takeOffShelf(
+                        $product, $variant?->id, $store->id, -$delta, (int) $line['counted_quantity'],
+                        (array) ($line['missing_serial_ids'] ?? []), $name, "Not found at count {$take->reference}."
+                    );
+                } else {
+                    $this->serials->putOnShelf(
+                        $product, $variant?->id, $store->id, $delta,
+                        preg_split('/[\r\n,]+/', (string) ($line['found_serials'] ?? '')) ?: [], $name, "Found at count {$take->reference}."
+                    );
                 }
 
                 $this->stock->adjust(

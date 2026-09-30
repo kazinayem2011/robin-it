@@ -16,18 +16,28 @@ class ProductSerial extends Model
 
     public const FAULTY = 'faulty';
 
+    /** Not on the shelf when it was counted, and not known to be sold. */
+    public const MISSING = 'missing';
+
     /*
-     * Three states, because a physical unit is only ever in three places: on a
-     * shelf, with a customer, or written off. "Returned" was a fourth that
+     * A physical unit is on a shelf, with a customer, written off — or not
+     * where the books said when somebody counted. "Returned" was a state that
      * nothing moved a unit out of — a working unit that came back was stranded
      * there, invisible to the next sale, while the stock count said it was
      * available. A resellable return goes back to the shelf, because that is
      * where it is; a damaged one is written off.
+     *
+     * Missing is the count's word. A count or a correction that takes units
+     * off a shelf used to leave their serials "On the shelf", so the serial
+     * list offered a unit the stock figure said was gone. It is kept on
+     * record, not deleted: a missing unit that turns up is counted back in
+     * under the same serial.
      */
     public const STATUSES = [
         self::IN_STOCK => 'On the shelf',
         self::SOLD => 'Sold',
         self::FAULTY => 'Faulty / written off',
+        self::MISSING => 'Missing',
     ];
 
     protected $fillable = [

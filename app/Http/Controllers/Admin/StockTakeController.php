@@ -179,6 +179,10 @@ class StockTakeController extends Controller
             'lines.*.product_id' => 'required|integer|exists:products,id',
             'lines.*.product_variant_id' => 'nullable|integer|exists:product_variants,id',
             'lines.*.counted_quantity' => 'required|integer|min:0|max:1000000',
+            // Which serials are gone from a short shelf, and those found on one over.
+            'lines.*.missing_serial_ids' => 'nullable|array',
+            'lines.*.missing_serial_ids.*' => 'integer',
+            'lines.*.found_serials' => 'nullable|string|max:20000',
         ], [
             'lines.required' => 'Count at least one product before saving.',
             'lines.*.counted_quantity.min' => 'A count cannot be negative. Zero means none on the shelf.',

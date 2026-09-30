@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductSerial;
+use App\Models\ProductStock;
 use App\Models\StockMovement;
 use App\Models\StockReceipt;
 use App\Models\Supplier;
@@ -376,6 +377,10 @@ class StockController extends Controller
             'reason' => 'required|string|in:'.implode(',', array_keys(StockService::ADJUSTMENT_REASONS)),
             'note' => 'nullable|string|max:1000',
             'store_id' => 'nullable|exists:stores,id',
+            // Which serials left the shelf, or the serials of units found.
+            'serial_ids' => 'nullable|array',
+            'serial_ids.*' => 'integer',
+            'serials' => 'nullable|string|max:20000',
         ], [
             'quantity.not_in' => 'Enter how many units to add or remove.',
             'reason.in' => 'Choose a reason for this adjustment.',
@@ -390,17 +395,49 @@ class StockController extends Controller
             $validated['product_variant_id'] ?? null
         );
 
-        $movement = $this->stock->adjust(
-            $product,
-            $variant,
-            (int) $validated['quantity'],
-            $validated['reason'],
-            $validated['note'] ?? null,
-            $request->user()?->id,
-            BranchScope::narrow($request->user(), $validated['store_id'] ?? null)
-        );
-
+        $storeId = BranchScope::narrow($request->user(), $validated['store_id'] ?? null);
+        $quantity = (int) $validated['quantity'];
         $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
+
+        /*
+         * The serials move with the units, as a count's do: the ones that
+         * left are named (Missing, or written off when damaged), the ones
+         * found are recorded. A correction used to change the number alone,
+         * leaving serials "On the shelf" for units that were gone.
+         */
+        $movement = DB::transaction(function () use ($product, $variant, $quantity, $validated, $request, $storeId, $name) {
+            if ($storeId) {
+                $here = (int) ProductStock::where('store_id', $storeId)
+                    ->where('product_id', $product->id)
+                    ->where('product_variant_id', $variant?->id)
+                    ->value('quantity');
+                $why = StockService::ADJUSTMENT_REASONS[$validated['reason']] ?? $validated['reason'];
+
+                if ($quantity < 0) {
+                    $this->serials->takeOffShelf(
+                        $product, $variant?->id, $storeId, -$quantity, max(0, $here + $quantity),
+                        (array) ($validated['serial_ids'] ?? []), $name, "Corrected out: {$why}.",
+                        // Gone for good: written off. Anything else may turn up.
+                        in_array($validated['reason'], ['damaged', 'supplier_return'], true),
+                    );
+                } else {
+                    $this->serials->putOnShelf(
+                        $product, $variant?->id, $storeId, $quantity,
+                        preg_split('/[\r\n,]+/', (string) ($validated['serials'] ?? '')) ?: [], $name, "Corrected in: {$why}.",
+                    );
+                }
+            }
+
+            return $this->stock->adjust(
+                $product,
+                $variant,
+                $quantity,
+                $validated['reason'],
+                $validated['note'] ?? null,
+                $request->user()?->id,
+                $storeId
+            );
+        });
 
         return $this->successResponse(
             $movement,
@@ -549,6 +586,8 @@ class StockController extends Controller
         $breakdown = collect($breakdown)->map(fn ($row) => $row + [
             'serials' => ($serials[$row['store_id']] ?? collect())
                 ->map(fn ($s) => ['id' => $s->id, 'serial' => $s->serial])->values()->all(),
+            // Whether units found by a correction must be named by serial.
+            'needs_serials' => (int) $product->warranty_months > 0,
         ])->all();
 
         $branch = BranchScope::for($request->user());
