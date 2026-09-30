@@ -53,16 +53,18 @@ export default function DeleteUserForm() {
                 Delete Account
             </Button>
 
-            <Modal show={confirmingUserDeletion} onClose={closeModal}>
+            {/* The window opens on isOpen. It was given `show`, which Modal
+                never reads, so this button did nothing at all. */}
+            <Modal
+                isOpen={confirmingUserDeletion}
+                onClose={closeModal}
+                title="Delete your account?"
+            >
                 <form
                     onSubmit={deleteUser}
                     className="profile-delete-modal"
                     noValidate
                 >
-                    <h2 className="profile-section-title">
-                        Delete your account?
-                    </h2>
-
                     <p className="profile-section-desc">
                         This cannot be undone. Enter your password to confirm
                         you want to permanently delete your account.
