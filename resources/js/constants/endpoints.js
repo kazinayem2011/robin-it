@@ -297,7 +297,6 @@ export const ROUTES = {
     DASHBOARD_PROFILE: '/dashboard/profile',
     ACCOUNT: '/account',
     PROFILE_EDIT: '/profile',
-    PROFILE_DESTROY: '/profile',
     LOGIN: '/login',
     REGISTER: '/register',
     FORGOT_PASSWORD: '/forgot-password',

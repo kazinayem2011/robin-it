@@ -117,28 +117,8 @@
     max-width: 720px;
 }
 
-/* Destructive section, visually separated from the routine settings. */
-.profile-danger-box {
-    border-color: var(--danger-border);
-}
-
-.profile-delete-modal {
-    padding: 24px;
-}
-
-.profile-delete-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-}
-
 @media (max-width: 640px) {
     .profile-page-header {
         align-items: flex-start;
-    }
-
-    .profile-delete-actions {
-        flex-direction: column-reverse;
     }
 }

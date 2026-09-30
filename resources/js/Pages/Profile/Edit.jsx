@@ -1,7 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { mainLayout } from '../../Layouts/MainLayout';
-import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import siteConfig from '../../constants/siteConfig';
@@ -28,8 +27,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <div>
                         <h1 className="profile-page-title">Account Settings</h1>
                         <p className="profile-page-sub">
-                            Update your details, change your password, or close
-                            your account.
+                            Update your details and change your password.
                         </p>
                     </div>
                 </div>
@@ -42,12 +40,10 @@ export default function Edit({ mustVerifyEmail, status }) {
                         />
                     </div>
 
+                    {/* No "delete account" here: an account is closed by the
+                        shop suspending it, which keeps its orders on record. */}
                     <div className="profile-section-card">
                         <UpdatePasswordForm />
-                    </div>
-
-                    <div className="profile-section-card profile-danger-box">
-                        <DeleteUserForm />
                     </div>
                 </div>
             </div>

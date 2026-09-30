@@ -167,7 +167,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete(ApiEndpoints::WEB_PROFILE, [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // No DELETE: accounts are suspended by the shop, never deleted by their owner.
 });
 
 /*
