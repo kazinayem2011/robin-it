@@ -1190,6 +1190,9 @@
     border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
     background: var(--bg-surface);
+    /* The theme's text, not the browser's button colour: in dark mode that
+       left the names dark on a dark chip. */
+    color: var(--text-primary);
     cursor: pointer;
     text-align: left;
     transition:
@@ -1232,6 +1235,27 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--danger-text);
+}
+
+/* Right-aligned, so the name leads and the note sits out of its way. */
+.pdp-variant-chip > .pdp-variant-out {
+    align-self: flex-end;
+}
+
+/*
+ * A Storage or Colour chip: the value and "Sold out" on one line, the note
+ * pushed to the right. Under the name it made sold-out chips a line taller
+ * than their neighbours.
+ */
+.pdp-variant-chip.is-value {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.pdp-variant-chip.is-value > .pdp-variant-out {
+    align-self: center;
+    margin-left: auto;
 }
 
 /* ── Back-in-stock request ─────────────────────────────────────────────────── */

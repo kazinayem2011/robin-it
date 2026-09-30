@@ -1128,7 +1128,7 @@ export default function ProductDetails(props) {
                                                 key={value}
                                                 type="button"
                                                 aria-pressed={chosen}
-                                                className={`pdp-variant-chip ${
+                                                className={`pdp-variant-chip is-value ${
                                                     chosen ? 'is-selected' : ''
                                                 } ${out ? 'is-out' : ''}`}
                                                 onClick={() =>
