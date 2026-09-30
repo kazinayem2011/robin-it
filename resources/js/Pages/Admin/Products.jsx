@@ -179,6 +179,16 @@ export const buildProductPayload = (values, editingProduct) => {
                         ? null
                         : Number(variant.discount_price),
                 is_active: variant.is_active !== false,
+                // What differs on this option, entered as lines and rows
+                // the same way as the product's own.
+                key_features: linesToBullets(variant.key_features),
+                specifications: (variant.specifications || [])
+                    .filter((spec) => spec.name?.trim() && spec.value?.trim())
+                    .map((spec) => ({
+                        group: spec.group?.trim() || null,
+                        name: spec.name.trim(),
+                        value: spec.value.trim(),
+                    })),
             };
 
             /*
@@ -841,6 +851,15 @@ export default function Products({
                         is_active: Boolean(v.is_active),
                         // Read-only here: editing an option never moves stock.
                         stock_quantity: v.stock_quantity ?? 0,
+                        key_features: bulletsToLines(v.key_features),
+                        specifications: (v.specifications || []).map(
+                            (spec, i) => ({
+                                key: `v-${v.id}-spec-${i}`,
+                                group: spec.group || '',
+                                name: spec.name || '',
+                                value: spec.value || '',
+                            }),
+                        ),
                         images: (v.images || []).map((img) => ({
                             id: img.id,
                             image_path: img.image_path,

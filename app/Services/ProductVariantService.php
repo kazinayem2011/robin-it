@@ -288,7 +288,14 @@ class ProductVariantService
     {
         $options = $definition['options'] ?? [];
 
-        return [
+        /*
+         * Only when sent. Other callers pass an option without these keys —
+         * converting a product, taking an order line — and that must not wipe
+         * what the product form wrote.
+         */
+        $details = array_intersect_key($definition, array_flip(['key_features', 'specifications']));
+
+        return $details + [
             'name' => trim((string) ($definition['name'] ?? '')) ?: ProductVariant::labelFor($options),
             'sku' => blank($definition['sku'] ?? null) ? null : trim((string) $definition['sku']),
             'options' => $options,

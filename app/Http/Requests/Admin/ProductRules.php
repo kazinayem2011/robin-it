@@ -296,6 +296,13 @@ class ProductRules
             // An option's own gallery. image_url above stays the lead shot and
             // is kept in step with the first of these.
             ...self::gallery('variants.*.images'),
+            // What this option has that its siblings do not: its own key
+            // features, and only the spec rows that differ from the product's.
+            'variants.*.key_features' => 'nullable|string|max:4000',
+            'variants.*.specifications' => 'nullable|array|max:60',
+            'variants.*.specifications.*.group' => 'nullable|string|max:80',
+            'variants.*.specifications.*.name' => 'nullable|string|max:120',
+            'variants.*.specifications.*.value' => 'nullable|string|max:2000',
             'variants.*.reorder_level' => 'nullable|integer|min:0|max:100000',
             'variants.*.is_active' => 'nullable|boolean',
             // Only read when switching a single product over to options, where it
