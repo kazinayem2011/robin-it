@@ -199,7 +199,7 @@
         background 0.14s ease;
 }
 
-.variant-picker-option:hover:not(:disabled) {
+.variant-picker-option:hover {
     border-color: var(--vp-option-hover);
 }
 
@@ -227,9 +227,12 @@
     transform: rotate(45deg);
 }
 
-.variant-picker-option.is-out {
-    opacity: 0.5;
-    cursor: not-allowed;
+/*
+ * Sold out, but still readable and clickable — the "Sold out" label says the
+ * rest. Faded to half and marked not-allowed, it looked like a broken button.
+ */
+.variant-picker-option.is-out .variant-picker-out {
+    color: var(--danger-text);
 }
 
 .variant-picker-name {

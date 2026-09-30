@@ -2757,7 +2757,7 @@ textarea.has-error:focus,
     text-decoration: none;
 }
 
-.btn-add-cart.is-notify:hover {
+.btn-add-cart.is-notify:hover:not(:disabled) {
     background: transparent;
     color: var(--primary-ink);
     box-shadow: inset 0 0 0 1px var(--primary);

@@ -87,6 +87,9 @@ export default function VariantPickerModal() {
 
     const variants = product?.active_variants || [];
     const chosen = variants.find((v) => v.id === chosenId) || null;
+    const chosenOut = Boolean(
+        chosen && !chosen.in_stock && !product?.allow_preorder,
+    );
 
     const confirm = useCallback(async () => {
         if (!product || !chosen || adding) return;
@@ -108,6 +111,16 @@ export default function VariantPickerModal() {
             setAdding(false);
         }
     }, [product, chosen, adding, thenCheckout, close]);
+
+    /*
+     * The window is mounted by the layout, which stays in place across an
+     * Inertia visit — so leaving for the product page has to close it, or it
+     * sits open on top of the page it sent the shopper to.
+     */
+    const goTo = (url) => {
+        close();
+        router.visit(url);
+    };
 
     if (!open) return null;
 
@@ -156,9 +169,7 @@ export default function VariantPickerModal() {
                         <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() =>
-                                router.visit(ROUTES.PRODUCT_DETAIL(slug))
-                            }
+                            onClick={() => goTo(ROUTES.PRODUCT_DETAIL(slug))}
                         >
                             Open the product page
                         </Button>
@@ -181,11 +192,19 @@ export default function VariantPickerModal() {
                                     !variant.in_stock &&
                                     !product?.allow_preorder;
 
+                                /*
+                                 * Never disabled, as on the product page: a
+                                 * sold-out option still has a price to read,
+                                 * and choosing it turns the button below into
+                                 * "Notify me". Greyed out, it looked broken.
+                                 */
                                 return (
                                     <li key={variant.id}>
                                         <button
                                             type="button"
-                                            disabled={out}
+                                            aria-pressed={
+                                                variant.id === chosenId
+                                            }
                                             className={`variant-picker-option ${
                                                 variant.id === chosenId
                                                     ? 'is-chosen'
@@ -218,21 +237,36 @@ export default function VariantPickerModal() {
                             <Button
                                 variant="secondary"
                                 onClick={() =>
-                                    router.visit(ROUTES.PRODUCT_DETAIL(slug))
+                                    goTo(ROUTES.PRODUCT_DETAIL(slug))
                                 }
                             >
                                 Full details
                             </Button>
-                            <Button
-                                onClick={confirm}
-                                disabled={!chosen || adding}
-                            >
-                                {adding
-                                    ? 'Adding…'
-                                    : thenCheckout
-                                      ? 'Buy now'
-                                      : 'Add to cart'}
-                            </Button>
+                            {/* A sold-out option cannot go in the cart — the
+                                server refuses it — so the button offers what
+                                can be done instead: be told when it returns. */}
+                            {chosenOut ? (
+                                <Button
+                                    onClick={() =>
+                                        goTo(
+                                            `${ROUTES.PRODUCT_DETAIL(slug)}#notify`,
+                                        )
+                                    }
+                                >
+                                    Notify me
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={confirm}
+                                    disabled={!chosen || adding}
+                                >
+                                    {adding
+                                        ? 'Adding…'
+                                        : thenCheckout
+                                          ? 'Buy now'
+                                          : 'Add to cart'}
+                                </Button>
+                            )}
                         </div>
                     </>
                 )}
