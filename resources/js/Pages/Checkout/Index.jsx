@@ -126,6 +126,9 @@ export default function Checkout({
     const [applyingCoupon, setApplyingCoupon] = useState(false);
     const [checkoutBlocker, setCheckoutBlocker] = useState(null);
     const [busyItemId, setBusyItemId] = useState(null);
+    // The order number once it is placed: the page says so, and stops taking
+    // Confirm Order, while it moves on to the confirmation.
+    const [placed, setPlaced] = useState(null);
 
     /* The same rules the cart page and the server apply. */
     const boundsFor = (item) => cartBounds(item, cart);
@@ -220,6 +223,25 @@ export default function Checkout({
         }
     };
 
+    /*
+     * On to the confirmation, and there for certain.
+     *
+     * On live the move sometimes never finished: the order was placed and the
+     * toast said so, but the page sat on checkout with the cart on screen and
+     * Confirm Order live — an invitation to order twice. The page now says
+     * the order is placed, and if the move has not landed in a few seconds it
+     * loads the confirmation outright.
+     */
+    useEffect(() => {
+        if (!placed) return undefined;
+
+        const url = ROUTES.ORDER_SUCCESS(placed);
+        router.visit(url);
+        const fallback = setTimeout(() => window.location.assign(url), 8000);
+
+        return () => clearTimeout(fallback);
+    }, [placed]);
+
     const placeOrder = async (values, { code = null } = {}) => {
         const { email, ...details } = values;
         const payload = {
@@ -235,7 +257,8 @@ export default function Checkout({
         if (data && data.order_number) {
             useAppStore.getState().fetchCartCount();
             toast.success('Order placed successfully!', 'Checkout Complete');
-            router.visit(ROUTES.ORDER_SUCCESS(data.order_number));
+            setVerify(null);
+            setPlaced(data.order_number);
         }
     };
 
@@ -296,6 +319,9 @@ export default function Checkout({
             values,
             { setSubmitting, setFieldError, setFieldTouched },
         ) => {
+            // Placed already: a second press must not order again.
+            if (placed) return;
+
             /*
              * A guest: the form is valid, so prove who is ordering before
              * anything is placed. Everything else was checked first so a code
@@ -1147,16 +1173,26 @@ export default function Checkout({
                                 </div>
                             </div>
 
-                            <Button
-                                type="submit"
-                                form="checkout-form"
-                                variant="primary"
-                                size="lg"
-                                fullWidth
-                                loading={formik.isSubmitting}
-                            >
-                                Confirm Order
-                            </Button>
+                            {placed ? (
+                                <div className="checkout-placed" role="status">
+                                    <strong>Order {placed} is placed.</strong>
+                                    <span>Opening your confirmation…</span>
+                                    <a href={ROUTES.ORDER_SUCCESS(placed)}>
+                                        Open it now
+                                    </a>
+                                </div>
+                            ) : (
+                                <Button
+                                    type="submit"
+                                    form="checkout-form"
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
+                                    loading={formik.isSubmitting}
+                                >
+                                    Confirm Order
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

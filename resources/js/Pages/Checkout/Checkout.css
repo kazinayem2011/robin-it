@@ -871,3 +871,23 @@
     gap: 10px;
     width: 100%;
 }
+
+/* The order is placed and the page is moving on: said in place of Confirm
+   Order, so it cannot be pressed a second time. */
+.checkout-placed {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-md);
+    background: var(--success-light);
+    color: var(--success-text);
+    font-size: 0.9rem;
+}
+
+.checkout-placed a {
+    color: var(--success-ink);
+    font-weight: 700;
+    text-decoration: underline;
+}
