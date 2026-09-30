@@ -59,6 +59,26 @@ class PurchaseOrderTest extends TestCase
         ]);
     }
 
+    /*
+     * The receive window asks for serials from what the order says. It was
+     * sent each product with only its id and name, so a product with a
+     * warranty read as not needing them — and the server then refused the
+     * delivery for the serials it had not asked for.
+     */
+    public function test_the_order_says_which_lines_need_serials(): void
+    {
+        $this->product->update(['warranty_months' => 12]);
+        $order = $this->draft(3);
+
+        $line = $this->actingAs($this->buyer)
+            ->getJson("/api/admin/purchase-orders/{$order->id}")
+            ->assertOk()
+            ->json('data.order.items.0') ?? $this->actingAs($this->buyer)
+            ->getJson("/api/admin/purchase-orders/{$order->id}")->json('data.items.0');
+
+        $this->assertTrue($line['needs_serials']);
+    }
+
     // --- writing one -------------------------------------------------------
 
     public function test_an_order_records_what_was_asked_for(): void

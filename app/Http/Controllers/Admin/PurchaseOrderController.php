@@ -35,7 +35,7 @@ class PurchaseOrderController extends Controller
         $orders = PurchaseOrder::query()
             // The products' names with the lines, in the same query: the
             // screens showed "#1308" where the product belonged.
-            ->with(['supplier:id,name', 'store:id,name', 'items.product:id,name', 'items.variant:id,name'])
+            ->with(['supplier:id,name', 'store:id,name', 'items.product:id,name,warranty_months', 'items.variant:id,name'])
             ->when($branch, fn ($q) => $q->where('store_id', $branch))
             ->when(
                 array_key_exists((string) $status, PurchaseOrder::STATUSES),
@@ -55,7 +55,7 @@ class PurchaseOrderController extends Controller
             // can be pointed at the order it belongs to.
             'openOrders' => PurchaseOrder::open()
                 ->when($branch, fn ($q) => $q->where('store_id', $branch))
-                ->with(['items.product:id,name', 'items.variant:id,name'])
+                ->with(['items.product:id,name,warranty_months', 'items.variant:id,name'])
                 ->latest('id')
                 ->get(),
             'stores' => BranchScope::storesFor($request->user()),
@@ -116,7 +116,7 @@ class PurchaseOrderController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $order = PurchaseOrder::with(['items.product:id,name', 'items.variant:id,name', 'store:id,name'])
+        $order = PurchaseOrder::with(['items.product:id,name,warranty_months', 'items.variant:id,name', 'store:id,name'])
             ->findOrFail($id);
 
         if ($refusal = $this->refuseOtherBranch($request, $order->store_id)) {
@@ -241,7 +241,7 @@ class PurchaseOrderController extends Controller
         $order->refresh();
 
         return $this->successResponse(
-            ['receipt' => $receipt, 'order' => $order->fresh(['items.product:id,name', 'items.variant:id,name'])],
+            ['receipt' => $receipt, 'order' => $order->fresh(['items.product:id,name,warranty_months', 'items.variant:id,name'])],
             $order->outstanding > 0
                 ? "Received. {$order->outstanding} still to come on {$order->reference} — receive the rest when it arrives."
                 : "{$order->reference} is complete — everything has arrived."
