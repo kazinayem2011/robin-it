@@ -23,7 +23,7 @@
             <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:22px; color:#334155;">
                 <span style="display:block; margin-bottom:8px; font-size:12px; font-weight:bold; color:#0f172a; text-transform:uppercase; letter-spacing:0.6px;">Order Summary</span>
                 <strong style="color:#0f172a;">Order number:</strong> #{{ $order->order_number }}<br>
-                <strong style="color:#0f172a;">Placed:</strong> {{ $order->created_at->format('d M Y, g:i A') }}<br>
+                <strong style="color:#0f172a;">Placed:</strong> {{ \App\Support\ShopDate::show($order->created_at, 'd M Y, g:i A') }}<br>
                 <strong style="color:#0f172a;">Payment:</strong> Cash on Delivery
             </td>
         </tr>

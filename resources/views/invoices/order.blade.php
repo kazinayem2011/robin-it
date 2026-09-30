@@ -128,7 +128,7 @@
             <div class="head-meta">
                 <div class="doc-title">Invoice</div>
                 <strong style="color:var(--ink); font-size:14px;">{{ $order->order_number }}</strong><br>
-                {{ $order->created_at->format('d M Y, g:i A') }}<br>
+                {{ \App\Support\ShopDate::show($order->created_at, 'd M Y, g:i A') }}<br>
                 <span class="badge">{{ ucfirst($order->status) }}</span>
             </div>
         </div>

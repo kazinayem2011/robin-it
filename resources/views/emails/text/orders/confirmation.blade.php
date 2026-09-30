@@ -12,7 +12,7 @@ email as soon as it ships.
 ORDER SUMMARY
 -------------
 Order number: #{{ $order->order_number }}
-Placed:       {{ $order->created_at->format('d M Y, g:i A') }}
+Placed:       {{ \App\Support\ShopDate::show($order->created_at, 'd M Y, g:i A') }}
 Payment:      Cash on Delivery
 
 ITEMS

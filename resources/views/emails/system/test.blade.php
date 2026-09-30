@@ -19,7 +19,7 @@
            style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
         <tr>
             <td style="padding:18px 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:22px; color:#475569;">
-                <strong style="color:#0f172a;">Sent:</strong> {{ now()->format('d M Y, g:i A') }}<br>
+                <strong style="color:#0f172a;">Sent:</strong> {{ \App\Support\ShopDate::show(now(), 'd M Y, g:i A') }}<br>
                 <strong style="color:#0f172a;">Host:</strong> {{ config('mail.mailers.smtp.host') }}:{{ config('mail.mailers.smtp.port') }}<br>
                 <strong style="color:#0f172a;">From:</strong> {{ config('mail.from.address') }}
             </td>
