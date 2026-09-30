@@ -10,6 +10,7 @@ const newVariant = () => ({
     id: null,
     options: {},
     sku: '',
+    mpn: '',
     image_url: '',
     images: [],
     reorder_level: '',
@@ -246,6 +247,20 @@ export default function VariantEditor({
                                     }
                                     placeholder="Optional"
                                     error={rowError(index, 'sku')}
+                                />
+
+                                {/* The maker's part number for this option,
+                                    which the shop page shows when it is
+                                    chosen — StarTech swaps it the same way. */}
+                                <FormInput
+                                    label="MPN"
+                                    value={variant.mpn || ''}
+                                    onChange={(e) =>
+                                        patchVariant(variant.key, {
+                                            mpn: e.target.value,
+                                        })
+                                    }
+                                    placeholder="Part no."
                                 />
 
                                 <FormInput

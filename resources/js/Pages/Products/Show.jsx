@@ -957,6 +957,17 @@ export default function ProductDetails(props) {
                                 </span>
                             </div>
 
+                            {/* The maker's part number — the chosen option's
+                                when it has one, as StarTech swaps it. */}
+                            {(selectedVariant?.mpn || product.mpn) && (
+                                <div className="meta-item">
+                                    <span className="meta-label">MPN:</span>
+                                    <span className="meta-value">
+                                        {selectedVariant?.mpn || product.mpn}
+                                    </span>
+                                </div>
+                            )}
+
                             {/* Only when there is one. "Brand: N/A" is a
                                 chip that answers nothing and pushes the
                                 ones that do along. */}
@@ -1446,7 +1457,7 @@ export default function ProductDetails(props) {
                                         product.specifications || []
                                     }
                                     model={product.model}
-                                    mpn={product.mpn}
+                                    mpn={selectedVariant?.mpn || product.mpn}
                                 />
                             </section>
 

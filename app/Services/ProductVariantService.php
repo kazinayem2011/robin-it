@@ -288,7 +288,16 @@ class ProductVariantService
     {
         $options = $definition['options'] ?? [];
 
-        return [
+        /*
+         * The part number only when it is sent. Other callers pass an option
+         * without it — converting a product, a counter order — and that must
+         * not wipe what the product form wrote.
+         */
+        $mpn = array_key_exists('mpn', $definition)
+            ? ['mpn' => blank($definition['mpn']) ? null : trim((string) $definition['mpn'])]
+            : [];
+
+        return $mpn + [
             'name' => trim((string) ($definition['name'] ?? '')) ?: ProductVariant::labelFor($options),
             'sku' => blank($definition['sku'] ?? null) ? null : trim((string) $definition['sku']),
             'options' => $options,

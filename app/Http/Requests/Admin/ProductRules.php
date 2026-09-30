@@ -287,6 +287,9 @@ class ProductRules
             'variants.*.options' => 'nullable|array',
             'variants.*.name' => 'nullable|string|max:180',
             'variants.*.sku' => 'nullable|string|max:80',
+            // The maker's part number for this option, shown on the page when
+            // it is chosen — see the product's own `mpn`.
+            'variants.*.mpn' => 'nullable|string|max:120',
             // 16GB and 32GB of the same stick are different boxes with
             // different numbers, so a variant carries its own.
             'variants.*.barcode' => 'nullable|string|max:64',
