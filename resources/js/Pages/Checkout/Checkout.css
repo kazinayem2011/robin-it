@@ -20,6 +20,12 @@
     gap: 28px;
 }
 
+/* A column may be narrower than its widest line, so nothing on a phone
+   pushes the page sideways. */
+.checkout-grid > * {
+    min-width: 0;
+}
+
 @media (max-width: 992px) {
     .checkout-grid {
         grid-template-columns: 1fr;
@@ -89,6 +95,7 @@
 .cart-item-info {
     margin-left: 16px;
     flex: 1;
+    min-width: 0;
 }
 
 .cart-item-name {
@@ -149,7 +156,7 @@
     font-size: 0.95rem;
     color: var(--text-primary);
     min-width: 100px;
-    textalign: right;
+    text-align: right;
     font-family: var(--font-heading);
 }
 
@@ -169,6 +176,33 @@
 
 .cart-item-remove-btn:hover {
     background: var(--danger-light);
+}
+
+/* On a phone a line wraps: photo and name on top, then quantity, price
+   and remove underneath. The table header has nothing to label then. */
+@media (max-width: 600px) {
+    .cart-table-header {
+        display: none;
+    }
+
+    .cart-item-row {
+        flex-wrap: wrap;
+        row-gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .cart-item-info {
+        flex-basis: calc(100% - 86px);
+    }
+
+    .cart-qty-control {
+        margin-left: 86px;
+    }
+
+    .cart-item-total {
+        margin-left: auto;
+        min-width: 0;
+    }
 }
 
 /* Summary Card */

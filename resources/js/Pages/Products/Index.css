@@ -173,16 +173,19 @@
         padding: 8px 12px;
     }
 
+    /* The whole next row, not just what the two need. Without it the pair
+       sat in about 210px and neither box had room to show its value. */
     .plp-results-controls {
+        flex: 1 1 100%;
         gap: 10px;
     }
 
-    .plp-control {
+    /* Show holds two digits and keeps its size; Sort By takes the rest. */
+    .plp-control:has(.plp-sort-select) {
         flex: 1 1 0;
     }
 
-    .plp-control .plp-sort-select,
-    .plp-control .plp-show-select {
+    .plp-control .plp-sort-select {
         flex: 1 1 auto;
         width: auto;
         min-width: 0;
