@@ -627,6 +627,7 @@ function WriteOrderModal({
                                 <td>{l.name}</td>
                                 <td className="po-num">
                                     <input
+                                        placeholder="Qty"
                                         type="number"
                                         min={Math.max(1, l.received || 0)}
                                         aria-label={`How many ${l.name}`}

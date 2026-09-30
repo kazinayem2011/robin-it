@@ -436,6 +436,7 @@ export default function AdminBanners({ banners = [] }) {
 
                             <div className="admin-form-grid-2">
                                 <FormInput
+                                    placeholder="e.g. 1"
                                     label={`Order among ${formType.tab.toLowerCase()}`}
                                     name="sort_order"
                                     type="number"

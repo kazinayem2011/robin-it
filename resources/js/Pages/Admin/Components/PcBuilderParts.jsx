@@ -510,6 +510,7 @@ function PartForm({ part, icons, onClose, onSaved }) {
 
             <div className="admin-grid-equal-2col">
                 <FormInput
+                    placeholder="e.g. 1"
                     label="A customer can choose up to"
                     name="part_max"
                     type="number"

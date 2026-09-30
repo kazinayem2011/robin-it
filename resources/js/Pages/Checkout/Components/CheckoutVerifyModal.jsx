@@ -217,6 +217,7 @@ export default function CheckoutVerifyModal({
                                 name="password"
                                 type="password"
                                 label="Password"
+                                placeholder="Enter your account password"
                                 icon={Lock}
                                 value={password}
                                 onChange={(event) =>

@@ -318,9 +318,14 @@ export default function AdminStaff({ staff = [], roles = [], stores = [] }) {
                             type="password"
                             formik={formik}
                             required={!editing}
-                            placeholder={editing ? 'Leave blank to keep' : ''}
+                            placeholder={
+                                editing
+                                    ? 'Leave blank to keep'
+                                    : 'At least 8 characters'
+                            }
                         />
                         <FormInput
+                            placeholder="Re-enter the password"
                             label="Confirm password"
                             name="password_confirmation"
                             type="password"

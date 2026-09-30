@@ -172,6 +172,7 @@ export default function EditOrderModal({ order, onClose, onDone }) {
                             <td className="po-num">{formatBdt(l.price)}</td>
                             <td className="po-num">
                                 <input
+                                    placeholder="Qty"
                                     type="number"
                                     min="0"
                                     value={l.quantity}

@@ -614,6 +614,7 @@ export const ImageCropperModal = ({
                                             onChange={(e) =>
                                                 setCustomWidth(e.target.value)
                                             }
+                                            placeholder="Width"
                                             min={50}
                                             max={3840}
                                         />
@@ -627,6 +628,7 @@ export const ImageCropperModal = ({
                                             onChange={(e) =>
                                                 setCustomHeight(e.target.value)
                                             }
+                                            placeholder="Height"
                                             min={50}
                                             max={3840}
                                         />

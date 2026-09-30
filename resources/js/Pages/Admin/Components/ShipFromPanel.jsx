@@ -208,6 +208,7 @@ function ShipFromLine({ line, saving, split, onSplit, onSave }) {
                                 </small>
                             </span>
                             <input
+                                placeholder="0"
                                 type="number"
                                 min="0"
                                 max={b.available}

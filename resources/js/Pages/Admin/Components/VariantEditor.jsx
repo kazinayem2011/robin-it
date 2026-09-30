@@ -263,6 +263,7 @@ export default function VariantEditor({
 
                                 {canEnterOpeningStock ? (
                                     <FormInput
+                                        placeholder="0"
                                         label={
                                             isConverting
                                                 ? 'Units'

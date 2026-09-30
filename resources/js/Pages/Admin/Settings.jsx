@@ -619,6 +619,7 @@ export default function AdminSettings({
                             <div>
                                 <div className="form-row-2col">
                                     <FormInput
+                                        placeholder="e.g. 70"
                                         label="Delivery Inside Dhaka (৳ BDT)"
                                         name="shipping_inside_dhaka"
                                         type="number"
@@ -626,6 +627,7 @@ export default function AdminSettings({
                                         formik={formik}
                                     />
                                     <FormInput
+                                        placeholder="e.g. 130"
                                         label="Delivery Outside Dhaka (৳ BDT)"
                                         name="shipping_outside_dhaka"
                                         type="number"

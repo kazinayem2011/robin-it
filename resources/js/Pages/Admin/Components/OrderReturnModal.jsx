@@ -171,6 +171,7 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
                                     </td>
                                     <td>
                                         <FormInput
+                                            placeholder="0"
                                             type="number"
                                             min="0"
                                             max={left}
@@ -187,6 +188,7 @@ export default function OrderReturnModal({ order, onClose, onSaved }) {
                                     </td>
                                     <td>
                                         <FormInput
+                                            placeholder="0"
                                             type="number"
                                             min="0"
                                             max={left}

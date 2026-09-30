@@ -59,6 +59,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     required
                     label="Current Password"
                     type="password"
+                    placeholder="Enter your current password"
                     value={formik.values.current_password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -75,6 +76,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     required
                     label="New Password (Min. 8 Characters)"
                     type="password"
+                    placeholder="Create a strong password"
                     value={formik.values.password}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -88,6 +90,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     required
                     label="Confirm New Password"
                     type="password"
+                    placeholder="Re-enter the new password"
                     value={formik.values.password_confirmation}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}

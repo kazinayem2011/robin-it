@@ -413,6 +413,7 @@ export default function NewOrderModal({
                                 <td className="po-num">{formatBdt(l.price)}</td>
                                 <td className="po-num">
                                     <input
+                                        placeholder="Qty"
                                         type="number"
                                         min="1"
                                         value={l.quantity}

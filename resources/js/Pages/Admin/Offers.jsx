@@ -337,6 +337,7 @@ export default function AdminOffers({ offers = [] }) {
                                 />
 
                                 <FormInput
+                                    placeholder="e.g. 1"
                                     label="Order On The Page"
                                     name="sort_order"
                                     type="number"

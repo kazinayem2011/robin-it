@@ -137,6 +137,7 @@ export default function RefundOrderModal({
                 <form onSubmit={formik.handleSubmit} noValidate>
                     <div className="admin-grid-equal-2col">
                         <FormInput
+                            placeholder="e.g. 500"
                             label="Amount (৳ BDT)"
                             name="amount"
                             type="number"

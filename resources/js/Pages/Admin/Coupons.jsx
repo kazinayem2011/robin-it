@@ -281,6 +281,7 @@ export default function AdminCoupons({
                                 />
 
                                 <FormInput
+                                    placeholder="e.g. 10"
                                     label="Discount Value"
                                     name="discount_value"
                                     type="number"
@@ -291,12 +292,14 @@ export default function AdminCoupons({
 
                             <div className="admin-form-grid-2">
                                 <FormInput
+                                    placeholder="e.g. 5000"
                                     label="Minimum Spend (৳)"
                                     name="min_spend"
                                     type="number"
                                     formik={formik}
                                 />
                                 <FormInput
+                                    placeholder="e.g. 1000"
                                     label="Max Discount Cap (৳)"
                                     name="max_discount"
                                     type="number"

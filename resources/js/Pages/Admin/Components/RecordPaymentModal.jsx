@@ -126,6 +126,7 @@ export default function RecordPaymentModal({
                 <form onSubmit={formik.handleSubmit} noValidate>
                     <div className="admin-grid-equal-2col">
                         <FormInput
+                            placeholder="e.g. 5000"
                             label="Amount received"
                             name="amount"
                             type="number"

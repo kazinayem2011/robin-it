@@ -248,6 +248,7 @@ export default function MessageTemplates({
                     <div className="tpl-editor">
                         {kind === 'email' && (
                             <FormInput
+                                placeholder="The email subject line"
                                 label="Subject"
                                 name="subject"
                                 value={draft.subject}
@@ -309,6 +310,7 @@ export default function MessageTemplates({
                         ) : (
                             <>
                                 <textarea
+                                    placeholder="Write the message here"
                                     className="tpl-sms-box"
                                     value={draft.body}
                                     rows={5}

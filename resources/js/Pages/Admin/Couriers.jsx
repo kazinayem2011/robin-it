@@ -488,6 +488,7 @@ function ZoneMappingModal({ courier, rows, onClose }) {
 
                 {usesArea ? (
                     <FormInput
+                        placeholder="e.g. 52"
                         label="Area ID"
                         name="zone_area_id"
                         required
@@ -497,12 +498,14 @@ function ZoneMappingModal({ courier, rows, onClose }) {
                 ) : (
                     <>
                         <FormInput
+                            placeholder="e.g. 1"
                             label="City ID"
                             name="zone_city_id"
                             value={cityId}
                             onChange={(e) => setCityId(e.target.value)}
                         />
                         <FormInput
+                            placeholder="e.g. 298"
                             label="Zone ID"
                             name="zone_zone_id"
                             value={zoneId}

@@ -61,6 +61,7 @@ export default function UpdateProfileInformation({
                     name="name"
                     required
                     label="Full Name"
+                    placeholder="e.g. Rahim Chowdhury"
                     value={formik.values.name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -74,6 +75,7 @@ export default function UpdateProfileInformation({
                     required
                     label="Email Address"
                     type="email"
+                    placeholder="name@example.com"
                     value={formik.values.email}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}

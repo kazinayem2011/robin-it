@@ -1697,6 +1697,7 @@ export default function Products({
                                         helperText="Blank runs until you change it."
                                     />
                                     <FormInput
+                                        placeholder="e.g. 1"
                                         id="min_order_quantity"
                                         name="min_order_quantity"
                                         type="number"

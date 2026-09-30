@@ -639,6 +639,7 @@ function ReceiveLine({
             </div>
 
             <FormInput
+                placeholder="0"
                 id={`receive-arrived-${line.key}`}
                 label="Arrived"
                 type="number"
@@ -649,6 +650,7 @@ function ReceiveLine({
             />
 
             <FormInput
+                placeholder="e.g. 1500"
                 id={`receive-cost-${line.key}`}
                 label="Cost each (৳)"
                 type="number"
@@ -709,6 +711,7 @@ function ReceiveLine({
                         <label key={s.id}>
                             <span>{s.name}</span>
                             <input
+                                placeholder="0"
                                 type="number"
                                 min="0"
                                 className="auth-text-input"

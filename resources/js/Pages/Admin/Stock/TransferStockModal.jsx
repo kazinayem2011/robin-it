@@ -243,6 +243,7 @@ export default function TransferStockModal({
                 </div>
 
                 <FormInput
+                    placeholder="e.g. 1"
                     label="How many"
                     name="quantity"
                     type="number"
