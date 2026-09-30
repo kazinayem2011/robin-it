@@ -234,6 +234,13 @@ class MessageTemplateSeeder extends Seeder
                 'hint' => 'For someone who pressed Notify me and left a mobile number. Adding {product_url} usually makes it three parts.',
                 'body' => '({shop_name}) {product_name} আবার স্টকে এসেছে। এখনই অর্ডার করুন।',
             ],
+            [
+                'key' => 'staff_signin_changed',
+                'name' => 'Staff sign-in changed (to the owner)',
+                'group' => 'Account',
+                'hint' => 'Texted to the owner when a staff or admin password, email or mobile changes. Never sent to customers. Keep it to two parts; with a long name {changed_by} is dropped to fit.',
+                'body' => '({shop_name}) লগইন বদলেছে: {staff_name}-এর {changed}, {changed_at}, করেছেন {changed_by}। অজানা হলে Staff পেজ দেখুন।',
+            ],
         ];
     }
 }

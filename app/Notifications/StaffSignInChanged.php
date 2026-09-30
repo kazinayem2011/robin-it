@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\User;
 use App\Support\BrandDetails;
 use App\Support\Roles;
+use App\Support\SmsTemplates;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -30,6 +31,8 @@ class StaffSignInChanged extends ShopNotification implements ShouldQueue
         public readonly array $before,
         public readonly string $by,
         public readonly string $when,
+        public readonly string $byBn = '',
+        public readonly string $whenShort = '',
     ) {}
 
     /** @return array<int, string> */
@@ -113,10 +116,28 @@ class StaffSignInChanged extends ShopNotification implements ShouldQueue
             ->action('Open Staff', url('/admin/staff'));
     }
 
-    /** The text, kept to one or two messages. */
+    /**
+     * The text, in Bengali — the gateway refuses English alone — and within
+     * two parts. See SmsTemplates::staffSignInChanged().
+     */
     public function sms(): string
     {
-        return '('.BrandDetails::name().') Sign-in changed: '.$this->who().' - '
-            .$this->what().", {$this->when}, by {$this->by}. Not you? Check Admin > Staff now.";
+        $words = array_map(fn ($f) => match ($f) {
+            'password' => 'পাসওয়ার্ড',
+            'email' => 'ইমেইল',
+            'phone' => 'মোবাইল',
+        }, $this->changed);
+
+        $changed = count($words) > 1
+            ? implode(', ', array_slice($words, 0, -1)).' ও '.end($words)
+            : $words[0];
+
+        return SmsTemplates::staffSignInChanged(
+            BrandDetails::name(),
+            $this->account->name,
+            $changed,
+            $this->whenShort ?: $this->when,
+            $this->byBn ?: $this->by,
+        );
     }
 }

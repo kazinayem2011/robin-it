@@ -74,8 +74,33 @@ class StaffSignInChangeAlertTest extends TestCase
         $this->sms->shouldHaveReceived('sendEvent')->with(
             'staff_signin_changed',
             '01818176783',
-            Mockery::on(fn ($t) => str_contains($t, 'Nazmul (Manager)') && str_contains($t, 'password') && SmsService::parts($t) <= 2)
+            Mockery::on(fn ($t) => str_contains($t, 'লগইন বদলেছে')
+                && str_contains($t, 'Nazmul-এর পাসওয়ার্ড')
+                && str_contains($t, 'করেছেন Robin')
+                && SmsService::parts($t) <= 2)
         )->once();
+    }
+
+    /**
+     * The gateway's rule, which the first version broke: Bengali, or Bengali
+     * mixed with English — never English alone — opening with the shop's name
+     * in brackets, and two parts at most however long the name.
+     */
+    public function test_the_text_is_bengali_opens_with_the_shop_and_fits_two_parts(): void
+    {
+        $long = User::factory()->create(['name' => 'Mohammad Abdullah Al Mamun Chowdhury', 'email' => 'long@shop.test']);
+        $long->forceFill(['role' => 'storekeeper'])->save();
+
+        $long->forceFill(['password' => Hash::make('New-Passw0rd!'), 'email' => 'new-long@shop.test', 'phone' => '01711999999'])->save();
+
+        Notification::assertSentTo($this->owner, StaffSignInChanged::class, function ($n) {
+            $text = $n->sms();
+
+            return preg_match('/\p{Bengali}/u', $text) === 1
+                && str_starts_with($text, '(')
+                && str_contains($text, 'পাসওয়ার্ড, ইমেইল ও মোবাইল')
+                && SmsService::parts($text) <= 2;
+        });
     }
 
     /** The case that started this: the owner's own password. */

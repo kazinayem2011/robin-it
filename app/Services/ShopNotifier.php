@@ -150,16 +150,21 @@ class ShopNotifier
     {
         $actor = auth()->user();
 
-        $by = match (true) {
-            $actor && $actor->id === $account->id => $account->name.' (from their own account)',
-            (bool) $actor => $actor->name,
-            app()->runningInConsole() => 'the server, with nobody signed in',
-            default => 'a password reset link or code',
+        // Who, for the bell and the email; and the same in Bengali for the
+        // text, which the gateway will not carry in English alone.
+        [$by, $byBn] = match (true) {
+            $actor && $actor->id === $account->id => [$account->name.' (from their own account)', 'নিজে'],
+            (bool) $actor => [$actor->name, $actor->name],
+            app()->runningInConsole() => ['the server, with nobody signed in', 'সার্ভার থেকে'],
+            default => ['a password reset link or code', 'রিসেট লিংক/কোডে'],
         };
 
         // The shop's clock: stored times are UTC, and the first alert on live
         // said 9:30 AM for a change made at 3:30 in the afternoon.
-        $notice = new StaffSignInChanged($account, $changed, $before, $by, ShopDate::show(now(), 'j M Y, g:i A'));
+        $notice = new StaffSignInChanged(
+            $account, $changed, $before, $by, ShopDate::show(now(), 'j M Y, g:i A'),
+            $byBn, ShopDate::show(now(), 'j M, g:i A'),
+        );
 
         $owners = User::query()
             ->where('role', User::ROLE_ADMIN)

@@ -343,6 +343,55 @@ class SmsTemplates
         return "({$shop}) {$code} {$what} কোড। {$minutes} মিনিট বৈধ। কাউকে দেবেন না।";
     }
 
+    /**
+     * To the owner: a staff or admin sign-in changed.
+     *
+     * It went out in English first, which is exactly what the gateway's rule
+     * forbids. "লগইন বদলেছে" — sign-in changed — then whose, what, when and
+     * by whom, and "অজানা হলে Staff পেজ দেখুন": if you do not know of it,
+     * look at the Staff page. Names and the time stay as written.
+     *
+     * Two parts at most, like the rest. A long name can push it over, and
+     * then the "by whom" goes — the bell and the email still carry it.
+     */
+    public static function staffSignInChanged(string $shop, string $staff, string $changed, string $at, string $by): string
+    {
+        $values = [
+            'shop_name' => $shop,
+            'staff_name' => $staff,
+            'changed' => $changed,
+            'changed_at' => $at,
+            'changed_by' => $by,
+        ];
+
+        $full = self::stored('staff_signin_changed', $values,
+            "({$shop}) লগইন বদলেছে: {$staff}-এর {$changed}, {$at}, করেছেন {$by}। অজানা হলে Staff পেজ দেখুন।");
+
+        if (SmsService::parts($full) <= 2) {
+            return $full;
+        }
+
+        /*
+         * Shorter and shorter until it fits: without who did it, then without
+         * the time, then "লগইন তথ্য" (sign-in details) for the list of what
+         * changed — and last, the name itself cut short. The bell and the email
+         * still say everything.
+         */
+        $candidates = [
+            fn ($name) => "({$shop}) লগইন বদলেছে: {$name}-এর {$changed}, {$at}। অজানা হলে Staff পেজ দেখুন।",
+            fn ($name) => "({$shop}) লগইন বদলেছে: {$name}-এর {$changed}। অজানা হলে Staff পেজ দেখুন।",
+            fn ($name) => "({$shop}) {$name}-এর লগইন তথ্য বদলেছে। অজানা হলে Staff পেজ দেখুন।",
+        ];
+
+        foreach ($candidates as $make) {
+            if (SmsService::parts($text = $make($staff)) <= 2) {
+                return $text;
+            }
+        }
+
+        return $candidates[2](Str::limit($staff, 30, '…'));
+    }
+
     /** What the shop is owed, when a delivery is going out unpaid. */
     public static function paymentDue(Order $order, float $due, string $shop): string
     {

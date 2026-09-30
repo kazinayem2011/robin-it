@@ -67,6 +67,7 @@ class MessageKeys
         'returned' => ['shop_name', 'order_number'],
         'refund' => ['shop_name', 'order_number', 'amount'],
         'back_in_stock' => ['shop_name', 'product_name', 'product_url'],
+        'staff_signin_changed' => ['shop_name', 'staff_name', 'changed', 'changed_at', 'changed_by'],
     ];
 
     /** @return list<string> */
