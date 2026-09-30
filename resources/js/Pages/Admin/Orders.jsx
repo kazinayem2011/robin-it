@@ -227,7 +227,25 @@ export default function Orders({
                  * one nobody had paid a taka on.
                  */
                 const paid = paidOn(order);
+                const refunded = refundedOn(order);
                 const due = dueOn(order);
+
+                /*
+                 * Nothing owed is not the same as paid. It read "Paid" for an
+                 * order refunded in full, and for a cancelled one nobody paid
+                 * a taka on.
+                 */
+                const settled =
+                    paid <= 0
+                        ? { text: 'Nothing owed', neutral: true }
+                        : refunded >= paid
+                          ? { text: 'Refunded', neutral: true }
+                          : refunded > 0
+                            ? {
+                                  text: `Paid · ${formatBdt(refunded)} refunded`,
+                                  neutral: false,
+                              }
+                            : { text: 'Paid', neutral: false };
 
                 return (
                     <div>
@@ -241,7 +259,11 @@ export default function Orders({
                                     : 'Nothing paid yet'}
                             </div>
                         ) : (
-                            <div className="admin-order-settled">Paid</div>
+                            <div
+                                className={`admin-order-settled${settled.neutral ? ' is-neutral' : ''}`}
+                            >
+                                {settled.text}
+                            </div>
                         )}
                     </div>
                 );

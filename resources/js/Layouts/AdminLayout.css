@@ -4149,6 +4149,11 @@ a.admin-card:hover,
     color: var(--success-ink);
 }
 
+/* Refunded, or never paid and owing nothing: settled, but not "Paid". */
+.admin-order-settled.is-neutral {
+    color: var(--text-muted);
+}
+
 /* The running total in the record-payment modal. */
 .pay-summary {
     display: grid;

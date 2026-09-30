@@ -152,7 +152,7 @@
                     <strong>{{ $order->payment_method === 'COD' ? 'Cash on delivery' : $order->payment_method }}</strong>
                     {{-- From the amounts, not the stored flag: "Partial" and
                          "Unpaid" were raw words, and could disagree with them. --}}
-                    {{ ['paid' => 'Paid', 'partial' => 'Part paid', 'unpaid' => 'Unpaid'][$order->payment_state] ?? ucfirst($order->payment_state) }}
+                    {{ ['paid' => 'Paid', 'partial' => 'Part paid', 'unpaid' => 'Unpaid', 'refunded' => 'Refunded'][$order->payment_state] ?? ucfirst($order->payment_state) }}
                 </p>
             </div>
         </div>
@@ -243,7 +243,7 @@
             @endif
             @if ($order->refunded_total > 0)
                 <tr>
-                    <td>Given back</td>
+                    <td>Refunded</td>
                     <td class="num">−৳{{ number_format($order->refunded_total, 2) }}</td>
                 </tr>
             @endif

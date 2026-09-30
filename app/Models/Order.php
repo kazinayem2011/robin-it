@@ -294,6 +294,12 @@ class Order extends Model
             return 'unpaid';
         }
 
+        // Everything that came in went back out. Nothing is owed, but it is
+        // not "paid" either — the list and the invoice both said so.
+        if ($this->isFullyRefunded() && $this->amount_due <= 0) {
+            return 'refunded';
+        }
+
         if ($this->amount_due <= 0) {
             return 'paid';
         }

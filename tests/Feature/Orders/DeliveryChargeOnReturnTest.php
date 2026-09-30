@@ -81,6 +81,16 @@ class DeliveryChargeOnReturnTest extends TestCase
         $this->assertTrue($order->delivery_refunded);
         $this->assertSame(0.0, $order->net_value);
         $this->assertSame(0.0, $order->amount_due);
+        // Nothing owed, but not "paid" — the list and the invoice said so.
+        $this->assertSame('refunded', $order->payment_state);
+    }
+
+    /** Part refunded with the delivery kept: paid, with a refund beside it. */
+    public function test_a_part_refund_is_still_paid(): void
+    {
+        $this->refund(4000, 'returned', false);
+
+        $this->assertSame('paid', $this->order->fresh()->payment_state);
     }
 
     public function test_delivery_goes_back_once_and_only_where_there_was_a_charge(): void
