@@ -115,6 +115,17 @@ class SerialCorrectionTest extends TestCase
         $this->serials->addToStock($this->product, null, ['SN-B'], $this->store->id);
     }
 
+    /**
+     * A branch holding none says that, not "every one of the 0 already has a
+     * serial", which is what someone saw after the form defaulted to the
+     * wrong branch.
+     */
+    public function test_a_branch_holding_none_says_to_choose_the_branch_that_does(): void
+    {
+        $this->expectExceptionMessage('That branch has none of this on the shelf. Choose the branch that holds it.');
+        $this->serials->addToStock($this->product, null, ['SN-A'], $this->store->id);
+    }
+
     /** A sold unit's serial no longer occupies a space on the shelf. */
     public function test_a_sold_unit_frees_its_place_for_a_new_serial(): void
     {

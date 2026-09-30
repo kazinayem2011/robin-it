@@ -18,6 +18,7 @@ import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
 import Select from '@/Components/Select';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { toast } from '@/Components/Toast';
 import { adminService } from '@/services';
 import { ROUTES } from '@/constants/endpoints';
@@ -279,6 +280,49 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
     }, [open, search, load]);
 
     /*
+     * Where the chosen product actually sits, and how many there still need
+     * a number.
+     *
+     * The product's figure is the whole shop's, and the branch box used to
+     * start on whichever branch sorted first. Choosing a laptop held only at
+     * Multiplan left Khulna selected, and the refusal that followed read
+     * "every one of the 0 in stock already has a serial".
+     */
+    const [holding, setHolding] = useState([]);
+
+    useEffect(() => {
+        if (!unit) {
+            setHolding([]);
+            return;
+        }
+
+        const [productId, variantId] = unit.split(':');
+        let live = true;
+
+        adminService
+            .getStockBranches(Number(productId), variantId || null)
+            .then((rows) => {
+                if (!live) return;
+                const need = rows.map((r) => ({
+                    ...r,
+                    missing: Math.max(0, r.quantity - (r.serials?.length ?? 0)),
+                }));
+                setHolding(need);
+                // Start on the branch with the most still to number.
+                const best = [...need].sort((a, b) => b.missing - a.missing)[0];
+                if (best?.missing > 0) setStoreId(best.store_id);
+            })
+            .catch(() => live && setHolding([]));
+
+        return () => {
+            live = false;
+        };
+    }, [unit]);
+
+    const at = (id) => holding.find((h) => String(h.store_id) === String(id));
+    const chosen = at(storeId);
+
+    /*
      * One per line, and blank lines dropped.
      *
      * People paste a column out of a supplier's spreadsheet, which brings
@@ -290,20 +334,27 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
         .map((s) => s.trim())
         .filter(Boolean);
 
+    /*
+     * Only what is on the shelf. Serials are checked against the units the
+     * branch holds, so a product with none can never take one — offering it
+     * only led to a refusal after the numbers were typed.
+     */
     const options = units.flatMap((p) =>
         p.has_variants && p.variants?.length
             ? p.variants
-                  .filter((v) => v.is_active)
+                  .filter((v) => v.is_active && v.stock_quantity > 0)
                   .map((v) => ({
                       value: `${p.id}:${v.id}`,
                       label: `${unitLabel(p, v)} — ${v.stock_quantity} in stock`,
                   }))
-            : [
-                  {
-                      value: `${p.id}:`,
-                      label: `${unitLabel(p)} — ${p.stock_quantity} in stock`,
-                  },
-              ],
+            : p.stock_quantity > 0
+              ? [
+                    {
+                        value: `${p.id}:`,
+                        label: `${unitLabel(p)} — ${p.stock_quantity} in stock`,
+                    },
+                ]
+              : [],
     );
 
     const submit = async () => {
@@ -358,24 +409,26 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
                 now on are best serialised as they arrive.
             </p>
 
-            <FormInput
-                label="Find a product"
-                name="serial_search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Type part of the name…"
-            />
-
-            <Select
+            {/*
+                One box: open it, type, pick. It was a search field above a
+                separate dropdown, and typing narrowed a list nobody could see
+                until they opened the dropdown — so the search looked broken.
+            */}
+            <SearchableSelect
                 label="Product"
                 name="serial_unit"
                 required
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                options={[
-                    { value: '', label: 'Choose a product…' },
-                    ...options,
-                ]}
+                onSearch={setSearch}
+                options={options}
+                placeholder="Choose a product…"
+                searchPlaceholder="Type part of the name…"
+                emptyText={
+                    search
+                        ? 'Nothing in stock matches that.'
+                        : 'Nothing in stock yet.'
+                }
             />
 
             {stores.length > 1 && (
@@ -385,10 +438,18 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
                     required
                     value={storeId}
                     onChange={(e) => setStoreId(e.target.value)}
-                    options={stores.map((s) => ({
-                        value: s.id,
-                        label: s.name,
-                    }))}
+                    options={stores.map((s) => {
+                        const h = at(s.id);
+                        return {
+                            value: s.id,
+                            label:
+                                unit && h
+                                    ? `${s.name} — ${h.quantity} on the shelf, ${h.missing} without a serial`
+                                    : unit
+                                      ? `${s.name} — none on the shelf`
+                                      : s.name,
+                        };
+                    })}
                 />
             )}
 
@@ -403,8 +464,14 @@ function AddSerialsModal({ open, stores, onClose, onSaved }) {
             />
 
             <p className="admin-field-hint">
-                {parsed.length} entered. Anything already on the books is
-                skipped and named back to you rather than duplicated.
+                {parsed.length} entered
+                {unit && chosen
+                    ? `, ${chosen.missing} can be added here`
+                    : unit
+                      ? ' — this branch has none of it; choose the branch that holds it'
+                      : ''}
+                . Anything already on the books is skipped and named back to you
+                rather than duplicated.
             </p>
         </Modal>
     );

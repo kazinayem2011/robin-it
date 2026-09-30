@@ -402,10 +402,14 @@ class SerialService
                 $room = max(0, $onShelf - $alreadyRecorded);
 
                 throw new StorefrontException(
-                    $room === 0
+                    $onShelf === 0
+                        ? ($storeId
+                            ? 'That branch has none of this on the shelf. Choose the branch that holds it.'
+                            : 'None of this is on the shelf, so there is nothing to add serials to.')
+                        : ($room === 0
                         ? "Every one of the {$onShelf} in stock already has a serial recorded."
                         : "Only {$room} of the {$onShelf} in stock still need a serial, and "
-                            .$fresh->count().' were entered.',
+                            .$fresh->count().' were entered.'),
                     422,
                     ApiCode::VALIDATION_ERROR
                 );
