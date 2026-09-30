@@ -6,6 +6,7 @@ import {
     HelpCircle,
     MessageSquare,
     PackageMinus,
+    ShieldAlert,
     Check,
     Undo2,
     Trash2,
@@ -31,6 +32,7 @@ const ICONS = {
     question: HelpCircle,
     message: MessageSquare,
     stock: PackageMinus,
+    staff: ShieldAlert,
 };
 
 /** Turns "order.placed" into "Order placed", so a kind added later needs no

@@ -49,6 +49,7 @@ class SmsService
         'sms_on_warranty_received',
         'sms_on_warranty_ready',
         'sms_on_warranty_rejected',
+        'sms_on_staff_signin_changed',
     ];
 
     public const PROVIDER_GREENWEB = 'greenweb';
@@ -123,6 +124,8 @@ class SmsService
             'hint' => 'When a repaired or replaced unit is ready to collect.'],
         'warranty_rejected' => ['label' => 'Warranty claim rejected', 'default' => true,
             'hint' => 'So the customer hears it from the shop rather than finding out at the counter.'],
+        'staff_signin_changed' => ['label' => 'Staff sign-in changed (to the owner)', 'default' => true,
+            'hint' => 'Texted to the owner when a staff or admin password, email or mobile changes, so a change nobody made is noticed at once. Never sent to customers.'],
     ];
 
     /**

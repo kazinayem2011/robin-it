@@ -6,6 +6,7 @@ import {
     MessageSquare,
     HelpCircle,
     PackageMinus,
+    ShieldAlert,
     CheckCheck,
 } from 'lucide-react';
 import axiosInstance from '../services/axiosInstance';
@@ -31,6 +32,7 @@ const ICONS = {
     question: HelpCircle,
     message: MessageSquare,
     stock: PackageMinus,
+    staff: ShieldAlert,
 };
 
 export default function NotificationBell({ userId }) {

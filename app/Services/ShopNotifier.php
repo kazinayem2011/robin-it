@@ -15,6 +15,7 @@ use App\Notifications\OrderPlaced;
 use App\Notifications\OrderStatusChanged;
 use App\Notifications\OrderUpdated;
 use App\Notifications\ProductQuestionAsked;
+use App\Notifications\StaffSignInChanged;
 use App\Notifications\StockRanLow;
 use App\Notifications\StockRequested;
 use App\Support\Roles;
@@ -131,6 +132,46 @@ class ShopNotifier
     public function orderUpdated(Order $order): void
     {
         $this->deliver('order updated', fn () => $order->user?->notify(new OrderUpdated($order)));
+    }
+
+    /**
+     * A staff or admin account's password, email or mobile changed.
+     *
+     * To the owners only — every active account with the owner role, the one
+     * whose account changed included, since that is exactly the case where a
+     * change nobody made matters most. Customers are never told about staff,
+     * and a customer's own change sends nothing.
+     *
+     * @param  array<int, string>  $changed
+     * @param  array<string, ?string>  $before
+     */
+    public function staffSignInChanged(User $account, array $changed, array $before): void
+    {
+        $actor = auth()->user();
+
+        $by = match (true) {
+            $actor && $actor->id === $account->id => $account->name.' (from their own account)',
+            (bool) $actor => $actor->name,
+            app()->runningInConsole() => 'the server, with nobody signed in',
+            default => 'a password reset link or code',
+        };
+
+        $notice = new StaffSignInChanged($account, $changed, $before, $by, now()->format('j M Y, g:i A'));
+
+        $owners = User::query()
+            ->where('role', User::ROLE_ADMIN)
+            ->where('is_active', true)
+            ->get();
+
+        $this->deliver('staff sign-in changed', function () use ($owners, $notice) {
+            Notification::send($owners, $notice);
+
+            $sms = app(SmsService::class);
+
+            foreach ($owners as $owner) {
+                $sms->sendEvent('staff_signin_changed', $owner->phone, $notice->sms());
+            }
+        });
     }
 
     /**

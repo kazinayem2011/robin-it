@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ShopNotifier;
 use App\Support\Roles;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -60,6 +61,37 @@ class User extends Authenticatable implements MustVerifyEmail
             'accepts_marketing' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * A staff sign-in changing is told to the owner, whatever changed it.
+     *
+     * Here rather than in the screens, because there are many ways in — the
+     * profile page, the Staff screen, a reset link, a reset by text — and an
+     * alert wired into some of them is an alert that misses the one that
+     * mattered.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (User $user) {
+            if (! Roles::isStaff($user->getOriginal('role') ?? $user->role)) {
+                return;
+            }
+
+            $changed = array_values(array_intersect(
+                ['password', 'email', 'phone'],
+                array_keys($user->getChanges())
+            ));
+
+            if ($changed === []) {
+                return;
+            }
+
+            app(ShopNotifier::class)->staffSignInChanged($user, $changed, [
+                'email' => $user->getOriginal('email'),
+                'phone' => $user->getOriginal('phone'),
+            ]);
+        });
     }
 
     /**

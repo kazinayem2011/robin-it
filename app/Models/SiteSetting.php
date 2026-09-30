@@ -157,6 +157,7 @@ class SiteSetting extends Model
             'sms_on_warranty_received',
             'sms_on_warranty_ready',
             'sms_on_warranty_rejected',
+            'sms_on_staff_signin_changed',
         ],
     ];
 
