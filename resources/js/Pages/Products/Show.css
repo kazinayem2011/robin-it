@@ -1185,7 +1185,7 @@
         box-shadow 0.15s ease;
 }
 
-.pdp-variant-chip:hover:not(:disabled) {
+.pdp-variant-chip:hover {
     border-color: var(--primary);
 }
 
@@ -1204,16 +1204,14 @@
     color: var(--text-subtle);
 }
 
+/*
+ * Sold out, but still an option to look at: readable and clickable, with the
+ * small red "Sold out" under the price saying the rest. It was faded and
+ * struck through, which read as "not a choice" — and a shopper could not open
+ * the configuration to see what it was.
+ */
 .pdp-variant-chip.is-out {
-    opacity: 0.55;
-    cursor: not-allowed;
     background: var(--state-wash);
-}
-
-/* Struck through rather than hidden, so the shopper can see the option exists
-   and is simply unavailable right now. */
-.pdp-variant-chip.is-out > span:first-child {
-    text-decoration: line-through;
 }
 
 .pdp-variant-out {

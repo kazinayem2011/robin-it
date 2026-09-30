@@ -1002,10 +1002,22 @@ export default function ProductDetails(props) {
                                             !product.allow_preorder;
 
                                         return (
+                                            /*
+                                             * Never disabled. A sold-out option
+                                             * still has a price and a spec to
+                                             * read, and the buy area below
+                                             * already turns into "Sold Out" /
+                                             * "Notify me" for it — greying the
+                                             * button out hid the configuration
+                                             * altogether.
+                                             */
                                             <button
                                                 key={variant.id}
                                                 type="button"
-                                                disabled={out}
+                                                aria-pressed={
+                                                    variant.id ===
+                                                    selectedVariantId
+                                                }
                                                 className={`pdp-variant-chip ${
                                                     variant.id ===
                                                     selectedVariantId

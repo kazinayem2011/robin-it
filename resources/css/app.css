@@ -2516,6 +2516,12 @@ textarea.has-error:focus,
     white-space: nowrap;
 }
 
+/*
+ * The whole name, as StarTech's cards show it. Two lines cut a laptop's name
+ * before the processor and screen, which is the part a shopper compares by.
+ * The two-line floor stays, so a short name does not lift its card's price
+ * above the ones beside it.
+ */
 .product-title {
     font-size: 0.9rem;
     font-weight: 600;
@@ -2523,10 +2529,7 @@ textarea.has-error:focus,
     line-height: 1.35;
     margin-bottom: 8px;
     min-height: 2.7em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 
 .product-title a {
