@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -16,13 +15,10 @@ class ProductVariant extends Model
     protected $fillable = [
         'product_id', 'name', 'sku', 'barcode', 'options', 'price', 'discount_price',
         'stock_quantity', 'reorder_level', 'image_url', 'is_active', 'position',
-        'key_features', 'specifications',
     ];
 
     protected $casts = [
         'options' => 'array',
-        // Only the rows that differ from the product's; see the migration.
-        'specifications' => 'array',
         'price' => 'float',
         'discount_price' => 'float',
         'stock_quantity' => 'integer',
@@ -36,31 +32,6 @@ class ProductVariant extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    /** Cleaned on the way in, like the product's own: what is stored is safe to render. */
-    public function setKeyFeaturesAttribute(?string $value): void
-    {
-        $this->attributes['key_features'] = blank($value) ? null : RichText::clean($value);
-    }
-
-    /**
-     * Rows that say something, trimmed; none at all is stored as null so the
-     * page falls straight back to the product's table.
-     */
-    public function setSpecificationsAttribute($rows): void
-    {
-        $clean = collect(is_array($rows) ? $rows : [])
-            ->map(fn ($r) => [
-                'group' => trim((string) ($r['group'] ?? '')) ?: null,
-                'name' => trim((string) ($r['name'] ?? '')),
-                'value' => trim((string) ($r['value'] ?? '')),
-            ])
-            ->filter(fn ($r) => $r['name'] !== '' && $r['value'] !== '')
-            ->values()
-            ->all();
-
-        $this->attributes['specifications'] = $clean === [] ? null : json_encode($clean);
     }
 
     public function stockMovements()

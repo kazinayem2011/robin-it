@@ -3152,55 +3152,6 @@ a.admin-card:hover,
     min-width: 0;
 }
 
-/* What differs on one option: its own key features and spec rows. */
-.admin-variant-details {
-    grid-column: 1 / -1;
-    padding-top: 8px;
-    border-top: 1px dashed var(--border-light);
-}
-
-.admin-variant-details > summary {
-    cursor: pointer;
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    padding: 4px 0;
-}
-
-.admin-variant-details[open] > summary {
-    margin-bottom: 10px;
-}
-
-.admin-variant-details-count {
-    margin-left: 8px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--primary-ink);
-}
-
-.admin-variant-spec-head {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin: 4px 0 8px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.admin-variant-spec-row {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr 2fr auto;
-    gap: 8px;
-    align-items: end;
-}
-
-@media (max-width: 720px) {
-    .admin-variant-spec-row {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
 .admin-variant-values {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));

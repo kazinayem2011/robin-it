@@ -20,125 +20,6 @@ const newVariant = () => ({
     stock_quantity: 0,
 });
 
-const blankRow = () => ({
-    key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    group: '',
-    name: '',
-    value: '',
-});
-
-/**
- * What this option has that its siblings do not.
- *
- * Only the differences: a laptop's fifty shared spec rows are typed once on
- * the product, and each build adds the half-dozen that change — processor,
- * memory, webcam, weight. On the shop page a row here replaces the product's
- * row of the same name, and its key features replace the product's, when the
- * option is chosen. Folded away, because most options (a colour, a size)
- * differ in nothing but their name.
- */
-function OptionDetails({ variant, onChange }) {
-    const rows = variant.specifications || [];
-    const filled =
-        rows.filter((r) => r.name?.trim()).length +
-        (variant.key_features?.trim() ? 1 : 0);
-
-    const setRow = (key, patch) =>
-        onChange({
-            specifications: rows.map((r) =>
-                r.key === key ? { ...r, ...patch } : r,
-            ),
-        });
-
-    return (
-        <details className="admin-variant-details" open={filled > 0}>
-            <summary>
-                What&apos;s different on this option
-                {filled > 0 && (
-                    <span className="admin-variant-details-count">
-                        {filled} set
-                    </span>
-                )}
-            </summary>
-
-            <FormInput
-                label="Key features for this option"
-                type="textarea"
-                rows={4}
-                value={variant.key_features || ''}
-                onChange={(e) => onChange({ key_features: e.target.value })}
-                placeholder={
-                    'One per line. Leave empty to use the product’s.\nProcessor: Intel Core i7-13620H (up to 4.9GHz)'
-                }
-                helperText="Shown instead of the product's key features when this option is chosen."
-            />
-
-            <div className="admin-variant-spec-head">
-                Spec rows that differ
-                <span className="admin-field-hint">
-                    A row here replaces the product&apos;s row with the same
-                    name; a new name is added to its group.
-                </span>
-            </div>
-
-            {rows.map((row) => (
-                <div className="admin-variant-spec-row" key={row.key}>
-                    <FormInput
-                        label="Group"
-                        value={row.group || ''}
-                        onChange={(e) =>
-                            setRow(row.key, { group: e.target.value })
-                        }
-                        placeholder="e.g. Processor"
-                    />
-                    <FormInput
-                        label="Name"
-                        value={row.name || ''}
-                        onChange={(e) =>
-                            setRow(row.key, { name: e.target.value })
-                        }
-                        placeholder="e.g. Processor Model"
-                    />
-                    <FormInput
-                        label="Value"
-                        value={row.value || ''}
-                        onChange={(e) =>
-                            setRow(row.key, { value: e.target.value })
-                        }
-                        placeholder="e.g. Core i7-13620H"
-                    />
-                    <button
-                        type="button"
-                        className="admin-receive-line-remove"
-                        title="Remove this row"
-                        onClick={() =>
-                            onChange({
-                                specifications: rows.filter(
-                                    (r) => r.key !== row.key,
-                                ),
-                            })
-                        }
-                    >
-                        <Trash2 size={15} />
-                    </button>
-                </div>
-            ))}
-
-            <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                icon={Plus}
-                onClick={() =>
-                    onChange({ specifications: [...rows, blankRow()] })
-                }
-            >
-                Add a spec row
-            </Button>
-        </details>
-    );
-}
-
 /**
  * Options on a product — "16GB / 32GB", "1TB / 2TB".
  *
@@ -454,13 +335,6 @@ export default function VariantEditor({
                                         emptyHint="Uses the product's photos."
                                     />
                                 </div>
-
-                                <OptionDetails
-                                    variant={variant}
-                                    onChange={(patch) =>
-                                        patchVariant(variant.key, patch)
-                                    }
-                                />
                             </div>
                         ))}
                     </div>

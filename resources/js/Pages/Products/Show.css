@@ -761,13 +761,6 @@
     border-bottom: 1px solid var(--border-color);
 }
 
-/* Which option the spec table below is describing. */
-.pdp-spec-for {
-    margin: -8px 0 16px;
-    font-size: 0.86rem;
-    color: var(--text-muted);
-}
-
 .pdp-details-heading::after {
     content: '';
     position: absolute;

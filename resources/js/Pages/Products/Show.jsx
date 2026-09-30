@@ -38,7 +38,6 @@ import { formatBdt } from '../../utils/formatters';
 import { stockStatusFor } from '../../utils/stockStatus';
 import { orderableCeiling } from '../../utils/orderable';
 import { photosOf } from '../../utils/productPhotos';
-import { optionSpecs } from '../../utils/optionSpecs';
 import { productSchemaFor } from '../../utils/productSchema';
 import { FacebookGlyph, WhatsAppGlyph } from '../../Components/BrandGlyphs';
 import siteConfig from '../../constants/siteConfig';
@@ -1074,16 +1073,10 @@ export default function ProductDetails(props) {
                                 Key Features
                             </h2>
 
-                            {/* The chosen option's own list when it has
-                                one — a Core i7 build's features are not the
-                                Core i5's. */}
-                            {selectedVariant?.key_features ||
-                            product.key_features ? (
+                            {product.key_features ? (
                                 <div
                                     dangerouslySetInnerHTML={{
-                                        __html:
-                                            selectedVariant?.key_features ||
-                                            product.key_features,
+                                        __html: product.key_features,
                                     }}
                                 />
                             ) : (
@@ -1448,21 +1441,10 @@ export default function ProductDetails(props) {
                                     Specification
                                 </h2>
 
-                                {/* Which build the table is describing, when
-                                    choosing one changed it. */}
-                                {selectedVariant?.specifications?.length >
-                                    0 && (
-                                    <p className="pdp-spec-for">
-                                        Showing the specification for{' '}
-                                        <strong>{selectedVariant.name}</strong>
-                                    </p>
-                                )}
-
                                 <ProductSpecifications
-                                    specifications={optionSpecs(
-                                        product.specifications || [],
-                                        selectedVariant?.specifications || [],
-                                    )}
+                                    specifications={
+                                        product.specifications || []
+                                    }
                                     model={product.model}
                                     mpn={product.mpn}
                                 />
