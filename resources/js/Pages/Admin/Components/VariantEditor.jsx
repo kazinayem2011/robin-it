@@ -4,6 +4,7 @@ import ImageGalleryEditor from '../../../Components/ImageGalleryEditor';
 import Checkbox from '../../../Components/Checkbox';
 import FormInput from '../../../Components/FormInput';
 import { Plus, Trash2 } from 'lucide-react';
+import { isColourName } from '../../../utils/optionColour';
 
 const newVariant = () => ({
     key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -11,6 +12,7 @@ const newVariant = () => ({
     options: {},
     sku: '',
     mpn: '',
+    swatch: '',
     image_url: '',
     images: [],
     reorder_level: '',
@@ -20,6 +22,58 @@ const newVariant = () => ({
     is_active: true,
     stock_quantity: 0,
 });
+
+/*
+ * A first guess from the name, so typing "Blue Titanium" fills the swatch in
+ * and most colours need no picking at all. The first word that is a colour
+ * wins; anything unknown is left for the picker.
+ */
+const COLOUR_GUESSES = {
+    black: '#1d1d1f',
+    midnight: '#1f2a44',
+    white: '#f5f5f0',
+    starlight: '#ede6da',
+    silver: '#c7c9cc',
+    grey: '#8e8e93',
+    gray: '#8e8e93',
+    graphite: '#4a4a4f',
+    titanium: '#8a8a8f',
+    natural: '#bfb5a6',
+    gold: '#d4b26a',
+    blue: '#3d5a80',
+    navy: '#1f3a5f',
+    red: '#c0392b',
+    green: '#2e7d32',
+    pink: '#f2b8c6',
+    purple: '#7e57c2',
+    yellow: '#f2c94c',
+    orange: '#e67e22',
+    brown: '#795548',
+    beige: '#d8c7a6',
+};
+
+export const guessSwatch = (value) =>
+    (value || '')
+        .toLowerCase()
+        .split(/[^a-z]+/)
+        .map((word) => COLOUR_GUESSES[word])
+        .find(Boolean) || '';
+
+const sameColour = (a, b) =>
+    (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+
+/*
+ * A control with no label of its own, lined up with the fields beside it: an
+ * empty label line on top, so its box starts where theirs do.
+ */
+const Unlabelled = ({ className = '', children }) => (
+    <div className={`auth-form-group ${className}`.trim()}>
+        <span className="auth-label" aria-hidden="true">
+            &nbsp;
+        </span>
+        {children}
+    </div>
+);
 
 /**
  * Options on a product — "16GB / 32GB", "1TB / 2TB".
@@ -94,6 +148,43 @@ export default function VariantEditor({
         setVariants(
             variants.map((v) => (v.key === key ? { ...v, ...patch } : v)),
         );
+
+    /*
+     * Typing a colour: the swatch another row already has for it, else a
+     * guess from the name — unless someone picked this row's swatch by hand,
+     * which a typo fix in the name must not undo.
+     */
+    const setColourValue = (variant, attribute, value) => {
+        const before = variant.options?.[attribute];
+        const picked = variant.swatch && variant.swatch !== guessSwatch(before);
+        const sibling = variants.find(
+            (v) =>
+                v.key !== variant.key &&
+                v.swatch &&
+                value.trim() &&
+                sameColour(v.options?.[attribute], value),
+        )?.swatch;
+
+        patchVariant(variant.key, {
+            options: { ...variant.options, [attribute]: value },
+            swatch: sibling || (picked ? variant.swatch : guessSwatch(value)),
+        });
+    };
+
+    // A picked swatch goes to every row of that colour: eight rows of
+    // storage × colour need four picks, not eight.
+    const setSwatch = (variant, attribute, swatch) => {
+        const colour = variant.options?.[attribute];
+
+        setVariants(
+            variants.map((v) =>
+                v.key === variant.key ||
+                (colour?.trim() && sameColour(v.options?.[attribute], colour))
+                    ? { ...v, swatch }
+                    : v,
+            ),
+        );
+    };
 
     const setAttributes = (raw) => {
         const names = raw
@@ -192,28 +283,88 @@ export default function VariantEditor({
                                 key={variant.key || variant.id}
                             >
                                 <div className="admin-variant-values">
-                                    {attributes.map((attribute) => (
-                                        <FormInput
-                                            key={attribute}
-                                            label={attribute}
-                                            value={
-                                                variant.options?.[attribute] ||
-                                                ''
-                                            }
-                                            onChange={(e) =>
-                                                patchVariant(variant.key, {
-                                                    options: {
-                                                        ...variant.options,
-                                                        [attribute]:
+                                    {attributes.map((attribute) =>
+                                        isColourName(attribute) ? (
+                                            <div
+                                                className="admin-variant-colour"
+                                                key={attribute}
+                                            >
+                                                <FormInput
+                                                    label={attribute}
+                                                    value={
+                                                        variant.options?.[
+                                                            attribute
+                                                        ] || ''
+                                                    }
+                                                    onChange={(e) =>
+                                                        setColourValue(
+                                                            variant,
+                                                            attribute,
                                                             e.target.value,
-                                                    },
-                                                })
-                                            }
-                                            placeholder={
-                                                index === 0 ? 'e.g. 32GB' : ''
-                                            }
-                                        />
-                                    ))}
+                                                        )
+                                                    }
+                                                    placeholder={
+                                                        index === 0
+                                                            ? 'e.g. Black'
+                                                            : ''
+                                                    }
+                                                />
+                                                {/* The colour shoppers see
+                                                    as a round swatch. */}
+                                                <Unlabelled>
+                                                    <span
+                                                        className={`admin-variant-swatch ${
+                                                            variant.swatch
+                                                                ? ''
+                                                                : 'is-empty'
+                                                        }`}
+                                                        title="Pick the colour shoppers see"
+                                                    >
+                                                        <input
+                                                            type="color"
+                                                            aria-label={`${attribute} swatch`}
+                                                            value={
+                                                                variant.swatch ||
+                                                                '#ffffff'
+                                                            }
+                                                            onChange={(e) =>
+                                                                setSwatch(
+                                                                    variant,
+                                                                    attribute,
+                                                                    e.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                        />
+                                                    </span>
+                                                </Unlabelled>
+                                            </div>
+                                        ) : (
+                                            <FormInput
+                                                key={attribute}
+                                                label={attribute}
+                                                value={
+                                                    variant.options?.[
+                                                        attribute
+                                                    ] || ''
+                                                }
+                                                onChange={(e) =>
+                                                    patchVariant(variant.key, {
+                                                        options: {
+                                                            ...variant.options,
+                                                            [attribute]:
+                                                                e.target.value,
+                                                        },
+                                                    })
+                                                }
+                                                placeholder={
+                                                    index === 0
+                                                        ? 'e.g. 32GB'
+                                                        : ''
+                                                }
+                                            />
+                                        ),
+                                    )}
                                 </div>
 
                                 <FormInput
@@ -306,25 +457,29 @@ export default function VariantEditor({
                                     </div>
                                 )}
 
-                                <button
-                                    type="button"
-                                    className="admin-receive-line-remove"
-                                    title={
-                                        variant.stock_quantity > 0
-                                            ? 'This option holds stock — it will be retired, not deleted'
-                                            : 'Remove this option'
-                                    }
-                                    disabled={variants.length === 1}
-                                    onClick={() =>
-                                        setVariants(
-                                            variants.filter(
-                                                (v) => v.key !== variant.key,
-                                            ),
-                                        )
-                                    }
-                                >
-                                    <Trash2 size={15} />
-                                </button>
+                                <Unlabelled>
+                                    <button
+                                        type="button"
+                                        className="admin-receive-line-remove admin-variant-remove"
+                                        aria-label="Remove this option"
+                                        title={
+                                            variant.stock_quantity > 0
+                                                ? 'This option holds stock — it will be retired, not deleted'
+                                                : 'Remove this option'
+                                        }
+                                        disabled={variants.length === 1}
+                                        onClick={() =>
+                                            setVariants(
+                                                variants.filter(
+                                                    (v) =>
+                                                        v.key !== variant.key,
+                                                ),
+                                            )
+                                        }
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
+                                </Unlabelled>
 
                                 {/* Options often differ visually — a white
                                     card looks nothing like the black one — so

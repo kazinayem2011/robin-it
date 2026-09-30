@@ -19,6 +19,8 @@ import Button from '../../Components/Button';
 import CountdownTimer from '../../Components/CountdownTimer';
 // The gallery renders <ProductImage> but never imported it, so the whole page
 // threw "ProductImage is not defined" and rendered nothing at all.
+import OptionSwatch from '../../Components/OptionSwatch';
+import { isColourName } from '../../utils/optionColour';
 import ProductImage from '../../Components/ProductImage';
 import ImageLightbox from '@/Components/ImageLightbox';
 import ProductDescription from '../../Components/ProductDescription';
@@ -749,6 +751,14 @@ export default function ProductDetails(props) {
         if (best) chooseVariant(best.id);
     };
 
+    // A colour's swatch, from whichever option of it has one set. Only a
+    // colour row: every option has a swatch, so a storage row would too.
+    const swatchFor = (name, value) =>
+        isColourName(name)
+            ? variants.find((v) => v.options?.[name] === value && v.swatch)
+                  ?.swatch
+            : null;
+
     // The option a value would lead to with the other rows as they are.
     const pairingFor = (name, value) =>
         variants.find((v) =>
@@ -1096,7 +1106,15 @@ export default function ProductDetails(props) {
                                                     )
                                                 }
                                             >
-                                                <span>{value}</span>
+                                                <span>
+                                                    <OptionSwatch
+                                                        color={swatchFor(
+                                                            group.name,
+                                                            value,
+                                                        )}
+                                                    />
+                                                    {value}
+                                                </span>
                                                 {out && (
                                                     <span className="pdp-variant-out">
                                                         Sold out
@@ -1162,7 +1180,14 @@ export default function ProductDetails(props) {
                                                               : 'Pre-order'
                                                     }
                                                 >
-                                                    <span>{variant.name}</span>
+                                                    <span>
+                                                        <OptionSwatch
+                                                            color={
+                                                                variant.swatch
+                                                            }
+                                                        />
+                                                        {variant.name}
+                                                    </span>
                                                     <span className="pdp-variant-price">
                                                         {formatBdt(
                                                             variant.effective_price,

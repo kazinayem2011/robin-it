@@ -65,6 +65,7 @@ describe('options in rows', () => {
         price,
         effective_price: price,
         in_stock: inStock,
+        swatch: colour.startsWith('Blue') ? '#3d5a80' : null,
         image_url: `/img/${colour.split(' ')[0].toLowerCase()}.jpg`,
         images: [],
     });
@@ -102,6 +103,18 @@ describe('options in rows', () => {
             name: 'Blue Titanium',
         });
         expect(screen.getByText('Color')).toBeInTheDocument();
+        // A colour with a swatch shows it; one without, and storage, do not.
+        expect(
+            screen
+                .getByRole('button', { name: '512GB' })
+                .querySelector('.option-swatch'),
+        ).toBeNull();
+        expect(blue.querySelector('.option-swatch')).not.toBeNull();
+        expect(
+            screen
+                .getByRole('button', { name: 'Natural Titanium' })
+                .querySelector('.option-swatch'),
+        ).toBeNull();
         expect(screen.queryByRole('button', { name: /512GB \// })).toBeNull();
 
         await user.click(blue);

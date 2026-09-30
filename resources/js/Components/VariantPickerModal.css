@@ -236,6 +236,9 @@
 }
 
 .variant-picker-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--vp-text);

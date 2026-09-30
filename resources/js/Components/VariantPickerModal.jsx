@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import Button from './Button';
+import OptionSwatch from './OptionSwatch';
 import { toast } from './Toast';
 import { cartService, productService } from '../services';
 import useAppStore from '../store/useAppStore';
@@ -215,6 +216,9 @@ export default function VariantPickerModal() {
                                             }
                                         >
                                             <span className="variant-picker-name">
+                                                <OptionSwatch
+                                                    color={variant.swatch}
+                                                />
                                                 {variant.name}
                                             </span>
                                             <span className="variant-picker-price">

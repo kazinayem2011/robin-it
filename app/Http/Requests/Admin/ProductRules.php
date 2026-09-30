@@ -290,6 +290,8 @@ class ProductRules
             // The maker's part number for this option, shown on the page when
             // it is chosen — see the product's own `mpn`.
             'variants.*.mpn' => 'nullable|string|max:120',
+            // The colour it is, as #rrggbb — what the colour picker gives.
+            'variants.*.swatch' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             // 16GB and 32GB of the same stick are different boxes with
             // different numbers, so a variant carries its own.
             'variants.*.barcode' => 'nullable|string|max:64',

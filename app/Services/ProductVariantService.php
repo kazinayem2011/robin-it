@@ -297,7 +297,12 @@ class ProductVariantService
             ? ['mpn' => blank($definition['mpn']) ? null : trim((string) $definition['mpn'])]
             : [];
 
-        return $mpn + [
+        // The swatch the same way: only the product form sends it.
+        $swatch = array_key_exists('swatch', $definition)
+            ? ['swatch' => blank($definition['swatch']) ? null : strtolower(trim((string) $definition['swatch']))]
+            : [];
+
+        return $mpn + $swatch + [
             'name' => trim((string) ($definition['name'] ?? '')) ?: ProductVariant::labelFor($options),
             'sku' => blank($definition['sku'] ?? null) ? null : trim((string) $definition['sku']),
             'options' => $options,

@@ -156,6 +156,7 @@ export const buildProductPayload = (values, editingProduct) => {
                 options: variant.options || {},
                 sku: variant.sku || null,
                 mpn: variant.mpn?.trim() || null,
+                swatch: variant.swatch || null,
                 image_url: variant.image_url || null,
                 /*
                  * The option's own photos. This builder names every field it
@@ -835,6 +836,7 @@ export default function Products({
                         options: v.options || {},
                         sku: v.sku || '',
                         mpn: v.mpn || '',
+                        swatch: v.swatch || '',
                         image_url: v.image_url || '',
                         reorder_level: v.reorder_level ?? '',
                         price: v.price ?? '',
