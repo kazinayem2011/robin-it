@@ -68,6 +68,17 @@ class PhonePasswordResetController extends Controller
 
         $this->otp->verify($phone, OtpCode::PURPOSE_PASSWORD_RESET, $request->string('code'));
 
+        /*
+         * A reset here signs the person straight in, so a suspended account
+         * would have walked back in through it. Asked after the code, so only
+         * the number's owner learns why, and the password is left alone.
+         */
+        if ($user->is_active === false) {
+            throw ValidationException::withMessages([
+                'phone' => 'This account has been suspended. Please contact us if you think that is a mistake.',
+            ]);
+        }
+
         $user->forceFill([
             'password' => Hash::make($request->string('password')),
             /*

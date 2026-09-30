@@ -211,6 +211,31 @@ class PhoneVerifiedSignupTest extends TestCase
     }
 
     /**
+     * A reset by text signs the person in, so it must not be a way round a
+     * suspension: refused with the reason, and the password left as it was.
+     */
+    public function test_a_suspended_account_cannot_get_back_in_by_resetting_by_text(): void
+    {
+        $user = User::factory()->create([
+            'phone' => '01712345678',
+            'password' => Hash::make('old-password'),
+        ]);
+        $user->forceFill(['is_active' => false])->save();
+
+        $this->postJson(route('otp.password'), ['phone' => '01712345678'])->assertOk();
+
+        $this->post(route('password.phone.store'), [
+            'phone' => '01712345678',
+            'code' => $this->lastCode(),
+            'password' => 'Br4nd-New-Passw0rd!',
+            'password_confirmation' => 'Br4nd-New-Passw0rd!',
+        ])->assertSessionHasErrors(['phone' => 'This account has been suspended. Please contact us if you think that is a mistake.']);
+
+        $this->assertGuest();
+        $this->assertTrue(Hash::check('old-password', $user->fresh()->password));
+    }
+
+    /**
      * The reply must be the same whether or not the number shops here.
      *
      * A different answer turns this endpoint into a way to ask "is this person
