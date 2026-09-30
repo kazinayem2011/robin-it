@@ -8,6 +8,7 @@ use App\Services\SmsService;
 use App\Support\Roles;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Mockery;
@@ -66,6 +67,10 @@ class StaffSignInChangeAlertTest extends TestCase
         });
         Notification::assertNotSentTo($manager, StaffSignInChanged::class);
 
+        // The text goes after the response; end the "request" to send it.
+        $this->sms->shouldNotHaveReceived('sendEvent');
+        $this->app->terminate();
+
         $this->sms->shouldHaveReceived('sendEvent')->with(
             'staff_signin_changed',
             '01818176783',
@@ -80,6 +85,16 @@ class StaffSignInChangeAlertTest extends TestCase
 
         Notification::assertSentTo($this->owner, StaffSignInChanged::class, fn ($n) => $n->account->is($this->owner)
             && $n->by === 'the server, with nobody signed in');
+    }
+
+    /** On the shop's clock, not UTC. */
+    public function test_the_time_is_the_shops_local_time(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-30 09:30:00', 'UTC'));
+
+        $this->owner->forceFill(['password' => Hash::make('Another-Passw0rd!')])->save();
+
+        Notification::assertSentTo($this->owner, StaffSignInChanged::class, fn ($n) => $n->when === '30 Sep 2026, 3:30 PM');
     }
 
     public function test_an_email_change_names_the_old_and_new_address(): void

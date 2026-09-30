@@ -19,6 +19,7 @@ use App\Notifications\StaffSignInChanged;
 use App\Notifications\StockRanLow;
 use App\Notifications\StockRequested;
 use App\Support\Roles;
+use App\Support\ShopDate;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -156,7 +157,9 @@ class ShopNotifier
             default => 'a password reset link or code',
         };
 
-        $notice = new StaffSignInChanged($account, $changed, $before, $by, now()->format('j M Y, g:i A'));
+        // The shop's clock: stored times are UTC, and the first alert on live
+        // said 9:30 AM for a change made at 3:30 in the afternoon.
+        $notice = new StaffSignInChanged($account, $changed, $before, $by, ShopDate::show(now(), 'j M Y, g:i A'));
 
         $owners = User::query()
             ->where('role', User::ROLE_ADMIN)
@@ -166,11 +169,17 @@ class ShopNotifier
         $this->deliver('staff sign-in changed', function () use ($owners, $notice) {
             Notification::send($owners, $notice);
 
-            $sms = app(SmsService::class);
+            /*
+             * The text once the page has answered. Sent inline, the gateway's
+             * reply held the save open — 8.8 seconds on live for one owner.
+             */
+            dispatch(function () use ($owners, $notice) {
+                $sms = app(SmsService::class);
 
-            foreach ($owners as $owner) {
-                $sms->sendEvent('staff_signin_changed', $owner->phone, $notice->sms());
-            }
+                foreach ($owners as $owner) {
+                    $sms->sendEvent('staff_signin_changed', $owner->phone, $notice->sms());
+                }
+            })->afterResponse();
         });
     }
 

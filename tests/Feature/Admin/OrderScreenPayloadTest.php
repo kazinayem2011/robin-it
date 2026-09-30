@@ -113,6 +113,10 @@ class OrderScreenPayloadTest extends TestCase
                 ->has('orders.data.0.refunds.0', fn ($refund) => $refund
                     ->where('amount', 5000)
                     ->where('reason', 'damaged')
+                    // And how it went back, and on which day: a ৳77,500
+                    // refund on live read "Given back" with neither.
+                    ->where('method_label', 'bKash')
+                    ->has('refunded_on')
                     ->has('created_at')
                     ->etc()
                 )

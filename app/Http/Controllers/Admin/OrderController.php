@@ -52,7 +52,9 @@ class OrderController extends Controller
              * amount alone was enough for the form and left the log reading
              * "Invalid Date · Refund".
              */
-            'refunds:id,order_id,amount,reason,created_at',
+            // With how and when: a refund line read "Given back" with no word
+            // on whether it went out as cash, bKash or a bank transfer.
+            'refunds:id,order_id,amount,method,reason,refunded_on,created_at',
             // And the payment form what is still owed.
             'payments',
         ])->latest();
