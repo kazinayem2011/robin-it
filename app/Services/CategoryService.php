@@ -43,37 +43,25 @@ class CategoryService
     /**
      * Active categories the menu leaves out because nothing is on them yet.
      *
-     * The mega menu hides a category with no products anywhere beneath it,
-     * so a customer is never sent to "No products found". The admin tree did
-     * not say so, and a category the shop had just made — "Used Laptop" —
-     * looked as if the menu were broken. Same rule as the menu: an offer
-     * category is always shown.
+     * None, now: the menu shows every active category, stocked or not (see
+     * getMegaMenuTree). Kept so the admin tree, which marks the ones the menu
+     * hides, has nothing to mark.
      *
      * @return list<int>
      */
     public function emptyCategoryIds(): array
     {
-        $stocked = $this->categoryIdsWithProducts();
-
-        return Category::where('is_active', true)
-            ->where('is_offer', false)
-            ->whereNotIn('id', $stocked)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+        return [];
     }
 
     /**
      * Get the nested category tree for the Mega Menu.
      *
-     * Categories holding nothing are left out. Three of the nine top-level
-     * entries had no products anywhere beneath them — Accessories, Server &
-     * Storage and Offers & Deals — so a third of the main navigation led
-     * straight to "No products found". They come back on their own as soon as
-     * the shop stocks them.
-     *
-     * An offer category is the exception: its discounts live on the products,
-     * not on a category assignment, so it never has any of its own.
+     * Every active category, whether or not anything is on it yet. Empty ones
+     * used to be left out so nobody landed on "No products found"; with the
+     * seeded samples gone that left a menu of three entries while the real
+     * catalogue was still being entered, so the shop asked for the whole
+     * structure to show, as StarTech's does.
      */
     public function getMegaMenuTree(): Collection
     {
@@ -101,8 +89,6 @@ class CategoryService
      */
     private function buildMegaMenuTree(): array
     {
-        $stocked = $this->categoryIdsWithProducts();
-
         /*
          * Third-level entries are overwhelmingly brand names, and a drawn icon
          * cannot say "ASUS" — a generic box next to every one of eleven hundred
@@ -130,14 +116,10 @@ class CategoryService
         return Category::whereNull('parent_id')
             ->inMenuOrder()
             ->where('is_active', true)
-            ->where(fn ($q) => $q->where('is_offer', true)
-                ->orWhereIn('id', $stocked))
-            ->with(['children' => function ($query) use ($stocked) {
+            ->with(['children' => function ($query) {
                 $query->where('is_active', true)
-                    ->whereIn('id', $stocked)
-                    ->with(['children' => function ($q) use ($stocked) {
+                    ->with(['children' => function ($q) {
                         $q->where('is_active', true)
-                            ->whereIn('id', $stocked)
                             // One query for every brand on the tree, not one per shelf.
                             ->with('brand:id,name,logo_path');
                     }]);
@@ -287,11 +269,9 @@ class CategoryService
                 return [];
             }
 
-            $stocked = $this->categoryIdsWithProducts();
-
+            // Every active child, stocked or not, as the menu shows them.
             return Category::where('parent_id', $parent->id)
                 ->where('is_active', true)
-                ->whereIn('id', $stocked)
                 ->inMenuOrder()
                 ->get(['id', 'name', 'slug'])
                 ->map(fn (Category $c) => ['id' => $c->id, 'name' => $c->name, 'slug' => $c->slug])

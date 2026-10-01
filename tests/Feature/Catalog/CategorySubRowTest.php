@@ -76,13 +76,13 @@ class CategorySubRowTest extends TestCase
         $this->assertSame(['Epson Projector'], collect($this->row('projector'))->pluck('name')->all());
     }
 
-    /* A shelf holding nothing would open onto "No products found". */
-    public function test_it_leaves_out_an_empty_shelf(): void
+    /* An empty shelf is listed too: the shop shows its whole structure, as the menu does. */
+    public function test_it_lists_an_empty_shelf_too(): void
     {
         $this->shelf('Projector', $this->office);
         $this->shelf('Kiosk', $this->office, 1, stocked: false);
 
-        $this->assertSame(['Projector'], collect($this->row())->pluck('name')->all());
+        $this->assertSame(['Projector', 'Kiosk'], collect($this->row())->pluck('name')->all());
     }
 
     /* Stocked further down counts, as it does in the mega menu. */

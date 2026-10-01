@@ -56,11 +56,16 @@ class NavigationDeadEndsTest extends TestCase
         ]);
     }
 
-    public function test_a_category_with_no_products_is_not_offered(): void
+    /*
+     * The whole structure shows, stocked or not: with the seeded samples gone
+     * the menu had shrunk to the few shelves holding real products, while the
+     * catalogue was still being entered.
+     */
+    public function test_a_category_with_no_products_is_still_offered(): void
     {
         $this->category('Server & Storage', 'server-storage');
 
-        $this->assertNotContains('server-storage', $this->tree()->pluck('slug'));
+        $this->assertContains('server-storage', $this->tree()->pluck('slug'));
     }
 
     public function test_a_category_with_products_is_offered(): void
@@ -86,7 +91,7 @@ class NavigationDeadEndsTest extends TestCase
         $this->assertContains('storage', $subs->pluck('slug'));
     }
 
-    public function test_an_empty_subcategory_is_pruned_from_a_stocked_parent(): void
+    public function test_an_empty_subcategory_still_shows_under_its_parent(): void
     {
         $root = $this->category('Components', 'components');
         $stocked = $this->category('CPU', 'cpu', ['parent_id' => $root->id]);
@@ -97,7 +102,7 @@ class NavigationDeadEndsTest extends TestCase
         $subs = collect($this->tree()->firstWhere('slug', 'components')['subcategories']);
 
         $this->assertContains('cpu', $subs->pluck('slug'));
-        $this->assertNotContains('sound-cards', $subs->pluck('slug'));
+        $this->assertContains('sound-cards', $subs->pluck('slug'));
     }
 
     /**
@@ -111,9 +116,10 @@ class NavigationDeadEndsTest extends TestCase
         $this->assertContains('offers-deals', $this->tree()->pluck('slug'));
     }
 
-    public function test_an_inactive_product_does_not_keep_a_category_alive(): void
+    /** An inactive category stays out, whatever is on it. */
+    public function test_an_inactive_category_is_not_offered(): void
     {
-        $this->product($this->category('Networking', 'networking'), active: false);
+        $this->product($this->category('Networking', 'networking', ['is_active' => false]));
 
         $this->assertNotContains('networking', $this->tree()->pluck('slug'));
     }

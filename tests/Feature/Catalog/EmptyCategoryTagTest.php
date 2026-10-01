@@ -38,16 +38,12 @@ class EmptyCategoryTagTest extends TestCase
         $admin = User::factory()->create(['role' => Roles::OWNER, 'is_active' => true]);
 
         $this->actingAs($admin)->get('/admin/categories')
-            ->assertInertia(function ($page) use ($used, $usedSub, $laptop, $gaming, $offer) {
+            ->assertInertia(function ($page) {
                 $empty = $page->toArray()['props']['emptyIds'];
 
-                $this->assertContains($used->id, $empty);
-                $this->assertContains($usedSub->id, $empty);
-                // Stocked below, so it is in the menu.
-                $this->assertNotContains($laptop->id, $empty);
-                $this->assertNotContains($gaming->id, $empty);
-                // An offer category is always shown.
-                $this->assertNotContains($offer->id, $empty);
+                // The menu shows every active category now, stocked or not,
+                // so the tree has none to mark as left out.
+                $this->assertSame([], $empty);
             });
     }
 }

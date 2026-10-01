@@ -164,8 +164,8 @@ class BrandShelfListingTest extends TestCase
         $this->assertContains($shelf->id, $ids->all());
     }
 
-    /** And drops it when the maker has nothing on the shelf above. */
-    public function test_the_menu_drops_a_brand_shelf_with_nothing_to_show(): void
+    /** And shows it while the maker has nothing on the shelf above: the menu shows every shelf. */
+    public function test_the_menu_shows_a_brand_shelf_with_nothing_on_it_yet(): void
     {
         $shelf = $this->shelfFor($this->asus, 'asus-pc');
         $this->product('MSI Tower', $this->msi);
@@ -174,6 +174,6 @@ class BrandShelfListingTest extends TestCase
             ->flatMap(fn ($top) => collect($top['subcategories'])->flatMap(fn ($s) => $s['children']))
             ->pluck('id');
 
-        $this->assertNotContains($shelf->id, $ids->all());
+        $this->assertContains($shelf->id, $ids->all());
     }
 }

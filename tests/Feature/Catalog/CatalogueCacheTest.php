@@ -85,8 +85,8 @@ class CatalogueCacheTest extends TestCase
     {
         $empty = Category::create(['name' => 'Monitors', 'slug' => 'monitors', 'is_active' => true]);
 
-        // A category with nothing in it is deliberately left out of the menu.
-        $this->getJson('/api/categories/mega-menu')->assertJsonCount(0, 'data');
+        // Shown while empty; the product added below must not drop it.
+        $this->getJson('/api/categories/mega-menu')->assertJsonCount(1, 'data');
 
         $this->actingAs(User::factory()->create(['role' => 'admin']))
             ->postJson('/api/admin/products', [
