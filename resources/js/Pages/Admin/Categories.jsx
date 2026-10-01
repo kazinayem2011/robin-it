@@ -16,7 +16,6 @@ import { toast } from '@/Components/Toast';
 import { adminCategorySchema } from '@/validations';
 import { adminService } from '@/services';
 import { reorderSiblings, indexOnShelf } from '@/utils/reorderTree';
-import { EmptyCategoriesContext } from './Components/NotInMenuTag';
 import { siteConfig } from '@/constants';
 import {
     CategoryParentCard,
@@ -31,10 +30,8 @@ export default function Categories({
     categories = [],
     parentOptions = [],
     brandOptions = [],
-    emptyIds = [],
 }) {
     // Categories the menu leaves out until something is on them.
-    const emptySet = useMemo(() => new Set(emptyIds), [emptyIds]);
     const [searchQuery, setSearchQuery] = useState('');
 
     /*
@@ -460,7 +457,7 @@ export default function Categories({
             title="Category Hierarchy & Mega Menu"
             subtitle={`Organize the 3-Level Category Architecture for ${siteConfig.name} Mega Menu & Taxonomy`}
         >
-            <EmptyCategoriesContext.Provider value={emptySet}>
+            <>
                 <Head title={`Category Organizer — Admin ${siteConfig.name}`} />
 
                 {/* Main Taxonomy Management Card */}
@@ -564,7 +561,7 @@ export default function Categories({
                     onConfirmDelete={handleDelete}
                     isSubmitting={isSubmitting}
                 />
-            </EmptyCategoriesContext.Provider>
+            </>
         </AdminLayout>
     );
 }

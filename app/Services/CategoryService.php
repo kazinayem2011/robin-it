@@ -41,20 +41,6 @@ class CategoryService
     }
 
     /**
-     * Active categories the menu leaves out because nothing is on them yet.
-     *
-     * None, now: the menu shows every active category, stocked or not (see
-     * getMegaMenuTree). Kept so the admin tree, which marks the ones the menu
-     * hides, has nothing to mark.
-     *
-     * @return list<int>
-     */
-    public function emptyCategoryIds(): array
-    {
-        return [];
-    }
-
-    /**
      * Get the nested category tree for the Mega Menu.
      *
      * Every active category, whether or not anything is on it yet. Empty ones
@@ -168,76 +154,6 @@ class CategoryService
                 ];
             })
             ->all();
-    }
-
-    /**
-     * Every category id that has a product somewhere beneath it.
-     *
-     * Two queries regardless of depth: the products' own categories, then the
-     * count rolled up through the parent chain, so a top-level entry counts as
-     * stocked when only a grandchild holds anything.
-     *
-     * @return array<int, int>
-     */
-    private function categoryIdsWithProducts(): array
-    {
-        // Read through the pivot: a product listed in several categories has
-        // to make every one of them visible, not just its primary.
-        $rows = DB::table('category_product')
-            ->join('products', 'products.id', '=', 'category_product.product_id')
-            ->where('products.is_active', true)
-            ->distinct()
-            ->get(['category_product.category_id', 'products.brand_id']);
-
-        if ($rows->isEmpty()) {
-            return [];
-        }
-
-        $parents = Category::pluck('parent_id', 'id');
-        $stocked = [];
-
-        // Which makers have something on each shelf, ancestors included.
-        $makersOn = [];
-
-        foreach ($rows as $row) {
-            if (! $row->category_id) {
-                continue;
-            }
-
-            $stocked[$row->category_id] = true;
-
-            if ($row->brand_id) {
-                $makersOn[$row->category_id][$row->brand_id] = true;
-            }
-
-            $cursor = $parents[$row->category_id] ?? null;
-
-            // Walk up to the root. The guard is against a cycle in the data,
-            // which would otherwise hang the request.
-            for ($depth = 0; $cursor !== null && $depth < 10; $depth++) {
-                $stocked[$cursor] = true;
-
-                if ($row->brand_id) {
-                    $makersOn[$cursor][$row->brand_id] = true;
-                }
-
-                $cursor = $parents[$cursor] ?? null;
-            }
-        }
-
-        /*
-         * A brand shelf holds what its maker made on the shelf above, and it
-         * holds it without a pivot row — that is the point of it. Counting
-         * only pivot rows would call it empty and drop it from the menu, so
-         * the one page that fills itself would be the one nobody could reach.
-         */
-        foreach (Category::whereNotNull('brand_id')->get(['id', 'parent_id', 'brand_id']) as $shelf) {
-            if ($shelf->parent_id && isset($makersOn[$shelf->parent_id][$shelf->brand_id])) {
-                $stocked[$shelf->id] = true;
-            }
-        }
-
-        return array_keys($stocked);
     }
 
     /**
