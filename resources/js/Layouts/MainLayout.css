@@ -1151,9 +1151,18 @@
 
 .footer-main-body {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr 1.3fr;
+    /* minmax(0, …): a column may shrink below its longest word, which wraps
+       instead — a plain 1fr held the footer 4px past a 320px screen. */
+    grid-template-columns:
+        minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)
+        minmax(0, 1.3fr);
     gap: 36px;
     padding: 50px 16px 40px;
+}
+
+.footer-nav-col {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .footer-brand-header {
@@ -1676,7 +1685,7 @@
 /* Responsive Overrides */
 @media (max-width: 1200px) {
     .footer-main-body {
-        grid-template-columns: 1.5fr 1fr 1fr;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
     }
 
     /*
@@ -1855,7 +1864,7 @@
         grid-template-columns: repeat(2, 1fr);
     }
     .footer-main-body {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
 }
 
@@ -1871,7 +1880,7 @@
         grid-template-columns: 1fr;
     }
     .footer-main-body {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
     .footer-bottom-inner {
         flex-direction: column;
