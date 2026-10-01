@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { cartService, categoryService, compareService } from '../services';
+import {
+    cartService,
+    categoryService,
+    compareService,
+    wishlistService,
+} from '../services';
 import { readCachedMenu, writeCachedMenu } from '../utils/menuCache';
 import { applyTheme, readThemeChoice, writeThemeChoice } from '../utils/theme';
 
@@ -88,6 +93,21 @@ const useAppStore = create((set, get) => ({
 
     wishlistCount: 0,
     setWishlistCount: (count) => set({ wishlistCount: count }),
+    /*
+     * Asked of the server, as the cart and compare counts are. The badge was
+     * only ever set by pages that show hearts, so on Contact, the cart or a
+     * fresh load anywhere else a saved wishlist read as empty. Signed-in only:
+     * the endpoint is behind auth, and a guest's 401 would send them to log in.
+     */
+    fetchWishlistCount: async () => {
+        try {
+            const items = await wishlistService.getWishlist();
+
+            set({ wishlistCount: Array.isArray(items) ? items.length : 0 });
+        } catch {
+            // The badge is a hint; a failed read leaves it as it was.
+        }
+    },
 
     compareCount: 0,
     setCompareCount: (count) => set({ compareCount: count }),

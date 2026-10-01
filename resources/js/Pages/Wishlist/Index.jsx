@@ -9,6 +9,7 @@ import { CardGridSkeleton } from '../../Components/Skeleton';
 import { toast } from '../../Components/Toast';
 import { wishlistService } from '../../services';
 import { useAddToCart } from '../../hooks';
+import useAppStore from '../../store/useAppStore';
 import { formatBdt } from '../../utils/formatters';
 import { ROUTES } from '../../constants/endpoints';
 import siteConfig from '../../constants/siteConfig';
@@ -37,6 +38,11 @@ export default function Wishlist() {
     useEffect(() => {
         loadWishlist();
     }, []);
+
+    // The header badge counts this list, so it moves as items leave it.
+    useEffect(() => {
+        if (!loading) useAppStore.getState().setWishlistCount(wishlist.length);
+    }, [wishlist, loading]);
 
     const loadWishlist = async () => {
         setLoading(true);

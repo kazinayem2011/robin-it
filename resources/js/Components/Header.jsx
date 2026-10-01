@@ -59,6 +59,9 @@ export const Header = () => {
     const fetchCompareCount = useAppStore((state) => state.fetchCompareCount);
     const fetchCategories = useAppStore((state) => state.fetchCategories);
     const wishlistCount = useAppStore((state) => state.wishlistCount);
+    const fetchWishlistCount = useAppStore((state) => state.fetchWishlistCount);
+    const setWishlistCount = useAppStore((state) => state.setWishlistCount);
+    const userId = auth?.user?.id;
 
     // Fetch the mega menu tree and sync the cart badge. The layout is
     // persistent now, so this runs on the first page and not on every
@@ -69,6 +72,12 @@ export const Header = () => {
 
         fetchCategories();
     }, [fetchCartCount, fetchCompareCount, fetchCategories]);
+
+    // Whose wishlist the badge counts follows whoever is signed in.
+    useEffect(() => {
+        if (userId) fetchWishlistCount();
+        else setWishlistCount(0);
+    }, [userId, fetchWishlistCount, setWishlistCount]);
 
     /*
      * The whole header block pins, pulled up by exactly the height of the
