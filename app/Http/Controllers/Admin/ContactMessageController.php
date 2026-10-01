@@ -149,6 +149,11 @@ class ContactMessageController extends Controller
                 'reply' => $reply->only(['id', 'body', 'author_name', 'emailed']),
                 'emailed' => $reply->emailed,
                 'texted' => (bool) $reply->texted,
+                // Whether the answer got to them some way: by email, by text,
+                // or in the account they wrote from. Only a miss is a warning.
+                'reached' => $reply->emailed
+                    || (bool) $reply->texted
+                    || (blank($message->email) && $message->user_id !== null),
             ],
             $note
         );

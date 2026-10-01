@@ -90,7 +90,9 @@ class ReachableWithoutAnEmailTest extends TestCase
         $this->actingAs($this->staff)
             ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'It ships tomorrow.'])
             ->assertSuccessful()
-            ->assertJsonPath('message', 'Replied. They will see it in their messages.');
+            ->assertJsonPath('message', 'Replied. They will see it in their messages.')
+            // Reached them, so the inbox shows no warning.
+            ->assertJsonPath('data.reached', true);
 
         Mail::assertNotSent(ContactReplyMail::class);
 
@@ -119,7 +121,9 @@ class ReachableWithoutAnEmailTest extends TestCase
         $this->actingAs($this->staff)
             ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'Ringing you now.'])
             ->assertSuccessful()
-            ->assertJsonPath('message', 'Saved. This enquiry left no email address — call 01341789939.');
+            ->assertJsonPath('message', 'Saved. This enquiry left no email address — call 01341789939.')
+            // Nothing got to them: the one case the inbox warns about.
+            ->assertJsonPath('data.reached', false);
     }
 
     /**
@@ -142,7 +146,9 @@ class ReachableWithoutAnEmailTest extends TestCase
             ->postJson("/api/admin/messages/{$message->id}/reply", ['body' => 'Yes, three in Uttara.'])
             ->assertSuccessful()
             ->assertJsonPath('message', 'Replied by text to 01341789939.')
-            ->assertJsonPath('data.texted', true);
+            ->assertJsonPath('data.texted', true)
+            // Texted is delivered; the inbox used to warn 'not emailed' here.
+            ->assertJsonPath('data.reached', true);
 
         $texts = $this->textsSent();
         $this->assertCount(1, $texts);

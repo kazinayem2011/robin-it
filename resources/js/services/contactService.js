@@ -11,7 +11,8 @@ export const contactService = {
             API_ENDPOINTS.CONTACT,
             payload,
         );
-        return response?.data || response;
+        // The whole reply: its message says where the answer will turn up.
+        return response;
     },
 
     /**
@@ -24,7 +25,8 @@ export const contactService = {
             email,
             source,
         });
-        return response?.data || response;
+        // The whole reply: its message says where the answer will turn up.
+        return response;
     },
 };
 

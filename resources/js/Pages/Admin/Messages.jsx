@@ -74,6 +74,16 @@ function SenderNote({ sender }) {
     );
 }
 
+/** Where a reply to this message ends up, said in the box before writing it. */
+export const replyGoesTo = (m) => {
+    if (m.email) return `Reply to ${m.name}. This is emailed to ${m.email}.`;
+    if (m.user_id || m.sender?.signed_in)
+        return `Reply to ${m.name}. They will see it in their messages.`;
+    if (m.phone)
+        return `Reply to ${m.name}. They left only a number: ${m.phone}.`;
+    return `Reply to ${m.name}.`;
+};
+
 export default function AdminMessages({
     messages = { data: [] },
     filters = {},
@@ -137,9 +147,10 @@ export default function AdminMessages({
             );
             setDraft('');
             // Said plainly: the answer is saved either way, but whoever sent it
-            // needs to know when the customer did not actually get an email.
-            if (data?.data?.emailed === false) {
-                toast.error(data.message, 'Saved, but not emailed');
+            // needs to know when it did not reach the customer. Texted to a
+            // guest who left only a number, or waiting in their account, it did.
+            if (data?.data?.reached === false) {
+                toast.error(data.message, 'Saved, but not delivered');
             } else {
                 toast.success(data?.message || 'Replied.');
             }
@@ -296,6 +307,7 @@ export default function AdminMessages({
                                                     </span>
                                                 )}
                                                 {!r.from_customer &&
+                                                    m.email &&
                                                     !r.emailed && (
                                                         <span className="msg-not-emailed">
                                                             <AlertTriangle
@@ -316,7 +328,7 @@ export default function AdminMessages({
                                         onChange={(e) =>
                                             setDraft(e.target.value)
                                         }
-                                        placeholder={`Reply to ${m.name}. This is emailed to ${m.email}.`}
+                                        placeholder={replyGoesTo(m)}
                                     />
 
                                     <div className="msg-actions">
