@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import BrandMark from './BrandMark';
 import { getCategoryIcon, hasCategoryIcon } from '../utils/iconMap';
 import { ROUTES } from '../constants/endpoints';
-import { ChevronRight, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
 
 /**
  * The category bar and its dropdowns.
@@ -49,8 +49,9 @@ const markFor = (node, size) =>
         <BrandMark name={node.name} logo={node.logo} size={size} />
     );
 
-/** Roughly what the "More" control occupies, reserved before it exists. */
-const MORE_WIDTH = 92;
+/** Roughly what the "More" control occupies, reserved before it exists:
+    the pill, its count and chevron, and the gap before it. */
+const MORE_WIDTH = 132;
 
 export default function CategoryNav({ categories = [] }) {
     const [openCategory, setOpenCategory] = useState(null);
@@ -551,9 +552,23 @@ export default function CategoryNav({ categories = [] }) {
                         close();
                     }}
                 >
-                    <button type="button" className="cat-nav-link">
+                    {/* A pill of its own, so the categories the bar has no room
+                        for are found rather than missed: says how many. */}
+                    <button
+                        type="button"
+                        className="cat-nav-link cat-nav-more-btn"
+                        aria-expanded={moreOpen}
+                        aria-label={`More categories (${overflow.length})`}
+                    >
                         <MoreHorizontal size={16} className="cat-nav-icon" />
                         <span>More</span>
+                        <span className="cat-nav-more-count">
+                            {overflow.length}
+                        </span>
+                        <ChevronDown
+                            size={14}
+                            className="cat-nav-more-chevron"
+                        />
                     </button>
 
                     <ul className="cat-nav-drop cat-nav-drop-right">
