@@ -425,12 +425,22 @@ class CategoryController extends Controller
 
         $query = Category::query()
             ->where('is_active', true)
-            ->with('parent.parent:id,name')
-            ->orderBy('name');
+            ->with('parent.parent:id,name');
 
         if ($term !== '') {
             $query->where('name', 'like', SearchTerm::contains($term));
+
+            // The category named what was typed comes first, then names that
+            // start with it, then the rest. A to Z alone put "Phone" tenth,
+            // behind Bluetooth Headphone, Earphone and IP Phone.
+            $lower = mb_strtolower($term);
+            $query->orderByRaw(
+                'CASE WHEN LOWER(name) = ? THEN 0 WHEN SUBSTR(LOWER(name), 1, ?) = ? THEN 1 ELSE 2 END',
+                [$lower, mb_strlen($lower), $lower]
+            )->orderByRaw('CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END');
         }
+
+        $query->orderBy('name');
 
         // A cap, not a page: this feeds a typeahead, and nobody scrolls to the
         // fortieth suggestion — they type another letter.

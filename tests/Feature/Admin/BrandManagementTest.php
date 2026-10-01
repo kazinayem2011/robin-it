@@ -168,4 +168,22 @@ class BrandManagementTest extends TestCase
             ->getJson('/api/admin/categories/search?q=x')
             ->assertForbidden();
     }
+
+    /** What was typed, exactly, before the names that merely contain it. */
+    public function test_the_category_named_what_was_typed_comes_first(): void
+    {
+        $accessories = Category::create(['name' => 'Accessories', 'slug' => 'accessories', 'is_active' => true]);
+        foreach (['Bluetooth Headphone', 'Earphone', 'Headphone'] as $name) {
+            Category::create(['name' => $name, 'slug' => str($name)->slug(), 'parent_id' => $accessories->id, 'is_active' => true]);
+        }
+        $phone = Category::create(['name' => 'Phone', 'slug' => 'phone', 'is_active' => true]);
+        Category::create(['name' => 'Phone Case', 'slug' => 'phone-case', 'parent_id' => $phone->id, 'is_active' => true]);
+
+        $names = collect($this->actingAs($this->admin())
+            ->getJson('/api/admin/categories/search?q=phone')
+            ->assertOk()
+            ->json('data'))->pluck('name')->all();
+
+        $this->assertSame(['Phone', 'Phone Case', 'Bluetooth Headphone', 'Earphone', 'Headphone'], $names);
+    }
 }

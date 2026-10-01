@@ -109,18 +109,26 @@ export default function CategoryPicker({
         });
     }, [value, initialLabel, initialPath]);
 
+    /*
+     * Only the latest search may fill the list. The debounce spaces requests
+     * out but cannot order the answers: on a slow connection the empty search
+     * made on opening came back after "Phone" and listed every category, with
+     * "Phone" still typed above them.
+     */
+    const latest = useRef(0);
     const fetchResults = useCallback(async (term) => {
+        const ticket = ++latest.current;
         setLoading(true);
         try {
             const res = await axiosInstance.get(
                 API_ENDPOINTS.ADMIN.CATEGORY_SEARCH,
                 { params: { q: term } },
             );
-            setResults(res?.data ?? res ?? []);
+            if (ticket === latest.current) setResults(res?.data ?? res ?? []);
         } catch {
-            setResults([]);
+            if (ticket === latest.current) setResults([]);
         } finally {
-            setLoading(false);
+            if (ticket === latest.current) setLoading(false);
         }
     }, []);
 
