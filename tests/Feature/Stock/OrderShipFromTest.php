@@ -12,6 +12,7 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Services\OrderEditService;
 use App\Services\OrderService;
 use App\Services\PurchaseOrderService;
 use App\Services\StockService;
@@ -592,5 +593,31 @@ class OrderShipFromTest extends TestCase
 
         Product::create(['category_id' => $stocked->category_id, 'name' => 'Never bought in', 'slug' => 'never', 'price' => 10, 'stock_quantity' => 0, 'is_active' => true]);
         $this->assertSame(1, $this->card('Low stock'));
+    }
+
+    /*
+     * Edited down while a unit is owed: the debt clears, not a real shelf.
+     * Two came from Dhaka and the third was owed at Khulna; edited to two,
+     * the unit went back onto Dhaka's shelf and left Khulna owing, so the
+     * order stayed "waiting for stock" and was refused at dispatch with the
+     * units it needed sitting in Dhaka. Found on live.
+     */
+    public function test_an_order_edited_down_clears_its_debt_first(): void
+    {
+        $product = $this->product(khulna: 0, dhaka: 2);
+        $order = $this->order($product, 3);
+        $this->assertSame(-1, $this->at($product, $this->khulna));
+        $this->assertSame(0, $this->at($product, $this->dhaka));
+
+        $item = $order->items()->first();
+        app(OrderEditService::class)->apply($order->fresh(), $this->admin, [
+            ['order_item_id' => $item->id, 'quantity' => 2],
+        ], 'Customer takes two');
+
+        $this->assertSame(0, $this->at($product, $this->khulna), 'the owed unit should be the one given back');
+        $this->assertSame(0, $this->at($product, $this->dhaka));
+
+        app(OrderService::class)->updateOrderStatus($order->fresh(), 'shipped');
+        $this->assertSame('shipped', $order->fresh()->status);
     }
 }

@@ -369,6 +369,21 @@ class StockService
         $holding = $this->branchesHolding($order)[self::unitKey($product->id, $variant?->id)] ?? [];
         arsort($holding);
 
+        /*
+         * A branch in debt first. A unit sold beyond what a branch had was
+         * never on its shelf, so giving one back should clear that debt before
+         * anything lands on a real shelf. Back to the most-used branch first,
+         * an order edited from three to two put the unit on Multiplan's shelf
+         * and left it owed at Khulna — still "waiting for stock", and refused
+         * at dispatch, with the stock it needed sitting in Multiplan. Found on
+         * live.
+         */
+        $balances = ProductStock::forUnit($product->id, $variant?->id)
+            ->whereIn('store_id', array_keys($holding))
+            ->pluck('quantity', 'store_id');
+        uksort($holding, fn ($a, $b) => [(int) ($balances[$a] ?? 0) < 0 ? 0 : 1, -$holding[$a]]
+            <=> [(int) ($balances[$b] ?? 0) < 0 ? 0 : 1, -$holding[$b]]);
+
         $put = [];
 
         foreach ($holding as $storeId => $units) {
