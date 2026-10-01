@@ -41,6 +41,52 @@ const DEFAULT_ACCEPTED_TYPES = [
     'image/jpg',
 ];
 
+/*
+ * The crop frame, and the picture's size before any zoom, for a canvas.
+ *
+ * The picture used to be fitted to 85% of the canvas and the frame drawn at
+ * 75%, so the frame always sat inside the picture: a banner already made at
+ * the right shape lost about a tenth of every edge, its text cut flush to the
+ * side. With a fixed shape the picture now starts exactly covering the
+ * frame — a picture of that shape is taken whole, any other has only its
+ * overflow trimmed — as every cropper does. A free crop keeps the whole
+ * picture inside its frame.
+ */
+export const frameFor = (cw, ch, aspect, image) => {
+    let boxW = cw * 0.8;
+    let boxH = ch * 0.8;
+
+    if (aspect) {
+        if (aspect >= 1) {
+            boxW = cw * 0.75;
+            boxH = boxW / aspect;
+            if (boxH > ch * 0.75) {
+                boxH = ch * 0.75;
+                boxW = boxH * aspect;
+            }
+        } else {
+            boxH = ch * 0.75;
+            boxW = boxH * aspect;
+            if (boxW > cw * 0.75) {
+                boxW = cw * 0.75;
+                boxH = boxW / aspect;
+            }
+        }
+    }
+
+    const fit = aspect ? Math.max : Math.min;
+    const scale = fit(boxW / image.width, boxH / image.height);
+
+    return {
+        boxW,
+        boxH,
+        boxX: (cw - boxW) / 2,
+        boxY: (ch - boxH) / 2,
+        dw: image.width * scale,
+        dh: image.height * scale,
+    };
+};
+
 export const ImageCropperModal = ({
     isOpen,
     onClose,
@@ -251,13 +297,8 @@ export const ImageCropperModal = ({
         ctx.rotate((rotation * Math.PI) / 180);
         ctx.scale(zoom, zoom);
 
-        // Calculate aspect-fit base size
-        const scale = Math.min(
-            (cw * 0.85) / imageObj.width,
-            (ch * 0.85) / imageObj.height,
-        );
-        const dw = imageObj.width * scale;
-        const dh = imageObj.height * scale;
+        // The picture's starting size: covering the frame (see frameFor).
+        const { dw, dh } = frameFor(cw, ch, selectedAspect, imageObj);
 
         ctx.drawImage(imageObj, -dw / 2, -dh / 2, dw, dh);
         ctx.restore();
@@ -266,29 +307,12 @@ export const ImageCropperModal = ({
         ctx.save();
         ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
 
-        let boxW = cw * 0.8;
-        let boxH = ch * 0.8;
-
-        if (selectedAspect) {
-            if (selectedAspect >= 1) {
-                boxW = cw * 0.75;
-                boxH = boxW / selectedAspect;
-                if (boxH > ch * 0.75) {
-                    boxH = ch * 0.75;
-                    boxW = boxH * selectedAspect;
-                }
-            } else {
-                boxH = ch * 0.75;
-                boxW = boxH * selectedAspect;
-                if (boxW > cw * 0.75) {
-                    boxW = cw * 0.75;
-                    boxH = boxW / selectedAspect;
-                }
-            }
-        }
-
-        const boxX = (cw - boxW) / 2;
-        const boxY = (ch - boxH) / 2;
+        const { boxW, boxH, boxX, boxY } = frameFor(
+            cw,
+            ch,
+            selectedAspect,
+            imageObj,
+        );
 
         // Darken outside crop zone
         ctx.beginPath();
@@ -368,29 +392,13 @@ export const ImageCropperModal = ({
         const cw = 500;
         const ch = 400;
 
-        let boxW = cw * 0.8;
-        let boxH = ch * 0.8;
-
-        if (selectedAspect) {
-            if (selectedAspect >= 1) {
-                boxW = cw * 0.75;
-                boxH = boxW / selectedAspect;
-                if (boxH > ch * 0.75) {
-                    boxH = ch * 0.75;
-                    boxW = boxH * selectedAspect;
-                }
-            } else {
-                boxH = ch * 0.75;
-                boxW = boxH * selectedAspect;
-                if (boxW > cw * 0.75) {
-                    boxW = cw * 0.75;
-                    boxH = boxW / selectedAspect;
-                }
-            }
-        }
-
-        const boxX = (cw - boxW) / 2;
-        const boxY = (ch - boxH) / 2;
+        // The same frame and picture size as the preview (frameFor).
+        const { boxW, boxH, boxX, boxY, dw, dh } = frameFor(
+            cw,
+            ch,
+            selectedAspect,
+            imageObj,
+        );
 
         outCtx.fillStyle = '#ffffff';
         outCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
@@ -404,13 +412,6 @@ export const ImageCropperModal = ({
         );
         outCtx.rotate((rotation * Math.PI) / 180);
         outCtx.scale(zoom, zoom);
-
-        const scale = Math.min(
-            (cw * 0.85) / imageObj.width,
-            (ch * 0.85) / imageObj.height,
-        );
-        const dw = imageObj.width * scale;
-        const dh = imageObj.height * scale;
 
         outCtx.drawImage(imageObj, -dw / 2, -dh / 2, dw, dh);
         outCtx.restore();
