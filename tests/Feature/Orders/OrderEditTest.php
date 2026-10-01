@@ -225,6 +225,38 @@ class OrderEditTest extends TestCase
         $this->assertEqualsWithDelta(2000.0, (float) $order->fresh()->discount, 0.01);
     }
 
+    /*
+     * Coming back, a line gives back only the discount it got. The whole
+     * order's discount was spread over every line, so a returned card on
+     * "10% off cards" was valued as though the RAM had been discounted too.
+     * On live: ৳81,039.82 suggested for a phone that cost ৳81,000.
+     */
+    public function test_a_returned_line_gives_back_only_its_own_coupon_discount(): void
+    {
+        $coupon = Coupon::create([
+            'code' => 'GPU10', 'discount_type' => 'percent', 'discount_value' => 10,
+            'scope' => Coupon::SCOPE_PRODUCTS, 'min_spend' => 0, 'is_active' => true,
+        ]);
+        $coupon->products()->sync([$this->gpu->id]);
+
+        $user = User::factory()->create();
+        foreach ([$this->gpu, $this->ram] as $product) {
+            $this->actingAs($user)->postJson('/api/cart', ['product_id' => $product->id, 'quantity' => 1])->assertOk();
+        }
+        $this->actingAs($user)->postJson('/api/checkout', [
+            'name' => 'Rahim', 'phone' => '01712345678', 'street_address' => 'House 45', 'city' => 'Dhaka',
+            'coupon_code' => 'GPU10',
+        ])->assertStatus(201);
+
+        $order = Order::latest('id')->first()->load('items');
+        $order->items->firstWhere('product_id', $this->gpu->id)->update(['returned_quantity' => 1]);
+        $this->assertEqualsWithDelta(9000.0, $order->fresh()->returned_value, 0.01);
+
+        $order->items->firstWhere('product_id', $this->gpu->id)->update(['returned_quantity' => 0]);
+        $order->items->firstWhere('product_id', $this->ram->id)->update(['returned_quantity' => 1]);
+        $this->assertEqualsWithDelta(5000.0, $order->fresh()->returned_value, 0.01);
+    }
+
     public function test_the_total_is_worked_out_again(): void
     {
         $order = $this->order(2);

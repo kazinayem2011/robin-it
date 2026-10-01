@@ -202,8 +202,38 @@ class Order extends Model
             return 0.0;
         }
 
+        $goods = max(0, (float) $this->total - (float) $this->shipping_fee);
+        $discount = (float) $this->discount;
+
+        /*
+         * A coupon for some products takes its discount off those lines only,
+         * so only they give it back. Spread over the whole order, a returned
+         * phone on "10% off phones" was valued as if the mouse beside it had
+         * been discounted too: ৳81,039.82 suggested where ৳81,000 was paid.
+         * Found on live.
+         */
+        $coupon = $discount > 0 && $this->coupon_code
+            ? Coupon::where('code', $this->coupon_code)->first()
+            : null;
+
+        if ($coupon && $coupon->scope !== Coupon::SCOPE_ALL && (float) $this->subtotal - $discount > 0) {
+            $items->loadMissing('product.categories');
+            $covered = $items->filter(fn ($i) => $coupon->appliesTo($i->product));
+            $coveredValue = $covered->sum(fn ($i) => (int) $i->quantity * (float) $i->price);
+
+            if ($coveredValue > 0) {
+                $off = min(1, $discount / $coveredValue);
+                $afterDiscount = $items->sum(fn ($i) => (int) $i->returned_quantity * (float) $i->price
+                    * ($covered->contains($i) ? 1 - $off : 1));
+                // VAT added on top, if any, comes back in proportion.
+                $onTop = $goods / ((float) $this->subtotal - $discount);
+
+                return round($afterDiscount * $onTop, 2);
+            }
+        }
+
         // The goods' share of the total, per taka of list price.
-        $share = max(0, (float) $this->total - (float) $this->shipping_fee) / (float) $this->subtotal;
+        $share = $goods / (float) $this->subtotal;
 
         return round($returned * $share, 2);
     }
