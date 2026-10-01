@@ -1230,3 +1230,20 @@
         justify-content: flex-end;
     }
 }
+
+/*
+ * The Live Offer, repeated between the banner and the trust strip. The same
+ * dark band as the header's top bar (OfferTicker draws both), here as a
+ * rounded strip inside the page width.
+ */
+.home-offer-section {
+    margin-top: 16px;
+}
+
+.home-offer-strip {
+    padding: 9px 14px;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-inverse-deep);
+    color: var(--text-faint);
+    font-size: 0.82rem;
+}

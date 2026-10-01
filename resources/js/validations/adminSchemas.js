@@ -143,6 +143,7 @@ export const adminSettingsSchema = Yup.object().shape({
         .nullable(),
     announcement_text: Yup.string().required('Announcement text is required'),
     announcement_active: Yup.boolean().default(true),
+    announcement_home: Yup.boolean().default(true),
     header_hot_searches: Yup.boolean().default(true),
     header_search_scope: Yup.boolean().default(false),
     announcement_badge: Yup.string()

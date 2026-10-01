@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { mainLayout } from '../Layouts/MainLayout';
 import {
     productService,
@@ -31,6 +31,7 @@ import CountdownTimer from '../Components/CountdownTimer';
 import EmptyState from '../Components/EmptyState';
 import { ProductCard } from '../Components/ProductCard';
 import SEOHead from '../Components/SEOHead';
+import OfferTicker, { offerTickerOnHome } from '../Components/OfferTicker';
 import { ProductCardSkeleton } from '../Components/Skeleton';
 import Select from '../Components/Select';
 import Tabs from '../Components/Tabs';
@@ -43,6 +44,7 @@ import { useWishlist, useAddToCart } from '../hooks';
 import './Welcome.css';
 
 export default function Welcome({ banners = [], blogs = [], brands = [] }) {
+    const siteSettings = usePage().props?.site_settings ?? {};
     const [bannersList, setBannersList] = useState(banners);
     const [blogsList, setBlogsList] = useState(blogs);
     const [flashSaleProducts, setFlashSaleProducts] = useState([]);
@@ -332,6 +334,16 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* The Live Offer again, between the banner and the trust
+                    strip — Settings → Header & Ticker switches it off. */}
+                {offerTickerOnHome(siteSettings) && (
+                    <section className="container home-offer-section">
+                        <div className="home-offer-strip top-ticker-left">
+                            <OfferTicker />
                         </div>
                     </section>
                 )}

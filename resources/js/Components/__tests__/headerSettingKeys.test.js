@@ -16,10 +16,18 @@ const read = (path) => readFileSync(resolve(process.cwd(), path), 'utf8');
 
 /** Keys the header expects the settings payload to carry. */
 const keysHeaderReads = () => {
-    const source = read('resources/js/Components/Header.jsx');
+    // The ticker is its own piece now (OfferTicker), drawn by the header.
+    const source = [
+        'resources/js/Components/Header.jsx',
+        'resources/js/Components/OfferTicker.jsx',
+    ]
+        .map(read)
+        .join('\n');
 
     return new Set(
-        [...source.matchAll(/siteSettings\.([a-z0-9_]+)/g)].map((m) => m[1]),
+        [...source.matchAll(/\b(?:siteSettings|settings)\.([a-z0-9_]+)/g)].map(
+            (m) => m[1],
+        ),
     );
 };
 

@@ -19,8 +19,7 @@ import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import siteConfig from '../constants/siteConfig';
 import { ROUTES } from '../constants/endpoints';
 import CategoryNav from './CategoryNav';
-import { splitAnnouncement } from '../utils/announcement';
-import { useMarqueeDuration } from '../hooks';
+import OfferTicker, { offerTickerOn } from './OfferTicker';
 import useAppStore from '../store/useAppStore';
 
 /**
@@ -55,7 +54,6 @@ export const Header = () => {
     const tickerRef = useRef(null);
     const mainHeaderRef = useRef(null);
     const megaNavRef = useRef(null);
-    const marqueeRef = useRef(null);
 
     const fetchCartCount = useAppStore((state) => state.fetchCartCount);
     const fetchCompareCount = useAppStore((state) => state.fetchCompareCount);
@@ -137,22 +135,8 @@ export const Header = () => {
      * fell through to the line below — editing it under Settings changed
      * nothing on the site.
      */
-    const announcement =
-        siteSettings.announcement_text ||
-        '⚡ Flash Deals Live: Save up to 40% OFF on Gaming Laptops & Graphics Cards! Free 64-District Express Delivery on orders over ৳50,000.';
-
-    /*
-     * The settings screen has an on/off switch for the ticker that nothing was
-     * reading either. Stored as '1'/'0'; anything else — including the key
-     * being absent on an older install — means on.
-     */
-    const announcementActive = siteSettings.announcement_active !== '0';
-
-    // The heading stays put; only the offer itself travels.
-    const { label: announcementLabel, message: announcementMessage } =
-        splitAnnouncement(announcement);
-
-    useMarqueeDuration(marqueeRef, [announcementMessage]);
+    // The ticker's on/off switch (Settings → Header & Ticker).
+    const announcementActive = offerTickerOn(siteSettings);
 
     return (
         <header className="site-header-wrapper">
@@ -161,40 +145,7 @@ export const Header = () => {
                 <div className="top-ticker-bar" ref={tickerRef}>
                     <div className="container top-ticker-inner">
                         <div className="top-ticker-left">
-                            <span className="ticker-pulse-badge">
-                                <span className="live-dot"></span>{' '}
-                                {siteSettings.announcement_badge ||
-                                    'LIVE OFFER'}
-                            </span>
-                            {/*
-                             * The announcement scrolls rather than being cut off
-                             * mid-word by the width of the bar. The text is
-                             * rendered twice so the track can travel exactly one
-                             * copy's width and start over with no visible jump;
-                             * the second copy is hidden from screen readers, which
-                             * would otherwise announce it all again.
-                             */}
-                            {announcementLabel && (
-                                <p className="ticker-label">
-                                    {announcementLabel}
-                                </p>
-                            )}
-                            <div className="header-marquee">
-                                <div
-                                    className="header-marquee-track"
-                                    ref={marqueeRef}
-                                >
-                                    <p className="ticker-text">
-                                        {announcementMessage}
-                                    </p>
-                                    <p
-                                        className="ticker-text"
-                                        aria-hidden="true"
-                                    >
-                                        {announcementMessage}
-                                    </p>
-                                </div>
-                            </div>
+                            <OfferTicker />
                         </div>
 
                         <div className="top-ticker-right">

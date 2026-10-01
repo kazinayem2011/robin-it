@@ -186,6 +186,7 @@ export default function AdminSettings({
                 initialMap.announcement_text ||
                 '⚡ Ramadan Tech Fest: Up to 15% Instant Discount on All Genuine Builds! Cash on Delivery Nationwide.',
             announcement_active: initialMap.announcement_active !== '0',
+            announcement_home: initialMap.announcement_home !== '0',
             // On unless switched off; the dropdown off unless switched on.
             header_hot_searches: initialMap.header_hot_searches !== '0',
             header_search_scope: initialMap.header_search_scope === '1',
@@ -1219,6 +1220,18 @@ export default function AdminSettings({
                                     name="announcement_active"
                                     label="Display Announcement Bar on Storefront Top Header"
                                     checked={formik.values.announcement_active}
+                                    onChange={formik.handleChange}
+                                />
+                                <Checkbox
+                                    name="announcement_home"
+                                    label="Also show it on the home page, between the banner and the service strip"
+                                    checked={
+                                        formik.values.announcement_active &&
+                                        formik.values.announcement_home
+                                    }
+                                    disabled={
+                                        !formik.values.announcement_active
+                                    }
                                     onChange={formik.handleChange}
                                 />
                             </div>

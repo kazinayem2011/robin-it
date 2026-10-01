@@ -118,6 +118,8 @@ class SiteSetting extends Model
             'announcement_text',
             'announcement_badge',
             'announcement_active',
+            // Repeated on the home page, between the banner and the trust strip.
+            'announcement_home',
         ],
         // The parts of the header's search that can be switched off.
         'header' => [
