@@ -15,6 +15,8 @@ class Category extends Model
         'slug',
         'position',
         'icon',
+        // The colour of its card on the home page; empty takes the palette's.
+        'accent_color',
         'badge',
         'is_offer',
         'is_active',

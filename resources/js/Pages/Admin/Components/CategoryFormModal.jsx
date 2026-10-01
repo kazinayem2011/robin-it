@@ -225,6 +225,49 @@ export const CategoryFormModal = ({
                     error={formik.touched.slug && formik.errors.slug}
                 />
 
+                {/* Its card's colour on the home page's Featured Tech
+                    Categories. Automatic takes the next of a fixed palette,
+                    so neighbouring cards differ without anyone choosing. */}
+                <div className="auth-form-group admin-cat-colour">
+                    <span className="auth-label">
+                        Card colour on the home page
+                    </span>
+                    <div className="admin-cat-colour-row">
+                        <span
+                            className={`admin-variant-swatch ${formik.values.accent_color ? '' : 'is-empty'}`}
+                            title="Pick the card's colour"
+                        >
+                            <input
+                                type="color"
+                                aria-label="Card colour"
+                                value={formik.values.accent_color || '#2563eb'}
+                                onChange={(e) =>
+                                    formik.setFieldValue(
+                                        'accent_color',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                        </span>
+                        <span className="admin-field-hint">
+                            {formik.values.accent_color
+                                ? formik.values.accent_color
+                                : 'Automatic — a different colour from its neighbours'}
+                        </span>
+                        {formik.values.accent_color && (
+                            <button
+                                type="button"
+                                className="admin-table-icon-btn has-label"
+                                onClick={() =>
+                                    formik.setFieldValue('accent_color', '')
+                                }
+                            >
+                                <span>Use automatic</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 <div className="admin-form-row-2col">
                     {/* Icon Name */}
                     <FormInput

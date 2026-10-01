@@ -144,6 +144,7 @@ export default function Categories({
             brand_id: '',
             create_brand: false,
             icon: '',
+            accent_color: '',
             badge: '',
             is_offer: false,
             is_active: true,
@@ -163,6 +164,8 @@ export default function Categories({
                     parent_id: targetParentId,
                     badge: values.badge || null,
                     icon: values.icon || null,
+                    // Empty: the home card takes the palette's colour.
+                    accent_color: values.accent_color || null,
                 };
 
                 if (modalState.mode === 'create') {
@@ -212,6 +215,7 @@ export default function Categories({
                 brand_id: '',
                 create_brand: false,
                 icon: 'Layers',
+                accent_color: '',
                 badge: '',
                 is_offer: false,
                 is_active: true,
@@ -235,6 +239,7 @@ export default function Categories({
                 brand_id: '',
                 create_brand: false,
                 icon: level === 2 ? 'Folder' : '',
+                accent_color: '',
                 badge: '',
                 is_offer: false,
                 is_active: true,
@@ -392,6 +397,7 @@ export default function Categories({
                 brand_id: cat.brand_id || '',
                 create_brand: false,
                 icon: cat.icon || '',
+                accent_color: cat.accent_color || '',
                 badge: cat.badge || '',
                 is_offer: Boolean(cat.is_offer),
                 is_active:

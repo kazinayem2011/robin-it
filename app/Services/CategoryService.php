@@ -27,6 +27,20 @@ class CategoryService
     /** Long, because every write path invalidates explicitly. */
     private const TTL = 21600;
 
+    /** Home category cards, in turn: distinct hues that hold on light and dark. */
+    public const CARD_PALETTE = [
+        '#2563eb', // blue
+        '#7c3aed', // violet
+        '#0891b2', // cyan
+        '#059669', // emerald
+        '#d97706', // amber
+        '#db2777', // pink
+        '#4f46e5', // indigo
+        '#ea580c', // orange
+        '#0d9488', // teal
+        '#dc2626', // red
+    ];
+
     /**
      * Drop the cached catalogue views.
      *
@@ -237,58 +251,23 @@ class CategoryService
             ->take(10)
             ->get();
 
-        // One read of the full category table, reused for every descendant lookup.
-        $tree = $this->loadTree();
+        /*
+         * A colour per card, so the row reads as different shelves rather than
+         * one red button repeated. The category's own colour (set in the
+         * admin), else the next of this palette by position, so neighbours
+         * always differ. They used to be keyed by the seeded slugs — desktops,
+         * laptops — which the real categories do not use, so every card fell
+         * back to the same red.
+         */
+        $palette = self::CARD_PALETTE;
 
-        $descendantMap = [];
-        $allIds = [];
-        foreach ($categories as $cat) {
-            $ids = $this->descendantIdsFromTree($cat->id, $tree);
-            $descendantMap[$cat->id] = $ids;
-            $allIds = array_merge($allIds, $ids);
-        }
-
-        // One grouped count covering every category at once.
-        $counts = empty($allIds)
-            ? collect()
-            : Product::active()
-                ->join('category_product', 'category_product.product_id', '=', 'products.id')
-                ->whereIn('category_product.category_id', array_unique($allIds))
-                ->groupBy('category_product.category_id')
-                ->selectRaw('category_product.category_id as category_id, COUNT(DISTINCT products.id) as aggregate')
-                ->pluck('aggregate', 'category_id');
-
-        $colors = [
-            'desktops' => '#EA484F',
-            'gaming-pc' => '#EA484F',
-            'laptops' => '#2563EB',
-            'gaming-laptops' => '#2563EB',
-            'graphics-card' => '#10B981',
-            'cpu' => '#7C3AED',
-            'motherboard' => '#F59E0B',
-            'monitors' => '#06B6D4',
-            'ram' => '#EC4899',
-            'storage' => '#8B5CF6',
-            'accessories' => '#F97316',
-            'gaming-gear' => '#14B8A6',
-            'components' => '#D12127',
-        ];
-
-        return $categories->map(function (Category $cat) use ($colors, $descendantMap, $counts) {
-            $count = 0;
-            foreach ($descendantMap[$cat->id] ?? [] as $id) {
-                $count += (int) ($counts[$id] ?? 0);
-            }
-
-            return [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'slug' => $cat->slug,
-                'icon' => $cat->icon ?: 'Box',
-                'color' => $colors[$cat->slug] ?? '#D12127',
-                'count' => $count > 0 ? "{$count}+ Models" : 'Available',
-            ];
-        })->toArray();
+        return $categories->values()->map(fn (Category $cat, int $i) => [
+            'id' => $cat->id,
+            'name' => $cat->name,
+            'slug' => $cat->slug,
+            'icon' => $cat->icon ?: 'Box',
+            'color' => $cat->accent_color ?: $palette[$i % count($palette)],
+        ])->toArray();
     }
 
     /**

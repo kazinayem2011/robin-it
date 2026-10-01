@@ -165,6 +165,7 @@ class CategoryController extends Controller
             'parent_id' => $parentId,
             'brand_id' => $brandId,
             'icon' => $validated['icon'] ?? ($validated['parent_id'] ?? null ? null : 'Layers'),
+            'accent_color' => isset($validated['accent_color']) ? strtolower($validated['accent_color']) : null,
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
             'is_active' => $validated['is_active'] ?? true,
@@ -191,6 +192,10 @@ class CategoryController extends Controller
             'parent_id' => $parentId,
             'brand_id' => $brandId,
             'icon' => $validated['icon'] ?? $category->icon,
+            // Sent empty to go back to the palette's colour.
+            'accent_color' => array_key_exists('accent_color', $validated)
+                ? ($validated['accent_color'] ? strtolower($validated['accent_color']) : null)
+                : $category->accent_color,
             'badge' => $validated['badge'] ?? null,
             'is_offer' => $validated['is_offer'] ?? false,
             'is_active' => $validated['is_active'] ?? true,

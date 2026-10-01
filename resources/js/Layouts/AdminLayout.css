@@ -5931,3 +5931,11 @@ a.admin-card:hover,
 .admin-claim-check {
     text-transform: none;
 }
+
+/* Category form: the home card's colour — picker, value, "use automatic". */
+.admin-cat-colour-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}

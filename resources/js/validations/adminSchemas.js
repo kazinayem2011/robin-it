@@ -55,6 +55,10 @@ export const adminCategorySchema = Yup.object().shape({
     /* The brand a shelf stands for, when it stands for one. Usually null. */
     brand_id: Yup.mixed().nullable(),
     icon: Yup.string().max(50).nullable(),
+    // Its home card's colour; empty is the palette's.
+    accent_color: Yup.string()
+        .matches(/^(#[0-9a-fA-F]{6})?$/, 'Pick a colour from the picker')
+        .nullable(),
     badge: Yup.string().max(20).nullable(),
     is_offer: Yup.boolean().default(false),
     is_active: Yup.boolean().default(true),

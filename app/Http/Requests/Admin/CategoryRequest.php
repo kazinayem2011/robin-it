@@ -36,6 +36,8 @@ class CategoryRequest extends AdminRequest
              */
             'create_brand' => 'nullable|boolean',
             'icon' => 'nullable|string|max:50',
+            // Its card's colour on the home page, as the colour picker gives it.
+            'accent_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'badge' => 'nullable|string|max:20',
             'is_offer' => 'boolean',
             'is_active' => 'boolean',

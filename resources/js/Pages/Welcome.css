@@ -415,10 +415,24 @@
 .category-bubble-card {
     flex: 0 0 135px;
     width: 135px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
+    /*
+     * One colour per category (--cat, from the server: the category's own, or
+     * the palette's next), and everything here mixed from it with the
+     * surface, so it holds in both themes: a soft tint, a bold icon disc, a
+     * bar along the foot, and a glow of the same colour on hover. They were
+     * all the same red, so the row read as one button repeated.
+     */
+    --cat: var(--primary);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--cat) 10%, var(--bg-surface)),
+        var(--bg-surface) 70%
+    );
+    border: 1px solid color-mix(in srgb, var(--cat) 22%, var(--border-color));
     border-radius: var(--radius-md);
-    padding: 16px 12px;
+    padding: 18px 12px 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -429,28 +443,50 @@
     user-select: none;
 }
 
+/* The colour along the foot. */
+.category-bubble-card::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--cat);
+    opacity: 0.85;
+    transition: height var(--transition-fast);
+}
+
 .category-bubble-card:hover {
     transform: translateY(-4px);
-    border-color: var(--primary);
-    box-shadow: 0 8px 20px -4px rgba(234, 72, 79, 0.15);
+    border-color: var(--cat);
+    box-shadow: 0 10px 22px -6px color-mix(in srgb, var(--cat) 45%, transparent);
+}
+
+.category-bubble-card:hover::after {
+    height: 4px;
 }
 
 .bubble-icon-circle {
-    width: 52px;
-    height: 52px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 10px;
     transition: transform var(--transition-fast);
-    background: var(--info-light);
-    color: var(--accent-blue-ink);
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--cat) 82%, white),
+        var(--cat)
+    );
+    color: var(--text-on-accent);
+    box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--cat) 70%, transparent);
     flex-shrink: 0;
 }
 
 .category-bubble-card:hover .bubble-icon-circle {
-    transform: scale(1.14);
+    transform: scale(1.12);
 }
 
 .bubble-name {

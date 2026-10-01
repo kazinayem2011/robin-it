@@ -455,14 +455,9 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                         href={ROUTES.SHOP_CATEGORY(cat.slug)}
                                         key={`${cat.slug}-${idx}`}
                                         className="category-bubble-card card-hover"
+                                        style={{ '--cat': cat.color }}
                                     >
-                                        <div
-                                            className="bubble-icon-circle"
-                                            style={{
-                                                background: `${cat.color || '#D12127'}15`,
-                                                color: cat.color || '#D12127',
-                                            }}
-                                        >
+                                        <div className="bubble-icon-circle">
                                             {getCategoryIcon(cat, { size: 24 })}
                                         </div>
                                         <span className="bubble-name">
