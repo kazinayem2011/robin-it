@@ -223,6 +223,7 @@ class PurchaseOrderService
             }
             $items = $order->items()->get()->keyBy('id');
             $receiptLines = [];
+            $typedSerials = [];
 
             foreach ($lines as $line) {
                 $item = $items->get((int) ($line['purchase_order_item_id'] ?? 0));
@@ -288,6 +289,8 @@ class PurchaseOrderService
                     $item->needs_serials,
                 );
 
+                $typedSerials[] = [$item->display_name, $line['serials'] ?? null];
+
                 $receiptLines[] = [
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
@@ -300,6 +303,8 @@ class PurchaseOrderService
 
                 $item->increment('quantity_received', $quantity);
             }
+
+            app(SerialService::class)->checkAcrossLines($typedSerials);
 
             if ($receiptLines === []) {
                 throw new StorefrontException(

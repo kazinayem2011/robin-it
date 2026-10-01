@@ -263,15 +263,19 @@ class StockController extends Controller
 
         // Serials checked before a unit lands, so a bad one stops the delivery
         // — and a missing one, on anything with a warranty.
+        $typed = [];
         foreach ($validated['lines'] as $line) {
             [$product, $variant] = $this->stock->resolveUnit((int) $line['product_id'], $line['product_variant_id'] ?? null);
+            $name = $variant ? "{$product->name} ({$variant->name})" : $product->name;
             $this->serials->checkDelivery(
-                $variant ? "{$product->name} ({$variant->name})" : $product->name,
+                $name,
                 $line['serials'] ?? null,
                 (int) $line['quantity'],
                 (int) $product->warranty_months > 0,
             );
+            $typed[] = [$name, $line['serials'] ?? null];
         }
+        $this->serials->checkAcrossLines($typed);
 
         $receipt = $this->stock->receive(
             [

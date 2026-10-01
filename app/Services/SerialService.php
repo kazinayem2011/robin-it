@@ -84,6 +84,40 @@ class SerialService
      *
      * @throws StorefrontException
      */
+    /**
+     * The same serial typed on two lines of one delivery.
+     *
+     * Each line was checked on its own, against itself and the books, so a
+     * number on two lines passed both checks: both units landed, one serial
+     * was saved, and the other unit had none. Found receiving on live.
+     *
+     * @param  array<int, array{0: string, 1: ?string}>  $lines  [name, typed serials]
+     *
+     * @throws StorefrontException
+     */
+    public function checkAcrossLines(array $lines): void
+    {
+        $seen = [];
+
+        foreach ($lines as [$name, $typed]) {
+            $list = collect(preg_split('/[\r\n,]+/', (string) $typed) ?: [])
+                ->map(fn ($s) => ProductSerial::normalise($s))
+                ->filter()
+                ->unique();
+
+            foreach ($list as $serial) {
+                if (isset($seen[$serial]) && $seen[$serial] !== $name) {
+                    throw new StorefrontException(
+                        "{$serial} is typed for both {$seen[$serial]} and {$name}. Each box has its own serial number.",
+                        422,
+                        ApiCode::VALIDATION_ERROR
+                    );
+                }
+                $seen[$serial] = $name;
+            }
+        }
+    }
+
     public function checkDelivery(string $name, ?string $typed, int $units, bool $required = false): void
     {
         $list = collect(preg_split('/[\r\n,]+/', (string) $typed) ?: [])
