@@ -128,4 +128,19 @@ class ReviewEligibilityTest extends TestCase
         $this->assertTrue($data['is_logged_in']);
         $this->assertTrue($data['can_review'], 'a verified buyer was refused');
     }
+
+    /** A refusal names the form's boxes, not the database's columns. */
+    public function test_a_short_review_is_refused_in_the_words_of_the_form(): void
+    {
+        $product = $this->product();
+        $buyer = User::factory()->create();
+        $this->buy($buyer, $product);
+
+        $this->actingAs($buyer)
+            ->postJson("/api/products/{$product->slug}/reviews", [
+                'rating' => 4, 'author_name' => 'Rahim', 'comment' => 'Ok',
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('data.errors.comment.0', 'Please write a few more words about the product.');
+    }
 }

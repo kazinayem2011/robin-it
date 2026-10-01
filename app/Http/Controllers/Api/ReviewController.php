@@ -89,6 +89,13 @@ class ReviewController extends Controller
             'author_name' => 'required|string|max:100',
             'title' => 'nullable|string|max:150',
             'comment' => 'required|string|min:5|max:2000',
+        ], [
+            // In the words of the form, not the column names.
+            'author_name.required' => 'Please add your name.',
+            'comment.required' => 'Please write a few words about the product.',
+            'comment.min' => 'Please write a few more words about the product.',
+            'comment.max' => 'Please keep the review under 2,000 characters.',
+            'title.max' => 'Please keep the headline under 150 characters.',
         ]);
 
         $existingReview = ProductReview::where('product_id', $product->id)

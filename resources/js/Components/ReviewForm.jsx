@@ -24,12 +24,14 @@ export default function ReviewForm({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await onSubmit({
+        const accepted = await onSubmit({
             rating,
             author_name: authorName,
             title: reviewTitle,
             comment,
         });
+        // A refused review keeps what was typed, to be fixed rather than rewritten.
+        if (accepted === false) return;
         setReviewTitle('');
         setComment('');
     };

@@ -584,8 +584,10 @@ export default function ProductDetails(props) {
             // Refresh reviews
             const revs = await reviewService.getProductReviews(productSlug);
             setReviewsData(revs);
+            return true;
         } catch (err) {
             toast.error(err?.message || 'Failed to submit review.');
+            return false;
         } finally {
             setSubmittingReview(false);
         }
@@ -1798,7 +1800,7 @@ export default function ProductDetails(props) {
                                                 </strong>
                                                 <p>
                                                     Only customers who have
-                                                    purchased this product from
+                                                    purchased this product from{' '}
                                                     {siteConfig.name} can write
                                                     a review.{' '}
                                                     <Link
