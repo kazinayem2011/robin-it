@@ -119,6 +119,11 @@ class SiteSetting extends Model
             'announcement_badge',
             'announcement_active',
         ],
+        // The parts of the header's search that can be switched off.
+        'header' => [
+            'header_hot_searches',
+            'header_search_scope',
+        ],
         // Credentials. Writable from the Settings screen, never published.
         'mail' => [
             'mail_mailer',
@@ -162,7 +167,7 @@ class SiteSetting extends Model
     ];
 
     /** Groups whose values are safe in a browser. */
-    private const PUBLIC_GROUPS = ['general', 'contact', 'shipping', 'tax', 'seo', 'announcement'];
+    private const PUBLIC_GROUPS = ['general', 'contact', 'shipping', 'tax', 'seo', 'announcement', 'header'];
 
     /**
      * Keys the admin Settings form may write.

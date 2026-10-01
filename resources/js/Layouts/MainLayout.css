@@ -935,15 +935,22 @@
     right: -2px;
     background: var(--primary);
     color: var(--text-on-accent);
-    font-size: 0.64rem;
+    /* Whole pixels, so the number sits dead centre: a 10px figure on a line
+       exactly the badge's inner height. 0.65rem in an 18px badge left it on
+       half pixels, and at 1x the digits rounded a pixel off centre. */
+    font-size: 10px;
+    line-height: 16px;
     font-weight: 800;
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
+    box-sizing: border-box;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 3px;
+    border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--bg-surface);
+    font-variant-numeric: tabular-nums;
 }
 
 /* ==========================================================================

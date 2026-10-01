@@ -186,6 +186,9 @@ export default function AdminSettings({
                 initialMap.announcement_text ||
                 '⚡ Ramadan Tech Fest: Up to 15% Instant Discount on All Genuine Builds! Cash on Delivery Nationwide.',
             announcement_active: initialMap.announcement_active !== '0',
+            // On unless switched off; the dropdown off unless switched on.
+            header_hot_searches: initialMap.header_hot_searches !== '0',
+            header_search_scope: initialMap.header_search_scope === '1',
             announcement_badge: initialMap.announcement_badge || 'LIVE OFFER',
             shipping_inside_dhaka: Number(
                 initialMap.shipping_inside_dhaka || 60,
@@ -367,7 +370,7 @@ export default function AdminSettings({
                         },
                         {
                             key: 'ticker',
-                            label: 'Announcement Ticker',
+                            label: 'Header & Ticker',
                             icon: Bell,
                         },
                     ]}
@@ -1218,6 +1221,48 @@ export default function AdminSettings({
                                     checked={formik.values.announcement_active}
                                     onChange={formik.handleChange}
                                 />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* The header's search: two parts the shop can switch off. */}
+                    {activeTab === 'ticker' && (
+                        <div className="admin-card">
+                            <div className="admin-card-header">
+                                <div className="admin-card-title-inline">
+                                    <Search
+                                        size={18}
+                                        className="admin-card-icon"
+                                    />
+                                    <h3 className="admin-card-title">
+                                        Header Search
+                                    </h3>
+                                </div>
+                            </div>
+                            <div>
+                                <Checkbox
+                                    name="header_hot_searches"
+                                    label='Show "Hot" searches under the search box'
+                                    checked={formik.values.header_hot_searches}
+                                    onChange={formik.handleChange}
+                                />
+                                <small className="admin-field-hint">
+                                    The scrolling row of popular searches (RTX
+                                    4090, Core i9 14900K…) beneath the search
+                                    box.
+                                </small>
+                                <Checkbox
+                                    name="header_search_scope"
+                                    label='Show the "All Tech" dropdown in the search box'
+                                    checked={formik.values.header_search_scope}
+                                    onChange={formik.handleChange}
+                                />
+                                <small className="admin-field-hint">
+                                    Lets shoppers search only in-stock, on-sale
+                                    or featured items. Off, the search box is
+                                    one plain box, as on StarTech, and searches
+                                    everything.
+                                </small>
                             </div>
                         </div>
                     )}

@@ -49,7 +49,18 @@ export const SearchBar = ({ onSearch }) => {
     const [searchFocused, setSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const tagsRef = useRef(null);
-    const { url } = usePage();
+    const { url, props } = usePage();
+
+    /*
+     * Both parts can be switched off in Settings → Header. The category
+     * dropdown starts off: StarTech's search is one box. With it hidden, a
+     * search covers everything — the scope a listing page would otherwise
+     * slip into it unseen is ignored.
+     */
+    const settings = props?.site_settings ?? {};
+    const showScope = settings.header_search_scope === '1';
+    const showHot = settings.header_hot_searches !== '0';
+    const scope = showScope ? selectedScope : 'all';
 
     /*
      * The dropdown follows the page.
@@ -250,15 +261,15 @@ export const SearchBar = ({ onSearch }) => {
         setSearchFocused(false);
 
         if (onSearch) {
-            onSearch(searchQuery, selectedScope);
+            onSearch(searchQuery, scope);
 
             return;
         }
 
         // A term, a scope, or both. Only an empty box on "All Tech" has
         // nowhere to go.
-        if (searchQuery.trim() || selectedScope !== 'all') {
-            router.visit(destination(selectedScope, searchQuery));
+        if (searchQuery.trim() || scope !== 'all') {
+            router.visit(destination(scope, searchQuery));
         }
     };
 
@@ -283,16 +294,18 @@ export const SearchBar = ({ onSearch }) => {
                  * on either side of it, did nothing at all, which is the part
                  * of the strip the eye lands on first.
                  */}
-                <div className="search-category-selector">
-                    <Select
-                        value={selectedScope}
-                        onChange={(e) => chooseScope(e.target.value)}
-                        options={searchIn}
-                        aria-label="Search within"
-                        icon={SlidersHorizontal}
-                        className="search-category-select"
-                    />
-                </div>
+                {showScope && (
+                    <div className="search-category-selector">
+                        <Select
+                            value={selectedScope}
+                            onChange={(e) => chooseScope(e.target.value)}
+                            options={searchIn}
+                            aria-label="Search within"
+                            icon={SlidersHorizontal}
+                            className="search-category-select"
+                        />
+                    </div>
+                )}
 
                 <input
                     type="text"
@@ -332,47 +345,51 @@ export const SearchBar = ({ onSearch }) => {
                 </button>
             </form>
 
-            {/* Live Trending Search Tags */}
-            <div className="search-hot-tags">
-                {/* Fixed, like the ticker's heading: it says what the row is,
+            {/* Live Trending Search Tags — Settings → Header switches them off. */}
+            {showHot && (
+                <div className="search-hot-tags">
+                    {/* Fixed, like the ticker's heading: it says what the row is,
                     so it should not have to be chased to be read. */}
-                <span className="hot-tag-label">
-                    <Flame size={12} className="text-primary" /> Hot:
-                </span>
-                <div className="header-marquee">
-                    <div className="header-marquee-track" ref={tagsRef}>
-                        {/*
-                         * Two copies so the loop has no seam. Unlike the
-                         * ticker these are real buttons, so the copy is taken
-                         * out of the tab order as well as hidden from screen
-                         * readers — otherwise every keyword is reachable twice
-                         * and one of the two goes nowhere useful.
-                         */}
-                        {[false, true].map((isDuplicate) => (
-                            <div
-                                className="hot-tag-group"
-                                key={isDuplicate ? 'copy' : 'original'}
-                                aria-hidden={isDuplicate || undefined}
-                            >
-                                {siteConfig.trendingKeywords.map((kw) => (
-                                    <button
-                                        key={kw}
-                                        type="button"
-                                        tabIndex={isDuplicate ? -1 : undefined}
-                                        onClick={() => {
-                                            setSearchQuery(kw);
-                                            setSearchFocused(true);
-                                        }}
-                                        className="hot-tag"
-                                    >
-                                        {kw}
-                                    </button>
-                                ))}
-                            </div>
-                        ))}
+                    <span className="hot-tag-label">
+                        <Flame size={12} className="text-primary" /> Hot:
+                    </span>
+                    <div className="header-marquee">
+                        <div className="header-marquee-track" ref={tagsRef}>
+                            {/*
+                             * Two copies so the loop has no seam. Unlike the
+                             * ticker these are real buttons, so the copy is taken
+                             * out of the tab order as well as hidden from screen
+                             * readers — otherwise every keyword is reachable twice
+                             * and one of the two goes nowhere useful.
+                             */}
+                            {[false, true].map((isDuplicate) => (
+                                <div
+                                    className="hot-tag-group"
+                                    key={isDuplicate ? 'copy' : 'original'}
+                                    aria-hidden={isDuplicate || undefined}
+                                >
+                                    {siteConfig.trendingKeywords.map((kw) => (
+                                        <button
+                                            key={kw}
+                                            type="button"
+                                            tabIndex={
+                                                isDuplicate ? -1 : undefined
+                                            }
+                                            onClick={() => {
+                                                setSearchQuery(kw);
+                                                setSearchFocused(true);
+                                            }}
+                                            className="hot-tag"
+                                        >
+                                            {kw}
+                                        </button>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Live Autocomplete Results Flyout Dropdown */}
             {searchFocused && searchQuery.trim().length >= 2 && (
@@ -541,7 +558,7 @@ export const SearchBar = ({ onSearch }) => {
                                         Did you mean{' '}
                                         <Link
                                             href={destination(
-                                                selectedScope,
+                                                scope,
                                                 suggestions.didYouMean,
                                             )}
                                             className="search-did-you-mean"

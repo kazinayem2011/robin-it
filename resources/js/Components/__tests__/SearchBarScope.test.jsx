@@ -13,7 +13,11 @@ vi.mock('@inertiajs/react', () => ({
         </a>
     ),
     router: { visit: (...args) => visit(...args) },
-    usePage: () => ({ url: currentUrl }),
+    // The dropdown is switched on in Settings → Header for these.
+    usePage: () => ({
+        url: currentUrl,
+        props: { site_settings: { header_search_scope: '1' } },
+    }),
 }));
 
 vi.mock('../../services', () => ({

@@ -143,6 +143,8 @@ export const adminSettingsSchema = Yup.object().shape({
         .nullable(),
     announcement_text: Yup.string().required('Announcement text is required'),
     announcement_active: Yup.boolean().default(true),
+    header_hot_searches: Yup.boolean().default(true),
+    header_search_scope: Yup.boolean().default(false),
     announcement_badge: Yup.string()
         .max(24, 'Keep the badge short — it is a pill, not a sentence')
         .nullable(),

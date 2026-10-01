@@ -716,34 +716,20 @@ textarea.has-error:focus,
     background: var(--bg-surface-subtle);
 }
 
+/*
+ * The page's width, as StarTech's: the full window with 15px each side, up to
+ * 1320px and then centred. Measured against startech.com.bd at 375–2560px.
+ *
+ * Below about 1436px the container used to narrow by another 58px a side to
+ * keep clear of the Compare / Cart dock on the right edge, so on a laptop the
+ * content started 74px in where StarTech's starts 15px in. StarTech lets its
+ * own side buttons sit over the page edge; so does this now.
+ */
 .container {
     width: 100%;
     max-width: 1320px;
     margin: 0 auto;
-    padding: 0 16px;
-}
-
-/*
- * Room beside the page for the Compare / Cart dock.
- *
- * The dock is pinned to the right edge at the vertical middle, 66px wide
- * (QuickDock.css). Content only stays clear of it while the page's side margin
- * is at least that, which at 1320px happens from about 1420px up — a 13" Mac,
- * but not a 15" Windows laptop at 150% scaling, which gives the browser 1280.
- * There the page ran to within 16px of each edge and the dock sat over the last
- * product card's buttons.
- *
- * So below that the container narrows instead: never closer than the dock's
- * width plus 8px to either edge, the same on both sides so the page stays
- * centred. calc(100% - 116px) is that 74px margin less the 16px padding
- * already inside, twice; it meets the 1320px cap at 1436px, so the page does
- * not jump as the window crosses it. Phones are left alone: below 641px the dock
- * moves to the bottom corner and every pixel of width is worth more there.
- */
-@media (min-width: 641px) {
-    .container {
-        max-width: min(1320px, calc(100% - 116px));
-    }
+    padding: 0 15px;
 }
 
 /* ==========================================================================

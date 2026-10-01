@@ -31,12 +31,17 @@
        floating above the icon rather than a count belonging to it. */
     top: -3px;
     right: -3px;
+    box-sizing: border-box;
     min-width: 18px;
     height: 18px;
-    padding: 0 5px;
+    padding: 0 4px;
     display: grid;
     place-items: center;
-    font-size: 0.65rem;
+    /* Whole pixels, so the number sits dead centre: a 10px figure on a line
+       exactly the badge's inner height. 0.65rem in an 18px badge left it on
+       half pixels, and at 1x the digits rounded a pixel off centre. */
+    font-size: 10px;
+    line-height: 14px;
     font-weight: 800;
     color: var(--text-on-accent);
     background: var(--primary);

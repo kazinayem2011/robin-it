@@ -428,9 +428,6 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                         <span className="bubble-name">
                                             {cat.name}
                                         </span>
-                                        <span className="bubble-count">
-                                            {cat.count || 'Browse'}
-                                        </span>
                                     </Link>
                                 ),
                             )}
