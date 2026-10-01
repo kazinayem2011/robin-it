@@ -16,7 +16,8 @@ class BannerRequest extends AdminRequest
             'image_path' => 'required|string',
             'link_url' => 'nullable|string|max:255',
             'button_text' => 'nullable|string|max:50',
-            'position' => 'required|in:hero,promo_top,promo_side,popup',
+            // hero_side: the two cards beside the slider, as StarTech's home has.
+            'position' => 'required|in:hero,hero_side,promo_top,promo_side,popup',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
         ];

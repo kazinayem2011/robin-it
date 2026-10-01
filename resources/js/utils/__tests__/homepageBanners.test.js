@@ -45,7 +45,26 @@ describe('homepageBanners', () => {
         expect(hero).toEqual([]);
     });
 
+    /* Beside the slider, as StarTech's home: two at most, in their own spot. */
+    it('puts up to two side cards beside the slider, and nowhere else', () => {
+        const { hero, side, promos } = homepageBanners([
+            banner(1, 'hero'),
+            banner(2, 'hero_side'),
+            banner(3, 'hero_side'),
+            banner(4, 'hero_side'),
+            banner(5, 'hero_side', false),
+        ]);
+
+        expect(side.map((b) => b.id)).toEqual([2, 3]);
+        expect(hero.map((b) => b.id)).toEqual([1]);
+        expect(promos).toEqual([]);
+    });
+
     it('copes with nothing at all', () => {
-        expect(homepageBanners(null)).toEqual({ hero: [], promos: [] });
+        expect(homepageBanners(null)).toEqual({
+            hero: [],
+            side: [],
+            promos: [],
+        });
     });
 });

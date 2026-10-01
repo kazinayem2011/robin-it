@@ -128,7 +128,7 @@ describe('Admin banners', () => {
         ).toHaveValue(3);
     });
 
-    it('offers only the two places the homepage shows', async () => {
+    it('offers only the three places the homepage shows', async () => {
         const person = userEvent.setup();
         render(<AdminBanners banners={banners} />);
 
@@ -143,8 +143,30 @@ describe('Admin banners', () => {
 
         expect(options).toEqual([
             'Hero slide (1920 × 800 px)',
+            'Beside the slider (600 × 480 px)',
             'Promo card (800 × 500 px)',
         ]);
+    });
+
+    /* Picture-only, as StarTech's: no subtitle, badge or button to fill in. */
+    it('asks a side card for its picture and link only', async () => {
+        const person = userEvent.setup();
+        render(<AdminBanners banners={banners} />);
+
+        await person.click(
+            screen.getByRole('tab', { name: /beside the slider/i }),
+        );
+        await person.click(
+            screen.getByRole('button', { name: /add side card/i }),
+        );
+
+        expect(
+            screen.getByText(/describes the picture to screen readers/i),
+        ).toBeInTheDocument();
+        expect(screen.queryByText('Subtitle / Description')).toBeNull();
+        expect(screen.queryByText('Badge Chip')).toBeNull();
+        expect(screen.queryByText('Button Call-to-Action Text')).toBeNull();
+        expect(screen.getByText('Target Link URL')).toBeInTheDocument();
     });
 
     it('says plainly when a list is empty', () => {

@@ -34,6 +34,17 @@ export const BANNER_TYPES = {
         aspect: 12 / 5,
         cropTitle: 'Crop hero slide (12:5)',
     },
+    side: {
+        key: 'side',
+        tab: 'Beside the slider',
+        one: 'side card',
+        numbered: 'Card',
+        where: 'Two picture cards stacked to the right of the hero slider, as on StarTech. The first two switched on show; with none, the slider is full width. Put any wording in the picture itself.',
+        size: '600 × 480 px',
+        aspect: 5 / 4,
+        cropTitle: 'Crop side card (5:4)',
+        imageOnly: true,
+    },
     promo: {
         key: 'promo',
         tab: 'Promo cards',
@@ -48,17 +59,16 @@ export const BANNER_TYPES = {
 
 /** Which list a saved banner belongs in; promo_top was shown as a card. */
 export const bannerType = (position) =>
-    position === 'hero' ? 'hero' : 'promo';
+    position === 'hero' ? 'hero' : position === 'hero_side' ? 'side' : 'promo';
 
 /** What is stored for a list. */
-const positionFor = (type) => (type === 'hero' ? 'hero' : 'promo_side');
+const positionFor = (type) =>
+    type === 'hero' ? 'hero' : type === 'side' ? 'hero_side' : 'promo_side';
 
 const readTab = () => {
     try {
-        return new URLSearchParams(window.location.search).get('type') ===
-            'promo'
-            ? 'promo'
-            : 'hero';
+        const asked = new URLSearchParams(window.location.search).get('type');
+        return ['promo', 'side'].includes(asked) ? asked : 'hero';
     } catch {
         return 'hero';
     }
@@ -68,7 +78,7 @@ export default function AdminBanners({ banners = [] }) {
     const [activeType, setActiveType] = useState(readTab);
 
     const groups = useMemo(() => {
-        const byType = { hero: [], promo: [] };
+        const byType = { hero: [], side: [], promo: [] };
         banners.forEach((b) => byType[bannerType(b.position)].push(b));
         Object.values(byType).forEach((list) =>
             list.sort(
@@ -87,7 +97,7 @@ export default function AdminBanners({ banners = [] }) {
         // Kept in the address, so a reload or a shared link opens the same list.
         try {
             const url = new URL(window.location.href);
-            if (key === 'promo') url.searchParams.set('type', 'promo');
+            if (key !== 'hero') url.searchParams.set('type', key);
             else url.searchParams.delete('type');
             window.history.replaceState(window.history.state, '', url);
         } catch {
@@ -346,19 +356,27 @@ export default function AdminBanners({ banners = [] }) {
                     <form onSubmit={formik.handleSubmit} noValidate>
                         <div className="admin-form-stack">
                             <FormInput
-                                label="Banner Headline Title"
+                                label={
+                                    formType.imageOnly
+                                        ? 'Card name (not shown: describes the picture to screen readers)'
+                                        : 'Banner Headline Title'
+                                }
                                 name="title"
                                 required
                                 formik={formik}
                                 placeholder="e.g. Next-Gen Gaming Rigs on Sale"
                             />
 
-                            <FormInput
-                                label="Subtitle / Description"
-                                name="subtitle"
-                                formik={formik}
-                                placeholder="e.g. Up to 15% off Intel Core i9 & RTX 4090 builds"
-                            />
+                            {!formType.imageOnly && (
+                                <>
+                                    <FormInput
+                                        label="Subtitle / Description"
+                                        name="subtitle"
+                                        formik={formik}
+                                        placeholder="e.g. Up to 15% off Intel Core i9 & RTX 4090 builds"
+                                    />
+                                </>
+                            )}
 
                             <div className="admin-form-grid-2">
                                 {/* Where it shows; changing it moves it to
@@ -374,18 +392,26 @@ export default function AdminBanners({ banners = [] }) {
                                             label: `Hero slide (${BANNER_TYPES.hero.size})`,
                                         },
                                         {
+                                            value: 'hero_side',
+                                            label: `Beside the slider (${BANNER_TYPES.side.size})`,
+                                        },
+                                        {
                                             value: 'promo_side',
                                             label: `Promo card (${BANNER_TYPES.promo.size})`,
                                         },
                                     ]}
                                 />
 
-                                <FormInput
-                                    label="Badge Chip"
-                                    name="badge"
-                                    formik={formik}
-                                    placeholder="e.g. FLASH SALE"
-                                />
+                                {!formType.imageOnly && (
+                                    <>
+                                        <FormInput
+                                            label="Badge Chip"
+                                            name="badge"
+                                            formik={formik}
+                                            placeholder="e.g. FLASH SALE"
+                                        />
+                                    </>
+                                )}
                             </div>
 
                             <div>
@@ -426,13 +452,17 @@ export default function AdminBanners({ banners = [] }) {
                                     placeholder="/shop or /products/rtx-4090"
                                 />
 
-                                <FormInput
-                                    label="Button Call-to-Action Text"
-                                    name="button_text"
-                                    required
-                                    formik={formik}
-                                    placeholder="Shop Now"
-                                />
+                                {!formType.imageOnly && (
+                                    <>
+                                        <FormInput
+                                            label="Button Call-to-Action Text"
+                                            name="button_text"
+                                            required
+                                            formik={formik}
+                                            placeholder="Shop Now"
+                                        />
+                                    </>
+                                )}
                             </div>
 
                             <div className="admin-form-grid-2">

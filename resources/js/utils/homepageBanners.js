@@ -13,6 +13,8 @@ export function homepageBanners(banners = []) {
 
     return {
         hero: live.filter((b) => b.position === 'hero'),
+        // Beside the slider: two at most, as StarTech's home has.
+        side: live.filter((b) => b.position === 'hero_side').slice(0, 2),
         promos: live.filter(
             (b) => b.position === 'promo_side' || b.position === 'promo_top',
         ),

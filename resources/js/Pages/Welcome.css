@@ -75,6 +75,68 @@
     width: 100%;
 }
 
+/*
+ * With cards beside it, as StarTech's home: the slider three quarters, the
+ * two cards stacked in the last quarter, 15px apart, the same height as the
+ * slider. Below 992px the cards move under the slider, side by side.
+ */
+.hero-banner-layout.has-side {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+    gap: 15px;
+}
+
+.hero-side-cards {
+    display: grid;
+    /* Two equal halves of the slider's height, whatever shape the pictures
+       are: 1fr alone let a square photo push its row taller. */
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 15px;
+    height: 100%;
+    min-height: 0;
+}
+
+.hero-side-card {
+    position: relative;
+    display: block;
+    min-height: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-muted);
+    box-shadow: var(--shadow-md);
+}
+
+/* Laid over the card rather than sizing it: a picture's own shape must not
+   stretch the column past the slider's height. */
+.hero-side-card img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-fast);
+}
+
+.hero-side-card:hover img {
+    transform: scale(1.02);
+}
+
+@media (max-width: 991px) {
+    .hero-banner-layout.has-side {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero-side-cards {
+        grid-template-rows: none;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .hero-side-card {
+        aspect-ratio: 5 / 4;
+    }
+}
+
 .hero-slider-surface {
     width: 100%;
     height: 500px;

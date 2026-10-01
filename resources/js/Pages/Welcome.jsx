@@ -101,8 +101,11 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
      * every active banner, so the three promo cards rotated through the slider
      * as well as sitting in their own grid below it: six slides, three twice.
      */
-    const { hero: activeHeroSlides, promos: activePromos } =
-        homepageBanners(bannersList);
+    const {
+        hero: activeHeroSlides,
+        side: sideCards,
+        promos: activePromos,
+    } = homepageBanners(bannersList);
 
     // 1. Auto-advance hero slides dynamically based on available slide count
     useEffect(() => {
@@ -197,7 +200,9 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                     banner is switched on; an empty dark box otherwise. */}
                 {activeHeroSlides.length > 0 && (
                     <section className="hero-master-section">
-                        <div className="container hero-banner-layout">
+                        <div
+                            className={`container hero-banner-layout${sideCards.length > 0 ? ' has-side' : ''}`}
+                        >
                             <div className="hero-slider-surface">
                                 <div className="hero-slider-track">
                                     {activeHeroSlides.map((slide, idx) => (
@@ -334,6 +339,29 @@ export default function Welcome({ banners = [], blogs = [], brands = [] }) {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Beside the slider, as on StarTech: up to two
+                                picture cards from Banners → Beside the slider. */}
+                            {sideCards.length > 0 && (
+                                <div className="hero-side-cards">
+                                    {sideCards.map((card) => (
+                                        <Link
+                                            key={card.id}
+                                            href={card.link_url || ROUTES.SHOP}
+                                            className="hero-side-card"
+                                        >
+                                            <img
+                                                src={
+                                                    card.image_path ||
+                                                    card.image
+                                                }
+                                                alt={card.title || ''}
+                                                loading="eager"
+                                            />
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </section>
                 )}

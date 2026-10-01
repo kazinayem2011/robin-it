@@ -72,7 +72,7 @@ export const adminBannerSchema = Yup.object().shape({
     button_text: Yup.string().max(50).default('Shop Now'),
     position: Yup.string()
         .oneOf(
-            ['hero', 'promo_top', 'promo_side', 'popup'],
+            ['hero', 'hero_side', 'promo_top', 'promo_side', 'popup'],
             'Invalid banner position',
         )
         .required('Position placement is required'),
