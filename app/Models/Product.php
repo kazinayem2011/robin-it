@@ -623,6 +623,43 @@ class Product extends Model
             }
         }
 
+        return $this->filterValue((array) $names);
+    }
+
+    /**
+     * The same fact ticked as a filter, when no specification says it.
+     *
+     * Specs & filters takes a socket two ways: a specification row, or the
+     * Socket filter a shopper narrows by. Only the row was read, so a
+     * processor with "Socket: Intel LGA1700" ticked still showed "Add spec:
+     * Socket", and the PC Builder could not check it against a board. Found
+     * on live. Matched by the filter's whole name, so "Panel Type" is never
+     * taken for "Type"; several ticks (a cooler's sockets) read as a list.
+     *
+     * @param  array<int, string>  $names
+     */
+    private function filterValue(array $names): ?string
+    {
+        if (! $this->exists) {
+            return null;
+        }
+
+        if (! $this->relationLoaded('attributeValues')) {
+            $this->load('attributeValues.attribute');
+        }
+
+        foreach ($names as $needle) {
+            $labels = $this->attributeValues
+                ->filter(fn ($v) => strcasecmp(trim((string) $v->attribute?->name), $needle) === 0)
+                ->sortBy('sort_order')
+                ->pluck('label')
+                ->filter(fn ($l) => trim((string) $l) !== '');
+
+            if ($labels->isNotEmpty()) {
+                return $labels->implode(' / ');
+            }
+        }
+
         return null;
     }
 

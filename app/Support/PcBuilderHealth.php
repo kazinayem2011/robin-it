@@ -179,7 +179,7 @@ class PcBuilderHealth
                 // slot at all and call it complete.
                 $slotKey = PcCompatibilityService::slotFor($slotId);
 
-                return Product::with('specifications', 'category.parent.parent')
+                return Product::with('specifications', 'attributeValues.attribute', 'category.parent.parent')
                     ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                     ->where('is_active', true)
                     ->get()
@@ -215,7 +215,7 @@ class PcBuilderHealth
 
         $parts = empty($categoryIds)
             ? collect()
-            : Product::with('specifications', 'category')
+            : Product::with('specifications', 'attributeValues.attribute', 'category')
                 ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
                 ->where('is_active', true)
                 ->get();

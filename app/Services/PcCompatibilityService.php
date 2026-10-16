@@ -661,6 +661,10 @@ class PcCompatibilityService
         // "SOCKETAM5" -> "AM5"
         $value = preg_replace('/^SOCKET/', '', $value) ?? $value;
 
+        // The Socket filter's labels carry the brand: "AMD AM5" came out as
+        // "AMDAM5" and never matched a board's "AM5".
+        $value = preg_replace('/^(AMD|INTEL)(?=AM\d|TR\d|STRX|SP\d|LGA)/', '', $value) ?? $value;
+
         if (preg_match('/(LGA\d{3,4})/', $value, $m)) {
             return $m[1];
         }

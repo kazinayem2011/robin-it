@@ -54,7 +54,10 @@ class ProductController extends Controller
             'categories.parent:id,name,parent_id',
             'categories.parent.parent:id,name',
             'brand', 'images', 'specifications',
-            'attributeValues:id',
+            // label and filter name too: a ticked Socket filter answers the
+            // "Add spec" check (Product::spec) as well as the form's boxes.
+            'attributeValues:id,attribute_id,label,sort_order',
+            'attributeValues.attribute:id,name',
             // variants.images so the edit form can show each option's own
             // photos without a second request per row.
             'variants', 'variants.images',

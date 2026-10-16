@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Attribute;
+use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -124,5 +126,59 @@ class CompatibilitySpecGapsTest extends TestCase
         $this->assertNotNull($row);
         $this->assertContains('Memory Type', $row['missing_specs']);
         $this->assertContains('Form Factor', $row['missing_specs']);
+    }
+
+    private function tickFilter(Product $product, string $filter, array $labels): void
+    {
+        $attribute = Attribute::firstOrCreate(['slug' => str($filter)->slug()], ['name' => $filter, 'input_type' => 'flags']);
+
+        foreach ($labels as $i => $label) {
+            $value = AttributeValue::firstOrCreate(
+                ['attribute_id' => $attribute->id, 'slug' => str($label)->slug()],
+                ['label' => $label, 'sort_order' => $i]
+            );
+            $product->attributeValues()->attach($value->id);
+        }
+    }
+
+    /*
+     * The socket ticked as a filter, with no Socket specification row. On live
+     * a processor with "Socket: Intel LGA1700" ticked still said "Add spec:
+     * Socket", and the PC Builder could not match it to a board.
+     */
+    public function test_a_socket_ticked_as_a_filter_counts(): void
+    {
+        $cpu = $this->builderPart('cpu', 'Intel Core i5-12400', ['Default TDP' => '65W']);
+        $this->tickFilter($cpu, 'Socket', ['Intel LGA1700']);
+        $cpu = $cpu->fresh();
+
+        $this->assertSame([], $this->service()->missingSpecsFor($cpu));
+        $this->assertSame('LGA1700', $this->service()->socket($cpu));
+
+        $props = $this->actingAs(User::factory()->create(['role' => 'admin']))
+            ->get('/admin/products')
+            ->viewData('page')['props'];
+        $row = collect($props['products']['data'])->firstWhere('name', 'Intel Core i5-12400');
+        $this->assertSame([], $row['missing_specs']);
+    }
+
+    /** It checks against a board specified the other way, and a cooler's several ticks read as a list. */
+    public function test_a_filter_socket_is_checked_against_parts(): void
+    {
+        $cpu = $this->builderPart('cpu', 'Filter CPU', ['TDP' => '65W']);
+        $this->tickFilter($cpu, 'Socket', ['Intel LGA1700']);
+        $cooler = $this->builderPart('cpu-cooler', 'Filter Cooler');
+        $this->tickFilter($cooler, 'Socket', ['Intel LGA1700', 'AMD AM5']);
+
+        $this->assertSame(['LGA1700', 'AM5'], $this->service()->supportedSockets($cooler->fresh()));
+    }
+
+    /** A filter only answers for its own whole name: "Panel Type" is not "Type". */
+    public function test_a_filter_is_matched_by_its_whole_name(): void
+    {
+        $ram = $this->builderPart('ram', 'Some RAM');
+        $this->tickFilter($ram, 'Panel Type', ['DDR5 IPS']);
+
+        $this->assertSame(['Memory Type'], $this->service()->missingSpecsFor($ram->fresh()));
     }
 }

@@ -77,7 +77,7 @@ class PcBuilderController extends Controller
         }
 
         $products = Product::whereIn('id', array_values($ids))
-            ->with('specifications')
+            ->with(['specifications', 'attributeValues.attribute'])
             ->get()
             ->keyBy('id');
 
@@ -152,7 +152,7 @@ class PcBuilderController extends Controller
         $ids = collect($components)->pluck('product_id')->filter()->unique();
 
         $products = Product::whereIn('id', $ids)
-            ->with(['brand', 'images', 'specifications', 'category'])
+            ->with(['brand', 'images', 'specifications', 'attributeValues.attribute', 'category'])
             ->withCatalogAggregates()
             ->get()
             ->keyBy('id');
