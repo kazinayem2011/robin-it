@@ -1212,6 +1212,13 @@ a.admin-card:hover,
 .admin-product-item-thumb-open,
 .pd-thumb-open {
     display: block;
+    /*
+     * The button is what sits in the row, so it is what must not shrink. The
+     * image's own flex-shrink did nothing here, and with images capped at
+     * 100% of their box, a long product name squeezed the button and the
+     * picture inside it to a sliver.
+     */
+    flex: none;
     padding: 0;
     border: none;
     background: none;
