@@ -2453,7 +2453,9 @@ textarea.has-error:focus,
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-surface-subtle);
+    background: var(
+        --white
+    ); /* theme-exempt: product photos are shot on white */
     overflow: hidden;
     text-decoration: none;
 }
@@ -2463,7 +2465,27 @@ textarea.has-error:focus,
     width: 100%;
     height: 100%;
     object-fit: contain;
+    /*
+     * A thin white margin, as StarTech's cards have: edge to edge, a box ran
+     * into the card's sides and the "Save" badge sat on the box art. The
+     * buttons only appear on hover here, so the margin stays thin and the
+     * product nearly full size.
+     */
+    padding: 10px;
+    box-sizing: border-box;
     transition: transform var(--transition-normal);
+}
+
+/*
+ * On touch the buttons are always shown (see .card-floating-actions), so the
+ * photo keeps clear of them and of the badge: room above for the badge, and
+ * the same on both sides so the product stays centred. Cards are full width
+ * on a phone, so it stays large.
+ */
+@media (hover: none) {
+    .product-image-box img {
+        padding: 34px 46px 10px;
+    }
 }
 
 .standard-product-card:hover .product-image-box img,

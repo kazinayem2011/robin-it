@@ -84,4 +84,21 @@ describe('product image shape', () => {
 
         expect(rule).toMatch(/object-fit:\s*contain/);
     });
+
+    /*
+     * On touch the card's buttons are always shown, so the photo keeps clear
+     * of them; elsewhere the margin stays thin so the product stays large.
+     */
+    it('keeps the photo clear of the buttons on touch, and thin elsewhere', () => {
+        const css = readFileSync('resources/css/app.css', 'utf8');
+        expect(css).toMatch(
+            /@media \(hover: none\) \{\s*\.product-image-box img \{\s*padding:\s*34px 46px 10px;/,
+        );
+
+        const rule = css.slice(
+            css.indexOf('.product-image-box img {'),
+            css.indexOf('}', css.indexOf('.product-image-box img {')),
+        );
+        expect(rule).toMatch(/padding:\s*10px;/);
+    });
 });
