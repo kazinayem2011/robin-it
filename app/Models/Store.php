@@ -19,6 +19,8 @@ class Store extends Model
         'opening_hours',
         'map_embed_url',
         'map_link',
+        'latitude',
+        'longitude',
         'sort_order',
         'is_active',
         'holds_stock',
@@ -30,6 +32,8 @@ class Store extends Model
         'sort_order' => 'integer',
         'holds_stock' => 'boolean',
         'fulfils_online' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
 
     public function scopeActive($query)

@@ -41,6 +41,7 @@
     "dependencies": {
         "formik": "^2.4.9",
         "laravel-echo": "^2.4.0",
+        "leaflet": "^1.9.4",
         "lucide-react": "^1.31.0",
         "pusher-js": "^8.6.0",
         "yup": "^1.7.1",

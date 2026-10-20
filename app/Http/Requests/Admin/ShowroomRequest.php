@@ -2,14 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Support\MapLink;
-use Illuminate\Validation\Validator;
-
 class ShowroomRequest extends AdminRequest
 {
-    /** What the pasted map link draws, once it has been read. */
-    private ?string $embed = null;
-
     /**
      * @return array<string, mixed>
      */
@@ -28,45 +22,22 @@ class ShowroomRequest extends AdminRequest
             // The primary branch for online sales: orders take stock from it
             // first. One at a time.
             'fulfils_online' => 'boolean',
-            // Pasted from Google Maps; the map is worked out from it below.
+            // The branch's pin on the Showrooms map, both or neither; and the
+            // Google Maps link it may have been dropped from, kept for staff.
+            'latitude' => 'nullable|numeric|between:-90,90|required_with:longitude',
+            'longitude' => 'nullable|numeric|between:-180,180|required_with:latitude',
             'map_link' => 'nullable|string|max:3000',
         ];
     }
 
     /**
-     * The link is read here, so a link Google Maps cannot place shows under
-     * its own field rather than as a failed save.
-     *
-     * @return array<int, callable>
+     * @return array<string, string>
      */
-    public function after(): array
+    public function messages(): array
     {
-        return [function (Validator $validator) {
-            if ($validator->errors()->has('map_link')) {
-                return;
-            }
-
-            try {
-                $this->embed = MapLink::embedFor($this->input('map_link'));
-            } catch (\InvalidArgumentException $e) {
-                $validator->errors()->add('map_link', $e->getMessage());
-            }
-        }];
-    }
-
-    /**
-     * The link as pasted and the map it draws, when the form sent one.
-     *
-     * @return array<string, ?string>
-     */
-    public function mapFields(): array
-    {
-        if (! $this->has('map_link')) {
-            return [];
-        }
-
-        $link = trim((string) $this->input('map_link'));
-
-        return ['map_link' => $link === '' ? null : $link, 'map_embed_url' => $this->embed];
+        return [
+            'latitude.required_with' => 'Place the pin on the map, or clear it.',
+            'longitude.required_with' => 'Place the pin on the map, or clear it.',
+        ];
     }
 }

@@ -6,6 +6,7 @@ import Button from '../../Components/Button';
 import Checkbox from '../../Components/Checkbox';
 import DataTable from '../../Components/DataTable';
 import FormInput from '../../Components/FormInput';
+import LocationPicker from '../../Components/LocationPicker';
 import Select from '../../Components/Select';
 import Modal from '../../Components/Modal';
 import { toast } from '../../Components/Toast';
@@ -29,6 +30,8 @@ export default function AdminStores({ stores = [] }) {
             is_active: true,
             fulfils_online: false,
             map_link: '',
+            latitude: null,
+            longitude: null,
         },
         validationSchema: adminStoreSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -45,10 +48,6 @@ export default function AdminStores({ stores = [] }) {
                 resetForm();
                 router.reload({ only: ['stores'] });
             } catch (err) {
-                // A link Google Maps cannot place: say so under its box.
-                if (err?.errors?.map_link) {
-                    formik.setFieldError('map_link', err.errors.map_link[0]);
-                }
                 toast.error(err?.message || 'Failed to save the branch.');
             } finally {
                 setSubmitting(false);
@@ -69,6 +68,9 @@ export default function AdminStores({ stores = [] }) {
                 opening_hours: '10:00 AM - 8:00 PM (Closed on Friday)',
                 is_active: true,
                 fulfils_online: false,
+                map_link: '',
+                latitude: null,
+                longitude: null,
             },
         });
         setModalOpen(true);
@@ -90,6 +92,8 @@ export default function AdminStores({ stores = [] }) {
                 is_active: Boolean(store.is_active),
                 fulfils_online: Boolean(store.fulfils_online),
                 map_link: store.map_link || '',
+                latitude: store.latitude ?? null,
+                longitude: store.longitude ?? null,
             },
         });
         setModalOpen(true);
@@ -332,12 +336,21 @@ export default function AdminStores({ stores = [] }) {
                                 placeholder="10:00 AM - 8:00 PM (Closed on Friday)"
                             />
 
-                            <FormInput
-                                label="Google Maps link"
-                                name="map_link"
-                                formik={formik}
-                                placeholder="https://maps.app.goo.gl/…"
-                                helperText="In Google Maps, find the branch, then Share → Copy link, and paste it here. Customers see the map on the Showrooms page."
+                            {/* The branch's pin on the Showrooms map:
+                                dragged onto the building, or dropped from
+                                its Google Maps link. Keyed so each branch
+                                opened gets its own map. */}
+                            <LocationPicker
+                                key={editingStore?.id ?? 'new'}
+                                latitude={formik.values.latitude}
+                                longitude={formik.values.longitude}
+                                mapLink={formik.values.map_link}
+                                onChange={(pin) =>
+                                    formik.setValues(
+                                        { ...formik.values, ...pin },
+                                        false,
+                                    )
+                                }
                             />
 
                             <div>

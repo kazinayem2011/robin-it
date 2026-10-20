@@ -396,6 +396,9 @@ class ApiEndpoints
 
     public const ADMIN_STORES = 'stores';
 
+    /** Where a pasted Google Maps link points, for the branch form's pin. */
+    public const ADMIN_STORES_LOCATE = 'stores/locate';
+
     public const ADMIN_STORES_ITEM = 'stores/{id}';
 
     public const ADMIN_SETTINGS = 'settings';

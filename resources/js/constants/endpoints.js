@@ -180,6 +180,8 @@ export const API_ENDPOINTS = {
         COUPON_ITEM: (id) => `/admin/coupons/${id}`,
         STORES: '/admin/stores',
         STORE_ITEM: (id) => `/admin/stores/${id}`,
+        // Where a pasted Google Maps link points, for the branch form's pin.
+        STORES_LOCATE: '/admin/stores/locate',
         SETTINGS: '/admin/settings',
         SETTINGS_TEST_EMAIL: '/admin/settings/test-email',
 

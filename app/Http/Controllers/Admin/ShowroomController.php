@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ShowroomRequest;
 use App\Models\ProductStock;
 use App\Models\Store;
+use App\Support\MapLink;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,7 +29,7 @@ class ShowroomController extends Controller
 
     public function store(ShowroomRequest $request): JsonResponse
     {
-        $validated = array_merge($request->validated(), $request->mapFields());
+        $validated = $request->validated();
 
         // sort_order defaults to 0 in the schema and the form does not collect
         // it, so a new branch used to land above the flagship showroom. Append
@@ -49,7 +51,7 @@ class ShowroomController extends Controller
     public function update(ShowroomRequest $request, int $id): JsonResponse
     {
         $store = Store::findOrFail($id);
-        $validated = array_merge($request->validated(), $request->mapFields());
+        $validated = $request->validated();
 
         // Omitting the field means "leave the position as it is".
         if (! isset($validated['sort_order'])) {
@@ -100,6 +102,22 @@ class ShowroomController extends Controller
     {
         if ($store->fulfils_online) {
             Store::whereKeyNot($store->id)->where('fulfils_online', true)->update(['fulfils_online' => false]);
+        }
+    }
+
+    /**
+     * Where a pasted Google Maps link points, for the form to drop its pin
+     * there. Nothing is saved: staff see the pin, nudge it if need be, then
+     * save the branch.
+     */
+    public function locate(Request $request): JsonResponse
+    {
+        $request->validate(['link' => 'required|string|max:3000']);
+
+        try {
+            return $this->successResponse(MapLink::pinFor($request->input('link')), 'Pin placed from the link.');
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 422, ApiCode::VALIDATION_ERROR);
         }
     }
 

@@ -1,0 +1,118 @@
+/*
+ * The branch maps: the Showrooms page's map of every branch, and the pin
+ * picker in the branch form.
+ */
+.branch-map {
+    position: relative;
+    z-index: 0; /* Leaflet's panes stack high; keep them under the header */
+    width: 100%;
+    height: 440px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    background: var(--bg-surface-subtle);
+}
+
+@media (max-width: 640px) {
+    .branch-map {
+        height: 320px;
+    }
+}
+
+/* The pin is an SVG coloured from here, so it follows the brand red. */
+.branch-pin {
+    color: var(--primary);
+    background: none;
+    border: none;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+
+.branch-pin .branch-pin-hole {
+    fill: var(--text-on-accent);
+}
+
+.branch-map-popup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 220px;
+    font-family: var(--font-body, inherit);
+}
+
+.branch-map-popup strong {
+    font-size: 0.95rem;
+}
+
+.branch-map-popup span {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.branch-map .branch-map-popup a {
+    margin-top: 4px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Leaflet's popup is white whatever the theme; it follows the site's instead. */
+.branch-map .leaflet-popup-content-wrapper,
+.branch-map .leaflet-popup-tip,
+.location-picker-map .leaflet-popup-content-wrapper,
+.location-picker-map .leaflet-popup-tip {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+/* The pin picker in the branch form. */
+.location-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.location-picker-map {
+    position: relative;
+    z-index: 0;
+    height: 260px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    background: var(--bg-surface-subtle);
+    cursor: crosshair;
+}
+
+.location-picker-link {
+    display: flex;
+    gap: 8px;
+}
+
+.location-picker-link input {
+    flex: 1;
+    min-width: 0;
+}
+
+.location-picker-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.location-picker-error {
+    color: var(--danger-text);
+    font-size: 0.82rem;
+}
+
+.location-picker-clear {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--danger-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}

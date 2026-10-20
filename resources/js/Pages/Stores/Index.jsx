@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { mainLayout } from '../../Layouts/MainLayout';
 import { storeService } from '../../services';
 import SEOHead from '../../Components/SEOHead';
 import { CardGridSkeleton } from '../../Components/Skeleton';
 import siteConfig from '../../constants/siteConfig';
+import BranchMap from '../../Components/BranchMap';
+import { hasPin } from '../../utils/leaflet';
 
 import {
     MapPin,
@@ -20,6 +22,16 @@ export default function StoresIndex() {
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCity, setSelectedCity] = useState('all');
+    const [focus, setFocus] = useState(null);
+    const mapBoxRef = useRef(null);
+
+    const showOnMap = (store) => {
+        setFocus({ id: store.id, at: Date.now() });
+        mapBoxRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+    };
 
     useEffect(() => {
         storeService
@@ -76,112 +88,111 @@ export default function StoresIndex() {
                         </div>
                     </div>
 
+                    {/* Every branch on one map, set from each branch's
+                        pin in the admin. */}
+                    {!loading && (
+                        <div ref={mapBoxRef} className="stores-map-wrap">
+                            <BranchMap stores={filteredStores} focus={focus} />
+                        </div>
+                    )}
+
                     {loading ? (
                         <CardGridSkeleton count={3} className="stores-grid" />
                     ) : (
                         <div className="stores-grid">
                             {filteredStores.map((store) => (
-                                <div
-                                    key={store.id}
-                                    className={`store-card ${store.map_embed_url ? 'has-map' : ''}`}
-                                >
-                                    <div className="store-card-body">
-                                        <div className="store-card-header">
-                                            <div className="store-type-tag">
-                                                <ShieldCheck size={13} />
-                                                <span>{store.branch_type}</span>
-                                            </div>
-                                            <span className="store-city-label">
-                                                {store.city}
-                                            </span>
+                                <div key={store.id} className="store-card">
+                                    <div className="store-card-header">
+                                        <div className="store-type-tag">
+                                            <ShieldCheck size={13} />
+                                            <span>{store.branch_type}</span>
+                                        </div>
+                                        <span className="store-city-label">
+                                            {store.city}
+                                        </span>
+                                    </div>
+
+                                    <h3 className="store-name">
+                                        {/* Points the map above at this
+                                                branch, when it has a pin. */}
+                                        {hasPin(store) ? (
+                                            <button
+                                                type="button"
+                                                className="store-name-btn"
+                                                onClick={() => showOnMap(store)}
+                                                title="Show on the map"
+                                            >
+                                                {store.name}
+                                            </button>
+                                        ) : (
+                                            store.name
+                                        )}
+                                    </h3>
+
+                                    <div className="store-details-list">
+                                        <div className="store-detail-row">
+                                            <MapPin
+                                                size={16}
+                                                className="detail-icon"
+                                            />
+                                            <span>{store.address}</span>
                                         </div>
 
-                                        <h3 className="store-name">
-                                            {store.name}
-                                        </h3>
+                                        <div className="store-detail-row">
+                                            <Phone
+                                                size={16}
+                                                className="detail-icon"
+                                            />
+                                            <a
+                                                href={`tel:${store.phone}`}
+                                                className="store-phone-link"
+                                            >
+                                                {store.phone}
+                                            </a>
+                                        </div>
 
-                                        <div className="store-details-list">
+                                        {store.email && (
                                             <div className="store-detail-row">
-                                                <MapPin
-                                                    size={16}
-                                                    className="detail-icon"
-                                                />
-                                                <span>{store.address}</span>
-                                            </div>
-
-                                            <div className="store-detail-row">
-                                                <Phone
+                                                <Mail
                                                     size={16}
                                                     className="detail-icon"
                                                 />
                                                 <a
-                                                    href={`tel:${store.phone}`}
-                                                    className="store-phone-link"
+                                                    href={`mailto:${store.email}`}
+                                                    className="store-email-link"
                                                 >
-                                                    {store.phone}
+                                                    {store.email}
                                                 </a>
                                             </div>
+                                        )}
 
-                                            {store.email && (
-                                                <div className="store-detail-row">
-                                                    <Mail
-                                                        size={16}
-                                                        className="detail-icon"
-                                                    />
-                                                    <a
-                                                        href={`mailto:${store.email}`}
-                                                        className="store-email-link"
-                                                    >
-                                                        {store.email}
-                                                    </a>
-                                                </div>
-                                            )}
-
-                                            <div className="store-detail-row">
-                                                <Clock
-                                                    size={16}
-                                                    className="detail-icon"
-                                                />
-                                                <span>
-                                                    {store.opening_hours}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="store-card-actions">
-                                            <a
-                                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + ' ' + store.address)}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="store-map-btn"
-                                            >
-                                                <Navigation size={14} />
-                                                <span>Get Directions</span>
-                                            </a>
-                                            <a
-                                                href={`tel:${store.phone}`}
-                                                className="store-call-btn"
-                                            >
-                                                <Phone size={14} />
-                                                <span>Call Branch</span>
-                                            </a>
+                                        <div className="store-detail-row">
+                                            <Clock
+                                                size={16}
+                                                className="detail-icon"
+                                            />
+                                            <span>{store.opening_hours}</span>
                                         </div>
                                     </div>
 
-                                    {/* The branch on a map, beside its
-                                        details: set from the Google Maps link
-                                        in the admin. */}
-                                    {store.map_embed_url && (
-                                        <div className="store-map">
-                                            <iframe
-                                                src={store.map_embed_url}
-                                                title={`Map: ${store.name}`}
-                                                loading="lazy"
-                                                referrerPolicy="no-referrer-when-downgrade"
-                                                allowFullScreen
-                                            />
-                                        </div>
-                                    )}
+                                    <div className="store-card-actions">
+                                        <a
+                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + ' ' + store.address)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="store-map-btn"
+                                        >
+                                            <Navigation size={14} />
+                                            <span>Get Directions</span>
+                                        </a>
+                                        <a
+                                            href={`tel:${store.phone}`}
+                                            className="store-call-btn"
+                                        >
+                                            <Phone size={14} />
+                                            <span>Call Branch</span>
+                                        </a>
+                                    </div>
                                 </div>
                             ))}
                         </div>

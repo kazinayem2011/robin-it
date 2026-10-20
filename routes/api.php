@@ -404,6 +404,7 @@ Route::middleware(['web', 'auth', 'admin', 'throttle:api'])
 
         // Showrooms
         Route::post(ApiEndpoints::ADMIN_STORES, [AdminShowroomController::class, 'store'])->middleware('can:settings');
+        Route::post(ApiEndpoints::ADMIN_STORES_LOCATE, [AdminShowroomController::class, 'locate'])->middleware('can:settings');
         Route::match(['put', 'patch'], ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'update'])->middleware('can:settings');
         Route::delete(ApiEndpoints::ADMIN_STORES_ITEM, [AdminShowroomController::class, 'destroy'])->middleware('can:settings');
 

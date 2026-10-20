@@ -766,6 +766,18 @@ export const adminService = {
     },
 
     /**
+     * Where a pasted Google Maps link points: { latitude, longitude }.
+     * @param {string} link
+     */
+    async locateStore(link) {
+        const response = await axiosInstance.post(
+            API_ENDPOINTS.ADMIN.STORES_LOCATE,
+            { link },
+        );
+        return response;
+    },
+
+    /**
      * Delete a showroom branch.
      * @param {number|string} storeId
      */
