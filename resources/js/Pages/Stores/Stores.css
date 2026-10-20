@@ -164,10 +164,16 @@
  * are not links, sat level. The negative margins take back exactly what the
  * minimum added, so the target is still 28px and the line is where it would
  * have been.
+ *
+ * Only below 820px, where the minimum is. Applied everywhere, it pulled the
+ * phone and email lines 5px above their icons on a computer, which has no
+ * minimum to take back.
  */
-.store-detail-row .store-phone-link,
-.store-detail-row .store-email-link {
-    margin-block: calc((28px - 1.4em) / -2);
+@media (max-width: 820px) {
+    .store-detail-row .store-phone-link,
+    .store-detail-row .store-email-link {
+        margin-block: calc((28px - 1.4em) / -2);
+    }
 }
 
 .store-phone-link,
