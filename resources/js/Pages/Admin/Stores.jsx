@@ -280,6 +280,10 @@ export default function AdminStores({ stores = [] }) {
                                             label: 'Official Service Center',
                                         },
                                         {
+                                            value: 'Showroom and Special Service Centre',
+                                            label: 'Showroom and Special Service Centre',
+                                        },
+                                        {
                                             value: 'Express Outlet',
                                             label: 'Express Outlet',
                                         },
