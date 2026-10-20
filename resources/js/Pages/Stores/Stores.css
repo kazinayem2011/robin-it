@@ -1,7 +1,7 @@
 /* Stores.css - Showrooms & Experience Centers */
 
 .stores-page-wrapper {
-    padding: 36px 0 60px 0;
+    padding: 20px 0 60px 0;
 }
 
 .stores-header-card {
@@ -10,39 +10,31 @@
         var(--bg-inverse-deep) 0%,
         var(--bg-inverse) 100%
     );
-    border-radius: var(--radius-lg);
-    padding: 36px 32px;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
     color: var(--text-on-accent);
-    margin-bottom: 32px;
+    margin-bottom: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.stores-badge {
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: var(--primary-ink);
-    background: rgba(234, 72, 79, 0.15);
-    padding: 3px 10px;
-    border-radius: var(--radius-full);
-    letter-spacing: 0.8px;
-    display: inline-block;
-    margin-bottom: 12px;
+    /* One slim bar: the title, and the city buttons beside it. */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .stores-header-card h1 {
-    font-size: 1.8rem;
+    font-size: 1.35rem;
     font-weight: 900;
     font-family: var(--font-heading);
-    margin-bottom: 10px;
+    margin: 0;
     color: var(--text-on-accent);
 }
 
-.stores-header-card p {
-    font-size: 0.92rem;
-    color: var(--text-faint);
-    max-width: 720px;
-    line-height: 1.6;
-    margin-bottom: 24px;
+@media (max-width: 640px) {
+    .stores-header-card h1 {
+        font-size: 1.15rem;
+    }
 }
 
 .city-filter-strip {

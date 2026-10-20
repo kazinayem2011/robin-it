@@ -62,16 +62,9 @@ export default function StoresIndex() {
                 <div className="container">
                     {/* Header Banner */}
                     <div className="stores-header-card">
-                        <span className="stores-badge">
-                            NATIONWIDE PRESENCE
-                        </span>
+                        {/* A slim bar: the title and the city buttons, so the
+                            map below shows on first open, phones included. */}
                         <h1>Showrooms &amp; Authorised Experience Centres</h1>
-                        <p>
-                            Visit any of our official outlets across Bangladesh
-                            for live hardware demonstrations, instant PC
-                            assembly, official brand warranty claims, and expert
-                            consultation.
-                        </p>
 
                         {/* City Filter Pills */}
                         <div className="city-filter-strip">
