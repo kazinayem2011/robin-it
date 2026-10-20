@@ -523,13 +523,11 @@ export default function ProductFilters({
                                                         )
                                                     }
                                                 />
+                                                {/* No count beside it: the
+                                                    owner asked for the list
+                                                    without them, as StarTech
+                                                    has it. */}
                                                 <span>{option.label}</span>
-                                                {/* How many it leaves, so a
-                                                    shopper can see a dead end
-                                                    before clicking into it. */}
-                                                <em className="plp-filter-count">
-                                                    {option.count}
-                                                </em>
                                             </label>
                                         ))}
                                     </div>
