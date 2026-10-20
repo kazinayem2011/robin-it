@@ -27,7 +27,7 @@ class ShowroomController extends Controller
 
     public function store(ShowroomRequest $request): JsonResponse
     {
-        $validated = $request->validated();
+        $validated = array_merge($request->validated(), $request->mapFields());
 
         // sort_order defaults to 0 in the schema and the form does not collect
         // it, so a new branch used to land above the flagship showroom. Append
@@ -49,7 +49,7 @@ class ShowroomController extends Controller
     public function update(ShowroomRequest $request, int $id): JsonResponse
     {
         $store = Store::findOrFail($id);
-        $validated = $request->validated();
+        $validated = array_merge($request->validated(), $request->mapFields());
 
         // Omitting the field means "leave the position as it is".
         if (! isset($validated['sort_order'])) {

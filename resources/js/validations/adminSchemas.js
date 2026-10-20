@@ -121,6 +121,16 @@ export const adminStoreSchema = Yup.object().shape({
     email: Yup.string().email('Invalid email').nullable(),
     opening_hours: Yup.string().required('Opening hours is required'),
     is_active: Yup.boolean().default(true),
+    // Read by the server, which says when Google Maps cannot place it.
+    map_link: Yup.string()
+        .trim()
+        .max(3000, 'That link is too long')
+        .matches(/^(https:\/\/|<iframe)/i, {
+            message:
+                'Paste the link from Google Maps (it starts with https://)',
+            excludeEmptyString: true,
+        })
+        .nullable(),
 });
 
 export const adminSettingsSchema = Yup.object().shape({

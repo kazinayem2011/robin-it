@@ -18,6 +18,7 @@ class Store extends Model
         'email',
         'opening_hours',
         'map_embed_url',
+        'map_link',
         'sort_order',
         'is_active',
         'holds_stock',

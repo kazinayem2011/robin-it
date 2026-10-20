@@ -28,6 +28,7 @@ export default function AdminStores({ stores = [] }) {
             opening_hours: '10:00 AM - 8:00 PM (Closed on Friday)',
             is_active: true,
             fulfils_online: false,
+            map_link: '',
         },
         validationSchema: adminStoreSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -44,6 +45,10 @@ export default function AdminStores({ stores = [] }) {
                 resetForm();
                 router.reload({ only: ['stores'] });
             } catch (err) {
+                // A link Google Maps cannot place: say so under its box.
+                if (err?.errors?.map_link) {
+                    formik.setFieldError('map_link', err.errors.map_link[0]);
+                }
                 toast.error(err?.message || 'Failed to save the branch.');
             } finally {
                 setSubmitting(false);
@@ -84,6 +89,7 @@ export default function AdminStores({ stores = [] }) {
                     '10:00 AM - 8:00 PM (Closed on Friday)',
                 is_active: Boolean(store.is_active),
                 fulfils_online: Boolean(store.fulfils_online),
+                map_link: store.map_link || '',
             },
         });
         setModalOpen(true);
@@ -324,6 +330,14 @@ export default function AdminStores({ stores = [] }) {
                                 required
                                 formik={formik}
                                 placeholder="10:00 AM - 8:00 PM (Closed on Friday)"
+                            />
+
+                            <FormInput
+                                label="Google Maps link"
+                                name="map_link"
+                                formik={formik}
+                                placeholder="https://maps.app.goo.gl/…"
+                                helperText="In Google Maps, find the branch, then Share → Copy link, and paste it here. Customers see the map on the Showrooms page."
                             />
 
                             <div>
