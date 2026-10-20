@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { localToday } from '@/utils/localToday';
-import { Plus, Trash2, Split, Hash } from 'lucide-react';
+import { Plus, Trash2, Split, Hash, AlertTriangle } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import Button from '@/Components/Button';
 import FormInput from '@/Components/FormInput';
@@ -253,11 +253,6 @@ export default function ReceiveDeliveryModal({
             .split(/[\r\n,]+/)
             .map((s) => s.replace(/\s+/g, '').toUpperCase())
             .filter(Boolean);
-        if (needsSerials(l) && typedSerials.length < arrived) {
-            out.push(
-                `${label} has a warranty: type the serial number of each of the ${arrived} (${typedSerials.length} so far). They are on the box labels.`,
-            );
-        }
         if (typedSerials.length > arrived) {
             out.push(
                 `${label}: ${arrived} arrived but ${typedSerials.length} serial numbers typed.`,
@@ -284,6 +279,28 @@ export default function ReceiveDeliveryModal({
         }
         return out;
     });
+
+    /*
+     * Units of a warranty product arriving without a serial. Not a problem
+     * that stops the save — serials are optional at the door — but said
+     * plainly, with where to add them, because a warranty claim on those
+     * units has nothing to be checked against until they are.
+     */
+    const withoutSerials = lines.flatMap((l) => {
+        const arrived = Number(l.arrived) || 0;
+        if (arrived <= 0 || !needsSerials(l)) return [];
+        const typed = countSerials(l.serials);
+        if (typed >= arrived) return [];
+        const label = fromOrder ? l.name : l.label || 'A product';
+        return [{ label, missing: arrived - typed, arrived }];
+    });
+    const withoutSerialsNote = withoutSerials.length
+        ? `${withoutSerials
+              .map((w) => `${w.label}: ${w.missing} of ${w.arrived}`)
+              .join(
+                  ', ',
+              )} without a serial. You can add them later under Stock → Serial numbers → Add serials.`
+        : '';
 
     // A purchase has a seller. "Opening balance" is in the list for stock
     // that was already on the shelves.
@@ -366,6 +383,9 @@ export default function ReceiveDeliveryModal({
                 res?.message || `Received ${totals.qty}.`,
                 'Delivery saved',
             );
+            if (withoutSerialsNote) {
+                toast.info(withoutSerialsNote, 'Serials still to add');
+            }
             onSaved?.();
         } catch (err) {
             toast.error(err?.message || 'Could not save this delivery.');
@@ -547,6 +567,13 @@ export default function ReceiveDeliveryModal({
                         </div>
                     )}
 
+                    {withoutSerialsNote && (
+                        <p className="admin-receive-serial-note" role="status">
+                            <AlertTriangle size={14} />
+                            <span>{withoutSerialsNote}</span>
+                        </p>
+                    )}
+
                     {tried && problems.length > 0 && (
                         <ul className="admin-receive-problems" role="alert">
                             {problems.map((p) => (
@@ -677,16 +704,14 @@ function ReceiveLine({
                     onClick={() => onChange({ showSerials: !line.showSerials })}
                     title={
                         needsSerials
-                            ? 'Serial numbers (required: this product has a warranty)'
+                            ? 'Serial numbers (this product has a warranty: add them now, or later under Stock → Serial numbers)'
                             : 'Serial numbers (optional)'
                     }
                 >
                     <Hash size={13} />{' '}
                     {serialCount
                         ? `${serialCount}${needsSerials ? ` of ${arrived}` : ''}`
-                        : needsSerials
-                          ? 'Serials needed'
-                          : 'Serials'}
+                        : 'Serials'}
                 </button>
                 {canRemove && (
                     <button
@@ -751,7 +776,7 @@ function ReceiveLine({
             {(line.showSerials || needsSerials) && (
                 <label className="admin-receive-serials">
                     {needsSerials
-                        ? `Serial numbers — one per line, all ${arrived} (this product has a warranty)`
+                        ? `Serial numbers — one per line, up to ${arrived} (this product has a warranty: any not typed now can be added later)`
                         : 'Serial numbers — one per line (optional)'}
                     <textarea
                         rows={4}

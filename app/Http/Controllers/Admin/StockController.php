@@ -70,6 +70,8 @@ class StockController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        $this->flagMissingSerials($products->getCollection());
+
         return Inertia::render('Admin/Stock/Index', [
             'products' => $products,
             'filters' => ['search' => $search, 'reorder' => $onlyReorder, 'store' => $storeId],
@@ -92,6 +94,45 @@ class StockController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'kind']),
         ]);
+    }
+
+    /**
+     * How many units of a warranty product are on the shelf without a serial.
+     *
+     * Serials are optional at the door now, so a delivery can land without
+     * them; this keeps saying so until they are added under Serial numbers,
+     * because a warranty claim on one of those units has nothing to be
+     * checked against. Per option, then summed: a serial on one colour does
+     * not cover a box of another.
+     *
+     * @param  IlluminateSupportCollection<int, Product>  $products
+     */
+    private function flagMissingSerials($products): void
+    {
+        $ids = $products->filter(fn (Product $p) => (int) $p->warranty_months > 0)->pluck('id')->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $key = fn ($row) => $row->product_id.':'.($row->product_variant_id ?? 0);
+        $serials = ProductSerial::whereIn('product_id', $ids)
+            ->where('status', ProductSerial::IN_STOCK)
+            ->groupBy('product_id', 'product_variant_id')
+            ->selectRaw('product_id, product_variant_id, count(*) as n')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$key($row) => (int) $row->n]);
+
+        $missing = DB::table('product_stock')
+            ->whereIn('product_id', $ids)
+            ->where('quantity', '>', 0)
+            ->groupBy('product_id', 'product_variant_id')
+            ->selectRaw('product_id, product_variant_id, sum(quantity) as q')
+            ->get()
+            ->groupBy('product_id')
+            ->map(fn ($rows) => $rows->sum(fn ($row) => max(0, (int) $row->q - ($serials[$key($row)] ?? 0))));
+
+        $products->each(fn (Product $p) => $p->setAttribute('serials_missing', (int) ($missing[$p->id] ?? 0)));
     }
 
     /**
@@ -261,8 +302,8 @@ class StockController extends Controller
             }
         }
 
-        // Serials checked before a unit lands, so a bad one stops the delivery
-        // — and a missing one, on anything with a warranty.
+        // Serials checked before a unit lands, so a bad one stops the delivery.
+        // A missing one does not: they are optional, and can be added later.
         $typed = [];
         foreach ($validated['lines'] as $line) {
             [$product, $variant] = $this->stock->resolveUnit((int) $line['product_id'], $line['product_variant_id'] ?? null);
@@ -271,7 +312,6 @@ class StockController extends Controller
                 $name,
                 $line['serials'] ?? null,
                 (int) $line['quantity'],
-                (int) $product->warranty_months > 0,
             );
             $typed[] = [$name, $line['serials'] ?? null];
         }

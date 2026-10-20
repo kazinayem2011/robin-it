@@ -2957,6 +2957,24 @@ a.admin-card:hover,
 }
 
 /* What is stopping the save, in words, under the lines. */
+/* Units of a warranty product arriving without a serial: a reminder, not a stop. */
+.admin-receive-serial-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--warning-light);
+    color: var(--warning-text);
+    font-size: 0.85rem;
+}
+
+.admin-receive-serial-note svg {
+    flex: none;
+    margin-top: 2px;
+}
+
 .admin-receive-problems {
     margin: 12px 0 0;
     padding: 10px 14px 10px 30px;

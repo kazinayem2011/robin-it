@@ -12,6 +12,7 @@ import {
     SlidersHorizontal,
     ClipboardList,
     ArrowLeftRight,
+    AlertTriangle,
 } from 'lucide-react';
 import ReceiptHistoryModal from './ReceiptHistoryModal';
 import AdjustStockModal from './AdjustStockModal';
@@ -198,6 +199,19 @@ export default function AdminStock({
                             {row._kind === 'parent' &&
                                 ' · stock is held per option'}
                         </div>
+                        {/* Serials are optional when a delivery arrives;
+                            this keeps saying so until they are added, as a
+                            warranty claim needs one to be checked against. */}
+                        {row.serials_missing > 0 && (
+                            <Link
+                                href={ROUTES.ADMIN_STOCK_SERIALS}
+                                className="admin-spec-gap"
+                                title="Add them under Serial numbers → Add serials"
+                            >
+                                <AlertTriangle size={12} />
+                                {row.serials_missing} without serial
+                            </Link>
+                        )}
                         {row._kind !== 'parent' && rowActions(row)}
                     </div>
                 ),

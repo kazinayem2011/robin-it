@@ -286,7 +286,6 @@ class PurchaseOrderService
                     $item->display_name,
                     $line['serials'] ?? null,
                     $quantity,
-                    $item->needs_serials,
                 );
 
                 $typedSerials[] = [$item->display_name, $line['serials'] ?? null];

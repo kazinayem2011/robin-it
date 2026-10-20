@@ -74,16 +74,32 @@ class WarrantyReportAndSerialsTest extends TestCase
 
     // --- serials at the door -----------------------------------------------
 
-    public function test_a_product_with_a_warranty_needs_a_serial_for_every_unit(): void
+    /*
+     * Optional at the door, at the owner's asking: a delivery of a warranty
+     * product lands with fewer serials than units. The Stock page then says
+     * how many are still to add (StockController::flagMissingSerials).
+     */
+    public function test_a_product_with_a_warranty_can_arrive_with_fewer_serials(): void
     {
-        $this->receive($this->laptop, 2, 'SN-1')
-            ->assertStatus(422)
-            ->assertJsonPath('message', 'ASUS Vivobook has a warranty, so each unit needs its serial number: 2 arrived, 1 typed. They are on the label of each box.');
+        $this->receive($this->laptop, 2, 'SN-1')->assertSuccessful();
 
-        $this->assertSame(0, (int) $this->laptop->fresh()->stock_quantity, 'nothing was received');
+        $this->assertSame(2, (int) $this->laptop->fresh()->stock_quantity);
+        $this->assertSame(['SN-1'], ProductSerial::pluck('serial')->all());
 
-        $this->receive($this->laptop, 2, "SN-1\nSN-2")->assertSuccessful();
-        $this->assertSame(2, ProductSerial::count());
+        $page = $this->actingAs($this->staff('admin'))->get('/admin/stock')->viewData('page')['props'];
+        $row = collect($page['products']['data'])->firstWhere('id', $this->laptop->id);
+        $this->assertSame(1, $row['serials_missing'], 'one unit on the shelf has no serial');
+
+        // Added later under Serial numbers, the flag clears.
+        app(SerialService::class)->receive($this->laptop, null, ['SN-2'], $this->store->id);
+        $page = $this->actingAs($this->staff('admin'))->get('/admin/stock')->viewData('page')['props'];
+        $this->assertSame(0, collect($page['products']['data'])->firstWhere('id', $this->laptop->id)['serials_missing']);
+    }
+
+    public function test_more_serials_than_units_is_still_refused(): void
+    {
+        $this->receive($this->laptop, 1, "SN-1\nSN-2")->assertStatus(422);
+        $this->assertSame(0, (int) $this->laptop->fresh()->stock_quantity);
     }
 
     public function test_a_product_without_a_warranty_can_arrive_without_serials(): void
@@ -92,7 +108,7 @@ class WarrantyReportAndSerialsTest extends TestCase
         $this->assertSame(20, (int) $this->cable->fresh()->stock_quantity);
     }
 
-    public function test_a_purchase_order_delivery_needs_them_too(): void
+    public function test_a_purchase_order_delivery_can_arrive_without_them_too(): void
     {
         $buyer = $this->staff('admin');
         $supplier = Supplier::create(['name' => 'Smart Tech', 'phone' => '01711000000', 'is_active' => true]);
@@ -102,8 +118,8 @@ class WarrantyReportAndSerialsTest extends TestCase
 
         $this->assertTrue($item->needs_serials, 'the window is told to ask');
 
-        $this->expectExceptionMessage('ASUS Vivobook has a warranty');
         $orders->receive($po, $buyer, [['purchase_order_item_id' => $item->id, 'quantity' => 2]]);
+        $this->assertSame(2, (int) $this->laptop->fresh()->stock_quantity);
     }
 
     // --- the report ----------------------------------------------------------

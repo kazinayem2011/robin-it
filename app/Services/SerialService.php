@@ -68,23 +68,6 @@ class SerialService
     }
 
     /**
-     * Check a delivery line's serial numbers before anything is saved.
-     *
-     * A serial already on the books was skipped quietly (or reported after the
-     * units were already on the shelf), so a delivery of six could land with
-     * five serials and nobody knowing which box was missing one. More serials
-     * than units put numbers on the books for boxes that never arrived. Both
-     * are stopped at the door now, and nothing is received until they are put
-     * right.
-     *
-     * Fewer serials than units is fine for most things, but not for a product
-     * with a warranty: a claim on one of its units can only be checked against
-     * a serial the shop wrote down, and the box at the door is the one moment
-     * somebody can read it.
-     *
-     * @throws StorefrontException
-     */
-    /**
      * The same serial typed on two lines of one delivery.
      *
      * Each line was checked on its own, against itself and the books, so a
@@ -118,21 +101,29 @@ class SerialService
         }
     }
 
-    public function checkDelivery(string $name, ?string $typed, int $units, bool $required = false): void
+    /**
+     * Check a delivery line's serial numbers before anything is saved.
+     *
+     * A serial already on the books was skipped quietly (or reported after the
+     * units were already on the shelf), so a delivery of six could land with
+     * five serials and nobody knowing which box was missing one. More serials
+     * than units put numbers on the books for boxes that never arrived. Both
+     * are stopped at the door now, and nothing is received until they are put
+     * right.
+     *
+     * Fewer serials than units is allowed, warranty or not: the owner asked
+     * for the box at the door to be optional. The window says how many units
+     * of a warranty product came in without one, and the Stock page keeps
+     * flagging them until they are added under Serial numbers.
+     *
+     * @throws StorefrontException
+     */
+    public function checkDelivery(string $name, ?string $typed, int $units): void
     {
         $list = collect(preg_split('/[\r\n,]+/', (string) $typed) ?: [])
             ->map(fn ($s) => ProductSerial::normalise($s))
             ->filter()
             ->values();
-
-        if ($required && $units > 0 && $list->count() < $units) {
-            throw new StorefrontException(
-                "{$name} has a warranty, so each unit needs its serial number: {$units} arrived, "
-                    ."{$list->count()} typed. They are on the label of each box.",
-                422,
-                ApiCode::VALIDATION_ERROR
-            );
-        }
 
         if ($list->isEmpty()) {
             return;
