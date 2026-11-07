@@ -38,7 +38,24 @@ return Application::configure(basePath: dirname(__DIR__))
             // for someone whose session has just run out of time.
             EnforceSessionWindow::class,
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
+            /*
+             * Capped, because uncapped it took the product page down.
+             *
+             * Every chunk a page imports went into one `Link` header, at about
+             * 95 bytes each. The product page imports the most — 80-odd — and
+             * its header went past the 8 KB the host's LiteSpeed accepts from
+             * PHP, which answers with its own 500 page instead of passing the
+             * response on. Every product refused a full page load; clicking
+             * through from the shop still worked, because an Inertia visit
+             * comes back as JSON and carries no preload header at all.
+             *
+             * The header only lets the browser start a few downloads before
+             * the HTML has arrived. The page already lists every chunk as
+             * <link rel="modulepreload">, so nothing is lost past the first
+             * few. Vite lists stylesheets first, then the entry, so this cap
+             * keeps those.
+             */
+            AddLinkHeadersForPreloadedAssets::using(24),
         ]);
 
         $middleware->alias([
