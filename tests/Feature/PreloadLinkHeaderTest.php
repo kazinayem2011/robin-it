@@ -33,7 +33,7 @@ class PreloadLinkHeaderTest extends TestCase
             public function preloadedAssets()
             {
                 return collect(range(1, 120))->mapWithKeys(fn ($i) => [
-                    "https://www.robinscomputer.com/build/assets/chunk-{$i}-AbCdEfGh.js" => ['rel="modulepreload"', 'as="script"'],
+                    asset("build/assets/chunk-{$i}-AbCdEfGh.js") => ['rel="modulepreload"', 'as="script"'],
                 ])->all();
             }
         });
@@ -41,7 +41,7 @@ class PreloadLinkHeaderTest extends TestCase
         $link = $this->get('/products/any-product')->headers->get('Link');
 
         $this->assertNotNull($link, 'The page should still preload its first assets.');
-        $this->assertLessThanOrEqual(24, substr_count($link, '<https://'));
+        $this->assertLessThanOrEqual(24, substr_count($link, 'rel="modulepreload"'));
         $this->assertLessThan(4096, strlen($link));
     }
 }
